@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -144,7 +145,7 @@ describe("LessonToolbar", () => {
   it("is a close control and a progress bar, not a nav", async () => {
     const onClose = vi.fn();
     await act(async () => {
-      root.render(<LessonToolbar onClose={onClose} sections={SECTIONS} />);
+      root.render(withInterfaceLocale(<LessonToolbar onClose={onClose} sections={SECTIONS} />));
     });
     expect(container.querySelector("nav")).toBeNull();
     expect(container.textContent).not.toContain("关卡地图");
@@ -162,14 +163,16 @@ describe("LessonToolbar", () => {
     stubLessonRects({ s1: 80, s2: 400, s3: 800 });
     await act(async () => {
       root.render(
-        <>
-          <LessonToolbar onClose={onClose} sections={SECTIONS} />
-          {SECTIONS.map((section) => (
-            <h2 key={section.id} data-section-id={section.id}>
-              {section.title}
-            </h2>
-          ))}
-        </>,
+        withInterfaceLocale(
+          <>
+            <LessonToolbar onClose={onClose} sections={SECTIONS} />
+            {SECTIONS.map((section) => (
+              <h2 key={section.id} data-section-id={section.id}>
+                {section.title}
+              </h2>
+            ))}
+          </>,
+        ),
       );
     });
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuemax")).toBe(
@@ -185,14 +188,16 @@ describe("LessonToolbar", () => {
     stubLessonRects({ s1: -200, s2: -20, s3: 40 });
     await act(async () => {
       root.render(
-        <>
-          <LessonToolbar onClose={onClose} sections={[...SECTIONS]} />
-          {SECTIONS.map((section) => (
-            <h2 key={section.id} data-section-id={section.id}>
-              {section.title}
-            </h2>
-          ))}
-        </>,
+        withInterfaceLocale(
+          <>
+            <LessonToolbar onClose={onClose} sections={[...SECTIONS]} />
+            {SECTIONS.map((section) => (
+              <h2 key={section.id} data-section-id={section.id}>
+                {section.title}
+              </h2>
+            ))}
+          </>,
+        ),
       );
     });
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuenow")).toBe(
@@ -244,7 +249,9 @@ describe("LessonToolbar scroll target", () => {
     const onScroller = vi.spyOn(scroller, "addEventListener");
     const onWindow = vi.spyOn(window, "addEventListener");
 
-    act(() => mount.render(<LessonToolbar onClose={() => {}} sections={SECTIONS} />));
+    act(() =>
+      mount.render(withInterfaceLocale(<LessonToolbar onClose={() => {}} sections={SECTIONS} />)),
+    );
 
     const scrollerEvents = onScroller.mock.calls.map(([type]) => type);
     expect(scrollerEvents).toContain("scroll");
@@ -261,7 +268,9 @@ describe("LessonToolbar scroll target", () => {
   it("falls back to window when nothing above it scrolls", () => {
     const onWindow = vi.spyOn(window, "addEventListener");
 
-    act(() => root.render(<LessonToolbar onClose={() => {}} sections={SECTIONS} />));
+    act(() =>
+      root.render(withInterfaceLocale(<LessonToolbar onClose={() => {}} sections={SECTIONS} />)),
+    );
 
     expect(onWindow.mock.calls.map(([type]) => type)).toContain("scroll");
   });

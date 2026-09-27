@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -83,7 +84,13 @@ describe("CompanionMarkers", () => {
 
     await act(async () => {
       root.render(
-        <CompanionMarkers peers={ada.snapshot().peers} surface="course" attach={() => undefined} />,
+        withInterfaceLocale(
+          <CompanionMarkers
+            peers={ada.snapshot().peers}
+            surface="course"
+            attach={() => undefined}
+          />,
+        ),
       );
     });
 
@@ -110,10 +117,16 @@ describe("CompanionMarkers", () => {
 
     await act(async () => {
       root.render(
-        <>
-          <CompanionMarkers peers={ada.snapshot().peers} surface="world" attach={() => undefined} />
-          <CompanionCursors peers={ada.snapshot().peers} viewKey="world" />
-        </>,
+        withInterfaceLocale(
+          <>
+            <CompanionMarkers
+              peers={ada.snapshot().peers}
+              surface="world"
+              attach={() => undefined}
+            />
+            <CompanionCursors peers={ada.snapshot().peers} viewKey="world" />
+          </>,
+        ),
       );
     });
 
@@ -138,7 +151,9 @@ describe("CompanionCursors", () => {
     grace.publishCursor({ x: 0.4, y: 0.5, viewKey: "world" });
 
     await act(async () => {
-      root.render(<CompanionCursors peers={ada.snapshot().peers} viewKey="world" />);
+      root.render(
+        withInterfaceLocale(<CompanionCursors peers={ada.snapshot().peers} viewKey="world" />),
+      );
     });
 
     const layer = container.querySelector<HTMLElement>(".companion-cursors");
@@ -173,7 +188,7 @@ describe("SettingsScreen presence", () => {
     expect(grace.snapshot().peers).toHaveLength(1);
 
     await act(async () => {
-      root.render(<SettingsScreen presence={ada} />);
+      root.render(withInterfaceLocale(<SettingsScreen presence={ada} />));
     });
     expect(container.textContent).toContain("共享学习动态");
 
@@ -192,7 +207,7 @@ describe("SettingsScreen presence", () => {
   });
 
   it("keeps the settings page working without a presence port", () => {
-    const markup = renderToStaticMarkup(<SettingsScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<SettingsScreen />));
     expect(markup).toContain("偏好设置");
     expect(markup).not.toContain("共享学习动态");
   });

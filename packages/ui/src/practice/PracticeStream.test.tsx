@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import {
@@ -131,7 +132,9 @@ async function renderStream(
   const store = props.store ?? memoryStore();
   await act(async () => {
     root.render(
-      <PracticeStream questions={QUESTIONS} store={store} renderReward={termReward} {...props} />,
+      withInterfaceLocale(
+        <PracticeStream questions={QUESTIONS} store={store} renderReward={termReward} {...props} />,
+      ),
     );
   });
   return store;

@@ -1,7 +1,7 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { useEffect, useRef } from "react";
 import type { ContextActivity, ContextPackResult, ContextVisit } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 /** The little counter is fed by the same sourced rows as the material inspector. */
 export function ContextCounter({
@@ -33,6 +33,7 @@ export function ContextCounter({
   readonly onBuild: () => void;
   readonly onFinish: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const customer =
     activity.visitors?.find((visitor) => visitor.id === active) ??
     (guided ? activity.visitors?.[0] : undefined);
@@ -63,12 +64,12 @@ export function ContextCounter({
     <section
       className="ai-context-counter"
       data-guided={guided}
-      aria-label={t("play.ai.context.counter")}
+      aria-label={interfaceTranslator.t("play.ai.context.counter")}
     >
       <header className="ai-context-counter__sign">
-        <span>{t("play.ai.context.counter")}</span>
-        <h4>{guided ? t(guideTitle) : activity.workTitle}</h4>
-        {!guided ? <p>{t("play.ai.context.takeOver")}</p> : null}
+        <span>{interfaceTranslator.t("play.ai.context.counter")}</span>
+        <h4>{guided ? interfaceTranslator.t(guideTitle) : activity.workTitle}</h4>
+        {!guided ? <p>{interfaceTranslator.t("play.ai.context.takeOver")}</p> : null}
       </header>
       <div
         ref={answer}
@@ -86,7 +87,7 @@ export function ContextCounter({
               <>
                 <p className="ai-context-counter__response">
                   {reply.value ??
-                    t(
+                    interfaceTranslator.t(
                       `play.ai.context.reason.${reply.status === "ready" ? "missing" : reply.status}`,
                       {
                         label: row.label,
@@ -94,7 +95,7 @@ export function ContextCounter({
                     )}
                 </p>
                 <p>
-                  {t(
+                  {interfaceTranslator.t(
                     guided && (!replyMatchesBuild || stale)
                       ? "play.ai.context.guide.oldAnswer"
                       : result.overCapacity
@@ -107,7 +108,7 @@ export function ContextCounter({
                 </p>
                 {!reply.passed && replyMatchesBuild && !stale && row.evidence.length ? (
                   <div className="ai-context-counter__clues">
-                    <span>{t("play.ai.context.followClue")}</span>
+                    <span>{interfaceTranslator.t("play.ai.context.followClue")}</span>
                     {row.evidence.map((item) => {
                       const document = activity.documents.find(
                         (doc) => doc.id === item.documentId,
@@ -120,7 +121,9 @@ export function ContextCounter({
                           onClick={() => onSource(document.id)}
                         >
                           {guided
-                            ? t("play.ai.context.guide.openSource", { title: document.title })
+                            ? interfaceTranslator.t("play.ai.context.guide.openSource", {
+                                title: document.title,
+                              })
                             : item.text}
                           <small>{guided ? item.text : document.title}</small>
                         </GameButton>
@@ -136,24 +139,27 @@ export function ContextCounter({
                 disabled={disabled}
                 onClick={() => onVisit(customer.id)}
               >
-                {t(reply ? "play.ai.context.guide.retry" : "play.ai.context.guide.visit", {
-                  name: customer.name,
-                })}
+                {interfaceTranslator.t(
+                  reply ? "play.ai.context.guide.retry" : "play.ai.context.guide.visit",
+                  {
+                    name: customer.name,
+                  },
+                )}
               </GameButton>
             ) : null}
           </>
         ) : (
-          <p>{t("play.ai.context.firstCustomer")}</p>
+          <p>{interfaceTranslator.t("play.ai.context.firstCustomer")}</p>
         )}
       </div>
       {stale ? (
         <p className="ai-context-counter__stale" role="status">
-          {t("play.ai.context.counterStale")}
+          {interfaceTranslator.t("play.ai.context.counterStale")}
         </p>
       ) : null}
       <footer>
         <span>
-          {t("play.ai.context.servedCount", {
+          {interfaceTranslator.t("play.ai.context.servedCount", {
             count: served.length,
             total: activity.visitors?.length ?? 0,
           })}
@@ -165,7 +171,7 @@ export function ContextCounter({
               disabled={disabled}
               onClick={onBuild}
             >
-              {t("play.ai.context.buildCounter")}
+              {interfaceTranslator.t("play.ai.context.buildCounter")}
             </GameButton>
           ) : null}
           {guided && reply && replyMatchesBuild && !stale && !allServed ? (
@@ -175,29 +181,32 @@ export function ContextCounter({
                 disabled={disabled}
                 onClick={() => onVisit(nextCustomer.id)}
               >
-                {t("play.ai.context.guide.visit", { name: nextCustomer.name })}
+                {interfaceTranslator.t("play.ai.context.guide.visit", { name: nextCustomer.name })}
               </GameButton>
             ) : (
               <GameButton variant="secondary" disabled={disabled} onClick={onMaterials}>
-                {t("play.ai.context.guide.materials")}
+                {interfaceTranslator.t("play.ai.context.guide.materials")}
               </GameButton>
             )
           ) : null}
           {!guided || allServed ? (
             <GameButton variant="primary" disabled={disabled} onClick={onFinish}>
-              {t("play.ai.context.deliverCounter")}
+              {interfaceTranslator.t("play.ai.context.deliverCounter")}
             </GameButton>
           ) : null}
         </div>
       </footer>
       <details className="play-context-queue" open={!guided}>
         <summary>
-          {t("play.ai.context.guide.queue", {
+          {interfaceTranslator.t("play.ai.context.guide.queue", {
             count: served.length,
             total: activity.visitors?.length ?? 0,
           })}
         </summary>
-        <div className="ai-context-counter__queue" aria-label={t("play.ai.context.customers")}>
+        <div
+          className="ai-context-counter__queue"
+          aria-label={interfaceTranslator.t("play.ai.context.customers")}
+        >
           {activity.visitors?.map((visitor, index) => (
             <GameButton
               key={visitor.id}
@@ -214,7 +223,7 @@ export function ContextCounter({
                 <small>{visitor.question}</small>
               </span>
               <span
-                aria-label={t(
+                aria-label={interfaceTranslator.t(
                   served.includes(visitor.id)
                     ? "play.ai.context.served"
                     : "play.ai.context.unserved",

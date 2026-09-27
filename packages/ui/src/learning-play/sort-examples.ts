@@ -1,6 +1,6 @@
 import type { SortActivity } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /**
  * The lab's `sort` fixture: 「这件事该开哪个文件？」
@@ -20,81 +20,99 @@ export function getSortExamples(): readonly SortActivity[] {
     {
       id: "sort-which-file",
       kind: "sort",
-      title: translate("play.sort.files.title"),
-      brief: translate("play.sort.files.brief"),
-      goal: translate("play.sort.files.goal"),
-      takeaway: translate("play.sort.files.takeaway"),
-      hint: translate("play.sort.files.hint"),
+      title: interfaceTranslator.t("play.sort.files.title"),
+      brief: interfaceTranslator.t("play.sort.files.brief"),
+      goal: interfaceTranslator.t("play.sort.files.goal"),
+      takeaway: interfaceTranslator.t("play.sort.files.takeaway"),
+      hint: interfaceTranslator.t("play.sort.files.hint"),
       source: {
-        label: translate("play.sort.files.source"),
+        label: interfaceTranslator.t("play.sort.files.source"),
         url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Your_first_website",
       },
-      question: translate("play.sort.files.question"),
+      question: interfaceTranslator.t("play.sort.files.question"),
       buckets: [
         {
           id: "html",
-          label: translate("play.sort.files.bucket.html"),
-          note: translate("play.sort.files.bucket.htmlNote"),
+          label: interfaceTranslator.t("play.sort.files.bucket.html"),
+          note: interfaceTranslator.t("play.sort.files.bucket.htmlNote"),
         },
         {
           id: "css",
-          label: translate("play.sort.files.bucket.css"),
-          note: translate("play.sort.files.bucket.cssNote"),
+          label: interfaceTranslator.t("play.sort.files.bucket.css"),
+          note: interfaceTranslator.t("play.sort.files.bucket.cssNote"),
         },
         {
           id: "js",
-          label: translate("play.sort.files.bucket.js"),
-          note: translate("play.sort.files.bucket.jsNote"),
+          label: interfaceTranslator.t("play.sort.files.bucket.js"),
+          note: interfaceTranslator.t("play.sort.files.bucket.jsNote"),
         },
       ],
       items: [
         {
           id: "add-a-line",
-          label: translate("play.sort.files.addLine"),
-          detail: translate("play.sort.files.addLineDetail"),
+          label: interfaceTranslator.t("play.sort.files.addLine"),
+          detail: interfaceTranslator.t("play.sort.files.addLineDetail"),
           bucketId: "html",
-          why: translate("play.sort.files.addLineWhy"),
-          tempting: { bucketId: "css", whyNot: translate("play.sort.files.addLineNot") },
+          why: interfaceTranslator.t("play.sort.files.addLineWhy"),
+          tempting: {
+            bucketId: "css",
+            whyNot: interfaceTranslator.t("play.sort.files.addLineNot"),
+          },
         },
         {
           id: "rename-button",
-          label: translate("play.sort.files.renameButton"),
-          detail: translate("play.sort.files.renameButtonDetail"),
+          label: interfaceTranslator.t("play.sort.files.renameButton"),
+          detail: interfaceTranslator.t("play.sort.files.renameButtonDetail"),
           bucketId: "html",
-          why: translate("play.sort.files.renameButtonWhy"),
-          tempting: { bucketId: "js", whyNot: translate("play.sort.files.renameButtonNot") },
+          why: interfaceTranslator.t("play.sort.files.renameButtonWhy"),
+          tempting: {
+            bucketId: "js",
+            whyNot: interfaceTranslator.t("play.sort.files.renameButtonNot"),
+          },
         },
         {
           id: "darker-button",
-          label: translate("play.sort.files.darkerButton"),
-          detail: translate("play.sort.files.darkerButtonDetail"),
+          label: interfaceTranslator.t("play.sort.files.darkerButton"),
+          detail: interfaceTranslator.t("play.sort.files.darkerButtonDetail"),
           bucketId: "css",
-          why: translate("play.sort.files.darkerButtonWhy"),
-          tempting: { bucketId: "html", whyNot: translate("play.sort.files.darkerButtonNot") },
+          why: interfaceTranslator.t("play.sort.files.darkerButtonWhy"),
+          tempting: {
+            bucketId: "html",
+            whyNot: interfaceTranslator.t("play.sort.files.darkerButtonNot"),
+          },
         },
         {
           id: "wider-gap",
-          label: translate("play.sort.files.widerGap"),
-          detail: translate("play.sort.files.widerGapDetail"),
+          label: interfaceTranslator.t("play.sort.files.widerGap"),
+          detail: interfaceTranslator.t("play.sort.files.widerGapDetail"),
           bucketId: "css",
-          why: translate("play.sort.files.widerGapWhy"),
-          tempting: { bucketId: "html", whyNot: translate("play.sort.files.widerGapNot") },
+          why: interfaceTranslator.t("play.sort.files.widerGapWhy"),
+          tempting: {
+            bucketId: "html",
+            whyNot: interfaceTranslator.t("play.sort.files.widerGapNot"),
+          },
         },
         {
           id: "message-after-click",
-          label: translate("play.sort.files.messageAfterClick"),
-          detail: translate("play.sort.files.messageAfterClickDetail"),
+          label: interfaceTranslator.t("play.sort.files.messageAfterClick"),
+          detail: interfaceTranslator.t("play.sort.files.messageAfterClickDetail"),
           bucketId: "js",
-          why: translate("play.sort.files.messageAfterClickWhy"),
-          tempting: { bucketId: "html", whyNot: translate("play.sort.files.messageAfterClickNot") },
+          why: interfaceTranslator.t("play.sort.files.messageAfterClickWhy"),
+          tempting: {
+            bucketId: "html",
+            whyNot: interfaceTranslator.t("play.sort.files.messageAfterClickNot"),
+          },
         },
         {
           id: "disable-until-picked",
-          label: translate("play.sort.files.disableUntilPicked"),
-          detail: translate("play.sort.files.disableUntilPickedDetail"),
+          label: interfaceTranslator.t("play.sort.files.disableUntilPicked"),
+          detail: interfaceTranslator.t("play.sort.files.disableUntilPickedDetail"),
           bucketId: "js",
-          why: translate("play.sort.files.disableUntilPickedWhy"),
-          tempting: { bucketId: "css", whyNot: translate("play.sort.files.disableUntilPickedNot") },
+          why: interfaceTranslator.t("play.sort.files.disableUntilPickedWhy"),
+          tempting: {
+            bucketId: "css",
+            whyNot: interfaceTranslator.t("play.sort.files.disableUntilPickedNot"),
+          },
         },
       ],
     },
@@ -114,18 +132,18 @@ export function getSortExamples(): readonly SortActivity[] {
 export function getSortElsewhereBucket() {
   return {
     id: "elsewhere",
-    label: translate("play.sort.files.bucket.elsewhere"),
-    note: translate("play.sort.files.bucket.elsewhereNote"),
+    label: interfaceTranslator.t("play.sort.files.bucket.elsewhere"),
+    note: interfaceTranslator.t("play.sort.files.bucket.elsewhereNote"),
   };
 }
 
 export function getSortElsewhereItem() {
   return {
     id: "swap-the-model",
-    label: translate("play.sort.files.swapModel"),
-    detail: translate("play.sort.files.swapModelDetail"),
+    label: interfaceTranslator.t("play.sort.files.swapModel"),
+    detail: interfaceTranslator.t("play.sort.files.swapModelDetail"),
     bucketId: "elsewhere",
-    why: translate("play.sort.files.swapModelWhy"),
-    tempting: { bucketId: "js", whyNot: translate("play.sort.files.swapModelNot") },
+    why: interfaceTranslator.t("play.sort.files.swapModelWhy"),
+    tempting: { bucketId: "js", whyNot: interfaceTranslator.t("play.sort.files.swapModelNot") },
   } as const;
 }

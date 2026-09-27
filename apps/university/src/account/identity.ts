@@ -1,3 +1,4 @@
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 /** The shared browser SwimmerBackend/Auth assembly, kept at the old import path. */
 import { createUniversityBackend, type BrowserEnv } from "@pieai/university-backend/browser.js";
 
@@ -9,7 +10,10 @@ export {
 } from "@pieai/university-backend/browser.js";
 export type { BrowserEnv } from "@pieai/university-backend/browser.js";
 
-const backend = createUniversityBackend(import.meta.env as unknown as BrowserEnv);
+const backend = createUniversityBackend(
+  import.meta.env as unknown as BrowserEnv,
+  () => interfaceTranslator.locale,
+);
 
 export const swimmerBackendClient = backend.client;
 export const identityPort = backend.identityPort;

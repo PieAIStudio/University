@@ -13,7 +13,7 @@ import {
   type AgentRunPause,
   type AgentState,
 } from "@pieai/university-core";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
 import type { ActivityControls } from "./controls.js";
 import { AgentActionFiles } from "./AgentActionFiles.js";
@@ -29,6 +29,7 @@ export function AgentGame({
   guided = false,
   onAttempt,
 }: ActivityControls<AgentActivity>) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<AgentState>(() => createAgentState(activity));
   const stateRef = useRef(state);
   const [fileId, setFileId] = useState(activity.files[0]?.id ?? "");
@@ -106,7 +107,7 @@ export function AgentGame({
     function stopWhenHidden() {
       if (!document.hidden || !runner.current.active) return;
       stopRunning();
-      setFeedback(translate("play.ai.agent.play.backgroundStopped"));
+      setFeedback(interfaceTranslator.t("play.ai.agent.play.backgroundStopped"));
       setIsError(false);
     }
     document.addEventListener("visibilitychange", stopWhenHidden);
@@ -154,9 +155,12 @@ export function AgentGame({
     setNeedsScopeEdit(false);
     setBlockedToolId(null);
     setFeedback(
-      translate(guided ? "play.ai.agent.guide.scopeChanged" : "play.ai.agent.play.scopeChanged", {
-        tool: activity.tools.find((tool) => tool.id === toolId)?.label ?? toolId,
-      }),
+      interfaceTranslator.t(
+        guided ? "play.ai.agent.guide.scopeChanged" : "play.ai.agent.play.scopeChanged",
+        {
+          tool: activity.tools.find((tool) => tool.id === toolId)?.label ?? toolId,
+        },
+      ),
     );
   }
 
@@ -210,7 +214,7 @@ export function AgentGame({
     setIsError(damaged.length > 0);
     setFeedback(
       [
-        translate(
+        interfaceTranslator.t(
           outcome.entry.outcome === "executed"
             ? "play.ai.agent.play.stepExecuted"
             : "play.ai.agent.rejected",
@@ -219,9 +223,13 @@ export function AgentGame({
           },
         ),
         outcome.entry.blockedFileIds.length
-          ? translate("play.ai.agent.clipped", { paths: paths(outcome.entry.blockedFileIds) })
+          ? interfaceTranslator.t("play.ai.agent.clipped", {
+              paths: paths(outcome.entry.blockedFileIds),
+            })
           : "",
-        damaged.length ? translate("play.ai.agent.damaged", { paths: paths(damaged) }) : "",
+        damaged.length
+          ? interfaceTranslator.t("play.ai.agent.damaged", { paths: paths(damaged) })
+          : "",
       ]
         .filter(Boolean)
         .join(" "),
@@ -244,12 +252,12 @@ export function AgentGame({
       setNeedsScopeEdit(canAdjust);
       setFeedback(
         outcome.reason === "required-action"
-          ? translate(
+          ? interfaceTranslator.t(
               action.effects.length > 1
                 ? "play.ai.agent.play.requiredPause"
                 : "play.ai.agent.play.requiredPauseSimple",
             )
-          : translate(`play.ai.agent.error.${outcome.reason}`, {
+          : interfaceTranslator.t(`play.ai.agent.error.${outcome.reason}`, {
               tool:
                 activity.tools.find((tool) => tool.id === action.toolId)?.label ?? action.toolId,
             }),
@@ -282,8 +290,8 @@ export function AgentGame({
         reason === "workspace-damaged" ||
         reason === "scope-denied" ||
         reason === "round-ended"
-        ? translate(`play.ai.agent.play.pause.${reason}`, values)
-        : translate(`play.ai.agent.error.${reason}`, values),
+        ? interfaceTranslator.t(`play.ai.agent.play.pause.${reason}`, values)
+        : interfaceTranslator.t(`play.ai.agent.error.${reason}`),
     );
   }
 
@@ -294,7 +302,7 @@ export function AgentGame({
     }
     if (document.hidden) {
       stopRunning();
-      setFeedback(translate("play.ai.agent.play.backgroundStopped"));
+      setFeedback(interfaceTranslator.t("play.ai.agent.play.backgroundStopped"));
       return;
     }
     const outcome = advanceAgentRun(activity, stateRef.current);
@@ -327,7 +335,7 @@ export function AgentGame({
     setNeedsScopeEdit(false);
     setBlockedToolId(null);
     setIsError(false);
-    setFeedback(translate("play.ai.agent.restored"));
+    setFeedback(interfaceTranslator.t("play.ai.agent.restored"));
   }
 
   function check() {
@@ -338,16 +346,20 @@ export function AgentGame({
     const result = evaluateAgentWorkspace(activity, current);
     const problems = [
       result.changedProtectedFileIds.length
-        ? translate("play.ai.agent.damaged", { paths: paths(result.changedProtectedFileIds) })
+        ? interfaceTranslator.t("play.ai.agent.damaged", {
+            paths: paths(result.changedProtectedFileIds),
+          })
         : "",
       result.unmetGoalFileIds.length
-        ? translate("play.ai.agent.unmet", { paths: paths(result.unmetGoalFileIds) })
+        ? interfaceTranslator.t("play.ai.agent.unmet", { paths: paths(result.unmetGoalFileIds) })
         : "",
       result.missingActionIds.length
-        ? translate("play.ai.agent.unfinished", { count: result.missingActionIds.length })
+        ? interfaceTranslator.t("play.ai.agent.unfinished", {
+            count: result.missingActionIds.length,
+          })
         : "",
       result.broadToolIds.length
-        ? translate("play.ai.agent.broad", {
+        ? interfaceTranslator.t("play.ai.agent.broad", {
             tools: result.broadToolIds
               .map((id) => activity.tools.find((tool) => tool.id === id)!.label)
               .join(" · "),
@@ -355,7 +367,7 @@ export function AgentGame({
         : "",
     ].filter(Boolean);
     const message = result.passed
-      ? translate("play.ai.agent.difficulty.success", {
+      ? interfaceTranslator.t("play.ai.agent.difficulty.success", {
           outputs: activity.goals
             .map(
               (goal) =>
@@ -367,19 +379,19 @@ export function AgentGame({
             .map((file) => file.label)
             .join(" · "),
         })
-      : problems.join(" ") || translate("play.ai.agent.pending");
+      : problems.join(" ") || interfaceTranslator.t("play.ai.agent.pending");
     setIsError(!result.passed);
     setFeedback(message);
     if (result.passed) reported.current = true;
     const handoff = [
-      `${translate("play.ai.agent.handoff")} — ${activity.title}`,
+      `${interfaceTranslator.t("play.ai.agent.handoff")} — ${activity.title}`,
       activity.authorization,
-      translate("play.ai.agent.handoffTools"),
+      interfaceTranslator.t("play.ai.agent.handoffTools"),
       ...activity.tools.map(
         (tool) =>
-          `${tool.label}: ${paths(current.capabilities[tool.id] ?? []) || translate("play.ai.agent.grantOff")}`,
+          `${tool.label}: ${paths(current.capabilities[tool.id] ?? []) || interfaceTranslator.t("play.ai.agent.grantOff")}`,
       ),
-      translate("play.ai.agent.handoffFiles"),
+      interfaceTranslator.t("play.ai.agent.handoffFiles"),
       ...current.files
         .filter((file) => !file.protected)
         .map((file) => `${file.path}\n${file.content}`),
@@ -416,7 +428,7 @@ export function AgentGame({
               : () => advance("execute")
       }
     >
-      {translate(
+      {interfaceTranslator.t(
         guided && damaged
           ? "play.ai.agent.restore"
           : readConsent
@@ -460,10 +472,14 @@ export function AgentGame({
   return (
     <div className="play-ai-workflow play-ai-agent" data-guided={guided}>
       {!guided ? (
-        <p className="play-ai-workflow__intro">{translate("play.ai.agent.play.intro")}</p>
+        <p className="play-ai-workflow__intro">
+          {interfaceTranslator.t("play.ai.agent.play.intro")}
+        </p>
       ) : null}
       <details className="play-ai-workflow__brief play-agent-authorization" open={!guided}>
-        <summary>{guided ? activity.goal : translate("play.ai.agent.authorization")}</summary>
+        <summary>
+          {guided ? activity.goal : interfaceTranslator.t("play.ai.agent.authorization")}
+        </summary>
         <p>{activity.authorization}</p>
       </details>
       {!guided ? toolbox : null}
@@ -472,18 +488,21 @@ export function AgentGame({
           <header>
             <h4 ref={actionHeading} tabIndex={-1}>
               {guided
-                ? (currentAction?.title ?? translate("play.ai.agent.check"))
-                : translate("play.ai.agent.action")}
+                ? (currentAction?.title ?? interfaceTranslator.t("play.ai.agent.check"))
+                : interfaceTranslator.t("play.ai.agent.action")}
             </h4>
             <span>
-              {translate("play.ai.agent.step", {
+              {interfaceTranslator.t("play.ai.agent.step", {
                 current: Math.min(state.cursor + 1, activity.actions.length),
                 total: activity.actions.length,
               })}
             </span>
           </header>
           {!guided ? (
-            <ol className="play-ai-agent__track" aria-label={translate("play.ai.agent.action")}>
+            <ol
+              className="play-ai-agent__track"
+              aria-label={interfaceTranslator.t("play.ai.agent.action")}
+            >
               {activity.actions.map((action, index) => (
                 <li
                   key={action.id}
@@ -501,12 +520,12 @@ export function AgentGame({
               className="play-agent-prompt"
               data-risk={damaged || !!inspection?.changedProtectedFileIds.length}
             >
-              {translate(guideTitle)}
+              {interfaceTranslator.t(guideTitle)}
             </p>
           ) : null}
           {readConsent && inspection ? (
             <div className="play-agent-read-start">
-              <ul aria-label={translate("play.ai.agent.inputs")}>
+              <ul aria-label={interfaceTranslator.t("play.ai.agent.inputs")}>
                 {inspection.targets
                   .filter((target) => target.required && target.reads)
                   .map((target) => {
@@ -530,7 +549,7 @@ export function AgentGame({
                     className="play-ai-agent__authority"
                     data-document={currentAction.authority === "document"}
                   >
-                    {translate(
+                    {interfaceTranslator.t(
                       currentAction.authority === "document"
                         ? "play.ai.agent.authorityDocument"
                         : "play.ai.agent.authorityUser",
@@ -545,7 +564,7 @@ export function AgentGame({
               ) : null}
               <PrimaryFilesFrame className="play-agent-files-frame" data-read-consent={readConsent}>
                 {readConsent ? (
-                  <summary>{translate("play.ai.agent.guide.readDetails")}</summary>
+                  <summary>{interfaceTranslator.t("play.ai.agent.guide.readDetails")}</summary>
                 ) : null}
                 {inspection && currentTool ? (
                   <AgentActionFiles
@@ -570,7 +589,7 @@ export function AgentGame({
               </PrimaryFilesFrame>
             </>
           ) : (
-            <p>{translate("play.ai.agent.roundEnd")}</p>
+            <p>{interfaceTranslator.t("play.ai.agent.roundEnd")}</p>
           )}
           {lastEntry?.outcome === "executed" && lastFile ? (
             <aside
@@ -580,29 +599,31 @@ export function AgentGame({
             >
               <header>
                 <strong>
-                  {translate(
+                  {interfaceTranslator.t(
                     guided ? "play.ai.agent.guide.result" : "play.ai.agent.play.resultTitle",
                   )}
                 </strong>
                 <code>{lastFile.path}</code>
               </header>
-              <pre tabIndex={0}>{lastFile.content || translate("play.ai.agent.fileEmpty")}</pre>
+              <pre tabIndex={0}>
+                {lastFile.content || interfaceTranslator.t("play.ai.agent.fileEmpty")}
+              </pre>
               {!guided && lastEntry.changedFileIds.length ? (
                 <p>
-                  {translate("play.ai.agent.play.resultChanged", {
+                  {interfaceTranslator.t("play.ai.agent.play.resultChanged", {
                     paths: paths(lastEntry.changedFileIds),
                   })}
                 </p>
               ) : !guided ? (
                 <p>
-                  {translate("play.ai.agent.play.resultRead", {
+                  {interfaceTranslator.t("play.ai.agent.play.resultRead", {
                     paths: paths(lastEntry.readFileIds),
                   })}
                 </p>
               ) : null}
               {lastEntry.blockedFileIds.length ? (
                 <p>
-                  {translate("play.ai.agent.play.resultBlocked", {
+                  {interfaceTranslator.t("play.ai.agent.play.resultBlocked", {
                     paths: paths(lastEntry.blockedFileIds),
                   })}
                 </p>
@@ -612,14 +633,14 @@ export function AgentGame({
           <div ref={driveRef} className="play-ai-agent__drive">
             {guided && lastEntry && currentAction ? (
               <strong className="play-agent-next">
-                {translate("play.ai.agent.guide.next", { title: currentAction.title })}
+                {interfaceTranslator.t("play.ai.agent.guide.next", { title: currentAction.title })}
               </strong>
             ) : null}
             {currentAction ? (
               <>
                 {!guided || running ? (
                   <p className="play-ai-agent__run-note">
-                    {translate(
+                    {interfaceTranslator.t(
                       running ? "play.ai.agent.play.running" : "play.ai.agent.play.runHelp",
                     )}
                   </p>
@@ -632,11 +653,11 @@ export function AgentGame({
                       onClick={() => {
                         stopRunning();
                         playSound("ui.press");
-                        setFeedback(translate("play.ai.agent.play.stopped"));
+                        setFeedback(interfaceTranslator.t("play.ai.agent.play.stopped"));
                         setIsError(false);
                       }}
                     >
-                      {translate("play.ai.agent.play.stop")}
+                      {interfaceTranslator.t("play.ai.agent.play.stop")}
                     </GameButton>
                   ) : !guided ? (
                     <GameButton
@@ -645,7 +666,7 @@ export function AgentGame({
                       disabled={disabled}
                       onClick={startRun}
                     >
-                      {translate("play.ai.agent.play.run")}
+                      {interfaceTranslator.t("play.ai.agent.play.run")}
                     </GameButton>
                   ) : null}
                   {!readConsent ? primaryAction : null}
@@ -656,7 +677,7 @@ export function AgentGame({
                       disabled={disabled}
                       onClick={() => advance("reject")}
                     >
-                      {translate("play.ai.agent.reject")}
+                      {interfaceTranslator.t("play.ai.agent.reject")}
                     </GameButton>
                   ) : null}
                 </div>
@@ -675,7 +696,7 @@ export function AgentGame({
                       : check
                 }
               >
-                {translate(
+                {interfaceTranslator.t(
                   damaged
                     ? "play.ai.agent.restore"
                     : evaluation.broadToolIds.length
@@ -699,12 +720,12 @@ export function AgentGame({
                 disabled={disabled}
                 onClick={focusScope}
               >
-                {translate("play.ai.agent.play.adjustHere")}
+                {interfaceTranslator.t("play.ai.agent.play.adjustHere")}
               </GameButton>
             ) : null}
             {blockedToolId && !guided ? (
               <GameButton variant="ghost" sound={false} onClick={() => openTools(blockedToolId)}>
-                {translate("play.ai.agent.adjustTool", {
+                {interfaceTranslator.t("play.ai.agent.adjustTool", {
                   tool:
                     activity.tools.find((tool) => tool.id === blockedToolId)?.label ??
                     blockedToolId,
@@ -713,9 +734,9 @@ export function AgentGame({
             ) : null}
             {guided && currentAction ? (
               <details className="play-agent-more">
-                <summary>{translate("play.ai.agent.guide.more")}</summary>
+                <summary>{interfaceTranslator.t("play.ai.agent.guide.more")}</summary>
                 <p className="play-ai-agent__run-note">
-                  {translate("play.ai.agent.guide.runHelp")}
+                  {interfaceTranslator.t("play.ai.agent.guide.runHelp")}
                 </p>
                 <div className="play-action-row">
                   {!running ? (
@@ -725,7 +746,7 @@ export function AgentGame({
                       disabled={disabled}
                       onClick={startRun}
                     >
-                      {translate("play.ai.agent.play.run")}
+                      {interfaceTranslator.t("play.ai.agent.play.run")}
                     </GameButton>
                   ) : null}
                   {readConsent ? (
@@ -735,7 +756,7 @@ export function AgentGame({
                       disabled={disabled}
                       onClick={() => advance("reject")}
                     >
-                      {translate("play.ai.agent.reject")}
+                      {interfaceTranslator.t("play.ai.agent.reject")}
                     </GameButton>
                   ) : null}
                 </div>
@@ -752,23 +773,27 @@ export function AgentGame({
             open={toolsOpen}
             onToggle={(event) => setToolsOpen(event.currentTarget.open)}
           >
-            <summary>{translate("play.ai.agent.guide.tools")}</summary>
+            <summary>{interfaceTranslator.t("play.ai.agent.guide.tools")}</summary>
             {toolbox}
           </details>
           <details className="play-agent-workspace">
-            <summary>{translate("play.ai.agent.guide.workspace")}</summary>
+            <summary>{interfaceTranslator.t("play.ai.agent.guide.workspace")}</summary>
             {workspace}
           </details>
         </>
       ) : null}
       <details className="play-agent-recovery" open={!guided}>
         <summary>
-          {translate("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}
+          {interfaceTranslator.t("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}
         </summary>
         <section className="play-ai-agent__recovery">
           <div>
-            <h4>{translate("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}</h4>
-            <p>{translate("play.ai.agent.checkpointNote")}</p>
+            <h4>
+              {interfaceTranslator.t("play.ai.agent.checkpoint", {
+                count: state.checkpoint.cursor,
+              })}
+            </h4>
+            <p>{interfaceTranslator.t("play.ai.agent.checkpointNote")}</p>
           </div>
           <GameButton
             variant="secondary"
@@ -776,47 +801,55 @@ export function AgentGame({
             disabled={disabled || !canRestore}
             onClick={restore}
           >
-            {translate("play.ai.agent.restore")}
+            {interfaceTranslator.t("play.ai.agent.restore")}
           </GameButton>
         </section>
       </details>
       {!guided ? (
         <GameButton variant="primary" sound={false} disabled={disabled} onClick={check}>
-          {translate("play.ai.agent.check")}
+          {interfaceTranslator.t("play.ai.agent.check")}
         </GameButton>
       ) : null}
       <details className="play-ai-workflow__history">
-        <summary>{translate("play.ai.agent.log")}</summary>
+        <summary>{interfaceTranslator.t("play.ai.agent.log")}</summary>
         {state.log.length ? (
           <ol>
             {state.log.map((entry, index) => (
               <li key={`${entry.actionId}-${index}`}>
                 <strong>
                   {entry.outcome === "restored"
-                    ? translate("play.ai.agent.logRestored")
+                    ? interfaceTranslator.t("play.ai.agent.logRestored")
                     : activity.actions.find((action) => action.id === entry.actionId)?.title}
                 </strong>
                 {entry.outcome === "rejected" ? (
-                  <p>{translate("play.ai.agent.logRejected")}</p>
+                  <p>{interfaceTranslator.t("play.ai.agent.logRejected")}</p>
                 ) : null}
                 {entry.readFileIds.length ? (
-                  <p>{translate("play.ai.agent.logRead", { paths: paths(entry.readFileIds) })}</p>
+                  <p>
+                    {interfaceTranslator.t("play.ai.agent.logRead", {
+                      paths: paths(entry.readFileIds),
+                    })}
+                  </p>
                 ) : null}
                 {entry.changedFileIds.length ? (
                   <p>
-                    {translate("play.ai.agent.logChanged", { paths: paths(entry.changedFileIds) })}
+                    {interfaceTranslator.t("play.ai.agent.logChanged", {
+                      paths: paths(entry.changedFileIds),
+                    })}
                   </p>
                 ) : null}
                 {entry.blockedFileIds.length ? (
                   <p>
-                    {translate("play.ai.agent.logBlocked", { paths: paths(entry.blockedFileIds) })}
+                    {interfaceTranslator.t("play.ai.agent.logBlocked", {
+                      paths: paths(entry.blockedFileIds),
+                    })}
                   </p>
                 ) : null}
               </li>
             ))}
           </ol>
         ) : (
-          <p>{translate("play.ai.agent.logEmpty")}</p>
+          <p>{interfaceTranslator.t("play.ai.agent.logEmpty")}</p>
         )}
       </details>
     </div>

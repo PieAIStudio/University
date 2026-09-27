@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 import type { ReactNode } from "react";
 
@@ -34,8 +34,8 @@ export interface TodaySectionData {
  */
 export function todayCtaLabel(progress: LessonProgress | null | undefined): string {
   return progress
-    ? translate("ui.today.todaySection.copy.继续学习")
-    : translate("ui.today.todaySection.copy.开始学习");
+    ? interfaceTranslator.t("ui.today.todaySection.copy.继续学习")
+    : interfaceTranslator.t("ui.today.todaySection.copy.开始学习");
 }
 
 export function todayMeta(
@@ -43,7 +43,7 @@ export function todayMeta(
   progress: { readonly done: number; readonly total: number } | null,
 ): string {
   if (progress == null || progress.done === 0) return studyTitle;
-  return translate("ui.today.todaySection.copy.value0-还剩-value1-关", {
+  return interfaceTranslator.t("ui.today.todaySection.copy.value0-还剩-value1-关", {
     value0: studyTitle,
     value1: Math.max(0, progress.total - progress.done),
   });
@@ -51,9 +51,13 @@ export function todayMeta(
 
 export function reviewLine(dueCount: number, dueTomorrow: number): string | null {
   if (dueCount > 0)
-    return translate("ui.today.todaySection.copy.复习-value0-张到期", { value0: dueCount });
+    return interfaceTranslator.t("ui.today.todaySection.copy.复习-value0-张到期", {
+      value0: dueCount,
+    });
   if (dueTomorrow > 0)
-    return translate("ui.today.todaySection.copy.复习-明天-value0-张", { value0: dueTomorrow });
+    return interfaceTranslator.t("ui.today.todaySection.copy.复习-明天-value0-张", {
+      value0: dueTomorrow,
+    });
   return null;
 }
 
@@ -80,6 +84,7 @@ export function TodaySection({
   readonly readEntitlements?: EntitlementReader;
   readonly vocabularyReview?: VocabularyReviewPort;
 }) {
+  const interfaceTranslator = useI18n();
   const card = data.card;
   const next = data.nextLesson;
   return (
@@ -87,8 +92,8 @@ export function TodaySection({
       <section className="today-hero">
         <p className="eyebrow">
           {next
-            ? translate("ui.today.todaySection.copy.今天的第一件事")
-            : translate("ui.today.todaySection.copy.今天-从回忆开始")}
+            ? interfaceTranslator.t("ui.today.todaySection.copy.今天的第一件事")
+            : interfaceTranslator.t("ui.today.todaySection.copy.今天-从回忆开始")}
         </p>
         {next ? (
           <>
@@ -111,10 +116,10 @@ export function TodaySection({
             </div>
           </>
         ) : (
-          <h2>{translate("ui.today.todaySection.copy.课程这边暂时没有待办")}</h2>
+          <h2>{interfaceTranslator.t("ui.today.todaySection.copy.课程这边暂时没有待办")}</h2>
         )}
         <p className="today-hero__note">
-          {translate(
+          {interfaceTranslator.t(
             "ui.today.todaySection.copy.课程负责建立理解-卡片只负责把重要知识留在长期记忆里",
           )}
         </p>
@@ -142,13 +147,13 @@ export function TodaySection({
         <div className="today-metric">
           <span>{data.dueCount}</span>
           <Tip term="due-cards" as="div">
-            <p>{translate("ui.today.todaySection.copy.今天到期的复习卡片")}</p>
+            <p>{interfaceTranslator.t("ui.today.todaySection.copy.今天到期的复习卡片")}</p>
           </Tip>
         </div>
       ) : null}
       {data.issues.length > 0 ? (
         <GameCallout
-          heading={translate("ui.today.todaySection.copy.有学习数据暂时无法使用")}
+          heading={interfaceTranslator.t("ui.today.todaySection.copy.有学习数据暂时无法使用")}
           tone="warning"
         >
           {data.issues.join("；")}

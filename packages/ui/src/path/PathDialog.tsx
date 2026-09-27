@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { arrow, autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -56,6 +56,7 @@ export function PathDialog({
   readonly centered?: boolean;
   readonly children: ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const headingId = useId();
   const layerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -180,8 +181,8 @@ export function PathDialog({
           <button
             type="button"
             className="path-card__close"
-            aria-label={translate("ui.path.pathDialog.copy.关闭")}
-            title={translate("ui.path.pathDialog.copy.关闭-也可按-Esc")}
+            aria-label={interfaceTranslator.t("ui.path.pathDialog.copy.关闭")}
+            title={interfaceTranslator.t("ui.path.pathDialog.copy.关闭-也可按-Esc")}
             onClick={onClose}
           >
             ×

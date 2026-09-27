@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { setActiveLocale } from "@pieai/university-ui/i18n.js";
+import { setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 
 import { compileAnswerKey, createProgressPort, mistakesOf } from "@pieai/university-core";
 
@@ -109,9 +109,9 @@ beforeAll(async () => {
 });
 
 describe("createOnlineGradingPort", () => {
-  afterEach(() => setActiveLocale("zh-CN"));
+  afterEach(() => setInterfaceLocale("zh-CN"));
   it("localizes deterministic feedback without translating the learner's answer or making a model call", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const fetchImpl = vi.fn(async () => {
       throw new Error("No model call expected");
     });
@@ -227,6 +227,7 @@ describe("createOnlineGradingPort", () => {
       expect(init?.headers).toEqual({
         Authorization: "Bearer learner-access-token",
         "Content-Type": "application/json",
+        "Accept-Language": "zh-CN",
       });
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
       expect(body).toMatchObject({
@@ -331,7 +332,10 @@ describe("createOnlineGradingPort", () => {
   it("reads a free daily offer from the server without submitting an answer", async () => {
     const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       expect(init?.method).toBe("GET");
-      expect(init?.headers).toEqual({ Authorization: "Bearer learner-access-token" });
+      expect(init?.headers).toEqual({
+        Authorization: "Bearer learner-access-token",
+        "Accept-Language": "zh-CN",
+      });
       return new Response(
         JSON.stringify({
           kind: "free",

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { ReactNode } from "react";
 import { GameBadge, GameEmptyState, GameField, GameInput, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -68,6 +68,7 @@ export function CollectionIndex({
   readonly onOpenHit: (id: string, trigger: HTMLElement) => void;
   readonly children?: ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const visibleTotal = groups.reduce((sum, group) => sum + group.count, 0);
 
   let body;
@@ -129,7 +130,7 @@ export function CollectionIndex({
       <div
         className="term-index__chips"
         role="radiogroup"
-        aria-label={translate("ui.reference.collectionIndex.copy.按类别筛选")}
+        aria-label={interfaceTranslator.t("ui.reference.collectionIndex.copy.按类别筛选")}
       >
         {chips.map((chip) => (
           <button

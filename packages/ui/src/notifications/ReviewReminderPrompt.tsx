@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useState, useSyncExternalStore } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ReviewReminderPort } from "@pieai/university-core";
@@ -34,6 +34,7 @@ export function ReviewReminderPrompt({
   readonly onDismiss?: () => void;
   readonly reminders: ReviewReminderPort;
 }) {
+  const interfaceTranslator = useI18n();
   const status = useSyncExternalStore(reminders.subscribe, reminders.snapshot, reminders.snapshot);
   const [dismissedEvent, setDismissedEvent] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -59,14 +60,14 @@ export function ReviewReminderPrompt({
   return (
     <GamePanel className="review-reminder-prompt" tone="strong">
       <p className="review-reminder-prompt__eyebrow">
-        {translate("ui.notifications.reviewReminderPrompt.copy.明天的复习")}
+        {interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.明天的复习")}
       </p>
       <h2>
-        {translate("ui.notifications.reviewReminderPrompt.copy.明天有")} {dueTomorrow}{" "}
-        {translate("ui.notifications.reviewReminderPrompt.copy.张复习卡回来")}
+        {interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.明天有")} {dueTomorrow}{" "}
+        {interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.张复习卡回来")}
       </h2>
       <p>
-        {translate(
+        {interfaceTranslator.t(
           "ui.notifications.reviewReminderPrompt.copy.要我提醒你吗-每天最多一条-有卡才提醒-随时可以在设置里关掉",
         )}
       </p>
@@ -84,7 +85,7 @@ export function ReviewReminderPrompt({
                 setError(
                   reason instanceof Error
                     ? reason.message
-                    : translate(
+                    : interfaceTranslator.t(
                         "ui.notifications.reviewReminderPrompt.copy.提醒没有开启-请稍后重试",
                       ),
                 );
@@ -93,8 +94,8 @@ export function ReviewReminderPrompt({
           }}
         >
           {pending
-            ? translate("ui.notifications.reviewReminderPrompt.copy.正在开启")
-            : translate("ui.notifications.reviewReminderPrompt.copy.好")}
+            ? interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.正在开启")
+            : interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.好")}
         </GameButton>
         <GameButton
           variant="secondary"
@@ -105,7 +106,7 @@ export function ReviewReminderPrompt({
             onDismiss?.();
           }}
         >
-          {translate("ui.notifications.reviewReminderPrompt.copy.以后再说")}
+          {interfaceTranslator.t("ui.notifications.reviewReminderPrompt.copy.以后再说")}
         </GameButton>
       </div>
       {(error ?? statusError) ? (

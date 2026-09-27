@@ -1,3 +1,4 @@
+import { paymentExplanations } from "../i18n/payment.js";
 /**
  * The browser-facing payment contract.
  *
@@ -119,6 +120,8 @@ export interface PaymentPort {
 }
 
 export interface CreatePaymentPortOptions {
+  /** Host selection, read when returning a user-facing explanation. */
+  readonly locale?: () => string;
   readonly identity: IdentityPort;
   readonly transport: PaymentTransport | null;
   readonly billingConfig?: BillingConfig;
@@ -134,90 +137,6 @@ interface PurchaseIntent {
   readonly offerId: string;
   readonly billingCycle: BillingCycle;
 }
-
-const INTENT_UNAVAILABLE: PaymentExplanation = {
-  kind: "explanation",
-  title: "先确认上一次购买",
-  whatItDoes: "保留同一个订单号，避免刷新或断网后重复购买。",
-  whyUnavailable: "上次订单还没有确认，或这台设备暂时无法保存订单号。本次没有发起新的购买。",
-  futureSupport: "请先查询已有订单。若本机存储不可用，恢复后重试；不要重复付款。",
-};
-
-const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "支付入口尚未开放",
-  whatItDoes: "购买成功后，会员权益会绑定到你现在登录的账号；账号是订单、钱包和权益的归属。",
-  whyUnavailable:
-    "当前还没有可用的 University 订单服务。现在点击不会扣款、不会创建订单，也不会改变你的权益。",
-  futureSupport:
-    "购买、账单查询和取消续费一起准备好后才会开售。在此之前可以继续免费学课；本机保存和云端同步会分别说明。",
-  action: { label: "继续学习", href: "#/" },
-};
-
-const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "先登录再继续",
-  whatItDoes: "订单、钱包和购买后的权益都属于账号；登录后才能把这次操作和同一份记录对应起来。",
-  whyUnavailable: "当前没有登录账号，所以不会创建订单或读取钱包；本地学习不会因此被挡住。",
-  futureSupport: "登录后，这个入口仍会先明确告诉你支付服务是否可用；浏览器不会直接扣款。",
-  /*
-    Without this the buyer is told to log in and handed no way to do it: the
-    anonymous case next door already carries its action, and this one is the
-    same dead end one step earlier.
-  */
-  action: { label: "去登录", href: "#/me" },
-};
-
-const ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "先绑定邮箱再购买",
-  whatItDoes: "绑定邮箱会把当前匿名会话变成可重新登录的账号；以后订单和权益才能归到同一身份。",
-  whyUnavailable:
-    "当前是匿名会话，没有可重新登录的邮箱。现在不会创建订单；学习进度仍可继续保存在当前会话里。",
-  futureSupport: "去个人档案绑定邮箱，保留当前身份和进度；付费页不会再收集一遍邮箱。",
-  action: { label: "去绑定邮箱", href: "#/me" },
-};
-
-const BALANCE_UNAVAILABLE_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "钱包余额暂时读不到",
-  whatItDoes: "它只读取服务端的钱包余额，不会在浏览器里改变钱包余额。",
-  whyUnavailable: "当前环境没有可用的钱包读取服务；这不代表余额是 0，也不会用猜出来的数字代替它。",
-  futureSupport: "连接到 SwimmerBackend 并登录后，这里会读取服务端返回的余额。",
-};
-
-const ENTITLEMENT_UNAVAILABLE_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "权益暂时读不到",
-  whatItDoes: "它读取账号当前由服务端授予的权益，购买完成后也靠这份记录更新页面。",
-  whyUnavailable: "服务端权益读取暂时没有返回，页面不会把待确认的付费档位当成已经拥有。",
-  futureSupport: "订单结算完成后，服务端会返回最新权益；这里会在购买成功时重新读取。",
-};
-
-const ORDER_STATUS_UNAVAILABLE_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "订单查询还没接好",
-  whatItDoes: "它向服务端查询同一个订单号的状态，不在浏览器猜付款是否成功。",
-  whyUnavailable: "当前还没有发布给 University 的订单查询接口。",
-  futureSupport:
-    "订单表和服务端查询接口上线后，这里会显示等待、成功、失败或取消，并在成功后刷新权益。",
-};
-
-const INVALID_ORDER_EXPLANATION: PaymentExplanation = {
-  kind: "explanation",
-  title: "这个订单号不能查询",
-  whatItDoes: "订单号用来把一次付款和账号里的订单记录对应起来。",
-  whyUnavailable: "页面没有收到有效的订单号，所以不会发出一条含糊的查询。",
-  futureSupport: "重新从购买入口发起一次请求，浏览器会生成新的订单号。",
-};
-
-const MANAGEMENT_UNAVAILABLE: PaymentExplanation = {
-  kind: "explanation",
-  title: "订阅管理暂时无法打开",
-  whatItDoes: "查看账单和管理续费；停止下次续费不等于立即退款。",
-  whyUnavailable: "还没有取得可用的订阅管理页面。这次没有取消或更改任何订阅。",
-  futureSupport: "请稍后重试。只有真实订阅管理和订单服务同时就绪，产品才会开放购买。",
-};
 
 /** Redirects come from the authenticated backend, never from URL query input. */
 export function safePaymentUrl(value: string): boolean {
@@ -292,10 +211,11 @@ function validateOrder(
   }
 }
 
-function accountRequiredExplanation(status: IdentityStatus): PaymentExplanation {
+function accountRequiredExplanation(status: IdentityStatus, locale?: string): PaymentExplanation {
+  const explanations = () => paymentExplanations(locale);
   return status.kind === "anonymous"
-    ? ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION
-    : ACCOUNT_REQUIRED_EXPLANATION;
+    ? explanations().ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION
+    : explanations().ACCOUNT_REQUIRED_EXPLANATION;
 }
 
 /**
@@ -307,6 +227,7 @@ function accountRequiredExplanation(status: IdentityStatus): PaymentExplanation 
  * browser can be reloaded and cannot be the final authority.
  */
 export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPort {
+  const explanations = () => paymentExplanations(options.locale?.());
   const requests = new Map<
     string,
     {
@@ -365,14 +286,15 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
   const readEntitlementResult = async (): Promise<PaymentResult<EntitlementReadModel>> => {
     const status = options.identity.status();
-    if (status.kind === "anonymous") return ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION;
+    if (status.kind === "anonymous") return explanations().ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION;
     let grant: EntitlementGrant | null | undefined;
     if (status.kind === "signed_in" && options.transport?.readEntitlement) {
       try {
         grant = await options.transport.readEntitlement(status.user.id);
-        if (userIdOf() !== status.user.id) return ENTITLEMENT_UNAVAILABLE_EXPLANATION;
+        if (userIdOf() !== status.user.id)
+          return explanations().ENTITLEMENT_UNAVAILABLE_EXPLANATION;
       } catch {
-        return ENTITLEMENT_UNAVAILABLE_EXPLANATION;
+        return explanations().ENTITLEMENT_UNAVAILABLE_EXPLANATION;
       }
     }
 
@@ -408,27 +330,27 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     async readBalance() {
       const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return accountRequiredExplanation(status);
+      if (!userId) return accountRequiredExplanation(status, options.locale?.());
       const readBalance = options.transport?.readBalance;
-      if (!readBalance) return BALANCE_UNAVAILABLE_EXPLANATION;
+      if (!readBalance) return explanations().BALANCE_UNAVAILABLE_EXPLANATION;
       try {
         const value = await readBalance(userId);
-        if (userIdOf() !== userId) return BALANCE_UNAVAILABLE_EXPLANATION;
+        if (userIdOf() !== userId) return explanations().BALANCE_UNAVAILABLE_EXPLANATION;
         return { kind: "value", value };
       } catch {
-        return BALANCE_UNAVAILABLE_EXPLANATION;
+        return explanations().BALANCE_UNAVAILABLE_EXPLANATION;
       }
     },
 
     readEntitlements: readEntitlementResult,
 
     async initiatePurchase(input) {
-      if (!completeChannel()) return DEFAULT_NO_CHANNEL_EXPLANATION;
+      if (!completeChannel()) return explanations().DEFAULT_NO_CHANNEL_EXPLANATION;
       const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return accountRequiredExplanation(status);
+      if (!userId) return accountRequiredExplanation(status, options.locale?.());
       const createOrder = options.transport?.createOrder;
-      if (!createOrder) return DEFAULT_NO_CHANNEL_EXPLANATION;
+      if (!createOrder) return explanations().DEFAULT_NO_CHANNEL_EXPLANATION;
 
       const offerId = input.offerId.trim();
       if (!offerId) throw new Error("Payment offerId must not be empty");
@@ -439,7 +361,7 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
       try {
         previous = loadIntent(userId);
       } catch {
-        return INTENT_UNAVAILABLE;
+        return explanations().INTENT_UNAVAILABLE;
       }
       if (
         previous &&
@@ -447,13 +369,13 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
           previous.billingCycle !== billingCycle ||
           (input.orderId && input.orderId.trim() !== previous.orderId))
       )
-        return INTENT_UNAVAILABLE;
+        return explanations().INTENT_UNAVAILABLE;
       const orderId = previous?.orderId || input.orderId?.trim() || options.orderIdFactory?.();
       if (!orderId) throw new Error("Payment orderId must not be empty");
       try {
         saveIntent(userId, { orderId, offerId, billingCycle });
       } catch {
-        return INTENT_UNAVAILABLE;
+        return explanations().INTENT_UNAVAILABLE;
       }
 
       const requestKey = requestKeyOf(userId, orderId);
@@ -467,7 +389,8 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
       const result = (async (): Promise<PaymentResult<PaymentOrder>> => {
         const order = await createOrder({ userId, orderId, offerId, billingCycle });
-        if (userIdOf() !== userId) return accountRequiredExplanation(options.identity.status());
+        if (userIdOf() !== userId)
+          return accountRequiredExplanation(options.identity.status(), options.locale?.());
         if (order.orderId !== orderId || order.offerId !== offerId) {
           throw new Error("Payment backend returned an order for a different request");
         }
@@ -488,15 +411,16 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
     async getOrderStatus(orderId) {
       const normalizedOrderId = orderId.trim();
-      if (!normalizedOrderId) return INVALID_ORDER_EXPLANATION;
+      if (!normalizedOrderId) return explanations().INVALID_ORDER_EXPLANATION;
       const status = options.identity.status();
       const userId = userIdOf();
-      if (!userId) return accountRequiredExplanation(status);
+      if (!userId) return accountRequiredExplanation(status, options.locale?.());
       const getOrderStatus = options.transport?.getOrderStatus;
-      if (!getOrderStatus) return ORDER_STATUS_UNAVAILABLE_EXPLANATION;
+      if (!getOrderStatus) return explanations().ORDER_STATUS_UNAVAILABLE_EXPLANATION;
       try {
         const order = await getOrderStatus({ userId, orderId: normalizedOrderId });
-        if (userIdOf() !== userId) return accountRequiredExplanation(options.identity.status());
+        if (userIdOf() !== userId)
+          return accountRequiredExplanation(options.identity.status(), options.locale?.());
         if (order.orderId !== normalizedOrderId) {
           throw new Error("Payment backend returned an order for a different request");
         }
@@ -515,7 +439,7 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
         }
         return { kind: "value", value: order };
       } catch {
-        return ORDER_STATUS_UNAVAILABLE_EXPLANATION;
+        return explanations().ORDER_STATUS_UNAVAILABLE_EXPLANATION;
       }
     },
 
@@ -527,26 +451,27 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
         const intent = loadIntent(userId);
         return intent ? await this.getOrderStatus(intent.orderId) : null;
       } catch {
-        return INTENT_UNAVAILABLE;
+        return explanations().INTENT_UNAVAILABLE;
       }
     },
     async manageSubscription() {
       const userId = userIdOf();
-      if (!userId) return accountRequiredExplanation(options.identity.status());
+      if (!userId) return accountRequiredExplanation(options.identity.status(), options.locale?.());
       const open = options.transport?.createSubscriptionPortal;
-      if (!open) return MANAGEMENT_UNAVAILABLE;
+      if (!open) return explanations().MANAGEMENT_UNAVAILABLE;
       try {
         const url = await open(userId);
-        if (userIdOf() !== userId || !safePaymentUrl(url)) return MANAGEMENT_UNAVAILABLE;
+        if (userIdOf() !== userId || !safePaymentUrl(url))
+          return explanations().MANAGEMENT_UNAVAILABLE;
         return { kind: "value", value: { url } };
       } catch {
-        return MANAGEMENT_UNAVAILABLE;
+        return explanations().MANAGEMENT_UNAVAILABLE;
       }
     },
   };
 }
 
 /** Stable fallback for callers that render the shared screen without a backend assembly. */
-export function createUnavailablePaymentPort(): PaymentPort {
-  return createPaymentPort({ identity: createIdentityPort(null), transport: null });
+export function createUnavailablePaymentPort(locale?: () => string): PaymentPort {
+  return createPaymentPort({ identity: createIdentityPort(null), transport: null, locale });
 }

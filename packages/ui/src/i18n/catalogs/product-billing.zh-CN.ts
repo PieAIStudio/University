@@ -3,7 +3,7 @@ export const messages = {
   "product.billing.upgrade": "升级会员",
   "product.billing.currentMember": "✓ 你已是会员",
   "product.billing.freeIncluded": "免费课程也包含在内",
-  "product.billing.saving": "年付省 {{percent}}%",
+  "product.billing.saving": "年付省 {percent}%",
   "product.billing.yearlyShort": "每年一次付清 · 美元计价",
   "product.billing.monthlyShort": "按月计费 · 美元计价",
   "product.billing.walletShort": "AI 批改按次另计",
@@ -29,7 +29,7 @@ export const messages = {
   "product.billing.total": "本次合计",
   "product.billing.pending": "先确认这笔订单的结果，再开始另一笔。",
   "product.billing.readFailed": "这次没有读到账户信息。请稍后重试；不会把暂时读不到的余额当成零。",
-  "product.billing.period": "按{{cycle}}计费",
+  "product.billing.period": "按{cycle}计费",
   "product.reminders.unavailable":
     "提醒服务还未就绪，现在不会申请通知权限。你仍可以在“练习”里查看到期复习。",
 } as const;

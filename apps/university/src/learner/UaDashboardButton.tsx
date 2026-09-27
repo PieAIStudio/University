@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessExplanation, SourceAccessPort } from "@pieai/university-core";
@@ -20,6 +20,7 @@ export function UaDashboardButton({
   readonly studyId: string;
   readonly sourceAccess: SourceAccessPort;
 }) {
+  const interfaceTranslator = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
@@ -38,7 +39,7 @@ export function UaDashboardButton({
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("app.learner.uaDashboardButton.copy.项目地图暂时打不开"),
+          : interfaceTranslator.t("app.learner.uaDashboardButton.copy.项目地图暂时打不开"),
       );
     } finally {
       setPending(false);
@@ -55,8 +56,8 @@ export function UaDashboardButton({
         disabled={pending}
       >
         {pending
-          ? translate("app.learner.uaDashboardButton.copy.正在打开项目地图")
-          : translate("app.learner.uaDashboardButton.copy.打开项目地图")}
+          ? interfaceTranslator.t("app.learner.uaDashboardButton.copy.正在打开项目地图")
+          : interfaceTranslator.t("app.learner.uaDashboardButton.copy.打开项目地图")}
       </GameButton>
       {error ? (
         <p className="ua-dashboard-entry__error" role="alert">

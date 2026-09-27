@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 /**
  * What an island says under its name.
  *
@@ -15,6 +15,6 @@ import { translate } from "@pieai/university-ui/i18n.js";
  */
 export function studySub(courses: number, done: number): string {
   return done > 0
-    ? translate("app.app.maplabels.copy.已学-value0-关", { value0: done })
-    : translate("app.app.maplabels.copy.value0-门课", { value0: courses });
+    ? interfaceTranslator.t("app.app.maplabels.copy.已学-value0-关", { value0: done })
+    : interfaceTranslator.t("app.app.maplabels.copy.value0-门课", { value0: courses });
 }

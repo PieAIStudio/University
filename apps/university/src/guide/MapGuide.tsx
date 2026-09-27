@@ -23,7 +23,7 @@ import {
 import { nervePresenceTarget, type NervePresenceTarget } from "@pieai/swimmer-nerve-kit/presence";
 import { createTargetRegistry } from "@pieai/swimmer-nerve-kit/targets";
 import { useOverlayReservation } from "@pieai/university-world/overlay-reservations.js";
-import { translate as t } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import {
   comparableMarkers,
   mapGuideAnswer,
@@ -53,7 +53,8 @@ import "./map-guide.css";
  *
  * Since SwimmerNerveKit 0.4 the entry itself is the kit's
  * `NerveLiquidInteraction`: its quick questions, its close and its motion
- * controls, drawn by SwimmerUIKit's liquid body, reveal and anchor. University
+ * controls, drawn by SwimmerUIKit's liquid body, reveal and anchor. Version 0.5
+ * receives the host locale from the application's native NerveI18nProvider. University
  * supplies what only it knows — the questions, the answers read from the map,
  * the places registered by identity, and the one action each place already
  * has. No model, no free text and no voice are wired: nothing is offered that
@@ -83,6 +84,7 @@ export function MapGuide({
   /** Where 涟's capabilities, cost and privacy are explained: Settings. */
   readonly onOpenDetails?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const registry = useMemo(() => createTargetRegistry(), []);
   const registered = useRef(new Map<string, RegisteredTarget>());
   const root = useRef<HTMLDivElement>(null);
@@ -126,7 +128,7 @@ export function MapGuide({
     () =>
       [...answers.keys()].map((question) => ({
         id: question,
-        label: t(`map.guide.q.${question}`),
+        label: interfaceTranslator.t(`map.guide.q.${question}`),
         ...(question === "compare" && comparable.length < 2 ? { disabled: true } : {}),
       })),
     [answers, comparable.length],
@@ -150,7 +152,7 @@ export function MapGuide({
     }
     for (const navId of ["practice", "more"] as const) {
       const [railId, tabsId] = navTargetIds(navId);
-      const label = t(`map.guide.place.${navId}`);
+      const label = interfaceTranslator.t(`map.guide.place.${navId}`);
       const rail = shell.querySelector(`.nav-rail [data-nav-id="${navId}"]`);
       const tabs = shell.querySelector(`.tab-bar [data-nav-id="${navId}"]`);
       if (rail) next.push({ id: railId!, element: rail, label });
@@ -256,7 +258,7 @@ export function MapGuide({
       setCompare({
         ...compare,
         candidates: null,
-        notice: t("map.guide.compare.gone", { title: label }),
+        notice: interfaceTranslator.t("map.guide.compare.gone", { title: label }),
       });
       return;
     }
@@ -270,7 +272,7 @@ export function MapGuide({
       ...compare,
       basis,
       candidates: basis ? compare.candidates : null,
-      notice: basis ? null : t("map.guide.compare.expired"),
+      notice: basis ? null : interfaceTranslator.t("map.guide.compare.expired"),
     });
   }
 
@@ -305,7 +307,9 @@ export function MapGuide({
     ? [
         shown.answer.text,
         shown.unseen && place
-          ? t(place.kind === "marker" ? "map.guide.offscreen.map" : "map.guide.offscreen.menu")
+          ? interfaceTranslator.t(
+              place.kind === "marker" ? "map.guide.offscreen.map" : "map.guide.offscreen.menu",
+            )
           : null,
       ]
         .filter(Boolean)
@@ -399,12 +403,13 @@ interface Compare {
 
 function compareMessage(compare: Compare, view: SelectionView | null, expired: boolean): string {
   if (compare.notice) return compare.notice;
-  if (compare.basis) return t(expired ? "map.guide.compare.expired" : "map.guide.compare.note");
+  if (compare.basis)
+    return interfaceTranslator.t(expired ? "map.guide.compare.expired" : "map.guide.compare.note");
   const first = view?.items[0];
-  if (first) return t("map.guide.compare.first", { title: first.label });
+  if (first) return interfaceTranslator.t("map.guide.compare.first", { title: first.label });
   if (compare.candidates !== null && compare.candidates.length < 2)
-    return t("map.guide.compare.none");
-  return t("map.guide.a.compare");
+    return interfaceTranslator.t("map.guide.compare.none");
+  return interfaceTranslator.t("map.guide.a.compare");
 }
 
 /**
@@ -429,11 +434,15 @@ function MapGuideComparison({
   readonly onChoose: (targetId: string) => void;
   readonly onAgain: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const { basis } = compare;
   if (basis && !expired) {
     return (
       <div className="map-guide__compare" data-guide-compare="result">
-        <ol className="map-guide__pair" aria-label={t("map.guide.compare.title")}>
+        <ol
+          className="map-guide__pair"
+          aria-label={interfaceTranslator.t("map.guide.compare.title")}
+        >
           {basis.context.objects.map((object, index) => (
             <li key={object.id}>
               <strong>
@@ -444,7 +453,7 @@ function MapGuideComparison({
           ))}
         </ol>
         <GameButton variant="secondary" onClick={onAgain}>
-          {t("map.guide.compare.again")}
+          {interfaceTranslator.t("map.guide.compare.again")}
         </GameButton>
       </div>
     );
@@ -453,7 +462,7 @@ function MapGuideComparison({
     return (
       <div className="map-guide__compare" data-guide-compare="expired">
         <GameButton variant="secondary" onClick={onAgain}>
-          {t("map.guide.compare.again")}
+          {interfaceTranslator.t("map.guide.compare.again")}
         </GameButton>
       </div>
     );
@@ -466,7 +475,7 @@ function MapGuideComparison({
       ref={listRef}
       className="map-guide__compare map-guide__candidates"
       data-guide-compare="choose"
-      aria-label={t("map.guide.compare.pick")}
+      aria-label={interfaceTranslator.t("map.guide.compare.pick")}
     >
       {candidates.map((candidate) => (
         <li key={candidate.id}>

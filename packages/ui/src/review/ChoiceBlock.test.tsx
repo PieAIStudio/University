@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { StrictMode, act } from "react";
@@ -86,9 +87,11 @@ afterEach(async () => {
 async function renderBlock(onNext?: () => void, onSolved?: () => void) {
   await act(async () => {
     root.render(
-      <StrictMode>
-        <ChoiceBlock exercise={EXERCISE} onNext={onNext} onSolved={onSolved} />
-      </StrictMode>,
+      withInterfaceLocale(
+        <StrictMode>
+          <ChoiceBlock exercise={EXERCISE} onNext={onNext} onSolved={onSolved} />
+        </StrictMode>,
+      ),
     );
   });
 }

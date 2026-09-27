@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useCallback, useEffect, useState } from "react";
 import { GameBadge, GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -23,6 +23,7 @@ export function VocabularyReview({
   readonly requestToken?: string;
   readonly review?: VocabularyReviewPort;
 }) {
+  const interfaceTranslator = useI18n();
   const [due, setDue] = useState<readonly DueWord[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [pending, setPending] = useState(false);
@@ -66,7 +67,9 @@ export function VocabularyReview({
         await review.rate(word.senseId, rating);
       } else {
         if (!requestToken)
-          throw new Error(translate("ui.review.vocabularyReview.copy.生词复习服务尚未接通"));
+          throw new Error(
+            interfaceTranslator.t("ui.review.vocabularyReview.copy.生词复习服务尚未接通"),
+          );
         await readJson(
           await fetch(`/api/vocabulary/${encodeURIComponent(word!.senseId)}/grade`, {
             method: "POST",
@@ -84,7 +87,7 @@ export function VocabularyReview({
       setError(
         cause instanceof Error
           ? cause.message
-          : translate("ui.review.vocabularyReview.copy.评分失败"),
+          : interfaceTranslator.t("ui.review.vocabularyReview.copy.评分失败"),
       );
     } finally {
       setPending(false);
@@ -96,16 +99,16 @@ export function VocabularyReview({
       <header className="vocab-review__header">
         <div>
           <p className="eyebrow">
-            {translate("ui.review.vocabularyReview.copy.生词")} {due.length}{" "}
-            {translate("ui.review.vocabularyReview.copy.个待复习")}
+            {interfaceTranslator.t("ui.review.vocabularyReview.copy.生词")} {due.length}{" "}
+            {interfaceTranslator.t("ui.review.vocabularyReview.copy.个待复习")}
           </p>
           <h2 lang="en">{word.entry.headword}</h2>
           <p className="vocab-review__phonetic">{word.entry.phonetic}</p>
         </div>
         <GameBadge tone={word.stage === "learning" ? "warning" : "success"}>
           {word.stage === "learning"
-            ? translate("ui.review.vocabularyReview.copy.还不熟")
-            : translate("ui.review.vocabularyReview.copy.复习中")}
+            ? interfaceTranslator.t("ui.review.vocabularyReview.copy.还不熟")
+            : interfaceTranslator.t("ui.review.vocabularyReview.copy.复习中")}
         </GameBadge>
       </header>
       {revealed ? (
@@ -114,30 +117,30 @@ export function VocabularyReview({
           <p className="vocab-review__usage">{word.entry.usage}</p>
           <div
             className="rating-row"
-            aria-label={translate("ui.review.vocabularyReview.copy.根据回忆难度评分")}
+            aria-label={interfaceTranslator.t("ui.review.vocabularyReview.copy.根据回忆难度评分")}
           >
             <GameButton variant="danger" onClick={() => void rate(1)} disabled={pending}>
-              {translate("ui.review.vocabularyReview.copy.没想起来")}
+              {interfaceTranslator.t("ui.review.vocabularyReview.copy.没想起来")}
             </GameButton>
             <GameButton variant="ghost" onClick={() => void rate(2)} disabled={pending}>
-              {translate("ui.review.vocabularyReview.copy.勉强想起")}
+              {interfaceTranslator.t("ui.review.vocabularyReview.copy.勉强想起")}
             </GameButton>
             <GameButton variant="secondary" onClick={() => void rate(3)} disabled={pending}>
-              {translate("ui.review.vocabularyReview.copy.想起来了")}
+              {interfaceTranslator.t("ui.review.vocabularyReview.copy.想起来了")}
             </GameButton>
             <GameButton variant="success" onClick={() => void rate(4)} disabled={pending}>
-              {translate("ui.review.vocabularyReview.copy.一眼就懂")}
+              {interfaceTranslator.t("ui.review.vocabularyReview.copy.一眼就懂")}
             </GameButton>
           </div>
         </div>
       ) : (
         <GameButton variant="primary" onClick={() => setRevealed(true)}>
-          {translate("ui.review.vocabularyReview.copy.我想好了-看释义")}
+          {interfaceTranslator.t("ui.review.vocabularyReview.copy.我想好了-看释义")}
         </GameButton>
       )}
       <p className="vocab-review__meta">
-        {translate("ui.review.vocabularyReview.copy.今天已复习")} {reviewedToday}{" "}
-        {translate("ui.review.vocabularyReview.copy.个词")}
+        {interfaceTranslator.t("ui.review.vocabularyReview.copy.今天已复习")} {reviewedToday}{" "}
+        {interfaceTranslator.t("ui.review.vocabularyReview.copy.个词")}
       </p>
       {error ? (
         <p className="inline-error" role="alert">

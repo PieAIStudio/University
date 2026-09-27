@@ -1,6 +1,6 @@
 import type { WeighActivity, WeighOption, WeighSituation } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /**
  * The lab's `weigh` fixture: how much of a project to read before changing it.
@@ -19,18 +19,18 @@ function options(): Readonly<Record<string, WeighOption>> {
   return {
     piece: {
       id: "piece",
-      label: translate("play.weigh.reading.piece"),
-      note: translate("play.weigh.reading.pieceNote"),
+      label: interfaceTranslator.t("play.weigh.reading.piece"),
+      note: interfaceTranslator.t("play.weigh.reading.pieceNote"),
     },
     whole: {
       id: "whole",
-      label: translate("play.weigh.reading.whole"),
-      note: translate("play.weigh.reading.wholeNote"),
+      label: interfaceTranslator.t("play.weigh.reading.whole"),
+      note: interfaceTranslator.t("play.weigh.reading.wholeNote"),
     },
     ask: {
       id: "ask",
-      label: translate("play.weigh.reading.ask"),
-      note: translate("play.weigh.reading.askNote"),
+      label: interfaceTranslator.t("play.weigh.reading.ask"),
+      note: interfaceTranslator.t("play.weigh.reading.askNote"),
     },
   };
 }
@@ -43,7 +43,7 @@ function options(): Readonly<Record<string, WeighOption>> {
  * option this board does not offer simply never renders.
  */
 function costs(): Readonly<Record<string, Readonly<Record<string, string>>>> {
-  const t = (key: string) => translate(key as never);
+  const t = (key: string) => interfaceTranslator.t(key as never);
   return {
     button: {
       whole: t("play.weigh.reading.buttonCost"),
@@ -77,50 +77,50 @@ function situations(): Readonly<Record<string, WeighSituation>> {
   return {
     button: {
       id: "button",
-      label: translate("play.weigh.reading.button"),
-      detail: translate("play.weigh.reading.buttonDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.button"),
+      detail: interfaceTranslator.t("play.weigh.reading.buttonDetail"),
       bestOptionId: "piece",
-      why: translate("play.weigh.reading.buttonWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.buttonWhy"),
       costOfOther: cost.button!,
     },
     crash: {
       id: "crash",
-      label: translate("play.weigh.reading.crash"),
-      detail: translate("play.weigh.reading.crashDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.crash"),
+      detail: interfaceTranslator.t("play.weigh.reading.crashDetail"),
       bestOptionId: "whole",
-      why: translate("play.weigh.reading.crashWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.crashWhy"),
       costOfOther: cost.crash!,
     },
     rename: {
       id: "rename",
-      label: translate("play.weigh.reading.rename"),
-      detail: translate("play.weigh.reading.renameDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.rename"),
+      detail: interfaceTranslator.t("play.weigh.reading.renameDetail"),
       bestOptionId: "whole",
-      why: translate("play.weigh.reading.renameWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.renameWhy"),
       costOfOther: cost.rename!,
     },
     newPage: {
       id: "newPage",
-      label: translate("play.weigh.reading.newPage"),
-      detail: translate("play.weigh.reading.newPageDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.newPage"),
+      detail: interfaceTranslator.t("play.weigh.reading.newPageDetail"),
       bestOptionId: "piece",
-      why: translate("play.weigh.reading.newPageWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.newPageWhy"),
       costOfOther: cost.newPage!,
     },
     firstDay: {
       id: "firstDay",
-      label: translate("play.weigh.reading.firstDay"),
-      detail: translate("play.weigh.reading.firstDayDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.firstDay"),
+      detail: interfaceTranslator.t("play.weigh.reading.firstDayDetail"),
       bestOptionId: "ask",
-      why: translate("play.weigh.reading.firstDayWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.firstDayWhy"),
       costOfOther: cost.firstDay!,
     },
     nobody: {
       id: "nobody",
-      label: translate("play.weigh.reading.nobody"),
-      detail: translate("play.weigh.reading.nobodyDetail"),
+      label: interfaceTranslator.t("play.weigh.reading.nobody"),
+      detail: interfaceTranslator.t("play.weigh.reading.nobodyDetail"),
       bestOptionId: "whole",
-      why: translate("play.weigh.reading.nobodyWhy"),
+      why: interfaceTranslator.t("play.weigh.reading.nobodyWhy"),
       costOfOther: cost.nobody!,
     },
   };
@@ -140,16 +140,16 @@ export function getWeighExamples(): readonly WeighActivity[] {
     {
       id: "weigh-how-much-to-read",
       kind: "weigh",
-      title: translate("play.weigh.reading.title"),
-      brief: translate("play.weigh.reading.brief"),
-      goal: translate("play.weigh.reading.goal"),
-      takeaway: translate("play.weigh.reading.takeaway"),
-      hint: translate("play.weigh.reading.hint"),
+      title: interfaceTranslator.t("play.weigh.reading.title"),
+      brief: interfaceTranslator.t("play.weigh.reading.brief"),
+      goal: interfaceTranslator.t("play.weigh.reading.goal"),
+      takeaway: interfaceTranslator.t("play.weigh.reading.takeaway"),
+      hint: interfaceTranslator.t("play.weigh.reading.hint"),
       source: {
-        label: translate("play.weigh.reading.source"),
+        label: interfaceTranslator.t("play.weigh.reading.source"),
         url: "https://docs.github.com/en/repositories/working-with-files/using-files/navigating-code-on-github",
       },
-      question: translate("play.weigh.reading.question"),
+      question: interfaceTranslator.t("play.weigh.reading.question"),
       options: [option.piece!, option.whole!],
       situations: [situation.button!, situation.crash!, situation.rename!, situation.newPage!],
     },

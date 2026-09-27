@@ -173,7 +173,7 @@ export const messages = {
   "gallery.history": "Earlier experiments",
   "gallery.empty": "No matches. Try another term or category.",
   "gallery.choose": "Choose an entry to start playing.",
-  "gallery.results": "{{count}} entries found",
+  "gallery.results": "{count} entries found",
   "gallery.exit": "Exit play area",
   "gallery.retry": "Start again",
   "gallery.pause": "Pause",
@@ -219,7 +219,7 @@ export const messages = {
   "gallery.history.compare.action": "Compare reading the source lesson with continuous interaction",
   "gallery.lesson.ask-about-a-picture": "When you see a photo, how do you ask AI about it?",
   "gallery.lesson.sound-words-and-meaning":
-    "Can't hear an English voicemail clearly? How AI can help",
+    "Can''t hear an English voicemail clearly? How AI can help",
   "gallery.lesson.name-the-result":
     "To make AI write something useful, how do you state your requirements clearly?",
   "gallery.lesson.edit-one-part":

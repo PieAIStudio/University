@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { readFileSync } from "node:fs";
@@ -32,7 +33,7 @@ describe("RouteFallback", () => {
     expect(src).not.toMatch(/from "@pieai\/university-ui\/loading\/LoadingTrivia/);
 
     await act(async () => {
-      root.render(<RouteFallback />);
+      root.render(withInterfaceLocale(<RouteFallback />));
     });
     expect(container.textContent).toContain("正在打开");
     expect(container.textContent).not.toContain("地图铺开时，看一条概念");
@@ -42,7 +43,7 @@ describe("RouteFallback", () => {
 
   it("can say the destination's first true sentence while a settlement chunk loads", async () => {
     await act(async () => {
-      root.render(<RouteFallback copy="读完了。" />);
+      root.render(withInterfaceLocale(<RouteFallback copy="读完了。" />));
     });
     expect(container.textContent).toContain("读完了。");
     expect(container.querySelector(".loading-trivia")).toBeNull();

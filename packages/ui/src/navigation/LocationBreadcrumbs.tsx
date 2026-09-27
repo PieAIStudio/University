@@ -1,5 +1,5 @@
 import { useEffect, useRef, type MouseEvent } from "react";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 export interface LocationCrumb {
   readonly id: string;
@@ -17,6 +17,7 @@ export function LocationBreadcrumbs({
   readonly items: readonly LocationCrumb[];
   readonly className?: string;
 }) {
+  const interfaceTranslator = useI18n();
   const details = useRef<HTMLDetailsElement>(null);
   const currentId = items.at(-1)?.id;
   useEffect(() => {
@@ -50,7 +51,7 @@ export function LocationBreadcrumbs({
   return (
     <nav
       className={`location-breadcrumb ${className}`}
-      aria-label={translate("ui.lesson.lessonBreadcrumbs.copy.当前位置")}
+      aria-label={interfaceTranslator.t("ui.lesson.lessonBreadcrumbs.copy.当前位置")}
     >
       <ol className="location-breadcrumb__list">
         {items.length > 1 ? (
@@ -66,7 +67,7 @@ export function LocationBreadcrumbs({
                 }
               }}
             >
-              <summary aria-label={translate("map.fullPath")}>…</summary>
+              <summary aria-label={interfaceTranslator.t("map.fullPath")}>…</summary>
               <ul>
                 {items.slice(0, -1).map((item) => (
                   <li key={item.id}>{link(item)}</li>

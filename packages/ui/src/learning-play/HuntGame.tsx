@@ -7,18 +7,20 @@ import {
   type HuntObservation,
 } from "@pieai/university-core";
 
-import { formatNumber, translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
 import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
 
 function numberWithUnit(value: number, unit: string): string {
-  return [formatNumber(value, { maximumSignificantDigits: 21 }), unit].filter(Boolean).join(" ");
+  return [interfaceTranslator.number(value, { maximumSignificantDigits: 21 }), unit]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function outputText(value: number | boolean, unit: string): string {
   return typeof value === "boolean"
-    ? translate(value ? "play.extra.hunt.yes" : "play.extra.hunt.no")
+    ? interfaceTranslator.t(value ? "play.extra.hunt.yes" : "play.extra.hunt.no")
     : numberWithUnit(value, unit);
 }
 
@@ -28,6 +30,7 @@ export function HuntGame({
   onAttempt,
   guided = false,
 }: ActivityControls<HuntActivity>) {
+  const interfaceTranslator = useI18n();
   const [input, setInput] = useState(String(activity.input.initial));
   const [history, setHistory] = useState<readonly HuntObservation[]>([]);
   const [error, setError] = useState("");
@@ -71,7 +74,7 @@ export function HuntGame({
         "out-of-range": "play.extra.hunt.outOfRange",
         "invalid-activity": "play.extra.hunt.invalidActivity",
       } as const;
-      setError(translate(keys[result.reason], rangeValues));
+      setError(interfaceTranslator.t(keys[result.reason], rangeValues));
       inputRef.current?.focus();
       return;
     }
@@ -82,16 +85,16 @@ export function HuntGame({
     passed.current = assessment.passed;
     const message =
       activity.verifyBoundarySides && assessment.found
-        ? translate(
+        ? interfaceTranslator.t(
             assessment.passed ? "play.difficulty.hunt.complete" : "play.difficulty.hunt.more",
           )
         : result.counterexample
-          ? translate("play.extra.hunt.found", {
+          ? interfaceTranslator.t("play.extra.hunt.found", {
               input: numberWithUnit(result.input, activity.input.unit),
               expected: outputText(result.expected, activity.input.unit),
               actual: outputText(result.actual, activity.input.unit),
             })
-          : translate("play.extra.hunt.same", {
+          : interfaceTranslator.t("play.extra.hunt.same", {
               output: outputText(result.actual, activity.input.unit),
             });
     onAttempt(
@@ -114,10 +117,10 @@ export function HuntGame({
     <div className="play-hunt">
       {guided ? (
         <PlayGuide
-          title={translate(
+          title={interfaceTranslator.t(
             history.length ? "play.usability.hunt.next" : "play.usability.hunt.first",
           )}
-          action={!history.length ? translate("play.usability.hunt.try") : undefined}
+          action={!history.length ? interfaceTranslator.t("play.usability.hunt.try") : undefined}
           onAction={() => run()}
           disabled={locked}
         >
@@ -125,7 +128,7 @@ export function HuntGame({
         </PlayGuide>
       ) : null}
       <section className="play-hunt__contract">
-        <h4>{translate("play.extra.hunt.rule")}</h4>
+        <h4>{interfaceTranslator.t("play.extra.hunt.rule")}</h4>
         <p>{activity.rule}</p>
       </section>
 
@@ -135,14 +138,14 @@ export function HuntGame({
             ?
           </span>
           <div>
-            <h4>{translate("play.extra.hunt.blackbox")}</h4>
-            <p>{translate("play.extra.hunt.blackboxBrief")}</p>
+            <h4>{interfaceTranslator.t("play.extra.hunt.blackbox")}</h4>
+            <p>{interfaceTranslator.t("play.extra.hunt.blackboxBrief")}</p>
           </div>
         </div>
         <form className="play-hunt__form" onSubmit={run} noValidate>
           <fieldset className="play-hunt__probe" disabled={locked}>
             <GameSlider
-              label={translate("play.extra.hunt.selectInput")}
+              label={interfaceTranslator.t("play.extra.hunt.selectInput")}
               min={Math.ceil(activity.input.min)}
               max={Math.floor(activity.input.max)}
               value={sliderValue}
@@ -173,8 +176,8 @@ export function HuntGame({
               <span>{numberWithUnit(activity.input.min, activity.input.unit)}</span>
               <span className="play-hunt__axis-caption">
                 {history.length === 0
-                  ? translate("play.extra.hunt.exploredEmpty")
-                  : translate("play.extra.hunt.testCount", { count: history.length })}
+                  ? interfaceTranslator.t("play.extra.hunt.exploredEmpty")
+                  : interfaceTranslator.t("play.extra.hunt.testCount", { count: history.length })}
               </span>
               <span>{numberWithUnit(activity.input.max, activity.input.unit)}</span>
             </div>
@@ -204,32 +207,34 @@ export function HuntGame({
               />
             </GameField>
             <GameButton type="submit" variant="primary" sound={false} disabled={locked}>
-              {translate("play.extra.hunt.run")}
+              {interfaceTranslator.t("play.extra.hunt.run")}
             </GameButton>
           </div>
-          <p className="play-hunt__precision-note">{translate("play.extra.hunt.precisionNote")}</p>
+          <p className="play-hunt__precision-note">
+            {interfaceTranslator.t("play.extra.hunt.precisionNote")}
+          </p>
         </form>
       </section>
 
       <div id={resultId} className="play-hunt__result" aria-live="polite" aria-atomic="true">
         <p className="play-hunt__result-caption" data-pending={hasUntestedChange}>
           {latest
-            ? translate(
+            ? interfaceTranslator.t(
                 hasUntestedChange ? "play.extra.hunt.previousInput" : "play.extra.hunt.testedInput",
                 { input: numberWithUnit(latest.input, activity.input.unit) },
               )
-            : translate("play.extra.hunt.ready")}
+            : interfaceTranslator.t("play.extra.hunt.ready")}
         </p>
         <div
           className="play-hunt__comparison"
           data-result={latest ? (latest.counterexample ? "different" : "equal") : "waiting"}
         >
           <div className="play-hunt__reading">
-            <span>{translate("play.extra.hunt.expected")}</span>
+            <span>{interfaceTranslator.t("play.extra.hunt.expected")}</span>
             <strong>
               {latest
                 ? outputText(latest.expected, activity.input.unit)
-                : translate("play.extra.hunt.waiting")}
+                : interfaceTranslator.t("play.extra.hunt.waiting")}
             </strong>
             <span className="play-hunt__reading-label">{activity.outputLabel}</span>
           </div>
@@ -239,18 +244,18 @@ export function HuntGame({
             </span>
             {latest ? (
               <span>
-                {translate(
+                {interfaceTranslator.t(
                   latest.counterexample ? "play.extra.hunt.different" : "play.extra.hunt.equal",
                 )}
               </span>
             ) : null}
           </div>
           <div className="play-hunt__reading play-hunt__reading--actual">
-            <span>{translate("play.extra.hunt.actual")}</span>
+            <span>{interfaceTranslator.t("play.extra.hunt.actual")}</span>
             <strong>
               {latest
                 ? outputText(latest.actual, activity.input.unit)
-                : translate("play.extra.hunt.waiting")}
+                : interfaceTranslator.t("play.extra.hunt.waiting")}
             </strong>
             <span className="play-hunt__reading-label">{activity.outputLabel}</span>
           </div>
@@ -263,7 +268,7 @@ export function HuntGame({
               inputRef.current?.focus({ preventScroll: true });
             }}
           >
-            {translate("play.usability.hunt.change")}
+            {interfaceTranslator.t("play.usability.hunt.change")}
           </GameButton>
         ) : null}
       </div>
@@ -274,29 +279,34 @@ export function HuntGame({
           if (event.currentTarget.open) implementationViewed.current = true;
         }}
       >
-        <summary>{translate("play.extra.hunt.openImplementation")}</summary>
-        <p>{translate("play.extra.hunt.implementationNote")}</p>
+        <summary>{interfaceTranslator.t("play.extra.hunt.openImplementation")}</summary>
+        <p>{interfaceTranslator.t("play.extra.hunt.implementationNote")}</p>
         <code>{activity.program}</code>
       </details>
 
       {history.length > 0 ? (
-        <section className="play-hunt__history" aria-label={translate("play.extra.hunt.history")}>
-          <h4>{translate("play.extra.hunt.history")}</h4>
+        <section
+          className="play-hunt__history"
+          aria-label={interfaceTranslator.t("play.extra.hunt.history")}
+        >
+          <h4>{interfaceTranslator.t("play.extra.hunt.history")}</h4>
           <ol reversed>
             {history.toReversed().map((observation, index) => (
               <li key={history.length - index} data-counterexample={observation.counterexample}>
                 <span className="play-hunt__history-number">
-                  {translate("play.extra.hunt.testNumber", { number: history.length - index })}
+                  {interfaceTranslator.t("play.extra.hunt.testNumber", {
+                    number: history.length - index,
+                  })}
                 </span>
                 <span>
-                  {translate("play.extra.hunt.testSummary", {
+                  {interfaceTranslator.t("play.extra.hunt.testSummary", {
                     input: numberWithUnit(observation.input, activity.input.unit),
                     expected: outputText(observation.expected, activity.input.unit),
                     actual: outputText(observation.actual, activity.input.unit),
                   })}
                 </span>
                 <strong>
-                  {translate(
+                  {interfaceTranslator.t(
                     observation.counterexample
                       ? "play.extra.hunt.different"
                       : "play.extra.hunt.equal",

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -35,7 +36,9 @@ function reminder(status: ReviewReminderStatus = { kind: "permission-default" })
 
 async function renderPrompt(reminders: ReviewReminderPort): Promise<void> {
   await act(async () => {
-    root.render(<ReviewReminderPrompt dueTomorrow={3} eligible reminders={reminders} />);
+    root.render(
+      withInterfaceLocale(<ReviewReminderPrompt dueTomorrow={3} eligible reminders={reminders} />),
+    );
   });
 }
 
@@ -71,7 +74,11 @@ describe("ReviewReminderPrompt", () => {
   it("does not appear for a bookmarked settlement", async () => {
     const reminders = reminder();
     await act(async () => {
-      root.render(<ReviewReminderPrompt dueTomorrow={3} eligible={false} reminders={reminders} />);
+      root.render(
+        withInterfaceLocale(
+          <ReviewReminderPrompt dueTomorrow={3} eligible={false} reminders={reminders} />,
+        ),
+      );
     });
     expect(container.textContent).toBe("");
   });

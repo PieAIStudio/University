@@ -17,7 +17,7 @@ describe("toy asset reuse", () => {
       expect(createHash("sha256").update(bytes).digest("hex")).toBe(asset.sha256);
       expect(asset.license.spdx).toBe("CC0-1.0");
       expect(asset.license.commercialUse).toBe(true);
-      expect(asset.src).not.toMatch(/\/Users\/|_donors|https?:/);
+      expect(asset.src).not.toMatch(/\/Users\/|_Donors|https?:/);
       totalBytes += bytes.byteLength;
       asset.dependencies.forEach((path) => dependencies.add(path));
     }

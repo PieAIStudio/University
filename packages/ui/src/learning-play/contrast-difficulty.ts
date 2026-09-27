@@ -1,6 +1,6 @@
 import type { ActivityDifficulty, ActivityFamily, ContrastActivity } from "@pieai/university-core";
 
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import { getContrastCases } from "./contrast-examples.js";
 
 /**
@@ -25,7 +25,8 @@ import { getContrastCases } from "./contrast-examples.js";
  * same way every time would finish it.
  */
 export function getContrastFamily(activity: ContrastActivity): ActivityFamily {
-  const goal = (level: ActivityDifficulty) => t(`play.difficulty.contrast.${level}`);
+  const goal = (level: ActivityDifficulty) =>
+    interfaceTranslator.t(`play.difficulty.contrast.${level}`);
   const tag = (task: ContrastActivity, difficulty: ActivityDifficulty): ContrastActivity => ({
     ...task,
     id: `${activity.id}:${difficulty}:v1`,

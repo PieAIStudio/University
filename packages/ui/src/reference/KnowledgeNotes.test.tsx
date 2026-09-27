@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -30,11 +31,13 @@ const notes: readonly KnowledgeNoteView[] = [
 describe("classroom knowledge notes", () => {
   it("keeps AI-host notes separate from formal courses and explains lifecycle gates", () => {
     const markup = renderToStaticMarkup(
-      <KnowledgeNotes
-        notes={notes}
-        basePathOf={(note) => `/api/studies/supaluv/notes/${note.id}`}
-        panelIdPrefix="supaluv"
-      />,
+      withInterfaceLocale(
+        <KnowledgeNotes
+          notes={notes}
+          basePathOf={(note) => `/api/studies/supaluv/notes/${note.id}`}
+          panelIdPrefix="supaluv"
+        />,
+      ),
     );
 
     expect(markup).toContain("我的追问 / 课堂笔记");
@@ -50,7 +53,9 @@ describe("classroom knowledge notes", () => {
 
   it("says so when the collection is empty, rather than rendering nothing", () => {
     const markup = renderToStaticMarkup(
-      <KnowledgeNotes notes={[]} basePathOf={() => "/nowhere"} panelIdPrefix="empty" />,
+      withInterfaceLocale(
+        <KnowledgeNotes notes={[]} basePathOf={() => "/nowhere"} panelIdPrefix="empty" />,
+      ),
     );
 
     // The delivery build has no notes until the export pipeline ships them, and
@@ -62,33 +67,35 @@ describe("classroom knowledge notes", () => {
   it("asks the caller where a note's evidence lives instead of assuming a server", () => {
     const asked: string[] = [];
     renderToStaticMarkup(
-      <KnowledgeNotes
-        notes={[
-          {
-            ...common,
-            id: "cited-note",
-            title: "有证据的笔记",
-            status: "active",
-            evidence: [
-              {
-                kind: "repository",
-                sourcePath: "src/app.ts",
-                lineStart: 1,
-                lineEnd: 2,
-                sourceCommit: "abc1234567890",
-                nodeIds: [],
-                note: null,
-                ua: null,
-              },
-            ],
-          },
-        ]}
-        basePathOf={(note) => {
-          asked.push(note.id);
-          return `/somewhere/${note.id}`;
-        }}
-        panelIdPrefix="cited"
-      />,
+      withInterfaceLocale(
+        <KnowledgeNotes
+          notes={[
+            {
+              ...common,
+              id: "cited-note",
+              title: "有证据的笔记",
+              status: "active",
+              evidence: [
+                {
+                  kind: "repository",
+                  sourcePath: "src/app.ts",
+                  lineStart: 1,
+                  lineEnd: 2,
+                  sourceCommit: "abc1234567890",
+                  nodeIds: [],
+                  note: null,
+                  ua: null,
+                },
+              ],
+            },
+          ]}
+          basePathOf={(note) => {
+            asked.push(note.id);
+            return `/somewhere/${note.id}`;
+          }}
+          panelIdPrefix="cited"
+        />,
+      ),
     );
 
     // The old component wrote `/api/studies/…` into itself, which is the

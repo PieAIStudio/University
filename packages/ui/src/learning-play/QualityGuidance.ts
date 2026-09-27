@@ -8,7 +8,7 @@ import {
   type RepairEvent,
   type RepairTrace,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /** A disclosed starter only. It is neither a saved case nor an observed response. */
 export function evalStarterQuestion(activity: EvalActivity): {
@@ -74,7 +74,7 @@ function challengeBookingCue(activity: RepairActivity, trace: RepairTrace): Repa
     return {
       name: "blocked",
       action: "reset",
-      instruction: t("play.qualityDifficulty.repair.keepLost"),
+      instruction: interfaceTranslator.t("play.qualityDifficulty.repair.keepLost"),
     };
   const cancelledSecond = entries.some(
     (entry) =>
@@ -97,7 +97,9 @@ function challengeBookingCue(activity: RepairActivity, trace: RepairTrace): Repa
     name: "choose",
     choice: target.id,
     action: product.choice !== target.id ? "choose" : needsCancel ? "cancel" : "submit",
-    instruction: t(`play.qualityDifficulty.repair.${key}`, { choice: target.label }),
+    instruction: interfaceTranslator.t(`play.qualityDifficulty.repair.${key}`, {
+      choice: target.label,
+    }),
   };
 }
 
@@ -116,7 +118,7 @@ function challengePreferenceCue(activity: RepairActivity, trace: RepairTrace): R
     name: "choose",
     choice: target.id,
     action: saved ? "reload" : trace.product.choice !== target.id ? "choose" : "submit",
-    instruction: t(
+    instruction: interfaceTranslator.t(
       saved
         ? "play.qualityDifficulty.repair.readChange"
         : "play.qualityDifficulty.repair.changeAndRead",

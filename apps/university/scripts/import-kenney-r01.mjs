@@ -32,10 +32,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "..");
 const DEFAULT_DONOR_ROOTS = [
-  // Normal checkout: PieAI/University/apps/university → PieAI/_donors.
-  resolve(appRoot, "../../../_donors/Kenney"),
+  // Normal checkout: PieAI/University/apps/university → PieAI/_Donors.
+  resolve(appRoot, "../../../_Donors/Kenney"),
   // In-repository worktree: University/.worktrees/<name>/apps/university.
-  resolve(appRoot, "../../../../../_donors/Kenney"),
+  resolve(appRoot, "../../../../../_Donors/Kenney"),
 ];
 // Manifests are committed and must not capture one developer's absolute home
 // path. The resolved path is used only while importing; provenance keeps this
@@ -437,7 +437,7 @@ export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
     assetSet: "R01-forest-academy",
     status: "prototype/local donor; PGS donor registered",
     sourceRoot: PROVENANCE_SOURCE_ROOT,
-    sourceRootHint: "../../../_donors/Kenney or KENNEY_DONOR_ROOT",
+    sourceRootHint: "../../../_Donors/Kenney or KENNEY_DONOR_ROOT",
     outputRoot: "public/kenney/r01",
     runtimeBasePath: "/kenney/r01",
     selection: {

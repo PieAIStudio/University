@@ -8,14 +8,16 @@ import { itemAccessibleName } from "./accessibility.js";
  */
 
 export function TabBar({
+  label,
   items,
   activeId,
 }: {
+  readonly label: string;
   readonly items: readonly ShellNavItem[];
   readonly activeId: string;
 }) {
   return (
-    <nav className="tab-bar" aria-label="Tabs">
+    <nav className="tab-bar" aria-label={label}>
       <ul className="tab-bar__list">
         {items.map((item) => (
           <li key={item.id} className="tab-bar__slot" data-nav-id={item.id}>

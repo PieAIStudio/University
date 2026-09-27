@@ -1,6 +1,6 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { AgentFile } from "@pieai/university-core";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 export function AgentWorkspace({
   files,
@@ -15,14 +15,15 @@ export function AgentWorkspace({
   readonly onSelect: (fileId: string) => void;
   readonly onNext?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const activeFile = files.find((file) => file.id === activeFileId);
   return (
     <section className="play-ai-agent__workspace">
-      <h4>{translate("play.ai.agent.workspace")}</h4>
+      <h4>{interfaceTranslator.t("play.ai.agent.workspace")}</h4>
       <div
         className="play-ai-agent__file-tabs"
         role="group"
-        aria-label={translate("play.ai.agent.workspace")}
+        aria-label={interfaceTranslator.t("play.ai.agent.workspace")}
       >
         {files.map((file) => (
           <GameButton
@@ -47,7 +48,7 @@ export function AgentWorkspace({
           <header>
             <code>{activeFile.path}</code>
             <span>
-              {translate(
+              {interfaceTranslator.t(
                 changedProtectedFileIds.includes(activeFile.id)
                   ? "play.ai.agent.changed"
                   : activeFile.protected
@@ -56,12 +57,12 @@ export function AgentWorkspace({
               )}
             </span>
           </header>
-          <pre>{activeFile.content || translate("play.ai.agent.fileEmpty")}</pre>
+          <pre>{activeFile.content || interfaceTranslator.t("play.ai.agent.fileEmpty")}</pre>
         </article>
       ) : null}
       {onNext ? (
         <GameButton variant="ghost" sound={false} onClick={onNext}>
-          {translate("play.ai.agent.nextAction")}
+          {interfaceTranslator.t("play.ai.agent.nextAction")}
         </GameButton>
       ) : null}
     </section>

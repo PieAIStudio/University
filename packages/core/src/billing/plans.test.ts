@@ -14,17 +14,15 @@ describe("billing configuration", () => {
   it("localizes plan copy without changing the offer or its rights", () => {
     const member = planById("member")!;
     expect(planCopyForLocale(member, "en-GB").name).toBe("Member");
-    expect(planCopyForLocale(member, "en").lines).toHaveLength(member.lines.length);
-    expect(planCopyForLocale(member, "zh-CN")).toBe(member);
+    expect(planCopyForLocale(member, "en").lines).toHaveLength(member.lineKeys.length);
+    expect(planCopyForLocale(member, "zh-CN").name).toBe("会员");
     expect(member.pricing).toEqual({
       kind: "configured",
       currency: "USD",
       monthlyCents: 1900,
       yearlyCents: 14900,
     });
-    expect(planCopyForLocale({ ...member, id: "custom", locales: undefined }, "en").name).toBe(
-      member.name,
-    );
+    expect(planCopyForLocale({ ...member, id: "custom" }, "en").name).toBe("Member");
   });
   /*
     The overseas launch has a named price now. Keep the paid plan's currency
@@ -63,8 +61,8 @@ describe("billing configuration", () => {
       openTutoringTurnsPerDay: null,
     });
     expect(free?.sync).toEqual({ included: false, seats: 0 });
-    expect(free?.lines).toContain("全部课程免费学");
-    expect(free?.lines).toContain("绑定邮箱，每天体验 AI 批改");
+    expect(planCopyForLocale(free!, "zh-CN").lines).toContain("全部课程免费学");
+    expect(planCopyForLocale(free!, "zh-CN").lines).toContain("绑定邮箱，每天体验 AI 批改");
   });
 
   it("keeps the config as the only plan collection", () => {

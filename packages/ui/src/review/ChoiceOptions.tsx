@@ -1,5 +1,5 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 /** Selection only: native exercise/skip-test owners retain grading and progress. */
 export function ChoiceOptions({
@@ -13,8 +13,13 @@ export function ChoiceOptions({
   readonly disabled?: boolean;
   readonly onSelect: (id: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   return (
-    <div className="exercise-choice" role="group" aria-label={translate("grading.answer.label")}>
+    <div
+      className="exercise-choice"
+      role="group"
+      aria-label={interfaceTranslator.t("grading.answer.label")}
+    >
       {options.map((option) => (
         <GameButton
           key={option.id}

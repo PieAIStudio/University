@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 
@@ -163,7 +164,11 @@ describe("the play lab offers every game that exists", () => {
       const root = createRoot(container);
       try {
         await act(async () =>
-          root.render(<LearningActivity activity={activity!} onResult={() => undefined} />),
+          root.render(
+            withInterfaceLocale(
+              <LearningActivity activity={activity!} onResult={() => undefined} />,
+            ),
+          ),
         );
         const board = container.querySelector(".learning-activity__game");
         expect(board, `${kind} 连游戏区都没有`).not.toBeNull();
@@ -195,7 +200,9 @@ describe("the play lab offers every game that exists", () => {
     const root = createRoot(container);
     try {
       await act(async () =>
-        root.render(<LearningActivity activity={activity} onResult={() => undefined} />),
+        root.render(
+          withInterfaceLocale(<LearningActivity activity={activity} onResult={() => undefined} />),
+        ),
       );
       const answer = async (index: number) => {
         const choices = [

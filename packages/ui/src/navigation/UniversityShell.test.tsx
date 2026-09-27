@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -28,9 +29,11 @@ async function renderShell(
 ): Promise<void> {
   await act(async () => {
     root.render(
-      <UniversityShell activeId="learn" identity={null} {...props}>
-        <p>主体</p>
-      </UniversityShell>,
+      withInterfaceLocale(
+        <UniversityShell activeId="learn" identity={null} {...props}>
+          <p>主体</p>
+        </UniversityShell>,
+      ),
     );
   });
 }

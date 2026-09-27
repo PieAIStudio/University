@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -9,7 +10,7 @@ import { createMemoryGradingPort } from "@pieai/university-core";
 
 import { ExerciseBlock } from "./ExerciseBlock.js";
 import { writeAnswerDraft, type AnswerDraftStorage } from "./answer-draft.js";
-import { setActiveLocale } from "../i18n/index.js";
+import { setInterfaceLocale } from "../i18n/index.js";
 import type { LessonView } from "../view/lesson-view.js";
 
 const LOCATOR: LessonRef = {
@@ -104,7 +105,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
-  setActiveLocale("zh-CN");
+  setInterfaceLocale("zh-CN");
 });
 
 function buttonWith(text: string): HTMLButtonElement | undefined {
@@ -123,14 +124,16 @@ async function renderBlock(
 ) {
   await act(async () => {
     root.render(
-      <ExerciseBlock
-        locator={LOCATOR}
-        exercise={options.exercise ?? EXERCISE}
-        grading={grading}
-        onRefresh={async () => undefined}
-        answerDraftScope={options.scope ?? "local-guest"}
-        {...("storage" in options ? { answerDraftStorage: options.storage } : {})}
-      />,
+      withInterfaceLocale(
+        <ExerciseBlock
+          locator={LOCATOR}
+          exercise={options.exercise ?? EXERCISE}
+          grading={grading}
+          onRefresh={async () => undefined}
+          answerDraftScope={options.scope ?? "local-guest"}
+          {...("storage" in options ? { answerDraftStorage: options.storage } : {})}
+        />,
+      ),
     );
   });
 }
@@ -167,7 +170,7 @@ describe("ExerciseBlock English learner copy", () => {
   ] as const)(
     "keeps %s feedback and its answer field in the selected language",
     async (outcome, label) => {
-      setActiveLocale("en");
+      setInterfaceLocale("en");
       const result: ExerciseAttemptResult = {
         ...TIER_ONE_RESULT,
         score: outcome === "pass" ? 1 : 0,
@@ -194,7 +197,7 @@ describe("ExerciseBlock English learner copy", () => {
   );
 
   it("shows English allowance quantities without starting a metered request", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const submitExercise = vi.fn<GradingPort["submitExercise"]>().mockResolvedValue({
       ...TIER_ONE_RESULT,
       hostGrade: {

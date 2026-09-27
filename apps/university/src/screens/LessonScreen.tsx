@@ -9,7 +9,7 @@
  * fetched a view over HTTP and one that folded a package, which is how the two
  * campuses came to disagree about what happens when a lesson is finished.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
@@ -85,6 +85,7 @@ export function LessonScreen({
   /** Reads the server-selected AI plan for open tutoring controls. */
   readonly readEntitlements?: EntitlementReader;
 }) {
+  const interfaceTranslator = useI18n();
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
   const identity = useSyncExternalStore(
     identityPort.subscribe,
@@ -192,7 +193,7 @@ export function LessonScreen({
         setError(
           reason instanceof Error
             ? reason.message
-            : translate("app.screens.lessonScreen.copy.无法读取课程"),
+            : interfaceTranslator.t("app.screens.lessonScreen.copy.无法读取课程"),
         );
       });
     return () => controller.abort();
@@ -321,9 +322,9 @@ export function LessonScreen({
         <RecoveryState
           reason="content"
           onRetry={() => setReloads((n) => n + 1)}
-          retryLabel={translate("app.screens.lessonScreen.copy.重试这节课")}
+          retryLabel={interfaceTranslator.t("app.screens.lessonScreen.copy.重试这节课")}
           onContinue={onBack}
-          continueLabel={translate("app.screens.lessonScreen.copy.回到课程岛")}
+          continueLabel={interfaceTranslator.t("app.screens.lessonScreen.copy.回到课程岛")}
         />
       </main>
     );
@@ -331,7 +332,9 @@ export function LessonScreen({
 
   if (!overlaid)
     return (
-      <p className="loading-copy">{translate("app.screens.lessonScreen.copy.正在打开这节课")}</p>
+      <p className="loading-copy">
+        {interfaceTranslator.t("app.screens.lessonScreen.copy.正在打开这节课")}
+      </p>
     );
 
   return (

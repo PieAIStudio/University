@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import type { ReactNode } from "react";
 import type {
   AntiPatternEntry,
@@ -32,9 +32,9 @@ export type { EntryNeighbour, EntryNeighbourPair } from "./EntryFloatNav.js";
  * for anti-patterns would be SPEC-0004 failing.
  */
 export const COLLECTION_LABEL: { readonly [C in CollectionId]: string } = {
-  terms: translate("ui.entry.entryPage.copy.术语图鉴"),
-  "anti-patterns": translate("ui.entry.entryPage.copy.防止-AI-味儿"),
-  concepts: translate("ui.entry.entryPage.copy.概念图解"),
+  terms: interfaceTranslator.t("ui.entry.entryPage.copy.术语图鉴"),
+  "anti-patterns": interfaceTranslator.t("ui.entry.entryPage.copy.防止-AI-味儿"),
+  concepts: interfaceTranslator.t("ui.entry.entryPage.copy.概念图解"),
 };
 
 export interface EntryBreadcrumbItem {
@@ -87,6 +87,7 @@ export function EntryPage({
   onOpenSense,
   neighbours,
 }: EntryPageProps) {
+  const interfaceTranslator = useI18n();
   const markdown = foldEntryMarkdown(headMarkdown, sections);
   const context: EntryRenderContext = { lexicon, resolveSense, onOpenSense };
 
@@ -96,7 +97,7 @@ export function EntryPage({
       <header className="entry-page__topbar">
         <nav
           className="entry-page__breadcrumb"
-          aria-label={translate("ui.entry.entryPage.copy.面包屑")}
+          aria-label={interfaceTranslator.t("ui.entry.entryPage.copy.面包屑")}
         >
           <ol>
             {breadcrumb.map((item, index) => {
@@ -115,8 +116,8 @@ export function EntryPage({
         </nav>
         <CopyTextButton
           text={markdown}
-          idleLabel={translate("ui.entry.entryPage.copy.复制为-Markdown")}
-          copiedLabel={translate("ui.entry.entryPage.copy.已复制")}
+          idleLabel={interfaceTranslator.t("ui.entry.entryPage.copy.复制为-Markdown")}
+          copiedLabel={interfaceTranslator.t("ui.entry.entryPage.copy.已复制")}
         />
       </header>
       <div className="entry-page__head">{head}</div>
@@ -137,6 +138,7 @@ export function EntryPage({
  * copied; both surfaces read `LexiconEntry`.
  */
 export function TermEntryHead({ entry }: { readonly entry: LexiconEntry }) {
+  const interfaceTranslator = useI18n();
   return (
     <header className="entry-head">
       <div className="entry-head__title">
@@ -159,7 +161,7 @@ export function TermEntryHead({ entry }: { readonly entry: LexiconEntry }) {
       {entry.colloquial && entry.colloquial.length > 0 ? (
         <p className="entry-head__colloquial">
           <span className="entry-head__colloquial-label">
-            {translate("ui.entry.entryPage.copy.你可能会说")}
+            {interfaceTranslator.t("ui.entry.entryPage.copy.你可能会说")}
           </span>
           {entry.colloquial[0]}
         </p>
@@ -208,6 +210,7 @@ export function TermEntryPage({
  * already expected.
  */
 export function AntiPatternEntryHead({ head }: { readonly head: AntiPatternHead }) {
+  const interfaceTranslator = useI18n();
   return (
     <header className="entry-head">
       <h1>
@@ -218,7 +221,7 @@ export function AntiPatternEntryHead({ head }: { readonly head: AntiPatternHead 
       </p>
       <p className="entry-head__colloquial">
         <span className="entry-head__colloquial-label">
-          {translate("ui.entry.entryPage.copy.你正常说就行")}
+          {interfaceTranslator.t("ui.entry.entryPage.copy.你正常说就行")}
         </span>
         {head.complaint}
       </p>

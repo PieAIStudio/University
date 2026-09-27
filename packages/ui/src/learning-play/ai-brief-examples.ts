@@ -1,5 +1,5 @@
 import type { BriefAction, BriefActivity, BriefConfiguration } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /** Widens each literal to `BriefAction` so the two outcome maps stay one type. */
 const satisfiesActions = (actions: readonly BriefAction[]): readonly BriefAction[] => actions;
@@ -12,13 +12,13 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
   return (["walk", "club"] as const).map((name, index) => ({
     kind: "ai-brief",
     id: `ai-brief-${name}`,
-    title: t(`play.ai.brief.${name}.title`),
-    brief: t(`play.ai.brief.${name}.brief`),
-    goal: t(`play.ai.brief.${name}.goal`),
-    request: t(`play.ai.brief.${name}.request`),
-    productName: t(`play.ai.brief.${name}.name`),
-    productDescription: t(`play.ai.brief.${name}.description`),
-    visitorName: t("play.ai.brief.visitorName"),
+    title: interfaceTranslator.t(`play.ai.brief.${name}.title`),
+    brief: interfaceTranslator.t(`play.ai.brief.${name}.brief`),
+    goal: interfaceTranslator.t(`play.ai.brief.${name}.goal`),
+    request: interfaceTranslator.t(`play.ai.brief.${name}.request`),
+    productName: interfaceTranslator.t(`play.ai.brief.${name}.name`),
+    productDescription: interfaceTranslator.t(`play.ai.brief.${name}.description`),
+    visitorName: interfaceTranslator.t("play.ai.brief.visitorName"),
     /*
       The two things a visitor can do here, and which agreement decides each.
 
@@ -30,22 +30,22 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
     actions: satisfiesActions([
       {
         id: "submit",
-        label: t(`play.ai.brief.${name}.action`),
+        label: interfaceTranslator.t(`play.ai.brief.${name}.action`),
         decidedBy: "confirmation",
         outcomes: {
-          instant: t("play.ai.brief.result.joined"),
-          review: t("play.ai.brief.result.queued"),
-          login: t("play.ai.brief.result.login"),
+          instant: interfaceTranslator.t("play.ai.brief.result.joined"),
+          review: interfaceTranslator.t("play.ai.brief.result.queued"),
+          login: interfaceTranslator.t("play.ai.brief.result.login"),
         },
       },
       {
         id: "roster",
-        label: t("play.ai.brief.roster"),
+        label: interfaceTranslator.t("play.ai.brief.roster"),
         decidedBy: "roster",
         outcomes: {
-          private: t("play.ai.brief.result.private"),
-          public: t("play.ai.brief.result.public"),
-          login: t("play.ai.brief.result.login"),
+          private: interfaceTranslator.t("play.ai.brief.result.private"),
+          public: interfaceTranslator.t("play.ai.brief.result.public"),
+          login: interfaceTranslator.t("play.ai.brief.result.login"),
         },
         // A public list shows you too, once you are on it. That is what makes
         // 「公开」 a decision rather than a word.
@@ -53,9 +53,12 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
           action: "submit",
           outcome: "instant",
           outcomes: {
-            public: `${t("play.ai.brief.result.public")} ${t("play.ai.brief.ownEntry", {
-              name: t("play.ai.brief.visitorName"),
-            })}`,
+            public: `${interfaceTranslator.t("play.ai.brief.result.public")} ${interfaceTranslator.t(
+              "play.ai.brief.ownEntry",
+              {
+                name: interfaceTranslator.t("play.ai.brief.visitorName"),
+              },
+            )}`,
           },
         },
       },
@@ -63,18 +66,18 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
     gate: {
       axis: "access",
       requiresUnlock: "account",
-      unlockLabel: t("play.ai.brief.login"),
+      unlockLabel: interfaceTranslator.t("play.ai.brief.login"),
       blockedOutcome: "login",
     },
-    hint: t("play.ai.brief.hint"),
-    takeaway: t("play.ai.brief.takeaway"),
+    hint: interfaceTranslator.t("play.ai.brief.hint"),
+    takeaway: interfaceTranslator.t("play.ai.brief.takeaway"),
     source: {
-      label: t("play.ai.brief.source"),
+      label: interfaceTranslator.t("play.ai.brief.source"),
       url: "https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/",
     },
     target: targets[index]!,
     followUp: {
-      request: t(`play.ai.brief.${name}.followUp`),
+      request: interfaceTranslator.t(`play.ai.brief.${name}.followUp`),
       target:
         name === "walk"
           ? { access: "guest", confirmation: "instant", roster: "private" }
@@ -87,55 +90,55 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
     questions: [
       {
         axis: "access",
-        label: t("play.ai.brief.access"),
-        question: t("play.ai.brief.accessQuestion"),
-        answer: t(`play.ai.brief.${name}.accessAnswer`),
+        label: interfaceTranslator.t("play.ai.brief.access"),
+        question: interfaceTranslator.t("play.ai.brief.accessQuestion"),
+        answer: interfaceTranslator.t(`play.ai.brief.${name}.accessAnswer`),
         options: [
           {
             value: "guest",
-            label: t("play.ai.brief.guest"),
-            clause: t("play.ai.brief.guestClause"),
+            label: interfaceTranslator.t("play.ai.brief.guest"),
+            clause: interfaceTranslator.t("play.ai.brief.guestClause"),
           },
           {
             value: "account",
-            label: t("play.ai.brief.account"),
-            clause: t("play.ai.brief.accountClause"),
+            label: interfaceTranslator.t("play.ai.brief.account"),
+            clause: interfaceTranslator.t("play.ai.brief.accountClause"),
           },
         ],
       },
       {
         axis: "confirmation",
-        label: t("play.ai.brief.confirmation"),
-        question: t("play.ai.brief.confirmQuestion"),
-        answer: t(`play.ai.brief.${name}.confirmAnswer`),
+        label: interfaceTranslator.t("play.ai.brief.confirmation"),
+        question: interfaceTranslator.t("play.ai.brief.confirmQuestion"),
+        answer: interfaceTranslator.t(`play.ai.brief.${name}.confirmAnswer`),
         options: [
           {
             value: "instant",
-            label: t("play.ai.brief.instant"),
-            clause: t("play.ai.brief.instantClause"),
+            label: interfaceTranslator.t("play.ai.brief.instant"),
+            clause: interfaceTranslator.t("play.ai.brief.instantClause"),
           },
           {
             value: "review",
-            label: t("play.ai.brief.review"),
-            clause: t("play.ai.brief.reviewClause"),
+            label: interfaceTranslator.t("play.ai.brief.review"),
+            clause: interfaceTranslator.t("play.ai.brief.reviewClause"),
           },
         ],
       },
       {
         axis: "roster",
-        label: t("play.ai.brief.visibility"),
-        question: t("play.ai.brief.rosterQuestion"),
-        answer: t(`play.ai.brief.${name}.rosterAnswer`),
+        label: interfaceTranslator.t("play.ai.brief.visibility"),
+        question: interfaceTranslator.t("play.ai.brief.rosterQuestion"),
+        answer: interfaceTranslator.t(`play.ai.brief.${name}.rosterAnswer`),
         options: [
           {
             value: "private",
-            label: t("play.ai.brief.private"),
-            clause: t("play.ai.brief.privateClause"),
+            label: interfaceTranslator.t("play.ai.brief.private"),
+            clause: interfaceTranslator.t("play.ai.brief.privateClause"),
           },
           {
             value: "public",
-            label: t("play.ai.brief.public"),
-            clause: t("play.ai.brief.publicClause"),
+            label: interfaceTranslator.t("play.ai.brief.public"),
+            clause: interfaceTranslator.t("play.ai.brief.publicClause"),
           },
         ],
       },

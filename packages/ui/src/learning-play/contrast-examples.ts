@@ -1,6 +1,6 @@
 import type { ContrastActivity, ContrastCase } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /**
  * The lab's `contrast` fixture: 「按字找」 against 「比像不像」.
@@ -20,53 +20,53 @@ function cases(): Readonly<Record<string, ContrastCase>> {
   return {
     exact: {
       id: "exact",
-      label: translate("play.contrast.search.exact"),
-      detail: translate("play.contrast.search.exactDetail"),
+      label: interfaceTranslator.t("play.contrast.search.exact"),
+      detail: interfaceTranslator.t("play.contrast.search.exactDetail"),
       outcomes: {
-        literal: translate("play.contrast.search.exactBoth"),
-        similar: translate("play.contrast.search.exactBoth"),
+        literal: interfaceTranslator.t("play.contrast.search.exactBoth"),
+        similar: interfaceTranslator.t("play.contrast.search.exactBoth"),
       },
-      why: translate("play.contrast.search.exactWhy"),
+      why: interfaceTranslator.t("play.contrast.search.exactWhy"),
     },
     synonym: {
       id: "synonym",
-      label: translate("play.contrast.search.synonym"),
-      detail: translate("play.contrast.search.synonymDetail"),
+      label: interfaceTranslator.t("play.contrast.search.synonym"),
+      detail: interfaceTranslator.t("play.contrast.search.synonymDetail"),
       outcomes: {
-        literal: translate("play.contrast.search.synonymLiteral"),
-        similar: translate("play.contrast.search.synonymSimilar"),
+        literal: interfaceTranslator.t("play.contrast.search.synonymLiteral"),
+        similar: interfaceTranslator.t("play.contrast.search.synonymSimilar"),
       },
-      why: translate("play.contrast.search.synonymWhy"),
+      why: interfaceTranslator.t("play.contrast.search.synonymWhy"),
     },
     typo: {
       id: "typo",
-      label: translate("play.contrast.search.typo"),
-      detail: translate("play.contrast.search.typoDetail"),
+      label: interfaceTranslator.t("play.contrast.search.typo"),
+      detail: interfaceTranslator.t("play.contrast.search.typoDetail"),
       outcomes: {
-        literal: translate("play.contrast.search.typoLiteral"),
-        similar: translate("play.contrast.search.typoSimilar"),
+        literal: interfaceTranslator.t("play.contrast.search.typoLiteral"),
+        similar: interfaceTranslator.t("play.contrast.search.typoSimilar"),
       },
-      why: translate("play.contrast.search.typoWhy"),
+      why: interfaceTranslator.t("play.contrast.search.typoWhy"),
     },
     homograph: {
       id: "homograph",
-      label: translate("play.contrast.search.homograph"),
-      detail: translate("play.contrast.search.homographDetail"),
+      label: interfaceTranslator.t("play.contrast.search.homograph"),
+      detail: interfaceTranslator.t("play.contrast.search.homographDetail"),
       outcomes: {
-        literal: translate("play.contrast.search.homographBoth"),
-        similar: translate("play.contrast.search.homographBoth"),
+        literal: interfaceTranslator.t("play.contrast.search.homographBoth"),
+        similar: interfaceTranslator.t("play.contrast.search.homographBoth"),
       },
-      why: translate("play.contrast.search.homographWhy"),
+      why: interfaceTranslator.t("play.contrast.search.homographWhy"),
     },
     orderId: {
       id: "orderId",
-      label: translate("play.contrast.search.orderId"),
-      detail: translate("play.contrast.search.orderIdDetail"),
+      label: interfaceTranslator.t("play.contrast.search.orderId"),
+      detail: interfaceTranslator.t("play.contrast.search.orderIdDetail"),
       outcomes: {
-        literal: translate("play.contrast.search.orderIdLiteral"),
-        similar: translate("play.contrast.search.orderIdSimilar"),
+        literal: interfaceTranslator.t("play.contrast.search.orderIdLiteral"),
+        similar: interfaceTranslator.t("play.contrast.search.orderIdSimilar"),
       },
-      why: translate("play.contrast.search.orderIdWhy"),
+      why: interfaceTranslator.t("play.contrast.search.orderIdWhy"),
     },
   };
 }
@@ -82,26 +82,26 @@ export function getContrastExamples(): readonly ContrastActivity[] {
     {
       id: "contrast-two-ways-to-search",
       kind: "contrast",
-      title: translate("play.contrast.search.title"),
-      brief: translate("play.contrast.search.brief"),
-      goal: translate("play.contrast.search.goal"),
-      takeaway: translate("play.contrast.search.takeaway"),
-      hint: translate("play.contrast.search.hint"),
+      title: interfaceTranslator.t("play.contrast.search.title"),
+      brief: interfaceTranslator.t("play.contrast.search.brief"),
+      goal: interfaceTranslator.t("play.contrast.search.goal"),
+      takeaway: interfaceTranslator.t("play.contrast.search.takeaway"),
+      hint: interfaceTranslator.t("play.contrast.search.hint"),
       source: {
-        label: translate("play.contrast.search.source"),
+        label: interfaceTranslator.t("play.contrast.search.source"),
         url: "https://developer.mozilla.org/en-US/docs/Web/API/String/includes",
       },
-      question: translate("play.contrast.search.question"),
+      question: interfaceTranslator.t("play.contrast.search.question"),
       approaches: [
         {
           id: "literal",
-          label: translate("play.contrast.search.literal"),
-          note: translate("play.contrast.search.literalNote"),
+          label: interfaceTranslator.t("play.contrast.search.literal"),
+          note: interfaceTranslator.t("play.contrast.search.literalNote"),
         },
         {
           id: "similar",
-          label: translate("play.contrast.search.similar"),
-          note: translate("play.contrast.search.similarNote"),
+          label: interfaceTranslator.t("play.contrast.search.similar"),
+          note: interfaceTranslator.t("play.contrast.search.similarNote"),
         },
       ],
       cases: [all.exact!, all.synonym!, all.typo!, all.orderId!],

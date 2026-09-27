@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, type ReactNode } from "react";
@@ -128,7 +129,7 @@ afterEach(async () => {
 describe("study context", () => {
   it("retains a non-default route when returning from a direct course URL", async () => {
     history.replaceState(null, "", "/beta/beta-course");
-    await act(async () => root.render(<App />));
+    await act(async () => root.render(withInterfaceLocale(<App />)));
     expect(container.querySelector(".map-shell__heading h2")?.textContent).toBe("Beta Course");
     const back = container.querySelector<HTMLAnchorElement>(
       '.location-breadcrumb__list > li:not(.location-breadcrumb__overflow) > a[href="/"]',
@@ -145,13 +146,13 @@ describe("study context", () => {
 
   it("keeps the direct course's route across a full document navigation to practice", async () => {
     history.replaceState(null, "", "/beta/beta-course");
-    await act(async () => root.render(<App />));
+    await act(async () => root.render(withInterfaceLocale(<App />)));
     // A native navigation remounts App; a popstate-only test misses the loss.
     // This simulates that lifecycle; S still drives the real anchor/pointer.
     await act(async () => root.unmount());
     root = createRoot(container);
     history.replaceState(null, "", "/practice");
-    await act(async () => root.render(<App />));
+    await act(async () => root.render(withInterfaceLocale(<App />)));
     expect(location.pathname).toBe("/practice");
     expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
   });
@@ -161,7 +162,7 @@ describe("study context", () => {
     // a selection rather than repeating a competing Start button.
     history.replaceState(null, "", "/review");
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
       await Promise.resolve();
     });
 

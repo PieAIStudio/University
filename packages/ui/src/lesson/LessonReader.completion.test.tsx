@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -112,20 +113,22 @@ async function renderReader(
 ) {
   await act(async () => {
     root.render(
-      <LessonReader
-        locator={LOCATOR}
-        view={LESSON_VIEW}
-        completion={completion}
-        unitObjective="我能说出使用 App 和开发 App 的差别。"
-        reader={reader}
-        grading={createMemoryGradingPort()}
-        sourceAccess={SOURCE_ACCESS}
-        requestToken=""
-        onLearningChanged={async () => undefined}
-        neighbours={NEIGHBOURS}
-        onOpenLesson={() => undefined}
-        onBackToCourse={() => undefined}
-      />,
+      withInterfaceLocale(
+        <LessonReader
+          locator={LOCATOR}
+          view={LESSON_VIEW}
+          completion={completion}
+          unitObjective="我能说出使用 App 和开发 App 的差别。"
+          reader={reader}
+          grading={createMemoryGradingPort()}
+          sourceAccess={SOURCE_ACCESS}
+          requestToken=""
+          onLearningChanged={async () => undefined}
+          neighbours={NEIGHBOURS}
+          onOpenLesson={() => undefined}
+          onBackToCourse={() => undefined}
+        />,
+      ),
     );
   });
   return reader;

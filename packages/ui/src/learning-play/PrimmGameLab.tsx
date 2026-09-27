@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { localizeActivity } from "@pieai/university-core";
-import { translate as t, useI18n } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { SoundToggle } from "../sound/index.js";
 import {
   PrimmInvestigate,
@@ -23,6 +23,7 @@ import {
  * by this page.
  */
 export function PrimmGameLab() {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const examples = useMemo(() => primmGameExamples(), []);
   const assets = useMemo(() => primmGameAssets(locale), [locale]);
@@ -39,21 +40,27 @@ export function PrimmGameLab() {
   };
   return (
     <div className="learning-play-lab">
-      <h1 className="play-visually-hidden">{t("primm.lab.title")}</h1>
+      <h1 className="play-visually-hidden">{interfaceTranslator.t("primm.lab.title")}</h1>
       <div className="learning-play-lab__top">
-        <a href="/practice">{t("play.lab.back")}</a>
+        <a href="/practice">{interfaceTranslator.t("play.lab.back")}</a>
         <SoundToggle />
       </div>
-      <nav className="learning-play-lab__collections" aria-label={t("play.ai.collection")}>
-        <a href="/play-lab/catalog">{t("gallery.title")}</a>
-        <a href="/play-lab/ai">{t("play.ai.collection.ai")}</a>
-        <a href="/play-lab">{t("play.ai.collection.foundations")}</a>
+      <nav
+        className="learning-play-lab__collections"
+        aria-label={interfaceTranslator.t("play.ai.collection")}
+      >
+        <a href="/play-lab/catalog">{interfaceTranslator.t("gallery.title")}</a>
+        <a href="/play-lab/ai">{interfaceTranslator.t("play.ai.collection.ai")}</a>
+        <a href="/play-lab">{interfaceTranslator.t("play.ai.collection.foundations")}</a>
         <a href="/play-lab/primm" aria-current="page">
-          {t("play.ai.collection.primm")}
+          {interfaceTranslator.t("play.ai.collection.primm")}
         </a>
       </nav>
-      <p className="primm-lab__note">{t("primm.lab.note")}</p>
-      <nav className="learning-play-lab__modes" aria-label={t("play.lab.select")}>
+      <p className="primm-lab__note">{interfaceTranslator.t("primm.lab.note")}</p>
+      <nav
+        className="learning-play-lab__modes"
+        aria-label={interfaceTranslator.t("play.lab.select")}
+      >
         {PRIMM_GAME_KINDS.map((item) => (
           <GameButton
             sound={false}
@@ -67,7 +74,7 @@ export function PrimmGameLab() {
             onClick={() => restart(item)}
           >
             <span>
-              <strong>{t(`primm.lab.game.${item}`)}</strong>
+              <strong>{interfaceTranslator.t(`primm.lab.game.${item}`)}</strong>
             </span>
           </GameButton>
         ))}
@@ -81,9 +88,9 @@ export function PrimmGameLab() {
           onChange={setDraft}
         />
         <div className="primm-lab__status" data-complete={complete ? "true" : "false"}>
-          <span>{t(complete ? "primm.lab.complete" : "primm.lab.open")}</span>
+          <span>{interfaceTranslator.t(complete ? "primm.lab.complete" : "primm.lab.open")}</span>
           <GameButton sound={false} variant="secondary" type="button" onClick={() => restart(kind)}>
-            {t("primm.lab.restart")}
+            {interfaceTranslator.t("primm.lab.restart")}
           </GameButton>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, type ComponentProps } from "react";
@@ -29,14 +30,16 @@ afterEach(async () => {
 function renderOverview(overrides: Partial<ComponentProps<typeof PracticeOverview>> = {}) {
   return act(async () => {
     root.render(
-      <PracticeOverview
-        categories={CATEGORIES}
-        dueTodayCount={0}
-        dueTomorrowCount={0}
-        questionCount={281}
-        recentCount={0}
-        {...overrides}
-      />,
+      withInterfaceLocale(
+        <PracticeOverview
+          categories={CATEGORIES}
+          dueTodayCount={0}
+          dueTomorrowCount={0}
+          questionCount={281}
+          recentCount={0}
+          {...overrides}
+        />,
+      ),
     );
   });
 }

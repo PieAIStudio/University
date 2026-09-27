@@ -27,7 +27,14 @@ packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 
 
 在设置中选择 English / 简体中文；也可以给地址加 `?lang=en` 或 `?lang=zh-CN`。
 界面语言运行时复用 `@pieai/swimmer-i18n-kit`；译文留在 `packages/ui/src/i18n/catalogs/`，
-中文键与旧 `{{name}}` 调用由本地薄包装兼容，课程正文不受影响。
+目录直接使用 ICU `{name}` / plural / select，保留现有中文键；旧插值与复数适配器已删除。
+React 组件使用 Kit 的目录绑定 Provider/hook。非 React 的浏览器辅助函数直接调用当前
+Kit translator，Node 调用使用独立 core 入口，AI 服务用请求作用域隔离语言。
+应用入口同时把当前语言提供给 NerveKit 的原生 Provider；地图向导与详情直接使用
+已接入共享语言 Kit 的 Nerve 界面，Nerve 目录的完整性与 University 目录分别判断。
+`pnpm i18n:check` 校验完整性、ICU、变量和生成类型，并扫描实际界面；改目录后运行
+`pnpm i18n:types`。核心包的批改/方案目录、支付说明目录和 AI 服务目录独立检查，
+后两者现有文案只有中文，其他语言请求整体回退中文，不冒充已完成英文翻译。
 新路线正文、互动、卡片、练习与引用说明有双语版本，旧应用课程仍保留原中文内容。
 已发布目录以 `apps/university/published-catalog.json` 和生成清单为准；锁定材料
 不是已经交付的课程。真实支付尚未开通，不能把会员页面当作真实交易成功的证明。

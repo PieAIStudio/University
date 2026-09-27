@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import {
   aiEntitlementPolicyOf,
   BILLING_CONFIG,
@@ -17,7 +17,7 @@ export type EntitlementReader = () => Promise<PaymentResult<EntitlementReadModel
 export const DEFAULT_AI_ENTITLEMENTS: AiEntitlementConfig = defaultPlanOf(BILLING_CONFIG).ai;
 
 const MEMBERSHIP_ACTION = {
-  label: translate("ui.capability.aientitlements.copy.查看会员方案"),
+  label: interfaceTranslator.t("ui.capability.aientitlements.copy.查看会员方案"),
   href: toPath({ kind: "plans" }),
 } as const;
 
@@ -29,23 +29,23 @@ export function openTutoringExplanation(ai: AiEntitlementConfig): PaymentExplana
   return {
     kind: "explanation",
     title: zeroAllowance
-      ? translate("ui.capability.aientitlements.copy.今天的开放式辅导次数已用完")
-      : translate("ui.capability.aientitlements.copy.开放式辅导属于会员权益"),
-    whatItDoes: translate(
+      ? interfaceTranslator.t("ui.capability.aientitlements.copy.今天的开放式辅导次数已用完")
+      : interfaceTranslator.t("ui.capability.aientitlements.copy.开放式辅导属于会员权益"),
+    whatItDoes: interfaceTranslator.t(
       "ui.capability.aientitlements.copy.它会把这张复习卡交给-AI-用自己的话再讲一遍-直到你真的弄明白",
     ),
     whyUnavailable: zeroAllowance
-      ? translate(
+      ? interfaceTranslator.t(
           "ui.capability.aientitlements.copy.当前账号的开放式辅导每日次数是-0-所以这个请求不会发给-AI",
         )
-      : translate(
+      : interfaceTranslator.t(
           "ui.capability.aientitlements.copy.免费方案不包含开放式辅导-课文-关卡和今天的免费结构化批改尝试仍然可用",
         ),
     futureSupport: zeroAllowance
-      ? translate(
+      ? interfaceTranslator.t(
           "ui.capability.aientitlements.copy.每日次数恢复或方案更新后-这里会重新检查-不需要把卡片重新做一遍",
         )
-      : translate(
+      : interfaceTranslator.t(
           "ui.capability.aientitlements.copy.开通会员后-这个按钮会按账号当前方案开放-没有会员也不会影响复习卡本身",
         ),
     action: MEMBERSHIP_ACTION,
@@ -55,12 +55,12 @@ export function openTutoringExplanation(ai: AiEntitlementConfig): PaymentExplana
 export function openTutoringReadFailureExplanation(result: PaymentExplanation): PaymentExplanation {
   return {
     ...result,
-    title: translate("ui.capability.aientitlements.copy.开放式辅导权益暂时读不到"),
-    whyUnavailable: translate(
+    title: interfaceTranslator.t("ui.capability.aientitlements.copy.开放式辅导权益暂时读不到"),
+    whyUnavailable: interfaceTranslator.t(
       "ui.capability.aientitlements.copy.value0-因此页面不会猜测你是否有会员-也不会把请求发给-AI",
       { value0: result.whyUnavailable },
     ),
-    futureSupport: translate(
+    futureSupport: interfaceTranslator.t(
       "ui.capability.aientitlements.copy.权益服务恢复后-重新点击这个按钮就会按账号方案判断",
     ),
     action: MEMBERSHIP_ACTION,

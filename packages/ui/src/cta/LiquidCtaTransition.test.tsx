@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -215,7 +216,7 @@ describe("LiquidCtaTransitionLayer", () => {
   it("does not schedule a driver while the CTA is resting", async () => {
     const requestFrame = vi.spyOn(window, "requestAnimationFrame");
     await act(async () => {
-      root.render(<LiquidCtaTransitionLayer />);
+      root.render(withInterfaceLocale(<LiquidCtaTransitionLayer />));
     });
 
     expect(requestFrame).not.toHaveBeenCalled();
@@ -227,12 +228,14 @@ describe("LiquidCtaTransitionLayer", () => {
     registerTestDestination("target");
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="target" onClick={onClick}>
-            开始学习
-          </LiquidCtaButton>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="target" onClick={onClick}>
+              开始学习
+            </LiquidCtaButton>
+          </>,
+        ),
       );
     });
 
@@ -265,12 +268,14 @@ describe("LiquidCtaTransitionLayer", () => {
     const onClick = vi.fn();
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="missing" onClick={onClick}>
-            完成
-          </LiquidCtaButton>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="missing" onClick={onClick}>
+              完成
+            </LiquidCtaButton>
+          </>,
+        ),
       );
     });
     const button = container.querySelector<HTMLButtonElement>("button");
@@ -289,12 +294,14 @@ describe("LiquidCtaTransitionLayer", () => {
     const onClick = vi.fn();
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="late-target" onClick={onClick}>
-            开始学习
-          </LiquidCtaButton>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="late-target" onClick={onClick}>
+              开始学习
+            </LiquidCtaButton>
+          </>,
+        ),
       );
     });
     const button = container.querySelector<HTMLButtonElement>("button");
@@ -316,13 +323,15 @@ describe("LiquidCtaTransitionLayer", () => {
     const onClick = vi.fn();
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="dom-target" onClick={onClick}>
-            完成
-          </LiquidCtaButton>
-          <LiquidDestination id="dom-target">进度</LiquidDestination>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="dom-target" onClick={onClick}>
+              完成
+            </LiquidCtaButton>
+            <LiquidDestination id="dom-target">进度</LiquidDestination>
+          </>,
+        ),
       );
     });
     const button = container.querySelector<HTMLButtonElement>("button");
@@ -342,13 +351,15 @@ describe("LiquidCtaTransitionLayer", () => {
   it("cancels instead of carrying a ghost flight after the same-screen target unmounts", async () => {
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="same-screen-target" onClick={() => undefined}>
-            完成
-          </LiquidCtaButton>
-          <LiquidDestination id="same-screen-target">课文进度</LiquidDestination>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="same-screen-target" onClick={() => undefined}>
+              完成
+            </LiquidCtaButton>
+            <LiquidDestination id="same-screen-target">课文进度</LiquidDestination>
+          </>,
+        ),
       );
     });
     const button = container.querySelector<HTMLButtonElement>("button");
@@ -358,12 +369,14 @@ describe("LiquidCtaTransitionLayer", () => {
 
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="same-screen-target" onClick={() => undefined}>
-            完成
-          </LiquidCtaButton>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="same-screen-target" onClick={() => undefined}>
+              完成
+            </LiquidCtaButton>
+          </>,
+        ),
       );
     });
     expect(liquidCtaTransitionSnapshot()).toBeNull();
@@ -386,12 +399,14 @@ describe("LiquidCtaTransitionLayer", () => {
     const onClick = vi.fn();
     await act(async () => {
       root.render(
-        <>
-          <LiquidCtaTransitionLayer />
-          <LiquidCtaButton destination="target" onClick={onClick}>
-            开始学习
-          </LiquidCtaButton>
-        </>,
+        withInterfaceLocale(
+          <>
+            <LiquidCtaTransitionLayer />
+            <LiquidCtaButton destination="target" onClick={onClick}>
+              开始学习
+            </LiquidCtaButton>
+          </>,
+        ),
       );
     });
     const button = container.querySelector<HTMLButtonElement>("button");

@@ -70,6 +70,7 @@ export interface AppShellProps {
   readonly tabs: readonly ShellNavItem[];
   readonly activeId: string;
   readonly counters?: readonly ShellCounter[];
+  readonly navigationLabels: { readonly primary: string; readonly tabs: string };
   readonly collapseLabels: ShellCollapseLabels;
   readonly brand?: ReactNode;
   readonly aside?: ReactNode;
@@ -113,6 +114,7 @@ export function AppShell({
   activeId,
   counters,
   collapseLabels,
+  navigationLabels,
   brand,
   aside,
   asideLabel,
@@ -262,6 +264,7 @@ export function AppShell({
         inert={mapMode && narrow && mobilePanel === "aside"}
       >
         <NavRail
+          label={navigationLabels.primary}
           items={nav}
           activeId={activeId}
           identity={
@@ -336,7 +339,7 @@ export function AppShell({
           }}
         />
       ) : null}
-      <TabBar items={tabs} activeId={activeId} />
+      <TabBar label={navigationLabels.tabs} items={tabs} activeId={activeId} />
     </div>
   );
 }

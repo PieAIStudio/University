@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -11,7 +12,7 @@ import {
   type AuthSession,
   type AuthUser,
 } from "@pieaistudio/swimmer-auth-kit";
-import { setActiveLocale } from "../../i18n/index.js";
+import { setInterfaceLocale } from "../../i18n/index.js";
 
 import { AuthCallbackScreen, AuthResetScreen, clearConsumedAuthParams } from "./AuthHandoff.js";
 
@@ -34,7 +35,7 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  setActiveLocale("en");
+  setInterfaceLocale("en");
 });
 
 afterEach(async () => {
@@ -103,7 +104,11 @@ describe("AuthCallbackScreen", () => {
     const pending = deferred<AuthUser | null>();
     account.setCurrentUser(pending.promise);
     await act(async () =>
-      root.render(<AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />,
+        ),
+      ),
     );
     await act(async () => account.emit({ user: member }, "SIGNED_IN"));
     expect(container.querySelector("[aria-busy='true']")).not.toBeNull();
@@ -117,7 +122,11 @@ describe("AuthCallbackScreen", () => {
   it("shows continue learning only after a verified registered user", async () => {
     const account = harness({ user: member });
     await act(async () =>
-      root.render(<AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.textContent).toMatch(/Continue learning/i);
@@ -127,7 +136,11 @@ describe("AuthCallbackScreen", () => {
   it("clears a successful callback view on logout", async () => {
     const account = harness({ user: member });
     await act(async () =>
-      root.render(<AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.textContent).toMatch(/Continue learning/i);
@@ -145,7 +158,11 @@ describe("AuthCallbackScreen", () => {
     );
     const account = harness(null);
     await act(async () =>
-      root.render(<AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthCallbackScreen auth={account} locale="en" onContinue={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.textContent).toMatch(/invalid or has expired/i);
@@ -158,7 +175,11 @@ describe("AuthResetScreen", () => {
     history.replaceState(null, "", "/auth/reset?type=recovery");
     const account = harness({ user: guest });
     await act(async () =>
-      root.render(<AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.textContent).toMatch(/invalid or has expired/i);
@@ -172,7 +193,11 @@ describe("AuthResetScreen", () => {
     const execute = vi.fn<AuthPort["execute"]>(async () => ({ status: "updated" as const }));
     account.execute = execute;
     await act(async () =>
-      root.render(<AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.querySelector('input[autocomplete="new-password"]')).not.toBeNull();
@@ -195,7 +220,11 @@ describe("AuthResetScreen", () => {
   it("clears a password-ready recovery state after logout or a different identity", async () => {
     const account = harness({ user: member });
     await act(async () =>
-      root.render(<AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     expect(container.querySelector('input[autocomplete="new-password"]')).not.toBeNull();
@@ -217,7 +246,11 @@ describe("AuthResetScreen", () => {
   it("may retain the same registered user through an offline verifier error", async () => {
     const account = harness({ user: member });
     await act(async () =>
-      root.render(<AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />),
+      root.render(
+        withInterfaceLocale(
+          <AuthResetScreen auth={account} locale="en" onUpdated={() => undefined} />,
+        ),
+      ),
     );
     await flush();
     account.failCurrentUser();

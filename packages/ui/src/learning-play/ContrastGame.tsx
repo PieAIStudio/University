@@ -7,7 +7,7 @@ import {
   type ContrastActivity,
   type ContrastState,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
@@ -31,6 +31,7 @@ export function ContrastGame({
   onAttempt,
   guided = false,
 }: ActivityControls<ContrastActivity>) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<ContrastState>(createContrastState);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -70,7 +71,9 @@ export function ContrastGame({
       </div>
 
       {guided && !done ? (
-        <p className="play-contrast__guide">{t("play.contrast.guidePredict")}</p>
+        <p className="play-contrast__guide">
+          {interfaceTranslator.t("play.contrast.guidePredict")}
+        </p>
       ) : null}
 
       <ul className="play-contrast__cases">
@@ -92,7 +95,9 @@ export function ContrastGame({
                   aria-expanded={showing}
                   onClick={() => setOpen((current) => (current === kase.id ? null : kase.id))}
                 >
-                  {agrees ? t("play.contrast.landedSame") : t("play.contrast.landedApart")}
+                  {agrees
+                    ? interfaceTranslator.t("play.contrast.landedSame")
+                    : interfaceTranslator.t("play.contrast.landedApart")}
                 </button>
               ) : (
                 <div className="play-contrast__choices">
@@ -102,7 +107,7 @@ export function ContrastGame({
                     disabled={disabled}
                     onClick={() => predict(kase.id, true)}
                   >
-                    {t("play.contrast.predictSame")}
+                    {interfaceTranslator.t("play.contrast.predictSame")}
                   </button>
                   <button
                     type="button"
@@ -110,7 +115,7 @@ export function ContrastGame({
                     disabled={disabled}
                     onClick={() => predict(kase.id, false)}
                   >
-                    {t("play.contrast.predictApart")}
+                    {interfaceTranslator.t("play.contrast.predictApart")}
                   </button>
                 </div>
               )}
@@ -144,7 +149,7 @@ export function ContrastGame({
                   role="status"
                 >
                   {reveal?.caseId === kase.id && !reveal.right
-                    ? `${t("play.contrast.notWhatYouSaid")} `
+                    ? `${interfaceTranslator.t("play.contrast.notWhatYouSaid")} `
                     : ""}
                   {kase.why}
                 </p>
@@ -156,13 +161,16 @@ export function ContrastGame({
 
       {done ? (
         <p className="play-contrast__done">
-          {t("play.contrast.summary", { value0: first?.label ?? "", value1: second?.label ?? "" })}
+          {interfaceTranslator.t("play.contrast.summary", {
+            value0: first?.label ?? "",
+            value1: second?.label ?? "",
+          })}
           {` ${activity.takeaway}`}
         </p>
       ) : null}
       {state.misses > 0 && !done ? (
         <p className="play-contrast__misses">
-          {t("play.contrast.misses", { value0: state.misses })}
+          {interfaceTranslator.t("play.contrast.misses", { value0: state.misses })}
         </p>
       ) : null}
     </div>

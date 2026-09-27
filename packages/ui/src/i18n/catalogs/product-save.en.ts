@@ -12,7 +12,7 @@ export const messages = {
   "product.save.initial":
     "Learning is local for now. Signing in does not by itself confirm cloud synchronization.",
   "product.save.anonymousMerge":
-    "Signing into an existing account merges this anonymous session's learning records. Unsubmitted text stays on this device.",
+    "Signing into an existing account merges this anonymous session''s learning records. Unsubmitted text stays on this device.",
   "product.account.title": "Your learning account",
   "product.account.invitation": "Sign in to keep your learning journey together.",
   "product.account.open": "Sign in / Create account",
@@ -45,9 +45,9 @@ export const messages = {
     "This device could not save the latest changes. The page still holds your work; do not close it yet. Restore browser storage and retry.",
   "product.save.heading": "Saving needs attention",
   "product.save.retry": "Retry saving",
-  "product.save.import": "Bring this device's guest learning into this account",
+  "product.save.import": "Bring this device''s guest learning into this account",
   "product.save.importHint":
-    "Only submitted learning records are merged. Unsubmitted text is not uploaded, and one account's records are never imported into another.",
+    "Only submitted learning records are merged. Unsubmitted text is not uploaded, and one account''s records are never imported into another.",
   "product.save.importFailed":
     "The merge did not finish. The original records remain available. Try again later.",
 } as const;

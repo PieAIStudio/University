@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 /**
  * The words and the sound decision the star button is a renderer of.
  *
@@ -11,10 +11,12 @@ import { translate } from "../i18n/index.js";
 export function favouriteStarLabel(pressed: boolean, headword?: string): string {
   const trimmed = headword?.trim() ?? "";
   const target =
-    trimmed.length > 0 ? `「${trimmed}」` : translate("ui.favourites.favouritestar.copy.这个词义");
+    trimmed.length > 0
+      ? `「${trimmed}」`
+      : interfaceTranslator.t("ui.favourites.favouritestar.copy.这个词义");
   return pressed
-    ? translate("ui.favourites.favouritestar.copy.取消收藏value0", { value0: target })
-    : translate("ui.favourites.favouritestar.copy.收藏value0", { value0: target });
+    ? interfaceTranslator.t("ui.favourites.favouritestar.copy.取消收藏value0", { value0: target })
+    : interfaceTranslator.t("ui.favourites.favouritestar.copy.收藏value0", { value0: target });
 }
 
 /** True only on the press that puts the sense onto the list. */

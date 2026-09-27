@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -55,11 +56,13 @@ describe("TodaySection", () => {
       issues: [],
     };
     const markup = renderToStaticMarkup(
-      <TodaySection
-        data={data}
-        onOpenLesson={() => undefined}
-        onReviewed={async () => undefined}
-      />,
+      withInterfaceLocale(
+        <TodaySection
+          data={data}
+          onOpenLesson={() => undefined}
+          onReviewed={async () => undefined}
+        />,
+      ),
     );
     expect(markup).toContain("TuringPact");
     expect(markup).toContain("game-ui-button--static");

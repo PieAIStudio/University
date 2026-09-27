@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import type { LessonRef } from "../view/lesson-view.js";
@@ -37,6 +37,7 @@ export function LessonNextStep({
   readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onBackToCourse: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const { next, position, total } = neighbours;
 
   if (!next) {
@@ -44,17 +45,17 @@ export function LessonNextStep({
       <section
         className="lesson-next"
         data-state="course-end"
-        aria-label={translate("ui.lesson.lessonNextStep.copy.学到这里")}
+        aria-label={interfaceTranslator.t("ui.lesson.lessonNextStep.copy.学到这里")}
       >
         <p className="lesson-next__eyebrow">
-          {translate("ui.lesson.lessonNextStep.copy.第")} {total}{" "}
-          {translate("ui.lesson.lessonNextStep.copy.节-这门课的最后一节")}
+          {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.第")} {total}{" "}
+          {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.节-这门课的最后一节")}
         </p>
         <h2 className="lesson-next__title">
-          {translate("ui.lesson.lessonNextStep.copy.这门课到这里就走完了")}
+          {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.这门课到这里就走完了")}
         </h2>
         <p className="lesson-next__note">
-          {translate(
+          {interfaceTranslator.t(
             "ui.lesson.lessonNextStep.copy.回到课程页可以看到这门课覆盖了项目的哪些地方-以及接下来还有哪些课",
           )}
         </p>
@@ -66,11 +67,11 @@ export function LessonNextStep({
             className="university-cta"
             onClick={onBackToCourse}
           >
-            {translate("ui.lesson.lessonNextStep.copy.回到课程")}
+            {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.回到课程")}
           </GameButton>
         ) : (
           <GameButton variant="ghost" onClick={onBackToCourse}>
-            {translate("ui.lesson.lessonNextStep.copy.回到课程")}
+            {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.回到课程")}
           </GameButton>
         )}
       </section>
@@ -81,21 +82,21 @@ export function LessonNextStep({
     <section
       className="lesson-next"
       data-state={completed ? "ready" : "unfinished"}
-      aria-label={translate("ui.lesson.lessonNextStep.copy.下一节")}
+      aria-label={interfaceTranslator.t("ui.lesson.lessonNextStep.copy.下一节")}
     >
       <p className="lesson-next__eyebrow">
-        {translate("ui.lesson.lessonNextStep.copy.下一节-第")} {position + 1}{" "}
-        {translate("ui.lesson.lessonNextStep.copy.节-共")} {total}{" "}
-        {translate("ui.lesson.lessonNextStep.copy.节")}
+        {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.下一节-第")} {position + 1}{" "}
+        {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.节-共")} {total}{" "}
+        {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.节")}
       </p>
       <h2 className="lesson-next__title">{next.title}</h2>
       {completed ? null : (
         <p className="lesson-next__note">
           {remainingRead
-            ? translate(
+            ? interfaceTranslator.t(
                 "ui.lesson.lessonNextStep.copy.题目过了-还差确认你读过这一版-这节才会计入进度",
               )
-            : translate(
+            : interfaceTranslator.t(
                 "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度",
               )}
         </p>
@@ -108,11 +109,11 @@ export function LessonNextStep({
           className="university-cta"
           onClick={() => onOpenLesson(next)}
         >
-          {translate("ui.lesson.lessonNextStep.copy.继续下一节")}
+          {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.继续下一节")}
         </GameButton>
       ) : (
         <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
-          {translate("ui.lesson.lessonNextStep.copy.先去下一节")}
+          {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.先去下一节")}
         </GameButton>
       )}
     </section>

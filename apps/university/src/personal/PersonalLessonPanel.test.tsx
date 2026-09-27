@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -46,7 +47,11 @@ async function mount(lessonIds = scope.lessonIds) {
   document.body.appendChild(host);
   root = createRoot(host);
   await act(async () =>
-    root!.render(<PersonalLessonPanel scope={{ ...scope, lessonIds }} onClose={() => {}} />),
+    root!.render(
+      withInterfaceLocale(
+        <PersonalLessonPanel scope={{ ...scope, lessonIds }} onClose={() => {}} />,
+      ),
+    ),
   );
 }
 async function unmount() {

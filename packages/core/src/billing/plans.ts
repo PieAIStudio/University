@@ -1,3 +1,4 @@
+import { coreI18n, type CorePlainMessageKey } from "../i18n/core.js";
 /**
  * The product's entitlement configuration.
  *
@@ -34,7 +35,7 @@ export interface AiEntitlementConfig {
 
 export interface Plan {
   readonly id: PlanId;
-  readonly name: string;
+  readonly nameKey: CorePlainMessageKey;
   readonly pricing: PlanPricing;
   readonly ai: AiEntitlementConfig;
   /** Account sync is a right; actual availability also needs an account and remote. */
@@ -42,16 +43,7 @@ export interface Plan {
     readonly included: boolean;
     readonly seats: number;
   };
-  readonly lines: readonly string[];
-  readonly locales?: Readonly<
-    Record<
-      string,
-      {
-        readonly name: string;
-        readonly lines: readonly string[];
-      }
-    >
-  >;
+  readonly lineKeys: readonly CorePlainMessageKey[];
 }
 
 export interface BillingConfig {
@@ -64,7 +56,7 @@ export const BILLING_CONFIG = {
   plans: [
     {
       id: "free",
-      name: "免费",
+      nameKey: "billing.free.name",
       pricing: { kind: "free" },
       ai: {
         deterministicGrading: true,
@@ -75,17 +67,7 @@ export const BILLING_CONFIG = {
         openTutoringTurnsPerDay: null,
       },
       sync: { included: false, seats: 0 },
-      lines: ["全部课程免费学", "练习与复习卡", "绑定邮箱，每天体验 AI 批改"],
-      locales: {
-        en: {
-          name: "Free",
-          lines: [
-            "Read every published course",
-            "Practice and review cards",
-            "Link your email for a daily AI-grading trial",
-          ],
-        },
-      },
+      lineKeys: ["billing.free.line1", "billing.free.line2", "billing.free.line3"],
     },
     /*
       The overseas launch hypothesis is $19 monthly or $149 yearly. Keeping
@@ -99,7 +81,7 @@ export const BILLING_CONFIG = {
     */
     {
       id: "member",
-      name: "会员",
+      nameKey: "billing.member.name",
       pricing: {
         kind: "configured",
         currency: "USD",
@@ -128,17 +110,7 @@ export const BILLING_CONFIG = {
         button says so in its own words rather than leaving the reader to find
         out by clicking.
       */
-      lines: ["学习进度、复习卡同步", "手机、电脑、平板接着学", "AI 批改不受每日免费额度限制"],
-      locales: {
-        en: {
-          name: "Member",
-          lines: [
-            "Sync learning progress and review cards",
-            "Continue on your phone, computer or tablet",
-            "AI grading beyond the daily free allowance",
-          ],
-        },
-      },
+      lineKeys: ["billing.member.line1", "billing.member.line2", "billing.member.line3"],
     },
   ],
 } satisfies BillingConfig;
@@ -146,8 +118,12 @@ export const BILLING_CONFIG = {
 export const PLANS: readonly Plan[] = BILLING_CONFIG.plans;
 
 /** Localized display only: prices, rights and stable plan identity never change. */
-export function planCopyForLocale(plan: Plan, locale: string): Pick<Plan, "name" | "lines"> {
-  return plan.locales?.[locale] ?? plan.locales?.[locale.split("-")[0]!] ?? plan;
+export function planCopyForLocale(
+  plan: Plan,
+  locale: string,
+): { readonly name: string; readonly lines: readonly string[] } {
+  const { t } = coreI18n.translator(locale);
+  return { name: t(plan.nameKey), lines: plan.lineKeys.map((key) => t(key)) };
 }
 
 export function planById(id: PlanId, config: BillingConfig = BILLING_CONFIG): Plan | undefined {

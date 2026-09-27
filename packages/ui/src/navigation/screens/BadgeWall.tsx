@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { badgesFor, type Badge, type ProgressDocument } from "@pieai/university-core";
 
@@ -10,9 +10,12 @@ import { badgesFor, type Badge, type ProgressDocument } from "@pieai/university-
  * makes the wall a list of things worth doing rather than a list of things you
  * have not done.
  */
-export const BADGE_WALL_TITLE = translate("ui.navigation.screens.badgeWall.copy.徽章墙");
+export const BADGE_WALL_TITLE = interfaceTranslator.t(
+  "ui.navigation.screens.badgeWall.copy.徽章墙",
+);
 
 function BadgeTile({ badge }: { badge: Badge }) {
+  const interfaceTranslator = useI18n();
   return (
     <li className={`badge-tile${badge.earned ? " badge-tile--earned" : ""}`}>
       <div className="badge-tile__disc" aria-hidden="true">
@@ -23,7 +26,7 @@ function BadgeTile({ badge }: { badge: Badge }) {
           <span className="badge-tile__name">{badge.name}</span>
           {badge.earned ? (
             <GameBadge tone="success">
-              {translate("ui.navigation.screens.badgeWall.copy.已获得")}
+              {interfaceTranslator.t("ui.navigation.screens.badgeWall.copy.已获得")}
             </GameBadge>
           ) : null}
         </div>
@@ -43,6 +46,7 @@ export function BadgeWall({
   readonly document: ProgressDocument;
   readonly coursesFinished?: number;
 }) {
+  const interfaceTranslator = useI18n();
   const badges = badgesFor(progress, coursesFinished);
   const earned = badges.filter((badge) => badge.earned).length;
 
@@ -51,7 +55,7 @@ export function BadgeWall({
       <header className="shell-screen__head">
         <h1>{BADGE_WALL_TITLE}</h1>
         <p className="shell-screen__lede">
-          {translate(
+          {interfaceTranslator.t(
             "ui.navigation.screens.badgeWall.copy.十枚-其中四枚不是靠量能拿到的-三枚要真的过了那么多天-一枚要排程同意你确实记住了-一下午就能刷完的墙-一周后就",
           )}
         </p>
@@ -59,7 +63,7 @@ export function BadgeWall({
 
       <GamePanel tone="strong">
         <GameProgress
-          label={translate("ui.navigation.screens.badgeWall.copy.已获得")}
+          label={interfaceTranslator.t("ui.navigation.screens.badgeWall.copy.已获得")}
           value={earned}
           max={badges.length}
           tone={earned > 0 ? "success" : "accent"}

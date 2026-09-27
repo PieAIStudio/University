@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { ProgressPort, WorldStyle } from "@pieai/university-core";
-import { translate, useI18n } from "./i18n/index.js";
+import { useI18n } from "./i18n/index.js";
 
 type StyleProgress = Pick<ProgressPort, "accountData" | "setAccountPreferences" | "subscribe">;
 let binding: { port: StyleProgress; unsubscribe: () => void } | null = null;
@@ -51,9 +51,10 @@ export function useWorldStyle(): WorldStyle {
 
 /** Same account choice on the map, in settings, and in isolated avatar previews. */
 export function WorldStyleControl({ compact = false }: { readonly compact?: boolean }) {
+  const interfaceTranslator = useI18n();
   useI18n();
   const style = useWorldStyle();
-  const label = translate("product.worldStyle.label");
+  const label = interfaceTranslator.t("product.worldStyle.label");
   return (
     <div className={`world-style-control${compact ? " world-style-control--compact" : ""}`}>
       {!compact ? <h2 className="settings-screen__heading">{label}</h2> : null}
@@ -67,7 +68,7 @@ export function WorldStyleControl({ compact = false }: { readonly compact?: bool
             data-world-style-choice={option}
             onClick={() => writeWorldStyle(option)}
           >
-            {translate(
+            {interfaceTranslator.t(
               option === "classic" ? "product.worldStyle.classic" : "product.worldStyle.clay",
             )}
           </GameButton>

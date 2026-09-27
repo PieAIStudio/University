@@ -6,7 +6,7 @@ export const messages = {
   "play.qualityGuide.eval.startAction": "Try the starter request",
   "play.qualityGuide.eval.starterNote":
     "The conditions and expectation are explicit. Only clicking records an actual trial.",
-  "play.qualityGuide.eval.candidate": "Trying {{candidate}} · Change candidate",
+  "play.qualityGuide.eval.candidate": "Trying {candidate} · Change candidate",
   "play.qualityGuide.eval.repeat": "Try the same request again. Does the answer stay the same?",
   "play.qualityGuide.eval.tryCandidate":
     "This candidate has not answered the current request. Try it once.",
@@ -23,7 +23,7 @@ export const messages = {
     "Next: what should happen when a slot or item is unavailable?",
   "play.qualityGuide.eval.next.out-of-scope":
     "Next: what if a customer asks for something beyond the service?",
-  "play.qualityGuide.eval.coverage": "{{count}} / 4 request categories covered",
+  "play.qualityGuide.eval.coverage": "{count} / 4 request categories covered",
   "play.qualityGuide.eval.moreTrials":
     "You have all four categories. Observe a boundary failure before deciding how to release.",
   "play.qualityGuide.eval.release":
@@ -35,11 +35,11 @@ export const messages = {
   "play.qualityGuide.repair.patchTab": "Choose a change",
   "play.qualityGuide.repair.historyTab": "Records and restore",
   "play.qualityGuide.repair.navigation": "Repair workspace",
-  "play.qualityGuide.repair.book": "Click “{{submit}}” once and count the booking records.",
+  "play.qualityGuide.repair.book": "Click “{submit}” once and count the booking records.",
   "play.qualityGuide.repair.bookAgain":
     "Keep the same time slot. Book once more and see whether another record appears.",
-  "play.qualityGuide.repair.choose": "First choose “{{choice}}”.",
-  "play.qualityGuide.repair.save": "Now click “{{submit}}” to save your selection.",
+  "play.qualityGuide.repair.choose": "First choose “{choice}”.",
+  "play.qualityGuide.repair.save": "Now click “{submit}” to save your selection.",
   "play.qualityGuide.repair.reopen":
     "The page says it saved. Reopen the page to check whether your choice survived.",
   "play.qualityGuide.repair.capture":
@@ -48,7 +48,7 @@ export const messages = {
     "Each proposal claims to fix the issue. Choose one and read its scope before applying it.",
   "play.qualityGuide.repair.replay":
     "Let both versions take the same actions, and compare each result.",
-  "play.qualityGuide.repair.replayNext": "Next action: {{action}}",
+  "play.qualityGuide.repair.replayNext": "Next action: {action}",
   "play.qualityGuide.repair.checkReplay":
     "Both versions have taken the same actions. Check whether the original issue is fixed.",
   "play.qualityGuide.repair.oldNext":
@@ -56,7 +56,7 @@ export const messages = {
   "play.qualityGuide.repair.cancel":
     "You booked once. Cancel it now to see whether you can change the slot.",
   "play.qualityGuide.repair.changeChoice":
-    "Choose “{{choice}}” to check whether users can still change their minds.",
+    "Choose “{choice}” to check whether users can still change their minds.",
   "play.qualityGuide.repair.bookChanged":
     "Book the new slot and check that only its booking remains.",
   "play.qualityGuide.repair.reloadLatest":

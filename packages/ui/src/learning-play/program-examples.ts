@@ -1,22 +1,22 @@
 import type { ProgramActivity } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /** Localized experiment payloads; these do not produce or publish lessons. */
 export function getProgramExamples(): readonly ProgramActivity[] {
   const source = {
-    label: translate("play.program.source"),
+    label: interfaceTranslator.t("play.program.source"),
     url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration",
   };
   return [
     {
       kind: "program",
       id: "program-delivery",
-      title: translate("play.program.delivery.title"),
-      brief: translate("play.program.delivery.brief"),
-      goal: translate("play.program.delivery.goal"),
-      takeaway: translate("play.program.delivery.takeaway"),
-      hint: translate("play.program.delivery.hint"),
+      title: interfaceTranslator.t("play.program.delivery.title"),
+      brief: interfaceTranslator.t("play.program.delivery.brief"),
+      goal: interfaceTranslator.t("play.program.delivery.goal"),
+      takeaway: interfaceTranslator.t("play.program.delivery.takeaway"),
+      hint: interfaceTranslator.t("play.program.delivery.hint"),
       source,
       width: 5,
       height: 5,
@@ -40,11 +40,11 @@ export function getProgramExamples(): readonly ProgramActivity[] {
     {
       kind: "program",
       id: "program-irrigation",
-      title: translate("play.program.irrigation.title"),
-      brief: translate("play.program.irrigation.brief"),
-      goal: translate("play.program.irrigation.goal"),
-      takeaway: translate("play.program.irrigation.takeaway"),
-      hint: translate("play.program.irrigation.hint"),
+      title: interfaceTranslator.t("play.program.irrigation.title"),
+      brief: interfaceTranslator.t("play.program.irrigation.brief"),
+      goal: interfaceTranslator.t("play.program.irrigation.goal"),
+      takeaway: interfaceTranslator.t("play.program.irrigation.takeaway"),
+      hint: interfaceTranslator.t("play.program.irrigation.hint"),
       source,
       width: 6,
       height: 5,

@@ -7,7 +7,7 @@ import {
   type Connection,
   type ConnectActivity,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
@@ -17,6 +17,7 @@ export function ConnectGame({
   onAttempt,
   guided = false,
 }: ActivityControls<ConnectActivity>) {
+  const interfaceTranslator = useI18n();
   const [edges, setEdges] = useState<Connection[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [compact, setCompact] = useState(false);
@@ -132,10 +133,13 @@ export function ConnectGame({
       ? activity.edges.find((edge) => edge.from === stuck.from && edge.to === stuck.to)?.why
       : undefined;
     const message = result.passed
-      ? t("play.connect.win", { count: activity.edges.length })
+      ? interfaceTranslator.t("play.connect.win", { count: activity.edges.length })
       : extra
-        ? t("play.connect.extra", { from: nodeOf(extra.from).label, to: nodeOf(extra.to).label })
-        : t("play.connect.missing", {
+        ? interfaceTranslator.t("play.connect.extra", {
+            from: nodeOf(extra.from).label,
+            to: nodeOf(extra.to).label,
+          })
+        : interfaceTranslator.t("play.connect.missing", {
             why: stuckWhy ?? result.missing[0]?.why ?? activity.hint,
           });
     const frames = paths.flatMap((path) => path.visited.map((id) => ({ id, label: path.label })));
@@ -177,19 +181,21 @@ export function ConnectGame({
     <div className="play-connect">
       <p className="play-instruction">
         {selected
-          ? t("play.connect.selected", { label: nodeOf(selected).label })
+          ? interfaceTranslator.t("play.connect.selected", { label: nodeOf(selected).label })
           : guided
             ? edges.length
-              ? t("play.usability.connect.next", { count: edges.length })
-              : t("play.usability.connect.first", { name: activity.nodes[0]!.label })
-            : t("play.connect.help")}
+              ? interfaceTranslator.t("play.usability.connect.next", { count: edges.length })
+              : interfaceTranslator.t("play.usability.connect.first", {
+                  name: activity.nodes[0]!.label,
+                })
+            : interfaceTranslator.t("play.connect.help")}
       </p>
       <div
         ref={board}
         className="play-connect__board"
         data-compact={compact}
         style={{ height: boardHeight }}
-        aria-label={t("play.connect.board")}
+        aria-label={interfaceTranslator.t("play.connect.board")}
       >
         <svg
           className="play-connect__wires"
@@ -264,7 +270,7 @@ export function ConnectGame({
       </div>
       <div className="play-connect__connections" aria-live="polite">
         {edges.length === 0 ? (
-          <p className="play-muted">{t("play.connect.empty")}</p>
+          <p className="play-muted">{interfaceTranslator.t("play.connect.empty")}</p>
         ) : (
           edges.map((edge) => (
             <GameButton
@@ -274,7 +280,7 @@ export function ConnectGame({
               type="button"
               key={connectionKey(edge)}
               disabled={disabled || running}
-              aria-label={t("play.connect.remove", {
+              aria-label={interfaceTranslator.t("play.connect.remove", {
                 from: nodeOf(edge.from).label,
                 to: nodeOf(edge.to).label,
               })}
@@ -307,14 +313,20 @@ export function ConnectGame({
           disabled={disabled || running || edges.length === 0}
           onClick={run}
         >
-          {t(running ? "play.connect.running" : "play.connect.run")}
+          {interfaceTranslator.t(running ? "play.connect.running" : "play.connect.run")}
         </GameButton>
         <span className="play-muted">
-          {t("play.connect.progress", { count: edges.length, total: activity.edges.length })}
+          {interfaceTranslator.t("play.connect.progress", {
+            count: edges.length,
+            total: activity.edges.length,
+          })}
         </span>
       </div>
       {traces.length > 0 ? (
-        <div className="play-connect__traces" aria-label={t("play.connect.trace")}>
+        <div
+          className="play-connect__traces"
+          aria-label={interfaceTranslator.t("play.connect.trace")}
+        >
           {traces.map((trace) => (
             <p key={trace.label}>
               <strong>{trace.label}</strong>
@@ -322,7 +334,7 @@ export function ConnectGame({
                 {trace.visited.map((id) => nodeOf(id).label).join(" → ")}
                 {trace.blocked ? (
                   <em className="play-connect__gap">
-                    {t("play.connect.gap", {
+                    {interfaceTranslator.t("play.connect.gap", {
                       from: nodeOf(trace.blocked.from).label,
                       to: nodeOf(trace.blocked.to).label,
                     })}

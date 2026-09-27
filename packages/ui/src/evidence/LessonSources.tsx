@@ -1,4 +1,4 @@
-import { formatDate, translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import {
   evidenceHost,
   isUrlEvidenceView,
@@ -26,6 +26,7 @@ import {
  * and a list that says so nineteen times is a list nobody reads.
  */
 export function LessonSources({ evidence }: { readonly evidence: readonly EvidenceView[] }) {
+  const interfaceTranslator = useI18n();
   const grouped = new Map<string, UrlEvidenceView[]>();
   for (const reference of evidence) {
     if (!isUrlEvidenceView(reference)) continue;
@@ -49,9 +50,11 @@ export function LessonSources({ evidence }: { readonly evidence: readonly Eviden
   return (
     <section
       className="lesson-sources"
-      aria-label={translate("ui.evidence.lessonSources.copy.出处")}
+      aria-label={interfaceTranslator.t("ui.evidence.lessonSources.copy.出处")}
     >
-      <h2 className="lesson-sources__label">{translate("ui.evidence.lessonSources.copy.出处")}</h2>
+      <h2 className="lesson-sources__label">
+        {interfaceTranslator.t("ui.evidence.lessonSources.copy.出处")}
+      </h2>
       <ul className="lesson-sources__list">
         {sources.map((references) => {
           const reference = references[0]!;
@@ -63,7 +66,7 @@ export function LessonSources({ evidence }: { readonly evidence: readonly Eviden
               <small>{evidenceHost(reference)}</small>
               {references.some((item) => item.provenance) ? (
                 <details className="lesson-sources__details">
-                  <summary>{translate("sources.why")}</summary>
+                  <summary>{interfaceTranslator.t("sources.why")}</summary>
                   {references.map((item, index) => (
                     <SourceDetails key={index} reference={item} />
                   ))}
@@ -78,40 +81,44 @@ export function LessonSources({ evidence }: { readonly evidence: readonly Eviden
 }
 
 function SourceDetails({ reference }: { readonly reference: UrlEvidenceView }) {
+  const interfaceTranslator = useI18n();
   const source = reference.provenance;
   if (!source) return null;
   // A calendar date is not a timestamp. UTC formatting keeps a Honolulu
   // reader from seeing the preceding day for a publication dated at midnight.
-  const date = (value: string) => formatDate(`${value}T00:00:00Z`, { timeZone: "UTC" });
+  const date = (value: string) =>
+    interfaceTranslator.date(`${value}T00:00:00Z`, { timeZone: "UTC" });
   return (
     <dl className="lesson-sources__provenance">
-      <dt>{translate("sources.publisher")}</dt>
+      <dt>{interfaceTranslator.t("sources.publisher")}</dt>
       <dd>{source.publisher}</dd>
-      <dt>{translate("sources.type")}</dt>
-      <dd>{translate(`sources.type.${source.type}`)}</dd>
+      <dt>{interfaceTranslator.t("sources.type")}</dt>
+      <dd>{interfaceTranslator.t(`sources.type.${source.type}`)}</dd>
       {source.publishedOn ? (
         <>
-          <dt>{translate("sources.published")}</dt>
+          <dt>{interfaceTranslator.t("sources.published")}</dt>
           <dd>
             <time dateTime={source.publishedOn}>{date(source.publishedOn)}</time>
           </dd>
         </>
       ) : null}
-      <dt>{translate("sources.accessed")}</dt>
+      <dt>{interfaceTranslator.t("sources.accessed")}</dt>
       <dd>
         <time dateTime={source.accessedOn}>{date(source.accessedOn)}</time>
       </dd>
       {source.locator ? (
         <>
-          <dt>{translate("sources.location")}</dt>
+          <dt>{interfaceTranslator.t("sources.location")}</dt>
           <dd>{source.locator}</dd>
         </>
       ) : null}
       <dt>
-        {translate(reference.kind === "inference" ? "sources.inference" : "sources.supports")}
+        {interfaceTranslator.t(
+          reference.kind === "inference" ? "sources.inference" : "sources.supports",
+        )}
       </dt>
       <dd>{source.supports}</dd>
-      <dt>{translate("sources.limits")}</dt>
+      <dt>{interfaceTranslator.t("sources.limits")}</dt>
       <dd>{source.limitations}</dd>
     </dl>
   );

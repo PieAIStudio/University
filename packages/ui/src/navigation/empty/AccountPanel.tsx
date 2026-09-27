@@ -1,4 +1,4 @@
-import { translate, useI18n } from "../../i18n/index.js";
+import { useI18n, interfaceTranslator } from "../../i18n/index.js";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   GameButton,
@@ -25,21 +25,29 @@ import { accountFailureMessage } from "./account-errors.js";
  * shared AuthKit form. It never intercepts a lesson.
  */
 
-export const ACCOUNT_UNSIGNED_TITLE = translate("product.account.title");
-export const ACCOUNT_UNSIGNED_DESCRIPTION = translate("product.account.description");
+export const ACCOUNT_UNSIGNED_TITLE = interfaceTranslator.t("product.account.title");
+export const ACCOUNT_UNSIGNED_DESCRIPTION = interfaceTranslator.t("product.account.description");
 /**
  * Said from the learner's side of the screen, not ours.
  *
  * If the backend is not configured, say that plainly. The local cache still
  * works, but it is not a cross-device guarantee until an account is connected.
  */
-export const ACCOUNT_UNCONFIGURED_DESCRIPTION = translate("product.account.unconfigured");
-export const ACCOUNT_UNCONFIGURED_ACTION = translate("product.account.open");
-export const ACCOUNT_UNCONFIGURED_REASON = translate("product.account.retryReason");
-export const ACCOUNT_SIGNED_IN_TITLE = translate("ui.navigation.empty.accountPanel.copy.已经登录");
-export const ACCOUNT_PENDING_LABEL = translate("ui.navigation.empty.accountPanel.copy.正在登录");
-export const ACCOUNT_SIGN_IN = translate("ui.navigation.empty.accountPanel.copy.登录");
-export const ACCOUNT_SIGN_OUT = translate("ui.navigation.empty.accountPanel.copy.退出登录");
+export const ACCOUNT_UNCONFIGURED_DESCRIPTION = interfaceTranslator.t(
+  "product.account.unconfigured",
+);
+export const ACCOUNT_UNCONFIGURED_ACTION = interfaceTranslator.t("product.account.open");
+export const ACCOUNT_UNCONFIGURED_REASON = interfaceTranslator.t("product.account.retryReason");
+export const ACCOUNT_SIGNED_IN_TITLE = interfaceTranslator.t(
+  "ui.navigation.empty.accountPanel.copy.已经登录",
+);
+export const ACCOUNT_PENDING_LABEL = interfaceTranslator.t(
+  "ui.navigation.empty.accountPanel.copy.正在登录",
+);
+export const ACCOUNT_SIGN_IN = interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.登录");
+export const ACCOUNT_SIGN_OUT = interfaceTranslator.t(
+  "ui.navigation.empty.accountPanel.copy.退出登录",
+);
 
 export function authKitLocale(locale: string): AuthLocale {
   return locale.toLowerCase().startsWith("zh") ? "zh" : "en";
@@ -61,6 +69,7 @@ export function AccountPanel({
   readonly onContinueLearning?: () => void;
   readonly onResult?: (result: AuthResult) => void | Promise<void>;
 }) {
+  const interfaceTranslator = useI18n();
   const status = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
   const i18n = useI18n();
   const locale = authKitLocale(i18n.locale);
@@ -92,10 +101,10 @@ export function AccountPanel({
     return (
       <section
         className="account-panel"
-        aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
+        aria-label={interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.账号")}
       >
         <GamePanel className="account-panel__invitation" title={ACCOUNT_UNSIGNED_TITLE}>
-          <p>{translate("product.account.invitation")}</p>
+          <p>{interfaceTranslator.t("product.account.invitation")}</p>
           <GameButton
             variant="primary"
             static
@@ -108,8 +117,8 @@ export function AccountPanel({
         {showUnavailableReason ? (
           <GameModal
             open
-            title={translate("product.account.retryTitle")}
-            closeLabel={translate("ui.navigation.empty.accountPanel.copy.关闭登录说明")}
+            title={interfaceTranslator.t("product.account.retryTitle")}
+            closeLabel={interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.关闭登录说明")}
             closeOnBackdrop
             onClose={() => setShowUnavailableReason(false)}
             footer={
@@ -118,7 +127,7 @@ export function AccountPanel({
                 type="button"
                 onClick={() => setShowUnavailableReason(false)}
               >
-                {translate("ui.navigation.empty.accountPanel.copy.知道了")}
+                {interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.知道了")}
               </GameButton>
             }
           >
@@ -134,7 +143,7 @@ export function AccountPanel({
     return (
       <section
         className="account-panel"
-        aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
+        aria-label={interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.账号")}
       >
         <div className="account-panel__signed-in">
           <p>{status.user.email ?? ACCOUNT_SIGNED_IN_TITLE}</p>
@@ -159,7 +168,7 @@ export function AccountPanel({
                 .finally(() => setIsSigningOut(false));
             }}
           >
-            {isSigningOut ? translate("account.failure.signingOut") : ACCOUNT_SIGN_OUT}
+            {isSigningOut ? interfaceTranslator.t("account.failure.signingOut") : ACCOUNT_SIGN_OUT}
           </GameButton>
         </div>
         {continueLearningHref ? (
@@ -171,12 +180,12 @@ export function AccountPanel({
             type="button"
             onClick={() => onContinueLearning?.()}
           >
-            {translate("product.account.continueLearning")}
+            {interfaceTranslator.t("product.account.continueLearning")}
           </GameButton>
         ) : null}
         {auth ? (
           <details className="product-details account-panel__password">
-            <summary>{translate("product.account.changePassword")}</summary>
+            <summary>{interfaceTranslator.t("product.account.changePassword")}</summary>
             <UpdatePasswordForm
               port={auth}
               locale={locale}
@@ -186,7 +195,7 @@ export function AccountPanel({
           </details>
         ) : null}
         {signOutError ? (
-          <GameCallout tone="danger" heading={translate("account.failure.heading")}>
+          <GameCallout tone="danger" heading={interfaceTranslator.t("account.failure.heading")}>
             {signOutError}
           </GameCallout>
         ) : null}
@@ -231,6 +240,7 @@ function UnsignedAccountForm({
   readonly focusRequest: number;
   readonly onResult?: (result: AuthResult) => void | Promise<void>;
 }) {
+  const interfaceTranslator = useI18n();
   const formDetails = useRef<HTMLDetailsElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -249,15 +259,15 @@ function UnsignedAccountForm({
   return (
     <div className="account-panel" aria-busy={pending} ref={panelRef}>
       <h2>{ACCOUNT_UNSIGNED_TITLE}</h2>
-      <p>{translate("product.account.invitation")}</p>
+      <p>{interfaceTranslator.t("product.account.invitation")}</p>
       <details className="product-details account-panel__form" ref={formDetails}>
-        <summary>{translate("product.account.open")}</summary>
-        {anonymous ? <p>{translate("product.save.anonymousMerge")}</p> : null}
+        <summary>{interfaceTranslator.t("product.account.open")}</summary>
+        {anonymous ? <p>{interfaceTranslator.t("product.save.anonymousMerge")}</p> : null}
         {pending ? <GameLoadingState label={ACCOUNT_PENDING_LABEL} /> : null}
         {error ? (
           <GameCallout
             tone="danger"
-            heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
+            heading={interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.没登上")}
           >
             {error}
           </GameCallout>
@@ -273,9 +283,9 @@ function UnsignedAccountForm({
           />
         ) : null}
         <details className="product-details">
-          <summary>{translate("product.account.help")}</summary>
+          <summary>{interfaceTranslator.t("product.account.help")}</summary>
           <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
-          <p>{translate("product.account.mailboxHint")}</p>
+          <p>{interfaceTranslator.t("product.account.mailboxHint")}</p>
         </details>
       </details>
     </div>

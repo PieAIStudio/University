@@ -13,7 +13,7 @@ import {
   type SkipTestVerdict,
 } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { ContentPort } from "../content/port.js";
 import type { UnitView } from "../view/lesson-view.js";
 import { ChoiceOptions } from "../review/ChoiceOptions.js";
@@ -89,6 +89,7 @@ export function UnitSkipTest({
   onOpenLesson,
   pick,
 }: UnitSkipTestProps) {
+  const interfaceTranslator = useI18n();
   const [sitting, setSitting] = useState<Sitting>({ kind: "idle" });
   const lessonIds = unit.lessons.map((lesson) => lesson.id);
   const alreadyProven = isUnitProven(lessonIds, proven);
@@ -166,13 +167,17 @@ export function UnitSkipTest({
       <div className="skip-test skip-test--entry">
         <p className="skip-test__pitch">
           {alreadyProven
-            ? translate("ui.path.unitSkipTest.copy.这一单元你已经证明过了-想再试一次也可以")
-            : translate("ui.path.unitSkipTest.copy.这一单元你已经会了-做三道它自己的题就能跳过去")}
+            ? interfaceTranslator.t(
+                "ui.path.unitSkipTest.copy.这一单元你已经证明过了-想再试一次也可以",
+              )
+            : interfaceTranslator.t(
+                "ui.path.unitSkipTest.copy.这一单元你已经会了-做三道它自己的题就能跳过去",
+              )}
         </p>
         <GameButton variant="ghost" onClick={() => void start()}>
           {alreadyProven
-            ? translate("ui.path.unitSkipTest.copy.再测一次")
-            : translate("ui.path.unitSkipTest.copy.我会了")}
+            ? interfaceTranslator.t("ui.path.unitSkipTest.copy.再测一次")
+            : interfaceTranslator.t("ui.path.unitSkipTest.copy.我会了")}
         </GameButton>
       </div>
     );
@@ -181,7 +186,7 @@ export function UnitSkipTest({
   if (sitting.kind === "loading") {
     return (
       <p className="skip-test skip-test__note" aria-live="polite">
-        {translate("ui.path.unitSkipTest.copy.正在从这一单元里抽题")}
+        {interfaceTranslator.t("ui.path.unitSkipTest.copy.正在从这一单元里抽题")}
       </p>
     );
   }
@@ -190,10 +195,10 @@ export function UnitSkipTest({
     return (
       <div className="skip-test" aria-live="polite">
         <p className="skip-test__note">
-          {translate("ui.path.unitSkipTest.copy.这一单元的题没读出来-再试一次")}
+          {interfaceTranslator.t("ui.path.unitSkipTest.copy.这一单元的题没读出来-再试一次")}
         </p>
         <GameButton variant="ghost" onClick={() => void start()}>
-          {translate("ui.path.unitSkipTest.copy.再试一次")}
+          {interfaceTranslator.t("ui.path.unitSkipTest.copy.再试一次")}
         </GameButton>
       </div>
     );
@@ -209,7 +214,7 @@ export function UnitSkipTest({
     return (
       <div className="skip-test" aria-live="polite">
         <p className="skip-test__note">
-          {translate(
+          {interfaceTranslator.t(
             "ui.path.unitSkipTest.copy.这一单元凑不出三道能当场判对错的题-所以没法用做题跳过",
           )}
         </p>
@@ -223,8 +228,8 @@ export function UnitSkipTest({
     return (
       <div className="skip-test" aria-live="polite">
         <p className="skip-test__progress">
-          {translate("ui.path.courseRouteQuiz.copy.第")} {sitting.results.length + 1} /{" "}
-          {sitting.questions.length} {translate("ui.path.courseRouteQuiz.copy.题")}
+          {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.第")} {sitting.results.length + 1} /{" "}
+          {sitting.questions.length} {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.题")}
         </p>
         <p className="skip-test__prompt">{question.prompt}</p>
         {question.options ? (
@@ -236,7 +241,7 @@ export function UnitSkipTest({
         ) : (
           <>
             <label className="skip-test__label" htmlFor={`skip-${unit.id}`}>
-              {translate("ui.path.unitSkipTest.copy.把你的答案写在这里")}
+              {interfaceTranslator.t("ui.path.unitSkipTest.copy.把你的答案写在这里")}
             </label>
             <textarea
               id={`skip-${unit.id}`}
@@ -252,12 +257,12 @@ export function UnitSkipTest({
         {sitting.blank ? (
           <p className="skip-test__note">
             {question.options
-              ? translate("grading.answer.chooseHint")
-              : translate("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
+              ? interfaceTranslator.t("grading.answer.chooseHint")
+              : interfaceTranslator.t("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
           </p>
         ) : null}
         <GameButton variant="primary" onClick={submit}>
-          {translate("ui.path.unitSkipTest.copy.交这一题")}
+          {interfaceTranslator.t("ui.path.unitSkipTest.copy.交这一题")}
         </GameButton>
       </div>
     );
@@ -274,20 +279,22 @@ export function UnitSkipTest({
               case — to a learner who just got everything wrong, being told they
               got one right is the product not having watched.
             */}
-            {translate("ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧", {
+            {interfaceTranslator.t("ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧", {
               wrong: sitting.wrong,
             })}
           </p>
           <GameButton variant="ghost" onClick={() => setSitting({ kind: "idle" })}>
-            {translate("ui.path.unitSkipTest.copy.再测一次")}
+            {interfaceTranslator.t("ui.path.unitSkipTest.copy.再测一次")}
           </GameButton>
         </>
       ) : (
         <>
           <p className="skip-test__verdict">
             {sitting.wrong === 0
-              ? translate("ui.path.unitSkipTest.copy.三道全对-这一单元你不用从头学了")
-              : translate("ui.path.unitSkipTest.copy.错了一道-那一节读一下-其余的算你会了")}
+              ? interfaceTranslator.t("ui.path.unitSkipTest.copy.三道全对-这一单元你不用从头学了")
+              : interfaceTranslator.t(
+                  "ui.path.unitSkipTest.copy.错了一道-那一节读一下-其余的算你会了",
+                )}
           </p>
           {sitting.opened.map((lessonId) => (
             <button
@@ -296,7 +303,7 @@ export function UnitSkipTest({
               className="text-button skip-test__open"
               onClick={() => onOpenLesson({ studyId, courseId, unitId: unit.id, lessonId })}
             >
-              {translate("ui.path.unitSkipTest.copy.去读")}
+              {interfaceTranslator.t("ui.path.unitSkipTest.copy.去读")}
               {lessonTitle(lessonId)}
             </button>
           ))}
@@ -306,7 +313,7 @@ export function UnitSkipTest({
             read anything, and the cards stay out of the queue until they do.
           */}
           <p className="skip-test__note">
-            {translate(
+            {interfaceTranslator.t(
               "ui.path.unitSkipTest.copy.跳过不等于学过-这几节的复习卡不会进复习队列-想正式读随时点进来-那时才开始排期",
             )}
           </p>

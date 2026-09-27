@@ -1,6 +1,6 @@
 import { formatLineRange } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useId, useState } from "react";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
@@ -47,6 +47,7 @@ export function EvidenceInlineSource({
   readonly loadOnMount?: boolean;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const triggerId = useId();
   const cited = parseLineRange(lines);
   const [status, setStatus] = useState<"deferred" | "loading" | "ready" | "locator-only" | "error">(
@@ -87,7 +88,9 @@ export function EvidenceInlineSource({
   const displayEnd = snippet?.highlightEndLine ?? snippet?.endLine ?? cited.end;
   const lineLabel = `L${formatLineRange(displayStart, displayEnd)}`;
   const pathLabel =
-    sourcePath || snippet?.sourcePath || translate("ui.evidence.evidenceInlineSource.copy.源码");
+    sourcePath ||
+    snippet?.sourcePath ||
+    interfaceTranslator.t("ui.evidence.evidenceInlineSource.copy.源码");
   const commit = sourceCommit ?? snippet?.sourceCommit;
   const estimatedLines = Math.max(1, cited.end - cited.start + 1);
   const loadingMinHeight = `calc(2.4rem + ${estimatedLines + 4} * 1.55em)`;
@@ -96,10 +99,13 @@ export function EvidenceInlineSource({
     <div
       className="evidence-inline-source"
       role="group"
-      aria-label={translate("ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1", {
-        value0: pathLabel,
-        value1: lineLabel,
-      })}
+      aria-label={interfaceTranslator.t(
+        "ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1",
+        {
+          value0: pathLabel,
+          value1: lineLabel,
+        },
+      )}
       aria-busy={status === "loading"}
     >
       <div className="evidence-inline-source__header">
@@ -114,12 +120,15 @@ export function EvidenceInlineSource({
           {commit ? (
             <span
               className="evidence-inline-source__commit"
-              title={translate("ui.evidence.evidenceInlineSource.copy.固定提交-value0", {
-                value0: commit,
-              })}
+              title={interfaceTranslator.t(
+                "ui.evidence.evidenceInlineSource.copy.固定提交-value0",
+                {
+                  value0: commit,
+                },
+              )}
               data-source-commit={commit}
             >
-              {translate("ui.evidence.evidenceInlineSource.copy.固定提交")}{" "}
+              {interfaceTranslator.t("ui.evidence.evidenceInlineSource.copy.固定提交")}{" "}
               <code>{commit.slice(0, 8)}</code>
             </span>
           ) : null}
@@ -133,7 +142,7 @@ export function EvidenceInlineSource({
             data-evidence-trigger-id={triggerId}
             onClick={(event) => onOpenEvidence(index, event.currentTarget)}
           >
-            {translate("ui.evidence.evidenceInlineSource.copy.看完整文件")}
+            {interfaceTranslator.t("ui.evidence.evidenceInlineSource.copy.看完整文件")}
           </button>
         ) : null}
       </div>
@@ -152,13 +161,13 @@ export function EvidenceInlineSource({
 
       {status === "deferred" && onOpenEvidence ? (
         <div className="evidence-inline-source__deferred" role="status">
-          {translate("ui.evidence.evidenceInlineSource.copy.点击查看固定源码")}
+          {interfaceTranslator.t("ui.evidence.evidenceInlineSource.copy.点击查看固定源码")}
         </div>
       ) : null}
 
       {status === "error" ? (
         <p className="evidence-inline-source__error" role="status">
-          {translate("ui.evidence.evidenceInlineSource.copy.无法读取固定源码")}{" "}
+          {interfaceTranslator.t("ui.evidence.evidenceInlineSource.copy.无法读取固定源码")}{" "}
           <code>{pathLabel}</code> · {lineLabel}
           {errorMessage ? (
             <span className="evidence-inline-source__error-detail">（{errorMessage}）</span>

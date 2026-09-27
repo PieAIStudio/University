@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -71,11 +72,13 @@ describe("LessonSourceVersion honest entry", () => {
   it("says this shell cannot open the app before the learner clicks", async () => {
     await act(async () => {
       root.render(
-        <LessonSourceVersion
-          studyId="turing-pact"
-          sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LessonSourceVersion
+            studyId="turing-pact"
+            sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
 
@@ -94,11 +97,13 @@ describe("LessonSourceVersion honest entry", () => {
   it("still opens the explanation when the honest control is pressed", async () => {
     await act(async () => {
       root.render(
-        <LessonSourceVersion
-          studyId="turing-pact"
-          sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LessonSourceVersion
+            studyId="turing-pact"
+            sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
     const trigger = container.querySelector<HTMLButtonElement>(
@@ -118,11 +123,13 @@ describe("LessonSourceVersion honest entry", () => {
     const run = async () => CHECKOUT;
     await act(async () => {
       root.render(
-        <LessonSourceVersion
-          studyId="turing-pact"
-          sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
-          sourceAccess={actionPort(run)}
-        />,
+        withInterfaceLocale(
+          <LessonSourceVersion
+            studyId="turing-pact"
+            sourceCommit="3b402e069a5db5fe9eb82dbc03aa05152b3d298b"
+            sourceAccess={actionPort(run)}
+          />,
+        ),
       );
     });
     expect(container.textContent).toContain("打开正在学习的 App");
@@ -143,12 +150,14 @@ describe("LessonSourceVersion pinned version line", () => {
   it("leads with the date and keeps the hash off the line", async () => {
     await act(async () => {
       root.render(
-        <LessonSourceVersion
-          studyId="turing-pact"
-          sourceCommit={commit}
-          sourceCommitDate="2026-07-22"
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LessonSourceVersion
+            studyId="turing-pact"
+            sourceCommit={commit}
+            sourceCommitDate="2026-07-22"
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
 
@@ -167,11 +176,13 @@ describe("LessonSourceVersion pinned version line", () => {
     // means there is no mirror, not that the pin is unknown.
     await act(async () => {
       root.render(
-        <LessonSourceVersion
-          studyId="turing-pact"
-          sourceCommit={commit}
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LessonSourceVersion
+            studyId="turing-pact"
+            sourceCommit={commit}
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
 

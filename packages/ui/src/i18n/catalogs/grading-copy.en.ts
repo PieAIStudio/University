@@ -15,18 +15,18 @@ export const messages = {
   "grading.request.incomplete": "The AI grading service returned an incomplete result.",
   "grading.request.unavailable":
     "The AI grading service is temporarily unavailable. Please try again later.",
-  "grading.quota.exhaustedTitle": "You have used all of today's free AI gradings",
+  "grading.quota.exhaustedTitle": "You have used all of today''s free AI gradings",
   "grading.quota.whatItDoes":
     "It provides a structured AI evaluation for open questions that automatic answer matching cannot assess.",
-  "grading.quota.exhausted": "You have used all of today's free AI gradings. They renew tomorrow.",
+  "grading.quota.exhausted": "You have used all of today''s free AI gradings. They renew tomorrow.",
   "grading.quota.exhaustedFuture":
     "Your free allowance renews tomorrow. If you need more grading now, you can view the membership plans.",
   "grading.quota.viewPlans": "View membership plans",
-  "grading.quota.unavailableTitle": "Today's free AI grading allowance is temporarily unavailable",
+  "grading.quota.unavailableTitle": "Today''s free AI grading allowance is temporarily unavailable",
   "grading.quota.unavailableReason":
     "The free allowance service has not returned a result, so no request that might incur a charge will be sent.",
   "grading.quota.unavailableFuture":
-    "Once the allowance service is available, resubmit this answer to check today's free AI grading allowance again.",
+    "Once the allowance service is available, resubmit this answer to check today''s free AI grading allowance again.",
   "grading.offer.signInTitle": "Sign in to choose AI grading",
   "grading.offer.signInReason":
     "You are not signed in, so the service cannot link this AI grading to your wallet. Free hints are still available.",
@@ -109,10 +109,10 @@ export const messages = {
     "We are checking the cost of this grading and your remaining wallet balance. AI grading will not start until this check is complete.",
   "grading.quota.freeTitle": "Free AI grading is still available today",
   "grading.quota.freeConsent":
-    "Only choosing “Use today's free AI grading” uses one of today's free gradings. Reading hints first does not use your free allowance.",
+    "Only choosing “Use today''s free AI grading” uses one of today''s free gradings. Reading hints first does not use your free allowance.",
   "grading.quota.freeHintSelected":
     "You chose to read hints first. This does not use your free allowance.",
-  "grading.quota.freeSelected": "You chose today's free AI grading.",
+  "grading.quota.freeSelected": "You chose today''s free AI grading.",
   "grading.quota.freeHint": "Read hints first (keeps your free allowance)",
   "grading.quota.walletTitle": "AI grading will use your wallet balance",
   "grading.quota.walletConsent":
@@ -141,30 +141,30 @@ export const messages = {
   "grading.result.pass": "Passed",
   "grading.result.fail": "Not passed",
   "grading.result.undecided": "Cannot assess yet",
-  "grading.request.failed": "Request failed ({{status}})",
+  "grading.request.failed": "Request failed ({status})",
   "grading.offer.whatItDoes":
-    "It provides a structured AI evaluation for open questions that automatic answer matching cannot assess. This uses {{cost}}.",
-  "grading.hint.source": "\n\nFrom a real project: {{path}}, lines {{start}}–{{end}}",
-  "grading.hint.quote": "Look again at this sentence you just read:\n\n> {{quote}}{{source}}",
-  "grading.answer.submittedAt": "This is the answer you submitted on {{date}}.",
+    "It provides a structured AI evaluation for open questions that automatic answer matching cannot assess. This uses {cost}.",
+  "grading.hint.source": "\n\nFrom a real project: {path}, lines {start}–{end}",
+  "grading.hint.quote": "Look again at this sentence you just read:\n\n> {quote}{source}",
+  "grading.answer.submittedAt": "This is the answer you submitted on {date}.",
   "grading.quota.usedFree":
-    "This used today's free AI grading. {{remaining}}. Your free allowance renews tomorrow.",
-  "grading.quota.usedWallet": "This AI grading used your wallet. {{balance}}.",
-  "grading.result.region": "{{grader}} result",
+    "This used today''s free AI grading. {remaining}. Your free allowance renews tomorrow.",
+  "grading.quota.usedWallet": "This AI grading used your wallet. {balance}.",
+  "grading.result.region": "{grader} result",
   "grading.quota.freeOffer":
-    "This uses {{cost}} from today's free allowance. {{remaining}}. Your wallet will not be charged.",
-  "grading.quota.useFree": "Use today's free AI grading (uses {{cost}})",
+    "This uses {cost} from today''s free allowance. {remaining}. Your wallet will not be charged.",
+  "grading.quota.useFree": "Use today''s free AI grading (uses {cost})",
   "grading.quota.exhaustedWalletOffer":
-    "You have used all of today's free AI gradings. They renew tomorrow. Grading now uses {{cost}} from your wallet. {{balance}}.",
-  "grading.quota.walletOffer": "This uses {{cost}}. {{balance}}.",
-  "grading.quota.useWallet": "Use AI grading (uses {{cost}})",
-  "grading.quota.unavailableOffer": "{{cost}} {{balance}}",
-  "grading.quota.attemptCost": "This AI grading uses {{cost}}.",
-  "grading.quota.balance": "{{balance}}.",
+    "You have used all of today''s free AI gradings. They renew tomorrow. Grading now uses {cost} from your wallet. {balance}.",
+  "grading.quota.walletOffer": "This uses {cost}. {balance}.",
+  "grading.quota.useWallet": "Use AI grading (uses {cost})",
+  "grading.quota.unavailableOffer": "{cost} {balance}",
+  "grading.quota.attemptCost": "This AI grading uses {cost}.",
+  "grading.quota.balance": "{balance}.",
   "grading.quota.balanceUnavailable": "Your wallet balance is temporarily unavailable.",
   "grading.packet.contentsWithAnswer":
-    "The packet includes {{count}} source code excerpts cited in this lesson{{omitted}}, plus the reference answer because you have already made several attempts.",
+    "The packet includes {count} source code excerpts cited in this lesson{omitted}, plus the reference answer because you have already made several attempts.",
   "grading.packet.contentsWithoutAnswer":
-    "The packet includes {{count}} source code excerpts cited in this lesson{{omitted}}, but no reference answer. Seeing the answer on your first attempt would defeat the purpose of the exercise.",
-  "grading.packet.omitted": " ({{count}} more omitted)",
+    "The packet includes {count} source code excerpts cited in this lesson{omitted}, but no reference answer. Seeing the answer on your first attempt would defeat the purpose of the exercise.",
+  "grading.packet.omitted": " ({count} more omitted)",
 } satisfies Record<keyof typeof sourceMessages, string>;

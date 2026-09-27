@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GameAssetIcon, GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
@@ -16,19 +16,23 @@ import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js"
 import { PracticeRewardPanel, PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
-export const PRACTICE_EMPTY_TITLE = translate("ui.practice.practiceStream.copy.还没有可以练的题");
+export const PRACTICE_EMPTY_TITLE = interfaceTranslator.t(
+  "ui.practice.practiceStream.copy.还没有可以练的题",
+);
 
-export const PRACTICE_EMPTY_DESCRIPTION = translate(
+export const PRACTICE_EMPTY_DESCRIPTION = interfaceTranslator.t(
   "ui.practice.practiceStream.copy.每一条词条自己带着一道判断题-带题的那些会出现在这里",
 );
 
-export const PRACTICE_EMPTY_ACTION = translate("ui.practice.practiceStream.copy.去翻翻词条");
+export const PRACTICE_EMPTY_ACTION = interfaceTranslator.t(
+  "ui.practice.practiceStream.copy.去翻翻词条",
+);
 
-export const PRACTICE_INTRO_TITLE = translate("product.practice.roundTitle");
+export const PRACTICE_INTRO_TITLE = interfaceTranslator.t("product.practice.roundTitle");
 
-export const PRACTICE_INTRO_DESCRIPTION = translate("product.practice.roundBrief");
+export const PRACTICE_INTRO_DESCRIPTION = interfaceTranslator.t("product.practice.roundBrief");
 
-export const PRACTICE_INTRO_ACTION = translate("product.practice.freeStart");
+export const PRACTICE_INTRO_ACTION = interfaceTranslator.t("product.practice.freeStart");
 
 /**
  * How many questions this sitting has already got right.
@@ -38,7 +42,9 @@ export const PRACTICE_INTRO_ACTION = translate("product.practice.freeStart");
  * how many it has unlocked; that number is honest.
  */
 export function practiceSolvedLabel(solved: number): string {
-  return translate("ui.practice.practiceStream.copy.本次已答对-value0", { value0: solved });
+  return interfaceTranslator.t("ui.practice.practiceStream.copy.本次已答对-value0", {
+    value0: solved,
+  });
 }
 
 export function sittingSolvedCount(session: PracticeSession): number {
@@ -83,6 +89,7 @@ export function PracticeStream<Head = unknown>({
   readonly introduction?: ReactNode;
   readonly extraAction?: ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const indexed = indexPracticeQuestions(questions);
   const bankKey = indexed.ids.join("\0");
   const [session, setSession] = useState<PracticeSession>(() =>
@@ -210,7 +217,7 @@ export function PracticeStream<Head = unknown>({
         {introduction}
         <section
           className="practice-stream"
-          aria-label={translate("ui.practice.practiceStream.copy.练习")}
+          aria-label={interfaceTranslator.t("ui.practice.practiceStream.copy.练习")}
         >
           <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
             <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
@@ -224,7 +231,7 @@ export function PracticeStream<Head = unknown>({
                 data-practice-round
                 onClick={() => start("round")}
               >
-                {translate("product.practice.startRound", { count: roundSize })}
+                {interfaceTranslator.t("product.practice.startRound", { count: roundSize })}
               </GameButton>
               <GameButton variant="secondary" static type="button" onClick={() => start("free")}>
                 {PRACTICE_INTRO_ACTION}
@@ -246,21 +253,23 @@ export function PracticeStream<Head = unknown>({
       >
         <GamePanel>
           <h1 ref={focusRef} tabIndex={-1} data-practice-focus className="practice-stream__heading">
-            {translate("product.practice.roundDone")}
+            {interfaceTranslator.t("product.practice.roundDone")}
           </h1>
           <div className="practice-stream__celebrate" aria-hidden="true">
             <GameAssetIcon icon="trophy" size="xl" />
           </div>
-          <p>{translate("product.practice.roundReceipt", { count: solvedIds.length })}</p>
+          <p>
+            {interfaceTranslator.t("product.practice.roundReceipt", { count: solvedIds.length })}
+          </p>
           <div className="practice-stream__actions">
             <GameButton variant="primary" static data-practice-finish onClick={finish}>
-              {translate("product.practice.stop")}
+              {interfaceTranslator.t("product.practice.stop")}
             </GameButton>
             <GameButton variant="secondary" static onClick={() => start("free")}>
-              {translate("product.practice.free")}
+              {interfaceTranslator.t("product.practice.free")}
             </GameButton>
             <GameButton variant="ghost" static onClick={() => start("round")}>
-              {translate("product.practice.another")}
+              {interfaceTranslator.t("product.practice.another")}
             </GameButton>
           </div>
         </GamePanel>
@@ -272,20 +281,20 @@ export function PracticeStream<Head = unknown>({
     <section
       className="practice-stream"
       data-practice-phase="question"
-      aria-label={translate("ui.practice.practiceStream.copy.练习")}
+      aria-label={interfaceTranslator.t("ui.practice.practiceStream.copy.练习")}
     >
       <header className="practice-stream__head">
         <h1 ref={focusRef} tabIndex={-1} data-practice-focus className="practice-stream__heading">
-          {translate("ui.practice.practiceStream.copy.练习")}
+          {interfaceTranslator.t("ui.practice.practiceStream.copy.练习")}
         </h1>
         <GameButton variant="ghost" static onClick={finish}>
-          {translate("product.practice.pause")}
+          {interfaceTranslator.t("product.practice.pause")}
         </GameButton>
       </header>
       <div className="practice-stream__progress">
         <p className="practice-stream__ordinal" aria-live="polite">
           {mode === "round"
-            ? translate("product.practice.roundCount", {
+            ? interfaceTranslator.t("product.practice.roundCount", {
                 done: solvedIds.length,
                 total: roundSize,
               })
@@ -311,7 +320,7 @@ export function PracticeStream<Head = unknown>({
             onNext={handleNext}
             nextLabel={
               mode === "round" && solvedIds.length >= roundSize
-                ? translate("product.practice.finishRound")
+                ? interfaceTranslator.t("product.practice.finishRound")
                 : undefined
             }
           />
@@ -322,7 +331,7 @@ export function PracticeStream<Head = unknown>({
             className="product-details practice-stream__reward"
             data-practice-reward
           >
-            <summary>{translate("product.practice.readEntry")}</summary>
+            <summary>{interfaceTranslator.t("product.practice.readEntry")}</summary>
             <PracticeRewardPanel unlocked>{renderReward(current)}</PracticeRewardPanel>
           </details>
         ) : (

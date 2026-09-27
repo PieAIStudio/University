@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -62,7 +63,7 @@ function dispatchPointerSequence(target: Element) {
 describe("FeedbackNote in the rail", () => {
   it("docks 提意见 in the rail footer as a button that is not a page link", async () => {
     await act(async () => {
-      root.render(<FeedbackNote shell="在线端" />);
+      root.render(withInterfaceLocale(<FeedbackNote shell="在线端" />));
     });
     const docked = footer.querySelector("button");
     expect(docked).toBeTruthy();
@@ -78,7 +79,7 @@ describe("FeedbackNote in the rail", () => {
   it("opens a panel from the docked control instead of navigating", async () => {
     const hashBefore = window.location.hash;
     await act(async () => {
-      root.render(<FeedbackNote shell="在线端" />);
+      root.render(withInterfaceLocale(<FeedbackNote shell="在线端" />));
     });
     const docked = footer.querySelector("button");
     expect(docked).toBeTruthy();
@@ -115,17 +116,19 @@ describe("FeedbackNote in the rail", () => {
     Object.defineProperty(window, "innerHeight", { configurable: true, value: 844 });
     await act(async () => {
       root.render(
-        <FeedbackNote
-          shell="在线端"
-          port={port}
-          lessonTitle="第一节"
-          context={{
-            locator: { studyId: "study", courseId: "course", unitId: "unit", lessonId: "lesson" },
-            contentRevision: 3,
-            exerciseAttemptCount: 4,
-            signedIn: true,
-          }}
-        />,
+        withInterfaceLocale(
+          <FeedbackNote
+            shell="在线端"
+            port={port}
+            lessonTitle="第一节"
+            context={{
+              locator: { studyId: "study", courseId: "course", unitId: "unit", lessonId: "lesson" },
+              contentRevision: 3,
+              exerciseAttemptCount: 4,
+              signedIn: true,
+            }}
+          />,
+        ),
       );
     });
     await act(async () => {
@@ -173,7 +176,7 @@ describe("FeedbackNote in the rail", () => {
       },
     };
     await act(async () => {
-      root.render(<FeedbackNote shell="在线端" port={port} />);
+      root.render(withInterfaceLocale(<FeedbackNote shell="在线端" port={port} />));
     });
     await act(async () => {
       dispatchPointerSequence(footer.querySelector("button")!);
@@ -208,7 +211,7 @@ describe("FeedbackNote in the rail", () => {
       },
     };
     await act(async () => {
-      root.render(<FeedbackNote shell="在线端" port={port} />);
+      root.render(withInterfaceLocale(<FeedbackNote shell="在线端" port={port} />));
     });
     await act(async () => {
       dispatchPointerSequence(footer.querySelector("button")!);

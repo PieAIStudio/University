@@ -1,3 +1,4 @@
+import { interfaceI18n } from "@pieai/university-ui/i18n/core.js";
 import {
   Component,
   useEffect,
@@ -299,7 +300,7 @@ function Wiring({ session, snapshot: s, locale, act, frozen }: Props) {
         : null}
       <Html center position={project(size.width / 2, 528, 0.5)} zIndexRange={[5, 0]}>
         <span className="workshop__small-caption">
-          {locale === "en" ? "Connect claims to checking methods" : "把说法接到对应的核对方法"}
+          {interfaceI18n.translator(locale).t("workshop.connectInstructions")}
         </span>
       </Html>
       <SignalPulse session={session} project={project} />
@@ -479,7 +480,7 @@ function Railway({ session, snapshot: s, locale, act, frozen }: Props) {
       </Html>
       <Html center position={project(size.width / 2, 582, 0.4)} zIndexRange={[5, 0]}>
         <span className="workshop__small-caption">
-          {locale === "en" ? "Select two cars to swap their places" : "点两节车厢，交换它们的位置"}
+          {interfaceI18n.translator(locale).t("workshop.swapInstructions")}
         </span>
       </Html>
     </group>

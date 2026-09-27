@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import type {
   CourseProgress,
   LessonRef,
@@ -66,6 +66,7 @@ export function CourseIsland({
   onBackToMap,
   onOpenLesson,
 }: CourseIslandProps) {
+  const interfaceTranslator = useI18n();
   const showRouteQuiz = hasRouteQuiz(course) && viewedProgress?.done === 0;
   const showRouteDetails = pathUnit != null || showRouteQuiz;
 
@@ -73,12 +74,12 @@ export function CourseIsland({
     <aside className="picked picked--left">
       <h3>{course.title}</h3>
       <p className="picked__study">
-        {course.units.length} {translate("app.app.courseIsland.copy.单元")}{" "}
-        {viewedProgress?.total ?? 0} {translate("app.app.courseIsland.copy.关-还剩")}{" "}
+        {course.units.length} {interfaceTranslator.t("app.app.courseIsland.copy.单元")}{" "}
+        {viewedProgress?.total ?? 0} {interfaceTranslator.t("app.app.courseIsland.copy.关-还剩")}{" "}
         {viewedProgress
           ? viewedProgress.total - viewedProgress.done - (viewedProgress.skipped ?? 0)
           : 0}{" "}
-        {translate("app.app.courseIsland.copy.关")}
+        {interfaceTranslator.t("app.app.courseIsland.copy.关")}
       </p>
       {/*
         V5 §12 决定 C, in the one place the learner is standing when it matters.
@@ -96,12 +97,12 @@ export function CourseIsland({
       {unmetPrerequisites.length > 0 ? (
         <section
           className="picked__assumes"
-          aria-label={translate("app.app.courseIsland.copy.这门课假定你会什么")}
+          aria-label={interfaceTranslator.t("app.app.courseIsland.copy.这门课假定你会什么")}
         >
           <p>
-            {translate("app.app.courseIsland.copy.这门课假定你已经做过")}
+            {interfaceTranslator.t("app.app.courseIsland.copy.这门课假定你已经做过")}
             {unmetPrerequisites.map((prerequisite) => prerequisite.title).join("、")}
-            {translate("app.app.courseIsland.copy.要不要先去那门课测一测")}
+            {interfaceTranslator.t("app.app.courseIsland.copy.要不要先去那门课测一测")}
           </p>
           <div className="picked__assumes-actions">
             {unmetPrerequisites.map((prerequisite) => (
@@ -111,13 +112,13 @@ export function CourseIsland({
                 className="text-button"
                 onClick={() => onOpenCourse(prerequisite.courseId)}
               >
-                {translate("app.app.courseIsland.copy.去")}
+                {interfaceTranslator.t("app.app.courseIsland.copy.去")}
                 {prerequisite.title}
               </button>
             ))}
           </div>
           <p className="picked__assumes-note">
-            {translate("app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声")}
+            {interfaceTranslator.t("app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声")}
           </p>
         </section>
       ) : null}
@@ -126,10 +127,10 @@ export function CourseIsland({
           {/* key remounts this closed when the series or course changes. */}
           <summary className="picked__route-summary">
             <span className="picked__route-summary-closed">
-              {translate("ui.path.courseRouteQuiz.copy.学习路线")}
+              {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.学习路线")}
             </span>
             <span className="picked__route-summary-open">
-              {translate("ui.shell.appShell.copy.收起")}
+              {interfaceTranslator.t("ui.shell.appShell.copy.收起")}
             </span>
           </summary>
           {pathUnit ? (
@@ -138,7 +139,7 @@ export function CourseIsland({
               <button
                 type="button"
                 className="unit-strip__list"
-                aria-label={translate("app.app.courseIsland.copy.先看这一单元讲什么")}
+                aria-label={interfaceTranslator.t("app.app.courseIsland.copy.先看这一单元讲什么")}
                 aria-haspopup="dialog"
                 aria-expanded={unitOverlayOpen ? true : undefined}
                 onClick={(event) => onOpenUnitOverlay(pathUnit.id, event.currentTarget)}

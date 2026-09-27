@@ -82,7 +82,7 @@ function createBrowserAuthPort(client: SupabaseClient): UniversityAuth | null {
   return createSupabaseAuth(client, redirects);
 }
 
-export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
+export function createUniversityBackend(env: BrowserEnv, locale?: () => string): UniversityBackend {
   const client = createOnlineSupabaseClient(env);
   const authPort = client ? createBrowserAuthPort(client) : null;
   const identityPort = createIdentityPort(authPort ? asIdentityAuth(authPort) : null);
@@ -91,6 +91,7 @@ export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
     authPort,
     identityPort,
     paymentPort: createPaymentPort({
+      locale,
       identity: identityPort,
       transport: client ? createSupabasePaymentRemote(client) : null,
       orderIdFactory: createPaymentOrderId,

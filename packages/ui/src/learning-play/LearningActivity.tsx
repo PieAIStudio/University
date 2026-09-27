@@ -7,7 +7,7 @@ import type {
   ActivityResult,
   LearningActivitySpec,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import { ConnectGame } from "./ConnectGame.js";
 import { SortGame } from "./SortGame.js";
@@ -178,6 +178,7 @@ function ActivityRound({
   readonly onPickLevel?: (level: ActivityDifficulty) => void;
   readonly onRestart: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [hintOpen, setHintOpen] = useState(false);
   const [guided, setGuided] = useState(initialGuidance === "guided");
   const guidanceUsed = useRef(initialGuidance === "guided");
@@ -275,7 +276,7 @@ function ActivityRound({
           <div
             className="learning-activity__levels"
             role="group"
-            aria-label={t("play.difficulty.label")}
+            aria-label={interfaceTranslator.t("play.difficulty.label")}
           >
             {levels.map((level) => (
               <GameButton
@@ -287,7 +288,7 @@ function ActivityRound({
                 aria-pressed={level === (activity.difficulty ?? "practice")}
                 onClick={() => onPickLevel?.(level)}
               >
-                {t(`play.difficulty.${level}`)}
+                {interfaceTranslator.t(`play.difficulty.${level}`)}
               </GameButton>
             ))}
           </div>
@@ -295,9 +296,9 @@ function ActivityRound({
         <details className="learning-activity__background">
           <summary>
             {!levels && activity.difficulty
-              ? `${t(`play.difficulty.${activity.difficulty}`)} · `
+              ? `${interfaceTranslator.t(`play.difficulty.${activity.difficulty}`)} · `
               : ""}
-            {t("play.usability.goal")}
+            {interfaceTranslator.t("play.usability.goal")}
           </summary>
           <p>{activity.brief}</p>
           <p className="learning-activity__goal">{activity.goal}</p>
@@ -311,12 +312,12 @@ function ActivityRound({
             }}
             aria-pressed={!guided}
           >
-            {t(guided ? "play.usability.explore" : "play.usability.guide")}
+            {interfaceTranslator.t(guided ? "play.usability.explore" : "play.usability.guide")}
           </GameButton>
         ) : null}
       </div>
       {activity.kind.startsWith("ai-") ? (
-        <p className="learning-activity__sandbox">{t("play.ai.sandbox")}</p>
+        <p className="learning-activity__sandbox">{interfaceTranslator.t("play.ai.sandbox")}</p>
       ) : null}
       {outcome?.status !== "skipped" ? (
         <div className="learning-activity__game">{renderGame(activity, controls)}</div>
@@ -343,13 +344,21 @@ function ActivityRound({
           aria-live="polite"
           data-result={outcome.status}
         >
-          <h3>{t(outcome.status === "completed" ? "play.host.complete" : "play.host.skipped")}</h3>
+          <h3>
+            {interfaceTranslator.t(
+              outcome.status === "completed" ? "play.host.complete" : "play.host.skipped",
+            )}
+          </h3>
           {outcome.status === "completed" ? (
             <>
               <p>{activity.takeaway}</p>
               <div className="learning-activity__receipt">
-                <span>{t("play.host.attempts", { count: outcome.attempts })}</span>
-                <span>{t("play.host.hints", { count: outcome.hintsUsed })}</span>
+                <span>
+                  {interfaceTranslator.t("play.host.attempts", { count: outcome.attempts })}
+                </span>
+                <span>
+                  {interfaceTranslator.t("play.host.hints", { count: outcome.hintsUsed })}
+                </span>
                 {/*
                   A link when the source is a page, the pinned location when it
                   is code. A repository citation is not a worse source, it is a
@@ -378,8 +387,8 @@ function ActivityRound({
           ) : null}
           {outcome.status === "completed" && typeof outcome.submission.handoff === "string" ? (
             <details className="learning-activity__handoff">
-              <summary>{t("play.ai.handoff")}</summary>
-              <p>{t("play.ai.handoffNote")}</p>
+              <summary>{interfaceTranslator.t("play.ai.handoff")}</summary>
+              <p>{interfaceTranslator.t("play.ai.handoffNote")}</p>
               <GameButton
                 type="button"
                 variant="secondary"
@@ -392,9 +401,11 @@ function ActivityRound({
                   }
                 }}
               >
-                {t(copyState === "copied" ? "play.ai.copied" : "play.ai.copy")}
+                {interfaceTranslator.t(copyState === "copied" ? "play.ai.copied" : "play.ai.copy")}
               </GameButton>
-              {copyState === "failed" ? <p role="status">{t("play.ai.copyFailed")}</p> : null}
+              {copyState === "failed" ? (
+                <p role="status">{interfaceTranslator.t("play.ai.copyFailed")}</p>
+              ) : null}
               <pre>{outcome.submission.handoff}</pre>
             </details>
           ) : null}
@@ -418,12 +429,12 @@ function ActivityRound({
                 variant="primary"
                 onClick={onNext}
               >
-                {nextLabel ?? t("play.lab.next")}
+                {nextLabel ?? interfaceTranslator.t("play.lab.next")}
                 <PlayIcon name="arrow" />
               </GameButton>
             ) : null}
             <GameButton sound={false} type="button" variant="secondary" onClick={onRestart}>
-              {t("play.host.retry")}
+              {interfaceTranslator.t("play.host.retry")}
             </GameButton>
           </div>
         </section>
@@ -440,14 +451,14 @@ function ActivityRound({
               setHintOpen(!hintOpen);
             }}
           >
-            {t(hintOpen ? "play.host.hideHint" : "play.host.hint")}
+            {interfaceTranslator.t(hintOpen ? "play.host.hideHint" : "play.host.hint")}
           </GameButton>
           <div>
             <GameButton sound={false} type="button" variant="ghost" static onClick={onRestart}>
-              {t("play.host.retry")}
+              {interfaceTranslator.t("play.host.retry")}
             </GameButton>
             <GameButton sound={false} type="button" variant="ghost" static onClick={skip}>
-              {t("play.host.skip")}
+              {interfaceTranslator.t("play.host.skip")}
             </GameButton>
           </div>
         </footer>

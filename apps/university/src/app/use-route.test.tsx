@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -41,7 +42,7 @@ describe("the shared browser route", () => {
       "/turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
     );
 
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
 
     expect(container.querySelector("output")?.textContent).toBe("lesson");
     expect(location.pathname).toBe(
@@ -57,7 +58,7 @@ describe("the shared browser route", () => {
       "/#/turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
     );
 
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
 
     expect(container.querySelector("output")?.textContent).toBe("lesson");
     expect(location.pathname).toBe(
@@ -72,7 +73,7 @@ describe("the shared browser route", () => {
     "#reading-notes",
   ])("does not consume a fragment owned by auth or the document: %s", async (fragment) => {
     history.replaceState(null, "", `/me${fragment}`);
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
     expect(container.querySelector("output")?.textContent).toBe("me");
     expect(location.pathname).toBe("/me");
     expect(location.hash).toBe(fragment);
@@ -81,7 +82,7 @@ describe("the shared browser route", () => {
   it("leaves auth callback values to the SDK even during a learning navigation", async () => {
     const fragment = "#access_token=test-only&type=magiclink";
     history.replaceState(null, "", `/me${fragment}`);
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
     expect(location.hash).toBe(fragment);
     await act(async () => container.querySelector("button")!.click());
     expect(location.pathname).toBe("/");
@@ -91,7 +92,7 @@ describe("the shared browser route", () => {
   it("does not carry auth fragments onto a later ordinary learning route", async () => {
     const fragment = "#access_token=test-only&type=magiclink";
     history.replaceState(null, "", `/auth/callback${fragment}`);
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
     expect(container.querySelector("output")?.textContent).toBe("auth-callback");
     expect(location.hash).toBe(fragment);
     await act(async () => container.querySelector("button")!.click());
@@ -102,7 +103,7 @@ describe("the shared browser route", () => {
   it("preserves language when leaving an auth callback", async () => {
     const fragment = "#access_token=test-only&type=magiclink";
     history.replaceState(null, "", `/auth/callback?lang=en&code=test-only${fragment}`);
-    await act(async () => root.render(<RouteProbe />));
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
     expect(container.querySelector("output")?.textContent).toBe("auth-callback");
     expect(location.search).toContain("lang=en");
     expect(location.hash).toBe(fragment);

@@ -1,6 +1,6 @@
 import type { ActivityDifficulty, ActivityFamily, SortActivity } from "@pieai/university-core";
 
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import { getSortElsewhereBucket, getSortElsewhereItem } from "./sort-examples.js";
 
 /**
@@ -23,7 +23,8 @@ import { getSortElsewhereBucket, getSortElsewhereItem } from "./sort-examples.js
  * reader can eliminate without understanding a thing.
  */
 export function getSortFamily(activity: SortActivity): ActivityFamily {
-  const goal = (level: ActivityDifficulty) => t(`play.difficulty.sort.${level}`);
+  const goal = (level: ActivityDifficulty) =>
+    interfaceTranslator.t(`play.difficulty.sort.${level}`);
   const tag = (task: SortActivity, difficulty: ActivityDifficulty): SortActivity => ({
     ...task,
     id: `${activity.id}:${difficulty}:v1`,

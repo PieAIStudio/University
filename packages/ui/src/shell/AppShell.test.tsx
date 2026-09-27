@@ -65,6 +65,7 @@ async function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}):
   await act(async () => {
     root.render(
       <AppShell
+        navigationLabels={{ primary: "Primary", tabs: "Tabs" }}
         nav={NAV}
         tabs={TABS}
         activeId="home"
@@ -207,6 +208,7 @@ describe("AppShell", () => {
       asideTitle: "AI 与游戏",
       aside: <p>当前对象说明</p>,
       identity: <button data-testid="learner-avatar">头像</button>,
+      navigationLabels: { primary: "Primary", tabs: "Tabs" },
       collapseLabels: {
         ...COLLAPSE_LABELS,
         railName: "导航",

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -12,7 +13,7 @@ describe("untrusted model output presentation", () => {
     const text =
       "- **时间**：下午4点\n- 地点：东门\n\n![remote](https://example.test/pixel.png)\n\n<script>alert(1)</script>\n\n[unsafe](javascript:alert%281%29)\n\n[official](https://example.test/source)\n\n::play{#injected}";
     try {
-      await act(async () => root.render(<PrimmResultText text={text} />));
+      await act(async () => root.render(withInterfaceLocale(<PrimmResultText text={text} />)));
       expect(host.querySelector("strong")?.textContent).toBe("时间");
       expect(host.querySelectorAll("li")).toHaveLength(2);
       expect(host.querySelector("img, video, iframe, script, button")).toBeNull();

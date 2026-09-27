@@ -1,8 +1,9 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activeLocale, setActiveLocale, translate } from "../i18n/index.js";
+import { setInterfaceLocale, interfaceTranslator } from "../i18n/index.js";
 import { ContextGame } from "./ContextGame.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getWorkflowFamily } from "./workflow-difficulty.js";
@@ -13,8 +14,8 @@ let previousLocale: string;
 let scrollDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  previousLocale = activeLocale();
-  setActiveLocale("zh-CN");
+  previousLocale = interfaceTranslator.locale;
+  setInterfaceLocale("zh-CN");
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("matchMedia", () => ({ matches: true }));
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
@@ -36,7 +37,7 @@ afterEach(async () => {
   if (scrollDescriptor)
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", scrollDescriptor);
   else Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
-  setActiveLocale(previousLocale);
+  setInterfaceLocale(previousLocale);
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -68,7 +69,9 @@ describe.each(["ai-context-cafe", "ai-context-workshop"])(
       const onAttempt = vi.fn();
       await act(async () =>
         root.render(
-          <ContextGame activity={activity} guided disabled={false} onAttempt={onAttempt} />,
+          withInterfaceLocale(
+            <ContextGame activity={activity} guided disabled={false} onAttempt={onAttempt} />,
+          ),
         ),
       );
       expect(container.querySelector<HTMLDetailsElement>(".play-context-materials")?.open).toBe(
@@ -78,26 +81,28 @@ describe.each(["ai-context-cafe", "ai-context-workshop"])(
       expect(container.querySelectorAll(".ai-context-counter__queue > button")).toHaveLength(1);
       expect(onAttempt).not.toHaveBeenCalled();
 
-      await click(translate("play.ai.context.guide.visit", { name: customer.name }));
+      await click(interfaceTranslator.t("play.ai.context.guide.visit", { name: customer.name }));
       expect(container.querySelector(".ai-context-counter__answer")?.textContent).toContain(
-        translate("play.ai.context.customerBlocked"),
+        interfaceTranslator.t("play.ai.context.customerBlocked"),
       );
-      await click(translate("play.ai.context.guide.openSource", { title: trial.title }));
+      await click(
+        interfaceTranslator.t("play.ai.context.guide.openSource", { title: trial.title }),
+      );
       expect(container.querySelector<HTMLDetailsElement>(".play-context-materials")?.open).toBe(
         true,
       );
       expect(container.querySelector(".play-ai-context__paper h4")?.textContent).toBe(trial.title);
       await click(
-        translate("play.ai.context.removeDocument"),
+        interfaceTranslator.t("play.ai.context.removeDocument"),
         container.querySelector(".play-ai-context__paper")!,
       );
       await click(
-        translate("play.ai.context.buildCounter"),
+        interfaceTranslator.t("play.ai.context.buildCounter"),
         container.querySelector(".play-context-build")!,
       );
       expect(onAttempt).not.toHaveBeenCalled();
-      await click(translate("play.ai.context.guide.retry", { name: customer.name }));
-      await click(translate("play.ai.context.deliverCounter"));
+      await click(interfaceTranslator.t("play.ai.context.guide.retry", { name: customer.name }));
+      await click(interfaceTranslator.t("play.ai.context.deliverCounter"));
       expect(onAttempt).toHaveBeenCalledExactlyOnceWith(
         true,
         expect.objectContaining({
@@ -108,7 +113,7 @@ describe.each(["ai-context-cafe", "ai-context-workshop"])(
             expect.objectContaining({ visitorId: customer.id, passed: true }),
           ],
         }),
-        translate("play.ai.context.difficulty.serviceSuccess", { count: 1 }),
+        interfaceTranslator.t("play.ai.context.difficulty.serviceSuccess", { count: 1 }),
       );
     });
 
@@ -116,13 +121,17 @@ describe.each(["ai-context-cafe", "ai-context-workshop"])(
       const activity = family(id).levels.challenge;
       await act(async () =>
         root.render(
-          <ContextGame activity={activity} guided disabled={false} onAttempt={vi.fn()} />,
+          withInterfaceLocale(
+            <ContextGame activity={activity} guided disabled={false} onAttempt={vi.fn()} />,
+          ),
         ),
       );
-      await click(translate("play.ai.context.guide.visit", { name: activity.visitors![0]!.name }));
+      await click(
+        interfaceTranslator.t("play.ai.context.guide.visit", { name: activity.visitors![0]!.name }),
+      );
       const answer = container.querySelector(".ai-context-counter__answer")!;
       expect(answer.textContent).toContain(
-        translate("play.ai.context.guide.overCapacity", { extra: 5 }),
+        interfaceTranslator.t("play.ai.context.guide.overCapacity", { extra: 5 }),
       );
       expect(answer.querySelectorAll(".ai-context-counter__clues > button")).toHaveLength(2);
     });

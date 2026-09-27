@@ -7,7 +7,7 @@
  * The shared reader and progress document must see that number so a read
  * confirmation is bound to the version the learner actually opened.
  */
-import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   assembleLessonIndex,
   backlinksOf,
@@ -43,7 +43,7 @@ export function assembleLessonView(input: {
   };
 }): LessonView {
   const { course, lesson, unitId, progress, completion } = input;
-  const locale = activeLocale();
+  const locale = interfaceTranslator.locale;
   const localizedLesson = lesson.locales?.[locale] ?? lesson.locales?.[locale.split("-")[0]!];
   const lessonTitle = localizedLesson?.title ?? lesson.title;
   const lessonContent = localizedLesson?.content ?? lesson.content;
@@ -156,7 +156,7 @@ export function assembleLessonView(input: {
         return {
           id: exercise.id,
           kind: exercise.kind,
-          title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
+          title: exercise.title ?? interfaceTranslator.t("app.lesson.assembleview.copy.自检"),
           ...(localized?.title ? { title: localized.title } : {}),
           prompt: localized?.prompt ?? exercise.prompt,
           ...(exercise.options ? { options: localized?.options ?? exercise.options } : {}),

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -24,7 +25,7 @@ it("keeps real ancestor addresses, a single current page and an expandable compl
     { id: "course", title: "Real course", href: "/a/b" },
     { id: "lesson", title: "Real lesson" },
   ];
-  act(() => root.render(<LocationBreadcrumbs items={items} />));
+  act(() => root.render(withInterfaceLocale(<LocationBreadcrumbs items={items} />)));
   expect(element.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   expect(element.querySelector('[aria-current="page"]')?.textContent).toBe("Real lesson");
   const details = element.querySelector("details")!;
@@ -63,9 +64,11 @@ it("keeps real ancestor addresses, a single current page and an expandable compl
   details.open = true;
   act(() =>
     root.render(
-      <LocationBreadcrumbs
-        items={[...items.slice(0, -1), { id: "lesson2", title: "Next lesson" }]}
-      />,
+      withInterfaceLocale(
+        <LocationBreadcrumbs
+          items={[...items.slice(0, -1), { id: "lesson2", title: "Next lesson" }]}
+        />,
+      ),
     ),
   );
   expect(details.open).toBe(false);
@@ -81,13 +84,15 @@ it("retains an expandable parent even when a narrow map has only two crumbs", ()
   };
   act(() =>
     root.render(
-      <LocationBreadcrumbs
-        className="map-breadcrumbs"
-        items={[
-          { id: "planets", title: "Learning planets", href: "/planet" },
-          { id: "study", title: "A real study" },
-        ]}
-      />,
+      withInterfaceLocale(
+        <LocationBreadcrumbs
+          className="map-breadcrumbs"
+          items={[
+            { id: "planets", title: "Learning planets", href: "/planet" },
+            { id: "study", title: "A real study" },
+          ]}
+        />,
+      ),
     ),
   );
   expect(element.querySelector("details a")?.getAttribute("href")).toBe("/planet");

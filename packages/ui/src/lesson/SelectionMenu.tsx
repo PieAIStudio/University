@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from "@floating-ui/react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -81,6 +81,7 @@ export function SelectionMenu({
   readonly onAsk: (target: SelectionTarget) => void;
   readonly busy?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const [target, setTarget] = useState<SelectionTarget | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -154,7 +155,7 @@ export function SelectionMenu({
         style={floatingStyles}
         className="selection-menu"
         role="toolbar"
-        aria-label={translate("ui.lesson.selectionMenu.copy.对选中的文字")}
+        aria-label={interfaceTranslator.t("ui.lesson.selectionMenu.copy.对选中的文字")}
         // Keeps the selection alive: a click on a button would otherwise blur
         // the range before the handler could read it.
         onMouseDown={(event) => event.preventDefault()}
@@ -165,7 +166,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onMark("question", target))}
         >
-          {translate("ui.lesson.selectionMenu.copy.记录不懂")}
+          {interfaceTranslator.t("ui.lesson.selectionMenu.copy.记录不懂")}
         </button>
         <button
           type="button"
@@ -173,7 +174,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onAsk(target))}
         >
-          {translate("ui.lesson.selectionMenu.copy.问-AI")}
+          {interfaceTranslator.t("ui.lesson.selectionMenu.copy.问-AI")}
         </button>
         <button
           type="button"
@@ -184,8 +185,8 @@ export function SelectionMenu({
           }}
         >
           {copied
-            ? translate("ui.lesson.selectionMenu.copy.已复制")
-            : translate("ui.lesson.selectionMenu.copy.复制")}
+            ? interfaceTranslator.t("ui.lesson.selectionMenu.copy.已复制")
+            : interfaceTranslator.t("ui.lesson.selectionMenu.copy.复制")}
         </button>
         <button
           type="button"
@@ -193,7 +194,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onMark("highlight", target))}
         >
-          {translate("ui.lesson.selectionMenu.copy.高亮")}
+          {interfaceTranslator.t("ui.lesson.selectionMenu.copy.高亮")}
         </button>
       </div>
     </FloatingPortal>

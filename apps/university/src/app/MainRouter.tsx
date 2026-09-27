@@ -1,5 +1,5 @@
 import { accountClosurePort, ACCOUNT_CLOSURE_CONFIRMATION } from "../account/account-closure.js";
-import { translate, useI18n } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import {
@@ -193,6 +193,7 @@ export function MainRouter({
   uncorrectedMistakeCount,
   view,
 }: MainRouterProps) {
+  const interfaceTranslator = useI18n();
   const i18n = useI18n();
   const continueView = continueLearningView(
     readLearningReturn(),
@@ -231,7 +232,9 @@ export function MainRouter({
         of a race against a fetch.
       */}
       {studyNames.length === 0 && !shelf ? (
-        <p className="loading-copy">{translate("app.app.mainRouter.copy.正在打开校园档案")}</p>
+        <p className="loading-copy">
+          {interfaceTranslator.t("app.app.mainRouter.copy.正在打开校园档案")}
+        </p>
       ) : null}
       {view.kind === "planet" || view.kind === "world" || view.kind === "course" ? (
         <MapBreadcrumbs
@@ -353,7 +356,9 @@ export function MainRouter({
 
       {view.kind === "settled" && course ? (
         <Suspense
-          fallback={<RouteFallback copy={translate("app.lesson.settlement.copy.读完了")} />}
+          fallback={
+            <RouteFallback copy={interfaceTranslator.t("app.lesson.settlement.copy.读完了")} />
+          }
         >
           <SettlementHost
             course={course}

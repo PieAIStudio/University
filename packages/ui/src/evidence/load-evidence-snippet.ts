@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import { readJson } from "../api/client.js";
 import type { LocatorOnlyEvidence } from "@pieai/university-core";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
@@ -82,7 +82,7 @@ export function loadEvidenceSnippet(
           message:
             reason instanceof Error
               ? reason.message
-              : translate("ui.evidence.loadevidencesnippet.copy.无法读取固定源码"),
+              : interfaceTranslator.t("ui.evidence.loadevidencesnippet.copy.无法读取固定源码"),
         };
       }
     })();

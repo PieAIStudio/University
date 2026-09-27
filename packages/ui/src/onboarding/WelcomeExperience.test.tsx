@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -34,17 +35,19 @@ describe("WelcomeExperience", () => {
     const onSelect = vi.fn();
     await act(async () =>
       root.render(
-        <StrictMode>
-          <WelcomeExperience
-            choices={choices}
-            selectedId="basics"
-            lesson={lesson}
-            onSelect={onSelect}
-            onStart={onStart}
-            onBrowse={vi.fn()}
-            onSignIn={vi.fn()}
-          />
-        </StrictMode>,
+        withInterfaceLocale(
+          <StrictMode>
+            <WelcomeExperience
+              choices={choices}
+              selectedId="basics"
+              lesson={lesson}
+              onSelect={onSelect}
+              onStart={onStart}
+              onBrowse={vi.fn()}
+              onSignIn={vi.fn()}
+            />
+          </StrictMode>,
+        ),
       ),
     );
     const dialog = document.querySelector("dialog")!;
@@ -66,15 +69,17 @@ describe("WelcomeExperience", () => {
     const onSignIn = vi.fn();
     await act(async () =>
       root.render(
-        <WelcomeExperience
-          choices={[]}
-          selectedId={null}
-          lesson={null}
-          onSelect={vi.fn()}
-          onStart={vi.fn()}
-          onBrowse={onBrowse}
-          onSignIn={onSignIn}
-        />,
+        withInterfaceLocale(
+          <WelcomeExperience
+            choices={[]}
+            selectedId={null}
+            lesson={null}
+            onSelect={vi.fn()}
+            onStart={vi.fn()}
+            onBrowse={onBrowse}
+            onSignIn={onSignIn}
+          />,
+        ),
       ),
     );
     const dialog = document.querySelector("dialog")!;

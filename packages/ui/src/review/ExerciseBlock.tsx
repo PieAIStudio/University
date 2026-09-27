@@ -35,7 +35,7 @@ import {
 } from "./answer-draft.js";
 import { useAnswerDraft } from "./use-answer-draft.js";
 import { ChoiceOptions } from "./ChoiceOptions.js";
-import { activeLocale, translate, type MessageKey } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 
 /**
  * How long the page keeps watching for a host grade on its own. Past this the
@@ -51,10 +51,10 @@ const meteredOfferReadFailure = (): MeteredGradingOffer => ({
   availablePowerUnits: null,
   explanation: {
     kind: "explanation",
-    title: translate("grading.offer.readFailureTitle"),
-    whatItDoes: translate("grading.offer.readFailureWhat"),
-    whyUnavailable: translate("grading.offer.readFailureReason"),
-    futureSupport: translate("grading.offer.readFailureFuture"),
+    title: interfaceTranslator.t("grading.offer.readFailureTitle"),
+    whatItDoes: interfaceTranslator.t("grading.offer.readFailureWhat"),
+    whyUnavailable: interfaceTranslator.t("grading.offer.readFailureReason"),
+    futureSupport: interfaceTranslator.t("grading.offer.readFailureFuture"),
   },
 });
 
@@ -101,6 +101,7 @@ function ExerciseBlockSession({
   answerDraftStorage,
   draftIdentity,
 }: ExerciseBlockProps & { readonly draftIdentity: AnswerDraftIdentity }) {
+  const interfaceTranslator = useI18n();
   /**
    * The answer the server already has, or the one being typed now.
    *
@@ -264,21 +265,26 @@ function ExerciseBlockSession({
       if (!grading.expressionPacket) {
         setExpressionExplanation({
           kind: "explanation",
-          title: translate("grading.expression.unavailableTitle"),
-          whatItDoes: translate("grading.expression.whatItDoes"),
-          whyUnavailable: translate("grading.expression.whyUnavailable"),
-          futureSupport: translate("grading.expression.futureSupport"),
+          title: interfaceTranslator.t("grading.expression.unavailableTitle"),
+          whatItDoes: interfaceTranslator.t("grading.expression.whatItDoes"),
+          whyUnavailable: interfaceTranslator.t("grading.expression.whyUnavailable"),
+          futureSupport: interfaceTranslator.t("grading.expression.futureSupport"),
         });
         return;
       }
 
       const body = await grading.expressionPacket(locator.studyId);
-      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      if (!navigator.clipboard?.writeText)
+        throw new Error(interfaceTranslator.t("product.errors.clipboardUnavailable"));
       await navigator.clipboard.writeText(body.packet);
       setExpressionCopied(true);
       setTimeout(() => setExpressionCopied(false), 8_000);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : translate("grading.expression.failed"));
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : interfaceTranslator.t("grading.expression.failed"),
+      );
     } finally {
       setExpressionPending(false);
     }
@@ -288,7 +294,8 @@ function ExerciseBlockSession({
     if (!grading.coachingPacket) return;
     try {
       const body = await grading.coachingPacket({ locator, exerciseId: exercise.id });
-      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      if (!navigator.clipboard?.writeText)
+        throw new Error(interfaceTranslator.t("product.errors.clipboardUnavailable"));
       await navigator.clipboard.writeText(body.packet);
       setPacketInfo(body);
       setPacketCopied(true);
@@ -332,11 +339,13 @@ function ExerciseBlockSession({
         body.awaitingHostGrade === true ? (body.hostGrade?.occurredAt ?? "") : null,
       );
       if (body.answerStored !== false) markSubmitted(submittedAnswer);
-      else setError(translate("grading.answer.saveFailed"));
+      else setError(interfaceTranslator.t("grading.answer.saveFailed"));
       await onRefresh();
     } catch (reason) {
       const message =
-        reason instanceof Error ? reason.message : translate("grading.answer.submitFailed");
+        reason instanceof Error
+          ? reason.message
+          : interfaceTranslator.t("grading.answer.submitFailed");
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
       if (isStaleTokenFailure(message)) await onRefresh().catch(() => undefined);
     } finally {
@@ -351,7 +360,9 @@ function ExerciseBlockSession({
       await onRefresh();
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : translate("grading.result.refreshFailed"),
+        reason instanceof Error
+          ? reason.message
+          : interfaceTranslator.t("grading.result.refreshFailed"),
       );
     } finally {
       setPending(false);
@@ -379,7 +390,7 @@ function ExerciseBlockSession({
         />
       ) : (
         <label className="answer-field">
-          <span>{translate("grading.answer.label")}</span>
+          <span>{interfaceTranslator.t("grading.answer.label")}</span>
           <textarea
             value={answer}
             onChange={(event) => {
@@ -393,11 +404,11 @@ function ExerciseBlockSession({
             placeholder={
               isExplain
                 ? grading.coachingPacket
-                  ? translate("grading.answer.explainHost")
-                  : translate("grading.answer.explain")
+                  ? interfaceTranslator.t("grading.answer.explainHost")
+                  : interfaceTranslator.t("grading.answer.explain")
                 : grading.coachingPacket
-                  ? translate("grading.answer.shortHost")
-                  : translate("grading.answer.short")
+                  ? interfaceTranslator.t("grading.answer.shortHost")
+                  : interfaceTranslator.t("grading.answer.short")
             }
             rows={isExplain ? 6 : 3}
             readOnly={solved || pending}
@@ -406,21 +417,28 @@ function ExerciseBlockSession({
       )}
       {answer.trim() && persistence === "saved" ? (
         <p className="answer-field__draft-status" role="status">
-          {translate("product.feedback.draftSaved")}
+          {interfaceTranslator.t("product.feedback.draftSaved")}
         </p>
       ) : persistence === "unavailable" ? (
         <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
-          {translate("grading.answer.storageUnavailable")}
+          {interfaceTranslator.t("grading.answer.storageUnavailable")}
         </p>
       ) : persistence === "failed" ? (
         <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
-          {translate("grading.answer.draftFailed")}
+          {interfaceTranslator.t("grading.answer.draftFailed")}
         </p>
       ) : null}
       {exercise.latestSubmission && !result ? (
         <p className="answer-field__saved">
-          {translate("grading.answer.submittedAt", {
-            date: new Date(exercise.latestSubmission.occurredAt).toLocaleString(activeLocale()),
+          {interfaceTranslator.t("grading.answer.submittedAt", {
+            date: interfaceTranslator.date(exercise.latestSubmission.occurredAt, {
+              year: "numeric",
+              month: "numeric",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              second: "2-digit",
+            }),
           })}
         </p>
       ) : null}
@@ -445,12 +463,12 @@ function ExerciseBlockSession({
             learner is doing in both campuses.
           */}
           {pending
-            ? translate("grading.answer.submitting")
+            ? interfaceTranslator.t("grading.answer.submitting")
             : solved
-              ? translate("grading.answer.completed")
+              ? interfaceTranslator.t("grading.answer.completed")
               : reopened
-                ? translate("grading.answer.resubmit")
-                : translate("grading.answer.submit")}
+                ? interfaceTranslator.t("grading.answer.resubmit")
+                : interfaceTranslator.t("grading.answer.submit")}
         </GameButton>
         {passedOnce ? (
           <GameButton
@@ -464,7 +482,9 @@ function ExerciseBlockSession({
             }}
             disabled={pending}
           >
-            {reopened ? translate("grading.answer.cancelRetry") : translate("grading.answer.retry")}
+            {reopened
+              ? interfaceTranslator.t("grading.answer.cancelRetry")
+              : interfaceTranslator.t("grading.answer.retry")}
           </GameButton>
         ) : null}
         {/*
@@ -480,20 +500,22 @@ function ExerciseBlockSession({
         */}
         {!answer.trim() && !solved && !pending ? (
           <span className="exercise-actions__hint">
-            {translate(isChoice ? "grading.answer.chooseHint" : "grading.answer.emptyHint")}
+            {interfaceTranslator.t(
+              isChoice ? "grading.answer.chooseHint" : "grading.answer.emptyHint",
+            )}
           </span>
         ) : null}
       </div>
 
       {result && hostGrade === null && grading.coachingPacket ? (
         <GameCallout
-          heading={translate("grading.result.awaitingTitle")}
+          heading={interfaceTranslator.t("grading.result.awaitingTitle")}
           tone="warning"
           role="status"
         >
           {awaitingGrade
-            ? translate("grading.result.awaitingRefresh")
-            : translate("grading.result.awaitingInstructions")}
+            ? interfaceTranslator.t("grading.result.awaitingRefresh")
+            : interfaceTranslator.t("grading.result.awaitingInstructions")}
         </GameCallout>
       ) : null}
 
@@ -514,24 +536,34 @@ function ExerciseBlockSession({
       ) : null}
 
       {result?.meteredFreeQuota || result?.meteredBalance ? (
-        <GameCallout heading={translate("grading.quota.afterTitle")} tone="neutral" role="status">
+        <GameCallout
+          heading={interfaceTranslator.t("grading.quota.afterTitle")}
+          tone="neutral"
+          role="status"
+        >
           {result.meteredFreeQuota ? (
             <p>
-              {emphasizedGradingCopy("grading.quota.usedFree", {
-                remaining: freeGradingRemainingText(
-                  result.meteredFreeQuota.remainingPowerUnits,
-                  activeLocale(),
-                ),
-              })}
+              {emphasizedGradingCopy(
+                {
+                  remaining: freeGradingRemainingText(
+                    result.meteredFreeQuota.remainingPowerUnits,
+                    interfaceTranslator.locale,
+                  ),
+                },
+                (marked) => interfaceTranslator.t("grading.quota.usedFree", marked),
+              )}
             </p>
           ) : result.meteredBalance ? (
             <p>
-              {emphasizedGradingCopy("grading.quota.usedWallet", {
-                balance: walletGradingBalanceText(
-                  result.meteredBalance.availablePowerUnits,
-                  activeLocale(),
-                ),
-              })}
+              {emphasizedGradingCopy(
+                {
+                  balance: walletGradingBalanceText(
+                    result.meteredBalance.availablePowerUnits,
+                    interfaceTranslator.locale,
+                  ),
+                },
+                (marked) => interfaceTranslator.t("grading.quota.usedWallet", marked),
+              )}
             </p>
           ) : null}
         </GameCallout>
@@ -546,15 +578,15 @@ function ExerciseBlockSession({
         <div
           className={`host-grade host-grade--${currentOutcome ?? "undecided"}`}
           role="region"
-          aria-label={translate("grading.result.region", {
-            grader: graderLabel(hostGrade.host, activeLocale()),
+          aria-label={interfaceTranslator.t("grading.result.region", {
+            grader: graderLabel(hostGrade.host, interfaceTranslator.locale),
           })}
         >
           <p className="host-grade__summary" data-grade-summary role="status">
             <span className="host-grade__mark" aria-hidden="true">
               {currentOutcome === "pass" ? "✓" : currentOutcome === "fail" ? "↻" : "?"}
             </span>
-            {translate(
+            {interfaceTranslator.t(
               currentOutcome === "pass"
                 ? "product.feedback.pass"
                 : currentOutcome === "fail"
@@ -564,14 +596,15 @@ function ExerciseBlockSession({
           </p>
           <details className="product-details" data-grade-details>
             <summary>
-              {translate(
+              {interfaceTranslator.t(
                 currentOutcome === "pass"
                   ? "product.feedback.explanation"
                   : "product.feedback.hint",
               )}
             </summary>
             <p className="host-grade__eyebrow">
-              {graderLabel(hostGrade.host, activeLocale())} · {gradeOutcomeLabel(currentOutcome)}
+              {graderLabel(hostGrade.host, interfaceTranslator.locale)} ·{" "}
+              {gradeOutcomeLabel(currentOutcome)}
               {/* Naming the model that read the answer is useful; repeating our
                 internal tier name after "当场判定" is just jargon on a page a
                 beginner is reading. */}
@@ -584,7 +617,7 @@ function ExerciseBlockSession({
             </div>
             {hostGrade.extensions.length > 0 ? (
               <div className="host-grade__extensions">
-                <p className="eyebrow">{translate("grading.result.extensions")}</p>
+                <p className="eyebrow">{interfaceTranslator.t("grading.result.extensions")}</p>
                 <ul>
                   {hostGrade.extensions.map((item) => (
                     // Same Markdown treatment the evaluation above gets. An
@@ -611,14 +644,14 @@ function ExerciseBlockSession({
                   disabled={pending || expressionPending}
                 >
                   {expressionPending
-                    ? translate("grading.expression.checking")
+                    ? interfaceTranslator.t("grading.expression.checking")
                     : expressionCopied
-                      ? translate("grading.expression.copied")
-                      : translate("grading.expression.ask")}
+                      ? interfaceTranslator.t("grading.expression.copied")
+                      : interfaceTranslator.t("grading.expression.ask")}
                 </GameButton>
                 {expressionCopied ? (
                   <span className="host-grade__coach-hint">
-                    {translate("grading.expression.instructions")}
+                    {interfaceTranslator.t("grading.expression.instructions")}
                   </span>
                 ) : null}
               </div>
@@ -630,42 +663,48 @@ function ExerciseBlockSession({
       {result?.meteredEligible ? (
         <details
           className="product-details metered-grading-choice"
-          aria-label={translate("grading.quota.choices")}
+          aria-label={interfaceTranslator.t("grading.quota.choices")}
         >
-          <summary>{translate("product.feedback.askAi")}</summary>
+          <summary>{interfaceTranslator.t("product.feedback.askAi")}</summary>
           {meteredOfferLoading ? (
             <GameCallout
-              heading={translate("grading.quota.loadingTitle")}
+              heading={interfaceTranslator.t("grading.quota.loadingTitle")}
               tone="neutral"
               role="status"
             >
-              {translate("grading.quota.loading")}
+              {interfaceTranslator.t("grading.quota.loading")}
             </GameCallout>
           ) : meteredOffer?.kind === "free" ? (
             <GameCallout
-              heading={translate("grading.quota.freeTitle")}
+              heading={interfaceTranslator.t("grading.quota.freeTitle")}
               tone="neutral"
               role="region"
             >
               <div className="metered-grading-choice__copy">
                 <p>
-                  {emphasizedGradingCopy("grading.quota.freeOffer", {
-                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
-                    remaining: freeGradingRemainingText(
-                      meteredOffer.remainingPowerUnits,
-                      activeLocale(),
-                    ),
-                  })}
+                  {emphasizedGradingCopy(
+                    {
+                      cost: gradingAttemptText(
+                        meteredOffer.costPowerUnits,
+                        interfaceTranslator.locale,
+                      ),
+                      remaining: freeGradingRemainingText(
+                        meteredOffer.remainingPowerUnits,
+                        interfaceTranslator.locale,
+                      ),
+                    },
+                    (marked) => interfaceTranslator.t("grading.quota.freeOffer", marked),
+                  )}
                 </p>
-                <p>{translate("grading.quota.freeConsent")}</p>
+                <p>{interfaceTranslator.t("grading.quota.freeConsent")}</p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  {translate("grading.quota.freeHintSelected")}
+                  {interfaceTranslator.t("grading.quota.freeHintSelected")}
                 </p>
               ) : meteredChoice === "free-ai" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  {translate("grading.quota.freeSelected")}
+                  {interfaceTranslator.t("grading.quota.freeSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -674,8 +713,11 @@ function ExerciseBlockSession({
                   onClick={() => void submit(true, "free")}
                   disabled={pending}
                 >
-                  {translate("grading.quota.useFree", {
-                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                  {interfaceTranslator.t("grading.quota.useFree", {
+                    cost: gradingAttemptText(
+                      meteredOffer.costPowerUnits,
+                      interfaceTranslator.locale,
+                    ),
                   })}
                 </GameButton>
                 <GameButton
@@ -683,43 +725,56 @@ function ExerciseBlockSession({
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  {translate("grading.quota.freeHint")}
+                  {interfaceTranslator.t("grading.quota.freeHint")}
                 </GameButton>
               </div>
             </GameCallout>
           ) : meteredOffer?.kind === "available" ? (
             <GameCallout
-              heading={translate("grading.quota.walletTitle")}
+              heading={interfaceTranslator.t("grading.quota.walletTitle")}
               tone="warning"
               role="region"
             >
               <div className="metered-grading-choice__copy">
                 {meteredOffer.freeQuotaExhausted ? (
                   <p>
-                    {emphasizedGradingCopy("grading.quota.exhaustedWalletOffer", {
-                      cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
-                      balance: walletGradingBalanceText(
-                        meteredOffer.availablePowerUnits,
-                        activeLocale(),
-                      ),
-                    })}
+                    {emphasizedGradingCopy(
+                      {
+                        cost: gradingAttemptText(
+                          meteredOffer.costPowerUnits,
+                          interfaceTranslator.locale,
+                        ),
+                        balance: walletGradingBalanceText(
+                          meteredOffer.availablePowerUnits,
+                          interfaceTranslator.locale,
+                        ),
+                      },
+                      (marked) =>
+                        interfaceTranslator.t("grading.quota.exhaustedWalletOffer", marked),
+                    )}
                   </p>
                 ) : (
                   <p>
-                    {emphasizedGradingCopy("grading.quota.walletOffer", {
-                      cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
-                      balance: walletGradingBalanceText(
-                        meteredOffer.availablePowerUnits,
-                        activeLocale(),
-                      ),
-                    })}
+                    {emphasizedGradingCopy(
+                      {
+                        cost: gradingAttemptText(
+                          meteredOffer.costPowerUnits,
+                          interfaceTranslator.locale,
+                        ),
+                        balance: walletGradingBalanceText(
+                          meteredOffer.availablePowerUnits,
+                          interfaceTranslator.locale,
+                        ),
+                      },
+                      (marked) => interfaceTranslator.t("grading.quota.walletOffer", marked),
+                    )}
                   </p>
                 )}
-                <p>{translate("grading.quota.walletConsent")}</p>
+                <p>{interfaceTranslator.t("grading.quota.walletConsent")}</p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  {translate("grading.quota.walletHintSelected")}
+                  {interfaceTranslator.t("grading.quota.walletHintSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -728,8 +783,11 @@ function ExerciseBlockSession({
                   onClick={() => void submit(true, "wallet")}
                   disabled={pending}
                 >
-                  {translate("grading.quota.useWallet", {
-                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                  {interfaceTranslator.t("grading.quota.useWallet", {
+                    cost: gradingAttemptText(
+                      meteredOffer.costPowerUnits,
+                      interfaceTranslator.locale,
+                    ),
                   })}
                 </GameButton>
                 <GameButton
@@ -737,7 +795,7 @@ function ExerciseBlockSession({
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  {translate("grading.quota.walletHint")}
+                  {interfaceTranslator.t("grading.quota.walletHint")}
                 </GameButton>
               </div>
             </GameCallout>
@@ -745,21 +803,24 @@ function ExerciseBlockSession({
             <GameCallout heading={meteredOffer.explanation.title} tone="neutral" role="status">
               <div className="metered-grading-choice__copy">
                 <p>
-                  {translate("grading.quota.unavailableOffer", {
+                  {interfaceTranslator.t("grading.quota.unavailableOffer", {
                     cost: meteredOffer.freeQuotaExhausted
-                      ? translate("grading.quota.exhausted")
-                      : translate("grading.quota.attemptCost", {
-                          cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                      ? interfaceTranslator.t("grading.quota.exhausted")
+                      : interfaceTranslator.t("grading.quota.attemptCost", {
+                          cost: gradingAttemptText(
+                            meteredOffer.costPowerUnits,
+                            interfaceTranslator.locale,
+                          ),
                         }),
                     balance:
                       meteredOffer.availablePowerUnits !== null
-                        ? translate("grading.quota.balance", {
+                        ? interfaceTranslator.t("grading.quota.balance", {
                             balance: walletGradingBalanceText(
                               meteredOffer.availablePowerUnits,
-                              activeLocale(),
+                              interfaceTranslator.locale,
                             ),
                           })
-                        : translate("grading.quota.balanceUnavailable"),
+                        : interfaceTranslator.t("grading.quota.balanceUnavailable"),
                   })}
                 </p>
                 <p>{meteredOffer.explanation.whyUnavailable}</p>
@@ -773,7 +834,7 @@ function ExerciseBlockSession({
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  {translate("grading.quota.walletHintSelected")}
+                  {interfaceTranslator.t("grading.quota.walletHintSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -781,14 +842,14 @@ function ExerciseBlockSession({
                   variant="secondary"
                   onClick={() => setMeteredExplanation(meteredOffer.explanation)}
                 >
-                  {translate("grading.quota.details")}
+                  {interfaceTranslator.t("grading.quota.details")}
                 </GameButton>
                 <GameButton
                   variant="ghost"
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  {translate("grading.quota.walletHint")}
+                  {interfaceTranslator.t("grading.quota.walletHint")}
                 </GameButton>
               </div>
             </GameCallout>
@@ -800,21 +861,21 @@ function ExerciseBlockSession({
         <div
           className="coaching-packet"
           role="region"
-          aria-label={translate("grading.packet.region")}
+          aria-label={interfaceTranslator.t("grading.packet.region")}
         >
           <p className="coaching-packet__status">
             {packetCopied
-              ? translate("grading.packet.copied")
+              ? interfaceTranslator.t("grading.packet.copied")
               : packetCopyFailed
-                ? translate("grading.packet.copyFailed")
-                : translate("grading.packet.copyInstructions")}
+                ? interfaceTranslator.t("grading.packet.copyFailed")
+                : interfaceTranslator.t("grading.packet.copyInstructions")}
           </p>
           {packetCopied && packetInfo ? (
             // An assistant in a fresh chat cannot open the repository, so the
             // packet carries the cited code with it. Saying so is what stops
             // the learner from wondering whether the AI is judging blind.
             <p className="coaching-packet__contents">
-              {translate(
+              {interfaceTranslator.t(
                 packetInfo.referenceDisclosed
                   ? "grading.packet.contentsWithAnswer"
                   : "grading.packet.contentsWithoutAnswer",
@@ -822,17 +883,19 @@ function ExerciseBlockSession({
                   count: packetInfo.evidenceCount,
                   omitted:
                     packetInfo.evidenceOmitted > 0
-                      ? translate("grading.packet.omitted", { count: packetInfo.evidenceOmitted })
+                      ? interfaceTranslator.t("grading.packet.omitted", {
+                          count: packetInfo.evidenceOmitted,
+                        })
                       : "",
                 },
               )}
             </p>
           ) : null}
           <ol className="coaching-packet__steps">
-            <li>{translate("grading.packet.openAssistant")}</li>
-            <li>{translate("grading.packet.paste")}</li>
-            <li>{translate("grading.packet.writeBack")}</li>
-            <li>{translate("grading.packet.return")}</li>
+            <li>{interfaceTranslator.t("grading.packet.openAssistant")}</li>
+            <li>{interfaceTranslator.t("grading.packet.paste")}</li>
+            <li>{interfaceTranslator.t("grading.packet.writeBack")}</li>
+            <li>{interfaceTranslator.t("grading.packet.return")}</li>
           </ol>
           <div className="coaching-packet__actions">
             <GameButton
@@ -841,15 +904,15 @@ function ExerciseBlockSession({
               disabled={pending}
             >
               {packetCopied
-                ? translate("grading.packet.copyAgain")
-                : translate("grading.packet.copy")}
+                ? interfaceTranslator.t("grading.packet.copyAgain")
+                : interfaceTranslator.t("grading.packet.copy")}
             </GameButton>
             {/* The page polls on its own; this stays as the escape hatch for a
                 write-back that lands after polling has given up. */}
             <GameButton variant="ghost" onClick={() => void refreshHostGrade()} disabled={pending}>
               {awaitingGrade
-                ? translate("grading.result.waitAndRefresh")
-                : translate("grading.result.refresh")}
+                ? interfaceTranslator.t("grading.result.waitAndRefresh")
+                : interfaceTranslator.t("grading.result.refresh")}
             </GameButton>
           </div>
         </div>
@@ -879,21 +942,28 @@ function ExerciseBlockSession({
 }
 
 function gradeOutcomeLabel(outcome: "pass" | "fail" | "undecided" | null): string {
-  if (outcome === "pass") return translate("grading.result.pass");
-  if (outcome === "fail") return translate("grading.result.fail");
-  return translate("grading.result.undecided");
+  if (outcome === "pass") return interfaceTranslator.t("grading.result.pass");
+  if (outcome === "fail") return interfaceTranslator.t("grading.result.fail");
+  return interfaceTranslator.t("grading.result.undecided");
 }
 
 /** Keep the original emphasis while letting each language order the whole sentence. */
-function emphasizedGradingCopy(key: MessageKey, values: Readonly<Record<string, string>>) {
-  return translate(key)
-    .split(/(\{\{\w+\}\})/)
-    .map((part, index) => {
-      const value = values[part.slice(2, -2)];
-      return part.startsWith("{{") && value !== undefined ? (
-        <strong key={index}>{value}</strong>
+function emphasizedGradingCopy<Values extends Record<string, string>>(
+  values: Values,
+  render: (marked: Values) => string,
+) {
+  const entries = Object.entries(values);
+  // Preserve this exact key set, replacing only values with opaque render markers.
+  const marked = Object.fromEntries(
+    entries.map(([key], index) => [key, "\uE000" + index + "\uE001"]),
+  ) as Values;
+  return render(marked)
+    .split(/(\uE000\d+\uE001)/u)
+    .map((part, index) =>
+      part.startsWith("\uE000") ? (
+        <strong key={index}>{entries[Number(part.slice(1, -1))]?.[1]}</strong>
       ) : (
         part
-      );
-    });
+      ),
+    );
 }

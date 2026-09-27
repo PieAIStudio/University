@@ -24,7 +24,7 @@ import {
   type ProgressPort,
 } from "@pieai/university-core";
 import { readJson } from "@pieai/university-ui/api/client.js";
-import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 
 import { isRepositoryAnchor, peekCourse } from "../../content/library";
 import type { Lesson } from "../../content/library";
@@ -84,7 +84,7 @@ export function createOnlineGradingPort(options: {
       const accountScope = progress?.syncState().userId ?? null;
       const saveResult = (result: ExerciseAttemptResult) => {
         if ((progress?.syncState().userId ?? null) !== accountScope) {
-          throw new Error(translate("grading.account.changedBeforeSave"));
+          throw new Error(interfaceTranslator.t("grading.account.changedBeforeSave"));
         }
         return recordAttempt(progress, input, result);
       };
@@ -109,7 +109,7 @@ export function createOnlineGradingPort(options: {
           hostGrade: {
             outcome: "pass",
             passed: true,
-            evaluation: translate("grading.result.correct"),
+            evaluation: interfaceTranslator.t("grading.result.correct"),
             extensions: [],
             host: DETERMINISTIC_GRADER_HOST,
             learnerAnswer: input.answer,
@@ -131,7 +131,7 @@ export function createOnlineGradingPort(options: {
               // Check before sending, not only before storing the response.
               // A token resolved during account switching may belong to someone else.
               if ((progress?.syncState().userId ?? null) !== accountScope) {
-                throw new Error(translate("grading.account.changedBeforeSend"));
+                throw new Error(interfaceTranslator.t("grading.account.changedBeforeSend"));
               }
               return token;
             },
@@ -173,7 +173,7 @@ export function createOnlineGradingPort(options: {
           ? undecidedCopy(lesson, exercise?.prompt, verdict.reason)
           : lesson
             ? failCopy(lesson, exercise?.prompt)
-            : translate("grading.hint.tryAgain");
+            : interfaceTranslator.t("grading.hint.tryAgain");
       const result: ExerciseAttemptResult = {
         correct: false,
         attemptCount: count,
@@ -225,10 +225,10 @@ async function submitToMeteredService(options: {
 }): Promise<ExerciseAttemptResult> {
   const accessToken = await options.readAccessToken();
   if (!accessToken) {
-    throw new Error(translate("grading.request.signIn"));
+    throw new Error(interfaceTranslator.t("grading.request.signIn"));
   }
   if (!options.gradingUrl) {
-    throw new Error(translate("grading.request.notConfigured"));
+    throw new Error(interfaceTranslator.t("grading.request.notConfigured"));
   }
   try {
     const response = await options.fetchImpl(options.gradingUrl, {
@@ -236,6 +236,7 @@ async function submitToMeteredService(options: {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
+        "Accept-Language": interfaceTranslator.locale,
       },
       body: JSON.stringify({
         answer: options.input.answer,
@@ -248,7 +249,7 @@ async function submitToMeteredService(options: {
     });
     const body = await readMeteredResponse(response);
     if (!body.hostGrade) {
-      throw new Error(translate("grading.request.incomplete"));
+      throw new Error(interfaceTranslator.t("grading.request.incomplete"));
     }
     const hostGrade = withExplicitOutcome(body.hostGrade);
     return {
@@ -270,7 +271,7 @@ async function submitToMeteredService(options: {
     ) {
       throw error;
     }
-    throw new Error(translate("grading.request.unavailable"));
+    throw new Error(interfaceTranslator.t("grading.request.unavailable"));
   }
 }
 
@@ -285,7 +286,7 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
   try {
     body = await response.json();
   } catch {
-    throw new Error(translate("grading.request.failed", { status: response.status }));
+    throw new Error(interfaceTranslator.t("grading.request.failed", { status: response.status }));
   }
 
   if (!response.ok) {
@@ -303,7 +304,7 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
     throw new Error(
       isRecord(body) && typeof body.error === "string"
         ? body.error
-        : translate("grading.request.failed", { status: response.status }),
+        : interfaceTranslator.t("grading.request.failed", { status: response.status }),
     );
   }
 
@@ -313,22 +314,28 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
 function quotaExhaustedExplanation(message: string): MeteredGradingExplanation {
   return {
     kind: "explanation",
-    title: translate("grading.quota.exhaustedTitle"),
-    whatItDoes: translate("grading.quota.whatItDoes"),
-    whyUnavailable: message || translate("grading.quota.exhausted"),
-    futureSupport: translate("grading.quota.exhaustedFuture"),
-    action: { label: translate("grading.quota.viewPlans"), href: toPath({ kind: "plans" }) },
+    title: interfaceTranslator.t("grading.quota.exhaustedTitle"),
+    whatItDoes: interfaceTranslator.t("grading.quota.whatItDoes"),
+    whyUnavailable: message || interfaceTranslator.t("grading.quota.exhausted"),
+    futureSupport: interfaceTranslator.t("grading.quota.exhaustedFuture"),
+    action: {
+      label: interfaceTranslator.t("grading.quota.viewPlans"),
+      href: toPath({ kind: "plans" }),
+    },
   };
 }
 
 function quotaUnavailableExplanation(message: string): MeteredGradingExplanation {
   return {
     kind: "explanation",
-    title: translate("grading.quota.unavailableTitle"),
-    whatItDoes: translate("grading.quota.whatItDoes"),
-    whyUnavailable: message || translate("grading.quota.unavailableReason"),
-    futureSupport: translate("grading.quota.unavailableFuture"),
-    action: { label: translate("grading.quota.viewPlans"), href: toPath({ kind: "plans" }) },
+    title: interfaceTranslator.t("grading.quota.unavailableTitle"),
+    whatItDoes: interfaceTranslator.t("grading.quota.whatItDoes"),
+    whyUnavailable: message || interfaceTranslator.t("grading.quota.unavailableReason"),
+    futureSupport: interfaceTranslator.t("grading.quota.unavailableFuture"),
+    action: {
+      label: interfaceTranslator.t("grading.quota.viewPlans"),
+      href: toPath({ kind: "plans" }),
+    },
   };
 }
 
@@ -372,22 +379,25 @@ async function readMeteredGradingOffer(options: {
   }
   if (!accessToken) {
     return unavailableOffer({
-      title: translate("grading.offer.signInTitle"),
-      whyUnavailable: translate("grading.offer.signInReason"),
-      futureSupport: translate("grading.offer.signInFuture"),
+      title: interfaceTranslator.t("grading.offer.signInTitle"),
+      whyUnavailable: interfaceTranslator.t("grading.offer.signInReason"),
+      futureSupport: interfaceTranslator.t("grading.offer.signInFuture"),
     });
   }
   if (!options.gradingUrl) {
     return unavailableOffer({
-      title: translate("grading.offer.notConfiguredTitle"),
-      whyUnavailable: translate("grading.offer.notConfiguredReason"),
-      futureSupport: translate("grading.offer.notConfiguredFuture"),
+      title: interfaceTranslator.t("grading.offer.notConfiguredTitle"),
+      whyUnavailable: interfaceTranslator.t("grading.offer.notConfiguredReason"),
+      futureSupport: interfaceTranslator.t("grading.offer.notConfiguredFuture"),
     });
   }
   try {
     const response = await options.fetchImpl(options.gradingUrl, {
       method: "GET",
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Accept-Language": interfaceTranslator.locale,
+      },
     });
     const offer = await readJson<MeteredGradingOffer>(response);
     if (offer.kind !== "free" && offer.kind !== "available" && offer.kind !== "unavailable") {
@@ -396,9 +406,9 @@ async function readMeteredGradingOffer(options: {
     return offer;
   } catch {
     return unavailableOffer({
-      title: translate("grading.offer.unavailableTitle"),
-      whyUnavailable: translate("grading.offer.unavailableReason"),
-      futureSupport: translate("grading.offer.unavailableFuture"),
+      title: interfaceTranslator.t("grading.offer.unavailableTitle"),
+      whyUnavailable: interfaceTranslator.t("grading.offer.unavailableReason"),
+      futureSupport: interfaceTranslator.t("grading.offer.unavailableFuture"),
     });
   }
 }
@@ -412,8 +422,8 @@ function unavailableOffer(options: {
   const explanation: MeteredGradingExplanation = {
     kind: "explanation",
     title: options.title,
-    whatItDoes: translate("grading.offer.whatItDoes", {
-      cost: gradingAttemptText(METERED_GRADING_COST_POWER_UNITS, activeLocale()),
+    whatItDoes: interfaceTranslator.t("grading.offer.whatItDoes", {
+      cost: gradingAttemptText(METERED_GRADING_COST_POWER_UNITS, interfaceTranslator.locale),
     }),
     whyUnavailable: options.whyUnavailable,
     futureSupport: options.futureSupport,
@@ -433,17 +443,17 @@ function unavailableOffer(options: {
  * it, and the answer is not available here any more — and should not be.
  */
 function failCopy(lesson: Lesson, prompt: string | undefined): string {
-  if (!prompt) return translate("grading.hint.tryAgain");
+  if (!prompt) return interfaceTranslator.t("grading.hint.tryAgain");
   const needle = normalise(prompt).slice(0, 5);
   const line = lesson.content
     .split(/\n+/)
     .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
-  if (!line) return translate("grading.hint.tryAgain");
+  if (!line) return interfaceTranslator.t("grading.hint.tryAgain");
   // Lesson source, not prose: the line can carry `[[evidence:…]]` and other
   // markup, and printing it raw at the moment a learner missed reads as a
   // broken product rather than a broken answer.
   const quoted = proseQuote(line);
-  if (quoted.length === 0) return translate("grading.hint.tryAgain");
+  if (quoted.length === 0) return interfaceTranslator.t("grading.hint.tryAgain");
   /*
     「出自真实项目」 is a claim about a repository, so it is only offered when
     one of this lesson's citations actually is one. A 通用课 cites MDN; naming
@@ -451,13 +461,13 @@ function failCopy(lesson: Lesson, prompt: string | undefined): string {
   */
   const evidence = lesson.evidence.find(isRepositoryAnchor);
   const source = evidence
-    ? translate("grading.hint.source", {
+    ? interfaceTranslator.t("grading.hint.source", {
         path: evidence.sourcePath,
         start: evidence.lineStart,
         end: evidence.lineEnd,
       })
     : "";
-  return translate("grading.hint.quote", { quote: quoted, source });
+  return interfaceTranslator.t("grading.hint.quote", { quote: quoted, source });
 }
 
 function undecidedCopy(
@@ -465,10 +475,10 @@ function undecidedCopy(
   prompt: string | undefined,
   reason: string,
 ): string {
-  const hint = lesson ? failCopy(lesson, prompt) : translate("grading.hint.addReasons");
+  const hint = lesson ? failCopy(lesson, prompt) : interfaceTranslator.t("grading.hint.addReasons");
   return [
-    translate("grading.result.undecidedExplanation"),
-    translate("grading.result.undecidedNext"),
+    interfaceTranslator.t("grading.result.undecidedExplanation"),
+    interfaceTranslator.t("grading.result.undecidedNext"),
     hint || reason,
   ]
     .filter(Boolean)

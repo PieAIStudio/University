@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -207,7 +208,11 @@ describe("EntryPage", () => {
     ]);
 
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} collectionHref="#/terms" lexicon={LEXICON} />);
+      root.render(
+        withInterfaceLocale(
+          <TermEntryPage entry={entry} collectionHref="#/terms" lexicon={LEXICON} />,
+        ),
+      );
     });
 
     const crumb = container.querySelector('[aria-label="面包屑"]');
@@ -242,7 +247,7 @@ describe("EntryPage", () => {
   it("renders a zero-section entry as just the head", async () => {
     const { entry } = assembleTermEntry(APP, []);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} />);
+      root.render(withInterfaceLocale(<TermEntryPage entry={entry} />));
     });
     expect(container.querySelectorAll("[data-section-type]")).toHaveLength(0);
     expect(container.querySelector("h1")?.textContent).toContain("app");
@@ -253,7 +258,11 @@ describe("EntryPage", () => {
     const entry = getAntiPatternEntry("steady-catch");
     expect(entry).toBeTruthy();
     await act(async () => {
-      root.render(<AntiPatternEntryPage entry={entry!} collectionHref="#/anti-patterns" />);
+      root.render(
+        withInterfaceLocale(
+          <AntiPatternEntryPage entry={entry!} collectionHref="#/anti-patterns" />,
+        ),
+      );
     });
     expect(container.querySelector('[aria-label="面包屑"]')?.textContent).toContain("防止 AI 味儿");
     expect(container.querySelector('[aria-label="面包屑"]')?.textContent).toContain("稳稳接住");
@@ -282,7 +291,7 @@ describe("EntryPage", () => {
     const sections = SECTION_TYPES.map((type) => ALL_SECTIONS[type]);
     const { entry } = assembleTermEntry(APP, sections);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} lexicon={LEXICON} />);
+      root.render(withInterfaceLocale(<TermEntryPage entry={entry} lexicon={LEXICON} />));
     });
     const rendered = [...container.querySelectorAll("[data-section-type]")].map((node) =>
       node.getAttribute("data-section-type"),
@@ -296,7 +305,11 @@ describe("EntryPage", () => {
       { id: "next", type: "related", payload: { senseIds: ["api.interface"] } },
     ]);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} lexicon={LEXICON} onOpenSense={onOpenSense} />);
+      root.render(
+        withInterfaceLocale(
+          <TermEntryPage entry={entry} lexicon={LEXICON} onOpenSense={onOpenSense} />,
+        ),
+      );
     });
     const pointer = container.querySelector(".entry-section__sense");
     await act(async () => {
@@ -308,7 +321,7 @@ describe("EntryPage", () => {
   it("renders a flow as an ordered list and highlights the current step", async () => {
     const { entry } = assembleTermEntry(APP, [ALL_SECTIONS.flow]);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} />);
+      root.render(withInterfaceLocale(<TermEntryPage entry={entry} />));
     });
 
     const section = container.querySelector('[data-section-type="flow"]');
@@ -340,7 +353,7 @@ describe("EntryPage", () => {
   it("hides the pronunciation button when speechSynthesis is missing", async () => {
     const { entry } = assembleTermEntry(APP, []);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} />);
+      root.render(withInterfaceLocale(<TermEntryPage entry={entry} />));
     });
     expect(container.querySelector('[aria-label="听 app 的英文发音"]')).toBeNull();
     expect(container.textContent).not.toContain("听发音");
@@ -378,7 +391,7 @@ describe("EntryPage", () => {
 
     const { entry } = assembleTermEntry(APP, []);
     await act(async () => {
-      root.render(<TermEntryPage entry={entry} />);
+      root.render(withInterfaceLocale(<TermEntryPage entry={entry} />));
     });
 
     const button = container.querySelector('[aria-label="听 app 的英文发音"]');
@@ -396,7 +409,7 @@ describe("EntryPage", () => {
   it("does not put a pronunciation button on an anti-pattern head", async () => {
     const entry = getAntiPatternEntry("steady-catch");
     await act(async () => {
-      root.render(<AntiPatternEntryPage entry={entry!} />);
+      root.render(withInterfaceLocale(<AntiPatternEntryPage entry={entry!} />));
     });
     expect(container.querySelector('[aria-label^="听 "]')).toBeNull();
   });
@@ -407,13 +420,15 @@ describe("EntryPage", () => {
     const { entry } = assembleTermEntry(APP, []);
     await act(async () => {
       root.render(
-        <TermEntryPage
-          entry={entry}
-          neighbours={{
-            previous: { label: "api", onOpen: onPrevious },
-            next: { label: "backend", href: "#/terms/backend", onOpen: onNext },
-          }}
-        />,
+        withInterfaceLocale(
+          <TermEntryPage
+            entry={entry}
+            neighbours={{
+              previous: { label: "api", onOpen: onPrevious },
+              next: { label: "backend", href: "#/terms/backend", onOpen: onNext },
+            }}
+          />,
+        ),
       );
     });
 
@@ -444,10 +459,12 @@ describe("EntryPage", () => {
     const entry = getAntiPatternEntry("steady-catch");
     await act(async () => {
       root.render(
-        <AntiPatternEntryPage
-          entry={entry!}
-          neighbours={{ next: { label: "热情洋溢", onOpen: () => undefined } }}
-        />,
+        withInterfaceLocale(
+          <AntiPatternEntryPage
+            entry={entry!}
+            neighbours={{ next: { label: "热情洋溢", onOpen: () => undefined } }}
+          />,
+        ),
       );
     });
     expect(container.querySelector('[data-neighbour="previous"]')).toBeNull();

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useState } from "react";
 
 import type { SourceAccessExplanation, SourceAccessPort } from "@pieai/university-core";
@@ -28,6 +28,7 @@ type EvidenceUaPlaceProps =
  * map stays one click away and stays UA's own page.
  */
 export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
+  const interfaceTranslator = useI18n();
   const { studyId, ua, compact = false } = props;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +55,7 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.evidence.evidenceUaPlace.copy.项目地图暂时打不开"),
+          : interfaceTranslator.t("ui.evidence.evidenceUaPlace.copy.项目地图暂时打不开"),
       );
     } finally {
       setPending(false);
@@ -65,11 +66,13 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
     <div className="evidence-ua-place">
       {!compact ? (
         <p className="evidence-ua-place__layer">
-          {translate("ui.evidence.evidenceUaPlace.copy.项目里的位置-这份课程引用的源码")}
+          {interfaceTranslator.t(
+            "ui.evidence.evidenceUaPlace.copy.项目里的位置-这份课程引用的源码",
+          )}
         </p>
       ) : ua.layerName ? (
         <p className="evidence-ua-place__layer">
-          {translate("ui.evidence.evidenceUaPlace.copy.项目里的位置")} {ua.layerName}
+          {interfaceTranslator.t("ui.evidence.evidenceUaPlace.copy.项目里的位置")} {ua.layerName}
         </p>
       ) : null}
       {!compact && ua.summary ? <p className="evidence-ua-place__summary">{ua.summary}</p> : null}
@@ -82,8 +85,8 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
           disabled={pending}
         >
           {pending
-            ? translate("ui.evidence.evidenceUaPlace.copy.正在打开项目地图")
-            : translate("ui.evidence.evidenceUaPlace.copy.在完整项目地图里看")}
+            ? interfaceTranslator.t("ui.evidence.evidenceUaPlace.copy.正在打开项目地图")
+            : interfaceTranslator.t("ui.evidence.evidenceUaPlace.copy.在完整项目地图里看")}
         </button>
       ) : null}
       {error ? (

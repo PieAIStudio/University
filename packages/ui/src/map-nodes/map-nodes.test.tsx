@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -48,14 +49,16 @@ describe("map node sessions", () => {
     const commit = vi.fn<Parameters<typeof MapCheckpoint>[0]["onCommit"]>(async () => {});
     await act(async () =>
       root.render(
-        <MapCheckpoint
-          lessons={lessons}
-          locator={locator}
-          accountScope="test-user-one"
-          onClose={() => {}}
-          onOpenLesson={() => {}}
-          onCommit={commit}
-        />,
+        withInterfaceLocale(
+          <MapCheckpoint
+            lessons={lessons}
+            locator={locator}
+            accountScope="test-user-one"
+            onClose={() => {}}
+            onOpenLesson={() => {}}
+            onCommit={commit}
+          />,
+        ),
       ),
     );
     await click(button("开始检查"));
@@ -77,14 +80,16 @@ describe("map node sessions", () => {
     const commit = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
     await act(async () =>
       root.render(
-        <MapCheckpoint
-          lessons={lessons.slice(0, 1)}
-          locator={locator}
-          accountScope="test-user-one"
-          onClose={() => {}}
-          onOpenLesson={() => {}}
-          onCommit={commit}
-        />,
+        withInterfaceLocale(
+          <MapCheckpoint
+            lessons={lessons.slice(0, 1)}
+            locator={locator}
+            accountScope="test-user-one"
+            onClose={() => {}}
+            onOpenLesson={() => {}}
+            onCommit={commit}
+          />,
+        ),
       ),
     );
     await click(button("开始检查"));
@@ -99,21 +104,23 @@ describe("map node sessions", () => {
     const commit = vi.fn();
     await act(async () =>
       root.render(
-        <MapCheckpoint
-          lessons={[
-            {
-              id: "make",
-              title: "Practical task",
-              contentRevision: 1,
-              exercises: [{ id: "make", prompt: "Create something" }],
-            },
-          ]}
-          locator={locator}
-          accountScope="test-user-one"
-          onClose={() => {}}
-          onOpenLesson={() => {}}
-          onCommit={commit}
-        />,
+        withInterfaceLocale(
+          <MapCheckpoint
+            lessons={[
+              {
+                id: "make",
+                title: "Practical task",
+                contentRevision: 1,
+                exercises: [{ id: "make", prompt: "Create something" }],
+              },
+            ]}
+            locator={locator}
+            accountScope="test-user-one"
+            onClose={() => {}}
+            onOpenLesson={() => {}}
+            onCommit={commit}
+          />,
+        ),
       ),
     );
     expect(host.textContent).toContain("不能用简短答题来跳过");
@@ -139,7 +146,7 @@ describe("map node sessions", () => {
         onPlayed={played}
       />
     );
-    await act(async () => root.render(render()));
+    await act(async () => root.render(withInterfaceLocale(render())));
     await click(button("慢慢玩"));
     await click(button("开始配对"));
     expect((host.querySelector('[data-match-back="card1"]') as HTMLButtonElement).disabled).toBe(
@@ -154,7 +161,7 @@ describe("map node sessions", () => {
     expect(host.querySelector("[data-match-front]")).toBeNull();
     await act(async () => root.unmount());
     root = createRoot(host);
-    await act(async () => root.render(render([...cards].reverse())));
+    await act(async () => root.render(withInterfaceLocale(render([...cards].reverse()))));
     expect(host.textContent).toContain("已暂停");
     await click(button("接着玩"));
     expect((host.querySelector('[data-match-front="card0"]') as HTMLButtonElement).disabled).toBe(

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { Tip } from "../Tip.js";
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 
@@ -27,19 +27,22 @@ export function LessonBacklinks({
   readonly backlinks: readonly LessonLinkTarget[];
   readonly onFollowLink?: ((target: LessonLinkTarget) => void) | undefined;
 }) {
+  const interfaceTranslator = useI18n();
   if (backlinks.length === 0) return null;
 
   return (
     <section
       className="lesson-backlinks"
-      aria-label={translate("ui.lesson.lessonRelated.copy.哪些课用到这节")}
+      aria-label={interfaceTranslator.t("ui.lesson.lessonRelated.copy.哪些课用到这节")}
     >
       <div className="rail-panel__header">
         <h3 className="rail-panel__label">
-          {translate("ui.lesson.lessonRelated.copy.哪些课用到这节")}
+          {interfaceTranslator.t("ui.lesson.lessonRelated.copy.哪些课用到这节")}
         </h3>
         <Tip term="lesson-related" className="rail-panel__help">
-          <span aria-label={translate("ui.lesson.lessonRelated.copy.关于反向链接")}>?</span>
+          <span aria-label={interfaceTranslator.t("ui.lesson.lessonRelated.copy.关于反向链接")}>
+            ?
+          </span>
         </Tip>
       </div>
       <ul className="lesson-backlinks__list">

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 /**
  * The one place that says there is nothing due.
  *
@@ -19,7 +19,9 @@ import { translate } from "../i18n/index.js";
  * shell needs a way back to the map, the authoring shell renders it as a
  * callout under the lesson it is already pointing at. The words do not.
  */
-export const REVIEW_EMPTY_TITLE = translate("ui.review.reviewempty.copy.今天没有到期卡片");
+export const REVIEW_EMPTY_TITLE = interfaceTranslator.t(
+  "ui.review.reviewempty.copy.今天没有到期卡片",
+);
 
 /**
  * `hasMoreToLearn` is the difference between "come back tomorrow" and "you are
@@ -28,6 +30,6 @@ export const REVIEW_EMPTY_TITLE = translate("ui.review.reviewempty.copy.今天�
  */
 export function reviewEmptyDescription(hasMoreToLearn: boolean): string {
   return hasMoreToLearn
-    ? translate("ui.review.reviewempty.copy.学一节新课-它会掉落新的卡片-明天就有事做了")
-    : translate("ui.review.reviewempty.copy.今天的复习已经清空");
+    ? interfaceTranslator.t("ui.review.reviewempty.copy.学一节新课-它会掉落新的卡片-明天就有事做了")
+    : interfaceTranslator.t("ui.review.reviewempty.copy.今天的复习已经清空");
 }

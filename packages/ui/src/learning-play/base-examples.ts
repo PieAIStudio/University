@@ -1,5 +1,5 @@
 import type { ConnectActivity, NumericExpression, TuneActivity } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 const value = (control: string): NumericExpression => ({ control });
 const product = (...args: NumericExpression[]): NumericExpression => ({ op: "product", args });
@@ -24,36 +24,44 @@ export function getBaseExamples(): readonly (ConnectActivity | TuneActivity)[] {
     (topic): ConnectActivity => ({
       id: `connect-${topic}`,
       kind: "connect",
-      title: t(`play.connect.${topic}.title`),
-      brief: t(`play.connect.${topic}.brief`),
-      goal: t(`play.connect.${topic}.goal`),
-      takeaway: t(`play.connect.${topic}.takeaway`),
-      hint: t(`play.connect.${topic}.hint`),
+      title: interfaceTranslator.t(`play.connect.${topic}.title`),
+      brief: interfaceTranslator.t(`play.connect.${topic}.brief`),
+      goal: interfaceTranslator.t(`play.connect.${topic}.goal`),
+      takeaway: interfaceTranslator.t(`play.connect.${topic}.takeaway`),
+      hint: interfaceTranslator.t(`play.connect.${topic}.hint`),
       source:
         topic === "web"
           ? {
-              label: t("play.connect.source"),
+              label: interfaceTranslator.t("play.connect.source"),
               url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
             }
           : {
-              label: t("play.connect.film.source"),
+              label: interfaceTranslator.t("play.connect.film.source"),
               url: "https://docs.blender.org/manual/en/latest/editors/video_sequencer/index.html",
             },
       nodes: (["a", "b", "c", "d", "e", "f"] as const).map((id, index) => ({
         id,
-        label: t(`play.connect.${topic}.${id}`),
-        note: t(`play.connect.${topic}.${id}n`),
+        label: interfaceTranslator.t(`play.connect.${topic}.${id}`),
+        note: interfaceTranslator.t(`play.connect.${topic}.${id}n`),
         x: positions[index]![0],
         y: positions[index]![1],
       })),
       edges: links.map(([from, to], index) => ({
         from,
         to,
-        why: t(`play.connect.${topic}.${(["ab", "bc", "cd", "de", "df"] as const)[index]!}`),
+        why: interfaceTranslator.t(
+          `play.connect.${topic}.${(["ab", "bc", "cd", "de", "df"] as const)[index]!}`,
+        ),
       })),
       probes: [
-        { label: t(`play.connect.${topic}.ok`), path: ["a", "b", "c", "d", "e"] },
-        { label: t(`play.connect.${topic}.fail`), path: ["a", "b", "c", "d", "f"] },
+        {
+          label: interfaceTranslator.t(`play.connect.${topic}.ok`),
+          path: ["a", "b", "c", "d", "e"],
+        },
+        {
+          label: interfaceTranslator.t(`play.connect.${topic}.fail`),
+          path: ["a", "b", "c", "d", "f"],
+        },
       ],
     }),
   );
@@ -62,79 +70,93 @@ export function getBaseExamples(): readonly (ConnectActivity | TuneActivity)[] {
     id: "tune-image",
     kind: "tune",
     visualization: { kind: "image-detail", detailMetric: "sharpness" },
-    title: t("play.tune.image.title"),
-    brief: t("play.tune.image.brief"),
-    goal: t("play.tune.image.goal"),
-    takeaway: t("play.tune.image.takeaway"),
-    hint: t("play.tune.image.hint"),
+    title: interfaceTranslator.t("play.tune.image.title"),
+    brief: interfaceTranslator.t("play.tune.image.brief"),
+    goal: interfaceTranslator.t("play.tune.image.goal"),
+    takeaway: interfaceTranslator.t("play.tune.image.takeaway"),
+    hint: interfaceTranslator.t("play.tune.image.hint"),
     source: {
-      label: t("play.tune.image.source"),
+      label: interfaceTranslator.t("play.tune.image.source"),
       url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Performance/Multimedia",
     },
     controls: [
-      { id: "width", label: t("play.tune.width"), unit: " px", min: 400, max: 1600, initial: 1400 },
-      { id: "quality", label: t("play.tune.quality"), unit: "%", min: 30, max: 95, initial: 90 },
+      {
+        id: "width",
+        label: interfaceTranslator.t("play.tune.width"),
+        unit: " px",
+        min: 400,
+        max: 1600,
+        initial: 1400,
+      },
+      {
+        id: "quality",
+        label: interfaceTranslator.t("play.tune.quality"),
+        unit: "%",
+        min: 30,
+        max: 95,
+        initial: 90,
+      },
     ],
     metrics: [
       {
         id: "size",
-        label: t("play.tune.size"),
+        label: interfaceTranslator.t("play.tune.size"),
         unit: " KB",
         expression: size,
         max: 150,
         scale: 550,
         precision: 0,
-        explanation: t("play.tune.image.sizeWhy"),
+        explanation: interfaceTranslator.t("play.tune.image.sizeWhy"),
       },
       {
         id: "time",
-        label: t("play.tune.time"),
+        label: interfaceTranslator.t("play.tune.time"),
         unit: " s",
         expression: product(size, 0.008),
         max: 1.2,
         scale: 4.4,
         precision: 2,
-        explanation: t("play.tune.image.timeWhy"),
+        explanation: interfaceTranslator.t("play.tune.image.timeWhy"),
       },
       {
         id: "sharpness",
-        label: t("play.tune.sharpness"),
-        unit: t("play.tune.points"),
+        label: interfaceTranslator.t("play.tune.sharpness"),
+        unit: interfaceTranslator.t("play.tune.points"),
         expression: { op: "min", args: [100, product(value("width"), 0.001, value("quality"))] },
         min: 65,
         scale: 100,
         precision: 0,
-        explanation: t("play.tune.image.sharpWhy"),
+        explanation: interfaceTranslator.t("play.tune.image.sharpWhy"),
       },
     ],
-    modelNote: t("play.tune.image.model"),
+    modelNote: interfaceTranslator.t("play.tune.image.model"),
   };
   const batch: TuneActivity = {
     id: "tune-batch",
     kind: "tune",
     visualization: { kind: "work-queue", batchControl: "batch", workersControl: "workers" },
-    title: t("play.tune.batch.title"),
-    brief: t("play.tune.batch.brief"),
-    goal: t("play.tune.batch.goal"),
-    takeaway: t("play.tune.batch.takeaway"),
-    hint: t("play.tune.batch.hint"),
+    title: interfaceTranslator.t("play.tune.batch.title"),
+    brief: interfaceTranslator.t("play.tune.batch.brief"),
+    goal: interfaceTranslator.t("play.tune.batch.goal"),
+    takeaway: interfaceTranslator.t("play.tune.batch.takeaway"),
+    hint: interfaceTranslator.t("play.tune.batch.hint"),
     source: {
-      label: t("play.tune.batch.source"),
+      label: interfaceTranslator.t("play.tune.batch.source"),
       url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model",
     },
     controls: [
       {
         id: "batch",
-        label: t("play.tune.batch"),
-        unit: t("play.tune.items"),
+        label: interfaceTranslator.t("play.tune.batch"),
+        unit: interfaceTranslator.t("play.tune.items"),
         min: 1,
         max: 10,
         initial: 2,
       },
       {
         id: "workers",
-        label: t("play.tune.workers"),
-        unit: t("play.tune.items"),
+        label: interfaceTranslator.t("play.tune.workers"),
+        unit: interfaceTranslator.t("play.tune.items"),
         min: 1,
         max: 8,
         initial: 1,
@@ -143,27 +165,27 @@ export function getBaseExamples(): readonly (ConnectActivity | TuneActivity)[] {
     metrics: [
       {
         id: "output",
-        label: t("play.tune.throughput"),
-        unit: t("play.tune.perSecond"),
+        label: interfaceTranslator.t("play.tune.throughput"),
+        unit: interfaceTranslator.t("play.tune.perSecond"),
         expression: product(value("batch"), value("workers"), 2),
         min: 24,
         scale: 160,
         precision: 0,
-        explanation: t("play.tune.batch.outputWhy"),
+        explanation: interfaceTranslator.t("play.tune.batch.outputWhy"),
       },
       {
         id: "wait",
-        label: t("play.tune.wait"),
+        label: interfaceTranslator.t("play.tune.wait"),
         unit: " s",
         expression: product(value("batch"), 0.1),
         max: 0.6,
         scale: 1,
         precision: 1,
-        explanation: t("play.tune.batch.waitWhy"),
+        explanation: interfaceTranslator.t("play.tune.batch.waitWhy"),
       },
       {
         id: "memory",
-        label: t("play.tune.memory"),
+        label: interfaceTranslator.t("play.tune.memory"),
         unit: " MB",
         expression: {
           op: "sum",
@@ -172,10 +194,10 @@ export function getBaseExamples(): readonly (ConnectActivity | TuneActivity)[] {
         max: 80,
         scale: 256,
         precision: 0,
-        explanation: t("play.tune.batch.memoryWhy"),
+        explanation: interfaceTranslator.t("play.tune.batch.memoryWhy"),
       },
     ],
-    modelNote: t("play.tune.batch.model"),
+    modelNote: interfaceTranslator.t("play.tune.batch.model"),
   };
   return [...graphs, image, batch];
 }

@@ -13,7 +13,7 @@
  * or review card, where its prose and answer content are actually needed.
  */
 import imported from "./imported.json";
-import { activeLocale } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { localizeLearnerContent } from "@pieai/university-core";
 import type { SourceProvenance } from "@pieai/university-core/domain/schemas.js";
 
@@ -165,7 +165,7 @@ interface LibraryStudy {
   readonly courses: readonly LibraryCourse[];
 }
 
-export const library = localizeLearnerContent(imported, activeLocale()) as {
+export const library = localizeLearnerContent(imported, interfaceTranslator.locale) as {
   readonly importedAt: string;
   readonly studies: readonly LibraryStudy[];
 };
@@ -177,7 +177,8 @@ const resolved = new Map<string, Course>();
 export function loadCourse(studyId: string, courseId: string): Promise<Course> {
   const key = `${studyId}/${courseId}`;
   const existing = cache.get(key);
-  if (existing) return existing.then((course) => localizeLearnerContent(course, activeLocale()));
+  if (existing)
+    return existing.then((course) => localizeLearnerContent(course, interfaceTranslator.locale));
   const pending = fetch(`/content/${studyId}/${courseId}.json`)
     .then((response) => {
       if (!response.ok) throw new Error(`${key}: ${response.status}`);
@@ -194,7 +195,7 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
       throw reason;
     });
   cache.set(key, pending);
-  return pending.then((course) => localizeLearnerContent(course, activeLocale()));
+  return pending.then((course) => localizeLearnerContent(course, interfaceTranslator.locale));
 }
 
 /**
@@ -211,7 +212,7 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
  */
 export function peekCourse(studyId: string, courseId: string): Course | undefined {
   const course = resolved.get(`${studyId}/${courseId}`);
-  return course ? localizeLearnerContent(course, activeLocale()) : undefined;
+  return course ? localizeLearnerContent(course, interfaceTranslator.locale) : undefined;
 }
 
 /** Defined in `@pieai/university-world`. The map's input contract. */

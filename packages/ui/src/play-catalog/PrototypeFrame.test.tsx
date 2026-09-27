@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { StrictMode, act } from "react";
 import { createRoot } from "react-dom/client";
@@ -17,9 +18,11 @@ it("does not stop a mounted prototype during StrictMode replay, but stops it on 
   try {
     await act(async () => {
       root.render(
-        <StrictMode>
-          <PrototypeFrame source="<button>Start</button>" presentation="" title="Test game" />
-        </StrictMode>,
+        withInterfaceLocale(
+          <StrictMode>
+            <PrototypeFrame source="<button>Start</button>" presentation="" title="Test game" />
+          </StrictMode>,
+        ),
       );
     });
     const stopCalls = () => postMessage.mock.calls.filter(([data]) => data.stop === true);

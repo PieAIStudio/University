@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, StrictMode } from "react";
@@ -30,15 +31,17 @@ describe("domain labels", () => {
     try {
       await act(async () =>
         root.render(
-          <StrictMode>
-            <PlanetDomainLabels
-              studies={[real]}
-              domainCatalog={domainCatalog}
-              selectedId={real.id}
-              selectedDomainId="ai-media"
-              nodes={nodes}
-            />
-          </StrictMode>,
+          withInterfaceLocale(
+            <StrictMode>
+              <PlanetDomainLabels
+                studies={[real]}
+                domainCatalog={domainCatalog}
+                selectedId={real.id}
+                selectedDomainId="ai-media"
+                nodes={nodes}
+              />
+            </StrictMode>,
+          ),
         ),
       );
       expect([...nodes.keys()].sort()).toEqual(["ai-foundations", "ai-media", "programming"]);
@@ -48,13 +51,15 @@ describe("domain labels", () => {
       expect(nodes.get("ai-media")?.dataset.active).toBe("true");
       await act(async () =>
         root.render(
-          <PlanetDomainLabels
-            studies={[real, { ...real, id: "new-real-study", domain: domainCatalog[1] }]}
-            domainCatalog={domainCatalog}
-            selectedId="new-real-study"
-            selectedDomainId="ai-foundations"
-            nodes={nodes}
-          />,
+          withInterfaceLocale(
+            <PlanetDomainLabels
+              studies={[real, { ...real, id: "new-real-study", domain: domainCatalog[1] }]}
+              domainCatalog={domainCatalog}
+              selectedId="new-real-study"
+              selectedDomainId="ai-foundations"
+              nodes={nodes}
+            />,
+          ),
         ),
       );
       expect(nodes.get("ai-foundations")?.textContent).toBe("AI 基础已选");

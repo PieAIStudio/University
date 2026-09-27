@@ -4,7 +4,7 @@ import type {
   EvalOutcome,
   RepairActivity,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)[] {
   const expectations = ["fulfilled", "clarify", "unavailable", "out-of-scope"] as const;
@@ -13,26 +13,26 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
     (topic): EvalActivity => ({
       kind: "ai-eval",
       id: `ai-eval-${topic}`,
-      title: t(`play.aiQuality.eval.${topic}.title`),
-      brief: t(`play.aiQuality.eval.${topic}.brief`),
-      goal: t(`play.aiQuality.eval.${topic}.goal`),
-      takeaway: t(`play.aiQuality.eval.${topic}.takeaway`),
-      hint: t(`play.aiQuality.eval.${topic}.hint`),
+      title: interfaceTranslator.t(`play.aiQuality.eval.${topic}.title`),
+      brief: interfaceTranslator.t(`play.aiQuality.eval.${topic}.brief`),
+      goal: interfaceTranslator.t(`play.aiQuality.eval.${topic}.goal`),
+      takeaway: interfaceTranslator.t(`play.aiQuality.eval.${topic}.takeaway`),
+      hint: interfaceTranslator.t(`play.aiQuality.eval.${topic}.hint`),
       source: {
-        label: t("play.aiQuality.eval.source"),
+        label: interfaceTranslator.t("play.aiQuality.eval.source"),
         url: "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
       },
-      product: t(`play.aiQuality.eval.${topic}.product`),
-      contract: t(`play.aiQuality.eval.${topic}.contract`),
+      product: interfaceTranslator.t(`play.aiQuality.eval.${topic}.product`),
+      contract: interfaceTranslator.t(`play.aiQuality.eval.${topic}.contract`),
       initial: { information: true, availability: true, supported: true },
       inputs: Object.fromEntries(
         (["information", "availability", "supported"] as const).map((key) => [
           key,
           {
-            label: t(`play.aiQuality.eval.${topic}.${key}.label`),
-            present: t(`play.aiQuality.eval.${topic}.${key}.present`),
-            absent: t(`play.aiQuality.eval.${topic}.${key}.absent`),
-            guard: t(`play.aiQuality.eval.${topic}.${key}.guard`),
+            label: interfaceTranslator.t(`play.aiQuality.eval.${topic}.${key}.label`),
+            present: interfaceTranslator.t(`play.aiQuality.eval.${topic}.${key}.present`),
+            absent: interfaceTranslator.t(`play.aiQuality.eval.${topic}.${key}.absent`),
+            guard: interfaceTranslator.t(`play.aiQuality.eval.${topic}.${key}.guard`),
           },
         ]),
       ) as EvalActivity["inputs"],
@@ -40,18 +40,20 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
         ([...expectations, "refused"] as const).map((outcome) => [
           outcome,
           {
-            label: t(`play.aiQuality.eval.${topic}.${outcome}.label`),
-            observation: t(`play.aiQuality.eval.${topic}.${outcome}.observation`),
+            label: interfaceTranslator.t(`play.aiQuality.eval.${topic}.${outcome}.label`),
+            observation: interfaceTranslator.t(
+              `play.aiQuality.eval.${topic}.${outcome}.observation`,
+            ),
             artifact: {
-              label: t(`play.aiQuality.eval.${topic}.artifact`),
+              label: interfaceTranslator.t(`play.aiQuality.eval.${topic}.artifact`),
               value:
                 topic === "schedule"
-                  ? t(
+                  ? interfaceTranslator.t(
                       outcome === "fulfilled"
                         ? "play.aiQuality.eval.schedule.created"
                         : "play.aiQuality.eval.schedule.notCreated",
                     )
-                  : t(`play.aiQuality.eval.shop.${outcome}.artifact`),
+                  : interfaceTranslator.t(`play.aiQuality.eval.shop.${outcome}.artifact`),
             },
           },
         ]),
@@ -59,7 +61,7 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
       trials: 3,
       candidates: (["careful", "eager", "refuse"] as const).map((id, index) => ({
         id,
-        label: t(
+        label: interfaceTranslator.t(
           (
             [
               "play.aiQuality.eval.candidateA",
@@ -68,7 +70,7 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
             ] as const
           )[index]!,
         ),
-        note: t("play.aiQuality.eval.unknownNote"),
+        note: interfaceTranslator.t("play.aiQuality.eval.unknownNote"),
         responses: Object.fromEntries(
           expectations.map((expected) => [
             expected,
@@ -91,37 +93,37 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
       kind: "ai-repair",
       id: `ai-repair-${model}`,
       model,
-      title: t(`play.aiQuality.repair.${model}.title`),
-      brief: t(`play.aiQuality.repair.${model}.brief`),
-      goal: t(`play.aiQuality.repair.${model}.goal`),
-      takeaway: t(`play.aiQuality.repair.${model}.takeaway`),
-      hint: t(`play.aiQuality.repair.${model}.hint`),
+      title: interfaceTranslator.t(`play.aiQuality.repair.${model}.title`),
+      brief: interfaceTranslator.t(`play.aiQuality.repair.${model}.brief`),
+      goal: interfaceTranslator.t(`play.aiQuality.repair.${model}.goal`),
+      takeaway: interfaceTranslator.t(`play.aiQuality.repair.${model}.takeaway`),
+      hint: interfaceTranslator.t(`play.aiQuality.repair.${model}.hint`),
       source: {
-        label: t("play.aiQuality.repair.source"),
+        label: interfaceTranslator.t("play.aiQuality.repair.source"),
         url: "https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/",
       },
-      product: t(`play.aiQuality.repair.${model}.product`),
-      productBrief: t(`play.aiQuality.repair.${model}.productBrief`),
+      product: interfaceTranslator.t(`play.aiQuality.repair.${model}.product`),
+      productBrief: interfaceTranslator.t(`play.aiQuality.repair.${model}.productBrief`),
       choices: (["first", "second"] as const).map((id) => ({
         id,
-        label: t(`play.aiQuality.repair.${model}.${id}`),
+        label: interfaceTranslator.t(`play.aiQuality.repair.${model}.${id}`),
       })),
       capacity: 3,
-      defect: t(`play.aiQuality.repair.${model}.defect`),
-      expected: t(`play.aiQuality.repair.${model}.expected`),
+      defect: interfaceTranslator.t(`play.aiQuality.repair.${model}.defect`),
+      expected: interfaceTranslator.t(`play.aiQuality.repair.${model}.expected`),
       reproduceSteps: (["step1", "step2", "step3"] as const).map((step) =>
-        t(`play.aiQuality.repair.${model}.${step}`),
+        interfaceTranslator.t(`play.aiQuality.repair.${model}.${step}`),
       ),
-      regression: t(`play.aiQuality.repair.${model}.regression`),
+      regression: interfaceTranslator.t(`play.aiQuality.repair.${model}.regression`),
       regressionSteps: (["regression1", "regression2", "regression3"] as const).map((step) =>
-        t(`play.aiQuality.repair.${model}.${step}`),
+        interfaceTranslator.t(`play.aiQuality.repair.${model}.${step}`),
       ),
-      submitLabel: t(`play.aiQuality.repair.${model}.submit`),
+      submitLabel: interfaceTranslator.t(`play.aiQuality.repair.${model}.submit`),
       patches: Object.fromEntries(
         (["scoped", "rewrite", "removed"] as const).map((patch) => [
           patch,
           {
-            label: t(
+            label: interfaceTranslator.t(
               model === "booking"
                 ? patch === "rewrite"
                   ? "play.aiQuality.repair.versionA"
@@ -134,9 +136,9 @@ export function getAIQualityExamples(): readonly (EvalActivity | RepairActivity)
                     ? "play.aiQuality.repair.versionB"
                     : "play.aiQuality.repair.versionC",
             ),
-            claim: t(`play.aiQuality.repair.${model}.${patch}.claim`),
-            scope: t(`play.aiQuality.repair.${model}.${patch}.scope`),
-            change: t(`play.aiQuality.repair.${model}.${patch}.change`),
+            claim: interfaceTranslator.t(`play.aiQuality.repair.${model}.${patch}.claim`),
+            scope: interfaceTranslator.t(`play.aiQuality.repair.${model}.${patch}.scope`),
+            change: interfaceTranslator.t(`play.aiQuality.repair.${model}.${patch}.change`),
           },
         ]),
       ) as RepairActivity["patches"],

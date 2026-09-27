@@ -5,7 +5,7 @@
  * browser beside the on/off switch rather than in the learner database.
  */
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 /** How an annotated word is marked in the prose. */
 export type WordMarkStyle = "underline" | "marker" | "plain";
@@ -82,25 +82,25 @@ export const FOREIGN_PRESETS: Readonly<Record<Exclude<ForeignPreset, "custom">, 
 
 export const PRESET_LABELS: Readonly<Record<Exclude<ForeignPreset, "custom">, string>> = {
   get read() {
-    return translate("reading.preset.read");
+    return interfaceTranslator.t("reading.preset.read");
   },
   get pronounce() {
-    return translate("reading.preset.pronounce");
+    return interfaceTranslator.t("reading.preset.pronounce");
   },
   get remember() {
-    return translate("reading.preset.remember");
+    return interfaceTranslator.t("reading.preset.remember");
   },
 };
 
 export const PRESET_HINTS: Readonly<Record<Exclude<ForeignPreset, "custom">, string>> = {
   get read() {
-    return translate("reading.preset.readHint");
+    return interfaceTranslator.t("reading.preset.readHint");
   },
   get pronounce() {
-    return translate("reading.preset.pronounceHint");
+    return interfaceTranslator.t("reading.preset.pronounceHint");
   },
   get remember() {
-    return translate("reading.preset.rememberHint");
+    return interfaceTranslator.t("reading.preset.rememberHint");
   },
 };
 

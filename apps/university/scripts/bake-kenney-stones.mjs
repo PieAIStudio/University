@@ -3,7 +3,7 @@
  * Bake a reviewed set of CC0 Kenney Nature Kit rocks into CPU mesh data.
  *
  *   node apps/university/scripts/bake-kenney-stones.mjs \
- *     [--donor-root ../_donors/Kenney] [--output packages/world/src/island/kenney-stone-shapes.json]
+ *     [--donor-root ../_Donors/Kenney] [--output packages/world/src/island/kenney-stone-shapes.json]
  *
  * The course island draws every rock from these shapes (R59-06): roadside rocks,
  * outcrops, ground stones and lock stones. They are baked rather than loaded as
@@ -25,7 +25,7 @@ const option = (name, fallback) => {
   return at >= 0 ? argv[at + 1] : fallback;
 };
 const donorRoot = resolve(
-  option("--donor-root", process.env.KENNEY_DONOR_ROOT ?? "../_donors/Kenney"),
+  option("--donor-root", process.env.KENNEY_DONOR_ROOT ?? "../_Donors/Kenney"),
 );
 const output = resolve(option("--output", "packages/world/src/island/kenney-stone-shapes.json"));
 const kit = join(donorRoot, "kenney_nature-kit");

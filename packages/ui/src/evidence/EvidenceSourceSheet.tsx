@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessPort } from "@pieai/university-core";
@@ -27,6 +27,7 @@ export function EvidenceSourceSheet({
   readonly onClose: () => void;
   readonly onSelectIndex: (index: number) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
   const [tokenLines, setTokenLines] = useState<readonly (readonly EvidenceToken[])[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +98,9 @@ export function EvidenceSourceSheet({
   async function copy(value: string, state: "code" | "locator") {
     try {
       if (!navigator.clipboard?.writeText)
-        throw new Error(translate("ui.evidence.evidenceSourceSheet.copy.当前浏览器不提供复制功能"));
+        throw new Error(
+          interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.当前浏览器不提供复制功能"),
+        );
       await navigator.clipboard.writeText(value);
       setCopyState(state);
       window.setTimeout(() => setCopyState("idle"), 2_500);
@@ -105,7 +108,7 @@ export function EvidenceSourceSheet({
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.evidence.evidenceSourceSheet.copy.复制失败"),
+          : interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.复制失败"),
       );
     }
   }
@@ -113,11 +116,11 @@ export function EvidenceSourceSheet({
   return (
     <GameModal
       open
-      title={translate("ui.evidence.evidenceSourceSheet.copy.源码证据-value0", {
+      title={interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.源码证据-value0", {
         value0: reference.sourcePath,
       })}
       size="lg"
-      closeLabel={translate("ui.evidence.evidenceSourceSheet.copy.关闭源码证据")}
+      closeLabel={interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.关闭源码证据")}
       closeOnBackdrop
       onClose={onClose}
       footer={
@@ -128,7 +131,7 @@ export function EvidenceSourceSheet({
               onClick={() => onSelectIndex(index - 1)}
               disabled={index <= 0}
             >
-              {translate("ui.evidence.evidenceSourceSheet.copy.上一条证据")}
+              {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.上一条证据")}
             </GameButton>
             <span>
               {index + 1} / {evidence.length}
@@ -138,11 +141,11 @@ export function EvidenceSourceSheet({
               onClick={() => onSelectIndex(index + 1)}
               disabled={index >= evidence.length - 1}
             >
-              {translate("ui.evidence.evidenceSourceSheet.copy.下一条证据")}
+              {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.下一条证据")}
             </GameButton>
           </div>
           <GameButton variant="secondary" onClick={onClose}>
-            {translate("ui.evidence.evidenceSourceSheet.copy.关闭")}
+            {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.关闭")}
           </GameButton>
         </div>
       }
@@ -150,14 +153,18 @@ export function EvidenceSourceSheet({
       <div className="source-sheet">
         <div
           className="source-sheet__meta"
-          aria-label={translate("ui.evidence.evidenceSourceSheet.copy.源码证据定位")}
+          aria-label={interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.源码证据定位")}
         >
           <span>
-            <strong>{translate("ui.evidence.evidenceSourceSheet.copy.固定提交")}</strong>{" "}
+            <strong>
+              {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.固定提交")}
+            </strong>{" "}
             <code>{reference.sourceCommit}</code>
           </span>
           <span>
-            <strong>{translate("ui.evidence.evidenceSourceSheet.copy.引用范围")}</strong>{" "}
+            <strong>
+              {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.引用范围")}
+            </strong>{" "}
             <code>
               L{citedStart}–{citedEnd}
             </code>
@@ -177,28 +184,34 @@ export function EvidenceSourceSheet({
         />
         <div className="source-sheet__tools">
           <label>
-            <span>{translate("ui.evidence.evidenceSourceSheet.copy.在这份源码中查找")}</span>
+            <span>
+              {interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.在这份源码中查找")}
+            </span>
             <input
               ref={findRef}
               type="search"
               value={findText}
               onChange={(event) => setFindText(event.target.value)}
-              placeholder={translate("ui.evidence.evidenceSourceSheet.copy.例如-dist-outDir")}
+              placeholder={interfaceTranslator.t(
+                "ui.evidence.evidenceSourceSheet.copy.例如-dist-outDir",
+              )}
             />
           </label>
           <span className="source-sheet__find-status" aria-live="polite">
             {findText.trim()
-              ? translate("ui.evidence.evidenceSourceSheet.copy.命中-value0-行", {
+              ? interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.命中-value0-行", {
                   value0: matchCount,
                 })
-              : translate("ui.evidence.evidenceSourceSheet.copy.只显示已批准的本课证据")}
+              : interfaceTranslator.t(
+                  "ui.evidence.evidenceSourceSheet.copy.只显示已批准的本课证据",
+                )}
           </span>
           <div className="source-sheet__copy-actions">
             {snippet ? (
               <GameButton variant="ghost" onClick={() => void copy(snippet.code, "code")}>
                 {copyState === "code"
-                  ? translate("ui.evidence.evidenceSourceSheet.copy.已复制源码")
-                  : translate("ui.evidence.evidenceSourceSheet.copy.复制源码")}
+                  ? interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.已复制源码")
+                  : interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.复制源码")}
               </GameButton>
             ) : null}
             <GameButton
@@ -211,14 +224,16 @@ export function EvidenceSourceSheet({
               }
             >
               {copyState === "locator"
-                ? translate("ui.evidence.evidenceSourceSheet.copy.已复制定位")
-                : translate("ui.evidence.evidenceSourceSheet.copy.复制定位")}
+                ? interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.已复制定位")
+                : interfaceTranslator.t("ui.evidence.evidenceSourceSheet.copy.复制定位")}
             </GameButton>
           </div>
         </div>
         {loading ? (
           <p className="loading-copy">
-            {translate("ui.evidence.evidenceSourceSheet.copy.正在从不可变提交读取完整源码")}
+            {interfaceTranslator.t(
+              "ui.evidence.evidenceSourceSheet.copy.正在从不可变提交读取完整源码",
+            )}
           </p>
         ) : null}
         {error ? (
@@ -237,7 +252,7 @@ export function EvidenceSourceSheet({
           <>
             {snippet.truncatedBefore || snippet.truncatedAfter ? (
               <p className="source-sheet__truncation" role="status">
-                {translate(
+                {interfaceTranslator.t(
                   "ui.evidence.evidenceSourceSheet.copy.文件超过阅读器上限-仅显示受控范围-引用行仍以真实行号标出",
                 )}
               </p>

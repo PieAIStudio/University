@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessPort } from "@pieai/university-core";
@@ -22,6 +22,7 @@ export function StudyEvidenceStatus({
   readonly snapshotCount: number;
   readonly readyUaAnalysisCount: number;
 }) {
+  const interfaceTranslator = useI18n();
   /*
     Two numbers and a footnote, which is what this always was.
 
@@ -39,20 +40,20 @@ export function StudyEvidenceStatus({
   return (
     <section
       className="study-evidence-status"
-      aria-label={translate("app.authoring.studyDetail.copy.课程使用的项目资料")}
+      aria-label={interfaceTranslator.t("app.authoring.studyDetail.copy.课程使用的项目资料")}
     >
       <div className="study-evidence-status__metrics">
         <div className="study-evidence-status__metric">
           <strong>{snapshotCount}</strong>
-          <span>{translate("app.authoring.studyDetail.copy.个源码版本")}</span>
+          <span>{interfaceTranslator.t("app.authoring.studyDetail.copy.个源码版本")}</span>
         </div>
         <div className="study-evidence-status__metric">
           <strong>{readyUaAnalysisCount}</strong>
-          <span>{translate("app.authoring.studyDetail.copy.份项目分析")}</span>
+          <span>{interfaceTranslator.t("app.authoring.studyDetail.copy.份项目分析")}</span>
         </div>
       </div>
       <p className="study-evidence-status__boundary">
-        {translate(
+        {interfaceTranslator.t(
           "app.authoring.studyDetail.copy.这些资料只说明课程引用了哪些源码-不代表课程学习进度",
         )}
       </p>
@@ -79,6 +80,7 @@ interface AirlockView {
  * problem.
  */
 export function AirlockClocks({ studyId }: { readonly studyId: string }) {
+  const interfaceTranslator = useI18n();
   const [view, setView] = useState<AirlockView | null>(null);
 
   useEffect(() => {
@@ -100,37 +102,39 @@ export function AirlockClocks({ studyId }: { readonly studyId: string }) {
   const ahead = view.upstream?.commitsAhead ?? null;
   return (
     <section className="airlock-clocks">
-      <p className="eyebrow">{translate("app.authoring.studyDetail.copy.教材版本")}</p>
+      <p className="eyebrow">{interfaceTranslator.t("app.authoring.studyDetail.copy.教材版本")}</p>
       <dl>
         <div>
-          <dt>{translate("app.authoring.studyDetail.copy.课程使用版本")}</dt>
+          <dt>{interfaceTranslator.t("app.authoring.studyDetail.copy.课程使用版本")}</dt>
           <dd>
             <code>{view.promotedCommit?.slice(0, 8)}</code>
           </dd>
         </div>
         <div>
-          <dt>{translate("app.authoring.studyDetail.copy.项目最新版本")}</dt>
+          <dt>{interfaceTranslator.t("app.authoring.studyDetail.copy.项目最新版本")}</dt>
           <dd>
             <code>
               {view.upstream?.headCommit.slice(0, 8) ??
-                translate("app.authoring.studyDetail.copy.读不到")}
+                interfaceTranslator.t("app.authoring.studyDetail.copy.读不到")}
             </code>
           </dd>
         </div>
         <div>
-          <dt>{translate("app.authoring.studyDetail.copy.相差")}</dt>
+          <dt>{interfaceTranslator.t("app.authoring.studyDetail.copy.相差")}</dt>
           <dd>
             {ahead === null
-              ? translate("app.authoring.studyDetail.copy.算不出-上游历史被改写过")
-              : translate("app.authoring.studyDetail.copy.value0-个提交", { value0: ahead })}
+              ? interfaceTranslator.t("app.authoring.studyDetail.copy.算不出-上游历史被改写过")
+              : interfaceTranslator.t("app.authoring.studyDetail.copy.value0-个提交", {
+                  value0: ahead,
+                })}
           </dd>
         </div>
         <div>
-          <dt>{translate("app.authoring.studyDetail.copy.课程快照")}</dt>
+          <dt>{interfaceTranslator.t("app.authoring.studyDetail.copy.课程快照")}</dt>
           <dd>
             {view.course?.matchesAirlock === false
-              ? translate("app.authoring.studyDetail.copy.资料版本较旧")
-              : translate("app.authoring.studyDetail.copy.与课程资料一致")}
+              ? interfaceTranslator.t("app.authoring.studyDetail.copy.资料版本较旧")
+              : interfaceTranslator.t("app.authoring.studyDetail.copy.与课程资料一致")}
           </dd>
         </div>
       </dl>
@@ -142,7 +146,7 @@ export function AirlockClocks({ studyId }: { readonly studyId: string }) {
         </ul>
       ) : (
         <p className="airlock-clocks__note">
-          {translate(
+          {interfaceTranslator.t(
             "app.authoring.studyDetail.copy.落后是正常的-这里教的永远是上一次提升的那个提交-不是你编辑器里那份",
           )}
         </p>
@@ -160,20 +164,25 @@ export function StudyAnalysisPanel({
   readonly summary: StudySummary | null;
   readonly sourceAccess: SourceAccessPort;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <details className="study-analysis-panel">
       <summary className="study-analysis-panel__summary">
         <span className="study-analysis-panel__summary-copy">
-          <span className="eyebrow">{translate("app.authoring.studyDetail.copy.项目分析")}</span>
-          <strong>{translate("app.authoring.studyDetail.copy.课程引用了项目的哪些文件")}</strong>
+          <span className="eyebrow">
+            {interfaceTranslator.t("app.authoring.studyDetail.copy.项目分析")}
+          </span>
+          <strong>
+            {interfaceTranslator.t("app.authoring.studyDetail.copy.课程引用了项目的哪些文件")}
+          </strong>
           <span>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.studyDetail.copy.这里的数字只统计课程引用过的源码-不是-你学了多少-点开后可以按分层查看-逐层打开文件名",
             )}
           </span>
         </span>
         <span className="study-analysis-panel__summary-action">
-          {translate("app.authoring.studyDetail.copy.打开分析")}
+          {interfaceTranslator.t("app.authoring.studyDetail.copy.打开分析")}
         </span>
       </summary>
       <div className="study-analysis-panel__body">
@@ -245,6 +254,7 @@ export function StudyDetail({
    */
   readonly showCourseEntry?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   /*
     Above this many courses, no course unrolls itself. The number is not a
     threshold on aesthetics — it is where one open course stops being a sample
@@ -282,7 +292,7 @@ export function StudyDetail({
       <header className="study-detail__header">
         <div>
           <p className="eyebrow">
-            {translate("app.authoring.studyDetail.copy.项目")} {view.study.id}
+            {interfaceTranslator.t("app.authoring.studyDetail.copy.项目")} {view.study.id}
           </p>
           <h2>{view.study.title}</h2>
           <p>{view.study.description}</p>
@@ -291,8 +301,8 @@ export function StudyDetail({
       {view.courses.length === 0 ? null : grouped ? (
         <>
           <p className="course-group__eyebrow">
-            {translate("app.authoring.studyDetail.copy.主攻路线")} {grouped.route.length}{" "}
-            {translate("app.authoring.studyDetail.copy.门")}
+            {interfaceTranslator.t("app.authoring.studyDetail.copy.主攻路线")}{" "}
+            {grouped.route.length} {interfaceTranslator.t("app.authoring.studyDetail.copy.门")}
           </p>
           {grouped.route.map(renderCourse)}
           {/*
@@ -305,8 +315,8 @@ export function StudyDetail({
           <details className="course-group">
             <summary>
               <span>
-                {translate("app.authoring.studyDetail.copy.其他课程")} {grouped.rest.length}{" "}
-                {translate("app.authoring.studyDetail.copy.门")}
+                {interfaceTranslator.t("app.authoring.studyDetail.copy.其他课程")}{" "}
+                {grouped.rest.length} {interfaceTranslator.t("app.authoring.studyDetail.copy.门")}
               </span>
             </summary>
             {grouped.rest.map((course) => renderCourse(course, -1))}
@@ -317,9 +327,9 @@ export function StudyDetail({
       )}
       {view.courses.length > 0 ? null : (
         <GamePanel className="formal-course-empty" tone="strong">
-          <h2>{translate("app.authoring.studyDetail.copy.正式课程尚未发布")}</h2>
+          <h2>{interfaceTranslator.t("app.authoring.studyDetail.copy.正式课程尚未发布")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.studyDetail.copy.源码-UA-地图与课堂笔记可以先存在-但它们不会冒充经过编排的正式课程",
             )}
           </p>

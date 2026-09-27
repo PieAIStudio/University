@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -42,6 +42,7 @@ export function ReferencePanel({
   readonly onOpenFull?: (() => void) | undefined;
   readonly children: ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const [mounted, setMounted] = useState(open);
 
   useEffect(() => {
@@ -108,8 +109,8 @@ export function ReferencePanel({
               type="button"
               className="reference-panel__close"
               onClick={onClose}
-              aria-label={translate("ui.reference.referencePanel.copy.关闭引用")}
-              title={translate("ui.reference.referencePanel.copy.关闭-也可按-Esc")}
+              aria-label={interfaceTranslator.t("ui.reference.referencePanel.copy.关闭引用")}
+              title={interfaceTranslator.t("ui.reference.referencePanel.copy.关闭-也可按-Esc")}
             >
               ×
             </button>
@@ -118,7 +119,7 @@ export function ReferencePanel({
           {onOpenFull ? (
             <footer className="reference-panel__footer">
               <button type="button" className="reference-panel__full" onClick={onOpenFull}>
-                {translate("ui.reference.referencePanel.copy.查看完整页")}
+                {interfaceTranslator.t("ui.reference.referencePanel.copy.查看完整页")}
               </button>
             </footer>
           ) : null}
@@ -129,9 +130,9 @@ export function ReferencePanel({
 }
 
 function kindLabel(kind: ReferenceKind): string {
-  if (kind === "lesson") return translate("ui.reference.referencePanel.copy.课文");
-  if (kind === "term") return translate("ui.reference.referencePanel.copy.词义");
-  return translate("ui.reference.referencePanel.copy.证据");
+  if (kind === "lesson") return interfaceTranslator.t("ui.reference.referencePanel.copy.课文");
+  if (kind === "term") return interfaceTranslator.t("ui.reference.referencePanel.copy.词义");
+  return interfaceTranslator.t("ui.reference.referencePanel.copy.证据");
 }
 
 /**
@@ -143,10 +144,11 @@ function kindLabel(kind: ReferenceKind): string {
  * was added to one of them.
  */
 export function TermReferenceBody({ entry }: { readonly entry: LexiconEntry | null }) {
+  const interfaceTranslator = useI18n();
   if (!entry) {
     return (
       <p className="reference-panel__note">
-        {translate("ui.reference.referencePanel.copy.词库里没有这个词义")}
+        {interfaceTranslator.t("ui.reference.referencePanel.copy.词库里没有这个词义")}
       </p>
     );
   }

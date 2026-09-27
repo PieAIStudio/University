@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { useI18n } from "../../i18n/index.js";
 import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 /**
@@ -8,7 +8,7 @@ import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 export function NextStepEmpty({
   title,
   description,
-  action = translate("ui.navigation.empty.nextStepEmpty.copy.回到学习"),
+  action,
   onNavigate,
 }: {
   readonly title: string;
@@ -16,6 +16,8 @@ export function NextStepEmpty({
   readonly action?: string;
   readonly onNavigate?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
+  action ??= interfaceTranslator.t("ui.navigation.empty.nextStepEmpty.copy.回到学习");
   return (
     <GameEmptyState
       className="shell-empty"

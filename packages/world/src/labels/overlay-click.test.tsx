@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 /**
@@ -206,15 +207,17 @@ describe("unit strip real click", () => {
     const render = async () => {
       await act(async () => {
         root.render(
-          <Stack
-            open={open}
-            onOpen={() => {
-              open = true;
-            }}
-            onClose={() => {
-              open = false;
-            }}
-          />,
+          withInterfaceLocale(
+            <Stack
+              open={open}
+              onOpen={() => {
+                open = true;
+              }}
+              onClose={() => {
+                open = false;
+              }}
+            />,
+          ),
         );
       });
     };
@@ -235,13 +238,15 @@ describe("unit strip real click", () => {
     let open = false;
     await act(async () => {
       root.render(
-        <Stack
-          open={false}
-          onOpen={() => {
-            open = true;
-          }}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <Stack
+            open={false}
+            onOpen={() => {
+              open = true;
+            }}
+            onClose={() => undefined}
+          />,
+        ),
       );
     });
     const { label } = layoutOverlapping(container);

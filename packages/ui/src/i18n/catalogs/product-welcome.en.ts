@@ -10,7 +10,7 @@ export const messages = {
   "product.welcome.choose": "Change learning direction",
   "product.welcome.firstStep": "Start with a question",
   "product.welcome.loading": "Finding a lesson you can start…",
-  "product.welcome.scope": "{{exercises}} short exercises",
+  "product.welcome.scope": "{exercises} short exercises",
   "product.welcome.dismiss": "Close the welcome and explore the map",
   "product.welcome.start": "Start learning",
   "product.welcome.browse": "Browse courses",

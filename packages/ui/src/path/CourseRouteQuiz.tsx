@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useMemo, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { provenIdsForUnit } from "@pieai/university-core";
@@ -22,31 +22,51 @@ interface RouteQuestion {
 */
 const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
   {
-    prompt: translate(
+    prompt: interfaceTranslator.t(
       "ui.path.courseRouteQuiz.copy.如果-App-里的按钮文字不对-你第一反应更接近哪一种",
     ),
     options: [
-      { label: translate("ui.path.courseRouteQuiz.copy.我会在界面里继续找"), score: 0 },
-      { label: translate("ui.path.courseRouteQuiz.copy.我会猜某个文件可能负责它"), score: 1 },
-      { label: translate("ui.path.courseRouteQuiz.copy.我会打开项目找代码并运行检查"), score: 2 },
+      { label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.我会在界面里继续找"), score: 0 },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.我会猜某个文件可能负责它"),
+        score: 1,
+      },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.我会打开项目找代码并运行检查"),
+        score: 2,
+      },
     ],
   },
   {
-    prompt: translate(
+    prompt: interfaceTranslator.t(
       "ui.path.courseRouteQuiz.copy.看到-tsx-package-json-这些名字时-你大概处在什么状态",
     ),
     options: [
-      { label: translate("ui.path.courseRouteQuiz.copy.看起来都很陌生"), score: 0 },
-      { label: translate("ui.path.courseRouteQuiz.copy.见过-但需要有人带着看"), score: 1 },
-      { label: translate("ui.path.courseRouteQuiz.copy.我能大致说出它们分别做什么"), score: 2 },
+      { label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.看起来都很陌生"), score: 0 },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.见过-但需要有人带着看"),
+        score: 1,
+      },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.我能大致说出它们分别做什么"),
+        score: 2,
+      },
     ],
   },
   {
-    prompt: translate("ui.path.courseRouteQuiz.copy.你以前把一个项目改过-并重新跑起来吗"),
+    prompt: interfaceTranslator.t(
+      "ui.path.courseRouteQuiz.copy.你以前把一个项目改过-并重新跑起来吗",
+    ),
     options: [
-      { label: translate("ui.path.courseRouteQuiz.copy.还没有"), score: 0 },
-      { label: translate("ui.path.courseRouteQuiz.copy.改过小地方-但过程不太稳定"), score: 1 },
-      { label: translate("ui.path.courseRouteQuiz.copy.改过-也能自己排查问题"), score: 2 },
+      { label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.还没有"), score: 0 },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.改过小地方-但过程不太稳定"),
+        score: 1,
+      },
+      {
+        label: interfaceTranslator.t("ui.path.courseRouteQuiz.copy.改过-也能自己排查问题"),
+        score: 2,
+      },
     ],
   },
 ];
@@ -93,13 +113,13 @@ export function hasRouteQuiz(course: {
  * about what the person has done rather than what they are, stayed.
  */
 const ROUTE_REASON: Record<CourseRouteLevel, string> = {
-  beginner: translate(
+  beginner: interfaceTranslator.t(
     "ui.path.courseRouteQuiz.copy.你会先建立-屏幕上的东西和文件里的代码有关-这条最重要的连接",
   ),
-  familiar: translate(
+  familiar: interfaceTranslator.t(
     "ui.path.courseRouteQuiz.copy.你已经见过项目文件-先把代码怎样组成界面这条线接起来更省力",
   ),
-  builder: translate(
+  builder: interfaceTranslator.t(
     "ui.path.courseRouteQuiz.copy.你已经改过并运行过项目-直接整理文件职责和运行链路更合适",
   ),
 };
@@ -166,6 +186,7 @@ export function CourseRouteQuiz({
   readonly onProven: (unit: UnitView, lessonIds: readonly string[]) => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const storageKey = `universitylocal-route-${studyId}-${course.id}`;
   const [answers, setAnswers] = useState<readonly number[]>([]);
   const [result, setResult] = useState<StoredRouteResult | null>(null);
@@ -233,28 +254,35 @@ export function CourseRouteQuiz({
     <details className="course-route-quiz">
       <summary>
         <span>
-          <span className="eyebrow">{translate("ui.path.courseRouteQuiz.copy.学习路线")}</span>
-          <strong>{translate("ui.path.courseRouteQuiz.copy.先测测你的学习起点")}</strong>
+          <span className="eyebrow">
+            {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.学习路线")}
+          </span>
+          <strong>
+            {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.先测测你的学习起点")}
+          </strong>
         </span>
         <span className="course-route-quiz__summary-meta">
           {result
-            ? translate("ui.path.courseRouteQuiz.copy.已回答")
-            : translate("ui.path.courseRouteQuiz.copy.3-个小问题")}
+            ? interfaceTranslator.t("ui.path.courseRouteQuiz.copy.已回答")
+            : interfaceTranslator.t("ui.path.courseRouteQuiz.copy.3-个小问题")}
         </span>
       </summary>
       <div className="course-route-quiz__body">
         {result ? (
           <div className="course-route-quiz__result">
             <p className="course-route-quiz__result-label">
-              {translate("ui.path.courseRouteQuiz.copy.根据你的回答")}
+              {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.根据你的回答")}
             </p>
             {suggested.length > 0 ? (
               <h4>
-                {translate("ui.path.courseRouteQuiz.copy.看起来你可以跳过前面")} {suggested.length}{" "}
-                {translate("ui.path.courseRouteQuiz.copy.个单元-要不要各测三道")}
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.看起来你可以跳过前面")}{" "}
+                {suggested.length}{" "}
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.个单元-要不要各测三道")}
               </h4>
             ) : (
-              <h4>{translate("ui.path.courseRouteQuiz.copy.这门课从第一节开始最省力")}</h4>
+              <h4>
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.这门课从第一节开始最省力")}
+              </h4>
             )}
             <p className="course-route-quiz__reason">{ROUTE_REASON[result.level]}</p>
             {/*
@@ -294,28 +322,31 @@ export function CourseRouteQuiz({
                     })
                   }
                 >
-                  {translate("ui.path.courseRouteQuiz.copy.从第一节开始")}
+                  {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.从第一节开始")}
                 </GameButton>
               ) : null}
               <button type="button" className="text-button" onClick={retake}>
-                {translate("ui.path.courseRouteQuiz.copy.重新回答")}
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.重新回答")}
               </button>
             </div>
             <p className="course-route-quiz__note">
-              {translate("ui.path.courseRouteQuiz.copy.回答本身不会解锁任何一节-做对题才会")}
+              {interfaceTranslator.t(
+                "ui.path.courseRouteQuiz.copy.回答本身不会解锁任何一节-做对题才会",
+              )}
             </p>
           </div>
         ) : currentQuestion ? (
           <div className="course-route-quiz__question" aria-live="polite">
             <div className="course-route-quiz__progress">
               <span>
-                {translate("ui.path.courseRouteQuiz.copy.第")} {answers.length + 1} /{" "}
-                {COURSE_ROUTE_QUESTIONS.length} {translate("ui.path.courseRouteQuiz.copy.题")}
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.第")} {answers.length + 1} /{" "}
+                {COURSE_ROUTE_QUESTIONS.length}{" "}
+                {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.题")}
               </span>
               <span>
                 {answers.length === 0
-                  ? translate("ui.path.courseRouteQuiz.copy.凭直觉回答就好")
-                  : translate("ui.path.courseRouteQuiz.copy.继续回答-系统会自动判断")}
+                  ? interfaceTranslator.t("ui.path.courseRouteQuiz.copy.凭直觉回答就好")
+                  : interfaceTranslator.t("ui.path.courseRouteQuiz.copy.继续回答-系统会自动判断")}
               </span>
             </div>
             <h4>{currentQuestion.prompt}</h4>

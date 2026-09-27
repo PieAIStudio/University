@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { useI18n } from "../../i18n/index.js";
 import type { ReactNode } from "react";
 
 import { LevelProgress } from "../screens/LevelProgress.js";
@@ -39,6 +39,7 @@ export function ProfileScreen({
   readonly nextHref?: string;
   readonly reviewCardCount?: number;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <div className="profile-screen">
       <div className="profile-screen__hero">{avatar}</div>
@@ -47,28 +48,30 @@ export function ProfileScreen({
       <dl className="profile-screen__stats">
         {passagesRead > 0 ? (
           <Stat
-            label={translate("ui.navigation.empty.profileScreen.copy.读过真实代码")}
+            label={interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.读过真实代码")}
             value={passagesRead}
-            unit={translate("ui.navigation.empty.profileScreen.copy.段")}
-            invite={translate(
+            unit={interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.段")}
+            invite={interfaceTranslator.t(
               "ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有",
             )}
             href={nextHref}
           />
         ) : (
           <Stat
-            label={translate("product.profile.cards")}
+            label={interfaceTranslator.t("product.profile.cards")}
             value={reviewCardCount}
-            unit={translate("product.profile.cardsUnit")}
-            invite={translate("product.profile.cardsEmpty")}
+            unit={interfaceTranslator.t("product.profile.cardsUnit")}
+            invite={interfaceTranslator.t("product.profile.cardsEmpty")}
             href={nextHref}
           />
         )}
         <Stat
-          label={translate("ui.navigation.empty.profileScreen.copy.学完")}
+          label={interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.学完")}
           value={lessonsCompleted}
-          unit={translate("ui.navigation.empty.profileScreen.copy.节")}
-          invite={translate("ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始")}
+          unit={interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.节")}
+          invite={interfaceTranslator.t(
+            "ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始",
+          )}
           href={nextHref}
         />
       </dl>
@@ -82,18 +85,24 @@ export function ProfileScreen({
       {badges ?? (
         <section
           className="profile-screen__badges"
-          aria-label={translate("ui.navigation.empty.profileScreen.copy.徽章墙")}
+          aria-label={interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.徽章墙")}
         >
-          <h2>{translate("ui.navigation.empty.profileScreen.copy.徽章墙")}</h2>
+          <h2>{interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.徽章墙")}</h2>
           <p>
-            {translate("ui.navigation.empty.profileScreen.copy.徽章长在投放端-学完的课会记在上面")}
+            {interfaceTranslator.t(
+              "ui.navigation.empty.profileScreen.copy.徽章长在投放端-学完的课会记在上面",
+            )}
           </p>
         </section>
       )}
       <div className="profile-screen__links">
-        <a href="/practice">{translate("ui.navigation.empty.profileScreen.copy.练习")}</a>
-        <a href="/review">{translate("ui.navigation.empty.profileScreen.copy.复习")}</a>
-        <a href="/settings">{translate("ui.navigation.empty.profileScreen.copy.设置")}</a>
+        <a href="/practice">
+          {interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.练习")}
+        </a>
+        <a href="/review">{interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.复习")}</a>
+        <a href="/settings">
+          {interfaceTranslator.t("ui.navigation.empty.profileScreen.copy.设置")}
+        </a>
       </div>
     </div>
   );

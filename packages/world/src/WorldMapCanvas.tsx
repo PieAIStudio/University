@@ -8,7 +8,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { SceneLabelText } from "./labels/SceneLabelText.js";
 import type { AuthoringFocus } from "@pieai/university-core";
 
@@ -156,6 +156,7 @@ export function WorldMapCanvas({
   /** A learner course route; absent on the reader, catalogue and diagnostic shots. */
   readonly courseViewKey?: string | null;
 }) {
+  const interfaceTranslator = useI18n();
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const reservations = useMemo(createOverlayReservations, []);
   const travelClock = useMemo<MapTravelClock>(
@@ -236,7 +237,7 @@ export function WorldMapCanvas({
       data-map-surface="true"
       data-map-framing={activeOverview ? "overview" : "learning"}
       tabIndex={0}
-      aria-label={translate("product.navigation.mapHeading")}
+      aria-label={interfaceTranslator.t("product.navigation.mapHeading")}
       onKeyDown={(event) => {
         const action = followNode?.current;
         if (event.key !== "Tab" || !followId || !action?.classList.contains("is-visible")) return;
@@ -363,11 +364,11 @@ export function WorldMapCanvas({
 
       {underlay}
 
-      <nav className="labels" aria-label={translate("map.destinations")}>
+      <nav className="labels" aria-label={interfaceTranslator.t("map.destinations")}>
         {markers.map((marker) => {
           const isCourseRewriteMarker = marker.kind === "course" && marker.sub !== undefined;
           const courseState = marker.courseState
-            ? translate(`ui.world.courseState.${marker.courseState}`)
+            ? interfaceTranslator.t(`ui.world.courseState.${marker.courseState}`)
             : undefined;
           const content =
             marker.kind === "icon" ? (
@@ -478,7 +479,9 @@ export function WorldMapCanvas({
       </nav>
       {overlay}
       <div className="map-tools">
-        {overviewError ? <p role="status">{translate("ui.world.overview.unavailable")}</p> : null}
+        {overviewError ? (
+          <p role="status">{interfaceTranslator.t("ui.world.overview.unavailable")}</p>
+        ) : null}
         {hoverHint !== null && hoverHint !== undefined ? (
           <p className="hint hint--hover" data-game-ui-tone="glass">
             {hoverHint}

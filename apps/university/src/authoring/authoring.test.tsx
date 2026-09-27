@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -45,19 +46,23 @@ describe("CourseSection entry", () => {
 
   it("names the first unfinished lesson when the catalog owns the start button", () => {
     const markup = renderToStaticMarkup(
-      <CourseSection studyId="pact" course={course} onOpenLesson={() => undefined} />,
+      withInterfaceLocale(
+        <CourseSection studyId="pact" course={course} onOpenLesson={() => undefined} />,
+      ),
     );
     expect(markup).toContain("开始第 1 节");
   });
 
   it("drops the per-course start button when the landing already named the next step", () => {
     const markup = renderToStaticMarkup(
-      <CourseSection
-        studyId="pact"
-        course={course}
-        onOpenLesson={() => undefined}
-        showEntry={false}
-      />,
+      withInterfaceLocale(
+        <CourseSection
+          studyId="pact"
+          course={course}
+          onOpenLesson={() => undefined}
+          showEntry={false}
+        />,
+      ),
     );
     expect(markup).not.toContain("开始第 1 节");
     expect(markup).toContain("从零开始之前");
@@ -67,7 +72,7 @@ describe("CourseSection entry", () => {
 describe("StudyEvidenceStatus", () => {
   it("shows source and ready-UA counts without presenting UA as a course", () => {
     const markup = renderToStaticMarkup(
-      <StudyEvidenceStatus snapshotCount={2} readyUaAnalysisCount={1} />,
+      withInterfaceLocale(<StudyEvidenceStatus snapshotCount={2} readyUaAnalysisCount={1} />),
     );
 
     expect(markup).toContain('aria-label="课程使用的项目资料"');
@@ -152,7 +157,9 @@ describe("retrieval and immutable evidence UI", () => {
       code: source,
     };
     const tokens = await highlightEvidenceCode(source, "typescript");
-    const markup = renderToStaticMarkup(<EvidenceCode snippet={snippet} lines={tokens} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<EvidenceCode snippet={snippet} lines={tokens} />),
+    );
 
     expect(markup).toContain("evidence-code__line--highlighted");
     expect(markup.match(/evidence-code__line--highlighted/g)).toHaveLength(1);

@@ -42,12 +42,12 @@ export const messages: { readonly [K in keyof typeof source]: string } = {
   "mapNodes.challenge": "Practice game",
   "mapNodes.checkpoint": "Checkpoint",
   "mapNodes.opportunities": "More ways to learn here",
-  "mapNodes.range": "Lessons {{first}}–{{last}}",
+  "mapNodes.range": "Lessons {first}–{last}",
   "mapNodes.personalPitch": "Describe something you want to do and get a lesson for your task.",
   "mapNodes.challengePitch": "Connect what you learned nearby. Optional practice, not a roadblock.",
   "mapNodes.checkpointPitch":
     "Already know this? Check the material and skip what you demonstrate.",
-  "mapNodes.loading": "Preparing this section's material…",
+  "mapNodes.loading": "Preparing this section''s material…",
   "mapNodes.loadFailed": "The material could not load. Your progress is unchanged; try again.",
   "mapNodes.retry": "Try again",
   "mapNodes.return": "Back to the map",
@@ -64,14 +64,14 @@ export const messages: { readonly [K in keyof typeof source]: string } = {
   "mapNodes.game.paused": "Paused. The timer has stopped too.",
   "mapNodes.game.next": "Next board",
   "mapNodes.game.finish": "Finish this round",
-  "mapNodes.game.time": "{{time}} remaining",
-  "mapNodes.game.round": "Board {{current}} / {{total}}",
-  "mapNodes.game.score": "{{count}} pairs matched",
+  "mapNodes.game.time": "{time} remaining",
+  "mapNodes.game.round": "Board {current} / {total}",
+  "mapNodes.game.score": "{count} pairs matched",
   "mapNodes.game.pick": "Pair each question with the answer that fits.",
   "mapNodes.game.miss": "These do not match. Check what the question asks and try again.",
-  "mapNodes.game.right": "Matched · From “{{lesson}}”",
+  "mapNodes.game.right": "Matched · From “{lesson}”",
   "mapNodes.game.done": "Round complete",
-  "mapNodes.game.summary": "{{matched}} pairs matched in {{attempts}} attempts.",
+  "mapNodes.game.summary": "{matched} pairs matched in {attempts} attempts.",
   "mapNodes.game.notProof":
     "Matching practice is not proof of mastery. Review schedules and skip records are unchanged.",
   "mapNodes.game.expired":
@@ -79,20 +79,20 @@ export const messages: { readonly [K in keyof typeof source]: string } = {
   "mapNodes.game.continueUntimed": "Finish this board without a timer",
   "mapNodes.game.empty":
     "There are not yet two suitable studied cards here. Learn this section, then return to practise.",
-  "mapNodes.game.available": "{{count}} cards in this round. No repeats to fill the timer.",
+  "mapNodes.game.available": "{count} cards in this round. No repeats to fill the timer.",
   "mapNodes.game.saved": "Your previous board is saved. Resume when ready.",
   "mapNodes.game.replay": "Play another round",
   "mapNodes.check.title": "Do you already know this section?",
   "mapNodes.check.intro":
     "Check the existing exercises for each lesson, without a timer. Results appear at the end; only demonstrated material is skipped.",
   "mapNodes.check.coverage":
-    "This sitting covers {{covered}} / {{total}} lessons, with {{questions}} questions.",
+    "This sitting covers {covered} / {total} lessons, with {questions} questions.",
   "mapNodes.check.unavailable":
     "These lessons need a practical task or another assessment. This test will not claim you mastered them:",
   "mapNodes.check.empty":
     "This section needs practical work, so a short quiz cannot prove it yet. You can still take the lessons.",
   "mapNodes.check.start": "Start checkpoint",
-  "mapNodes.check.progress": "Question {{current}} / {{total}}",
+  "mapNodes.check.progress": "Question {current} / {total}",
   "mapNodes.check.answer": "Your answer",
   "mapNodes.check.short": "Write just the short answer requested, without extra explanation.",
   "mapNodes.check.blank": "Write or select an answer first.",
@@ -105,7 +105,7 @@ export const messages: { readonly [K in keyof typeof source]: string } = {
     "Your results could not be saved yet. Your answers are retained; try again.",
   "mapNodes.check.complete": "Section checkpoint passed",
   "mapNodes.check.partial": "Your checkpoint results",
-  "mapNodes.check.passed": "You may skip {{count}} lessons",
+  "mapNodes.check.passed": "You may skip {count} lessons",
   "mapNodes.check.practice": "Worth studying again",
   "mapNodes.check.untested": "Not assessed yet",
   "mapNodes.check.noRead":

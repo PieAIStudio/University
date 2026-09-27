@@ -1,25 +1,28 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { setActiveLocale } from "../i18n/index.js";
+import { setInterfaceLocale } from "../i18n/index.js";
 import type { UrlEvidenceView } from "../view/lesson-view.js";
 import { LessonSources } from "./LessonSources.js";
 
 let container: HTMLDivElement;
 
 beforeEach(() => {
-  setActiveLocale("zh-CN");
+  setInterfaceLocale("zh-CN");
   container = document.createElement("div");
 });
 
 afterEach(() => {
   container.remove();
-  setActiveLocale("zh-CN");
+  setInterfaceLocale("zh-CN");
 });
 
 function renderSources(evidence: readonly UrlEvidenceView[]): void {
-  container.innerHTML = renderToStaticMarkup(<LessonSources evidence={evidence} />);
+  container.innerHTML = renderToStaticMarkup(
+    withInterfaceLocale(<LessonSources evidence={evidence} />),
+  );
 }
 
 const source: UrlEvidenceView = {

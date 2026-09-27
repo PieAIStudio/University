@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   spineOf,
   learningSegments,
@@ -217,8 +217,10 @@ export function useWorldModel({
         : focusedStudyId;
     const title = studies.find((entry) => entry.id === studyId)?.title;
     return title
-      ? translate("app.app.worldmodel.copy.回到value0地图", { value0: spacedName(title) })
-      : translate("app.app.worldmodel.copy.回到课程地图");
+      ? interfaceTranslator.t("app.app.worldmodel.copy.回到value0地图", {
+          value0: spacedName(title),
+        })
+      : interfaceTranslator.t("app.app.worldmodel.copy.回到课程地图");
   }, [view, focusedStudyId, studies]);
 
   return {
@@ -293,7 +295,7 @@ export function useWorldMarkers({
           ...marker,
           proved: true,
           text: marker.kind === "icon" ? "◇" : marker.text,
-          label: `${lesson.title} · ${translate("mapNodes.proven")}`,
+          label: `${lesson.title} · ${interfaceTranslator.t("mapNodes.proven")}`,
         };
       });
       if (view.kind === "lesson" || !course) return annotated;
@@ -345,7 +347,7 @@ export function useWorldMarkers({
       locked: entry.state === "idle",
       sub:
         entry.node.isBeingRewritten === true
-          ? translate("app.app.worldmodel.copy.改写中")
+          ? interfaceTranslator.t("app.app.worldmodel.copy.改写中")
           : undefined,
       // The map has one answer to "what next". The remaining mobile budget
       // follows the authored road, not projected depth, so a nearer-looking

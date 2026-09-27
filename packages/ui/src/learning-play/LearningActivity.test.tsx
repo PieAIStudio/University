@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -48,11 +49,13 @@ describe("activity host evidence boundary", () => {
     const family = getExampleFamily(base);
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={family.levels.intro}
-          levels={{ id: family.id, levels: family.levels }}
-          initialDifficulty="practice"
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={family.levels.intro}
+            levels={{ id: family.id, levels: family.levels }}
+            initialDifficulty="practice"
+          />,
+        ),
       ),
     );
 
@@ -69,11 +72,13 @@ describe("activity host evidence boundary", () => {
     const base = getBaseExamples()[0]!;
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={{ ...base, difficulty: "intro" }}
-          occurrenceId="lesson-1-slot-1"
-          onResult={onResult}
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={{ ...base, difficulty: "intro" }}
+            occurrenceId="lesson-1-slot-1"
+            onResult={onResult}
+          />,
+        ),
       ),
     );
     await click("先跳过");
@@ -84,11 +89,13 @@ describe("activity host evidence boundary", () => {
     });
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={{ ...base, difficulty: "intro" }}
-          occurrenceId="lesson-1-slot-2"
-          onResult={onResult}
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={{ ...base, difficulty: "intro" }}
+            occurrenceId="lesson-1-slot-2"
+            onResult={onResult}
+          />,
+        ),
       ),
     );
     expect(container.querySelector('[data-result="skipped"]')).toBeNull();
@@ -98,11 +105,13 @@ describe("activity host evidence boundary", () => {
     );
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={{ ...base, difficulty: "challenge" }}
-          occurrenceId="lesson-1-slot-2"
-          onResult={onResult}
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={{ ...base, difficulty: "challenge" }}
+            occurrenceId="lesson-1-slot-2"
+            onResult={onResult}
+          />,
+        ),
       ),
     );
     expect(container.querySelector(".learning-activity")?.getAttribute("data-guided")).toBe("true");
@@ -127,7 +136,9 @@ describe("activity host evidence boundary", () => {
       })),
     };
     await act(async () =>
-      root.render(<LearningActivity activity={activity} onResult={onResult} />),
+      root.render(
+        withInterfaceLocale(<LearningActivity activity={activity} onResult={onResult} />),
+      ),
     );
     await click("给我一个线索");
     await click("记录这次实验");
@@ -149,12 +160,16 @@ describe("activity host evidence boundary", () => {
     const onResult = vi.fn();
     const examples = getBaseExamples();
     await act(async () =>
-      root.render(<LearningActivity activity={examples[0]!} onResult={onResult} />),
+      root.render(
+        withInterfaceLocale(<LearningActivity activity={examples[0]!} onResult={onResult} />),
+      ),
     );
     await click("先跳过");
     expect(onResult.mock.calls[0]![0]).toMatchObject({ status: "skipped", attempts: 0 });
     await act(async () =>
-      root.render(<LearningActivity activity={examples[1]!} onResult={onResult} />),
+      root.render(
+        withInterfaceLocale(<LearningActivity activity={examples[1]!} onResult={onResult} />),
+      ),
     );
     expect(container.querySelector('[data-result="skipped"]')).toBeNull();
     expect(container.querySelectorAll(".play-connect__node")).toHaveLength(6);
@@ -169,7 +184,9 @@ describe("activity host evidence boundary", () => {
     const onResult = vi.fn();
     const activity = getBaseExamples()[0] as ConnectActivity;
     await act(async () =>
-      root.render(<LearningActivity activity={activity} onResult={onResult} />),
+      root.render(
+        withInterfaceLocale(<LearningActivity activity={activity} onResult={onResult} />),
+      ),
     );
     for (const edge of activity.edges) {
       await click(activity.nodes.find((node) => node.id === edge.from)!.label);
@@ -191,7 +208,11 @@ describe("activity host evidence boundary", () => {
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
     try {
       await act(async () =>
-        root.render(<LearningActivity activity={getAIBriefExamples()[0]!} onResult={onResult} />),
+        root.render(
+          withInterfaceLocale(
+            <LearningActivity activity={getAIBriefExamples()[0]!} onResult={onResult} />,
+          ),
+        ),
       );
       expect(container.textContent).toContain("预设 AI 案例");
       await click("自由探索");

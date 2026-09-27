@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import type { ReactNode } from "react";
 
 import { toPath } from "@pieai/university-core";
@@ -81,25 +81,25 @@ function SettingsIcon() {
 export const MORE_CHILDREN: readonly ShellNavItem[] = [
   {
     id: "catalog",
-    label: translate("ui.navigation.slots.copy.目录"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.目录"),
     icon: <CatalogIcon />,
     href: toPath({ kind: "catalog" }),
   },
   {
     id: "review",
-    label: translate("ui.navigation.slots.copy.复习"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.复习"),
     icon: <ReviewIcon />,
     href: toPath({ kind: "review" }),
   },
   {
     id: "favourites",
-    label: translate("ui.navigation.slots.copy.收藏"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.收藏"),
     icon: <FavouritesIcon />,
     href: toPath({ kind: "favourites" }),
   },
   {
     id: "settings",
-    label: translate("ui.navigation.slots.copy.设置"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.设置"),
     icon: <SettingsIcon />,
     href: toPath({ kind: "settings" }),
   },
@@ -108,7 +108,7 @@ export const MORE_CHILDREN: readonly ShellNavItem[] = [
 /** Local-only flyout entry. Passed in through `extraMoreItems`, never forked in. */
 export const STUDIO_MORE_ITEM: ShellNavItem = {
   id: "studio",
-  label: translate("ui.navigation.slots.copy.作者工作台"),
+  label: interfaceTranslator.t("ui.navigation.slots.copy.作者工作台"),
   icon: <IslandIcon />,
   href: toPath({ kind: "studio" }),
 };
@@ -116,49 +116,49 @@ export const STUDIO_MORE_ITEM: ShellNavItem = {
 export const RAIL_ITEMS: readonly ShellNavItem[] = [
   {
     id: "learn",
-    label: translate("ui.navigation.slots.copy.学习"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.学习"),
     icon: <HomeIcon />,
     href: toPath({ kind: "world" }),
   },
   {
     id: "library",
-    label: translate("ui.navigation.slots.copy.图鉴"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.图鉴"),
     icon: <CodexIcon />,
     href: toPath({ kind: "library", tab: "concepts" }),
   },
   {
     id: "practice",
-    label: translate("ui.navigation.slots.copy.练习"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.练习"),
     icon: <PracticeIcon />,
     href: toPath({ kind: "practice" }),
   },
   {
     id: "league",
-    label: translate("ui.navigation.slots.copy.排行榜"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.排行榜"),
     icon: <LeagueIcon />,
     href: toPath({ kind: "league" }),
   },
   {
     id: "quests",
-    label: translate("ui.navigation.slots.copy.任务"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.任务"),
     icon: <QuestsIcon />,
     href: toPath({ kind: "quests" }),
   },
   {
     id: "plan",
-    label: translate("ui.navigation.slots.copy.会员"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.会员"),
     icon: <PlanIcon />,
     href: toPath({ kind: "plans" }),
   },
   {
     id: "profile",
-    label: translate("ui.navigation.slots.copy.个人档案"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.个人档案"),
     icon: <ProfileIcon />,
     href: toPath({ kind: "me" }),
   },
   {
     id: "more",
-    label: translate("ui.navigation.slots.copy.更多"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.更多"),
     icon: <MoreIcon />,
     href: "/more",
     children: MORE_CHILDREN,
@@ -168,43 +168,43 @@ export const RAIL_ITEMS: readonly ShellNavItem[] = [
 export const TAB_ITEMS: readonly ShellNavItem[] = [
   {
     id: "learn",
-    label: translate("ui.navigation.slots.copy.学习"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.学习"),
     icon: <HomeIcon />,
     href: toPath({ kind: "world" }),
   },
   {
     id: "practice",
-    label: translate("ui.navigation.slots.copy.练习"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.练习"),
     icon: <PracticeIcon />,
     href: toPath({ kind: "practice" }),
   },
   {
     id: "quests",
-    label: translate("ui.navigation.slots.copy.任务"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.任务"),
     icon: <QuestsIcon />,
     href: toPath({ kind: "quests" }),
   },
   {
     id: "league",
-    label: translate("ui.navigation.slots.copy.排行榜"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.排行榜"),
     icon: <LeagueIcon />,
     href: toPath({ kind: "league" }),
   },
   {
     id: "library",
-    label: translate("ui.navigation.slots.copy.图鉴"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.图鉴"),
     icon: <CodexIcon />,
     href: toPath({ kind: "library", tab: "concepts" }),
   },
   {
     id: "plan",
-    label: translate("ui.navigation.slots.copy.会员"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.会员"),
     icon: <PlanIcon />,
     href: toPath({ kind: "plans" }),
   },
   {
     id: "profile",
-    label: translate("ui.navigation.slots.copy.我"),
+    label: interfaceTranslator.t("ui.navigation.slots.copy.我"),
     icon: <ProfileIcon />,
     href: toPath({ kind: "me" }),
   },

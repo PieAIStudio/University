@@ -11,7 +11,7 @@
  * different lexicon import — and the two lexicon files were the same 90 KB.
  */
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import { loadCard, recapCardKeyOf, RATING, review } from "@pieai/university-core";
 import type { LexiconEntry, ProgressPort, RatingName } from "@pieai/university-core";
 
@@ -34,7 +34,9 @@ const PRIOR_ATTEMPTS_SHOWN = 3;
  * flow. This registry is the one decision for this shared implementation; the
  * queue publisher is checked separately.
  */
-const UNSUPPORTED_CARD = translate("ui.review.schedulerports.copy.这类复习卡还不能在这里复习");
+const UNSUPPORTED_CARD = interfaceTranslator.t(
+  "ui.review.schedulerports.copy.这类复习卡还不能在这里复习",
+);
 
 type ReviewCardKindSupport = "supported" | "unsupported";
 
@@ -86,7 +88,9 @@ export function createReviewCardPort(content: ContentPort, progress: ProgressPor
         to reload.
       */
       if (body.contentRevision !== card.contentRevision) {
-        throw new Error(translate("ui.review.schedulerports.copy.复习卡内容已更新-请重新加载"));
+        throw new Error(
+          interfaceTranslator.t("ui.review.schedulerports.copy.复习卡内容已更新-请重新加载"),
+        );
       }
       const cardKey = cardKeyOf(card);
       const priorAttempts = progress
@@ -118,7 +122,9 @@ export function createReviewCardPort(content: ContentPort, progress: ProgressPor
       progress.gradeCard(cardKey, RATINGS[rating - 1]!);
       const dueAt = progress.snapshot().cards[cardKey]?.dueAt;
       if (dueAt === undefined)
-        throw new Error(translate("ui.review.schedulerports.copy.复习结果没有写入云端缓存"));
+        throw new Error(
+          interfaceTranslator.t("ui.review.schedulerports.copy.复习结果没有写入云端缓存"),
+        );
       return { dueAt: new Date(dueAt).toISOString() };
     },
   };

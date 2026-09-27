@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -65,13 +66,15 @@ describe("StudySwitcher", () => {
     const picked: string[] = [];
     await act(async () => {
       root.render(
-        <StudySwitcher
-          studies={STUDIES}
-          focusedId="turing-pact"
-          onSelect={(id) => {
-            picked.push(id);
-          }}
-        />,
+        withInterfaceLocale(
+          <StudySwitcher
+            studies={STUDIES}
+            focusedId="turing-pact"
+            onSelect={(id) => {
+              picked.push(id);
+            }}
+          />,
+        ),
       );
     });
     const trigger = container.querySelector<HTMLButtonElement>(".study-switcher__trigger");

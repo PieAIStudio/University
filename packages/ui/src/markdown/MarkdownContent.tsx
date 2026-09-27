@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { Children, isValidElement, useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkDirective from "remark-directive";
@@ -60,6 +60,7 @@ function LessonDetailBlock({
   readonly kind: string;
   readonly detailMode: "standard" | "all";
 }) {
+  const interfaceTranslator = useI18n();
   const [open, setOpen] = useState(detailMode === "all");
   useEffect(() => setOpen(detailMode === "all"), [detailMode]);
   return (
@@ -69,7 +70,7 @@ function LessonDetailBlock({
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        <span>{title || translate("ui.markdown.markdownContent.copy.补充说明")}</span>
+        <span>{title || interfaceTranslator.t("ui.markdown.markdownContent.copy.补充说明")}</span>
         <small>{kind}</small>
       </summary>
       <div className="lesson-detail__body">{children}</div>
@@ -91,11 +92,11 @@ function formatCaptureDate(iso: string | undefined): string {
   if (Number.isNaN(date.getTime())) return "";
   const sameYear = date.getFullYear() === new Date().getFullYear();
   return sameYear
-    ? translate("ui.markdown.markdownContent.copy.value0月value1日", {
+    ? interfaceTranslator.t("ui.markdown.markdownContent.copy.value0月value1日", {
         value0: date.getMonth() + 1,
         value1: date.getDate(),
       })
-    : translate("ui.markdown.markdownContent.copy.value0年value1月value2日", {
+    : interfaceTranslator.t("ui.markdown.markdownContent.copy.value0年value1月value2日", {
         value0: date.getFullYear(),
         value1: date.getMonth() + 1,
         value2: date.getDate(),
@@ -111,23 +112,26 @@ function LessonMediaBlock({
   readonly children?: ReactNode;
   readonly video?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   if (!asset) {
     return (
       <div className="lesson-media lesson-media--missing" role="alert">
-        {translate("ui.markdown.markdownContent.copy.这段媒体没有通过当前课文版本的本地资产清单")}
+        {interfaceTranslator.t(
+          "ui.markdown.markdownContent.copy.这段媒体没有通过当前课文版本的本地资产清单",
+        )}
       </div>
     );
   }
   const label =
     asset.kind === "real-screenshot"
-      ? translate("ui.markdown.markdownContent.copy.真实截图")
+      ? interfaceTranslator.t("ui.markdown.markdownContent.copy.真实截图")
       : asset.kind === "ai-illustration"
-        ? translate("ui.markdown.markdownContent.copy.示意图-AI-插图")
+        ? interfaceTranslator.t("ui.markdown.markdownContent.copy.示意图-AI-插图")
         : asset.kind === "diagram"
-          ? translate("ui.markdown.markdownContent.copy.结构图")
+          ? interfaceTranslator.t("ui.markdown.markdownContent.copy.结构图")
           : asset.kind === "authorized-external"
-            ? translate("sources.originalMedia")
-            : translate("ui.markdown.markdownContent.copy.本地媒体");
+            ? interfaceTranslator.t("sources.originalMedia")
+            : interfaceTranslator.t("ui.markdown.markdownContent.copy.本地媒体");
   /*
     The directive body wins over the manifest caption, and `children` is kept as
     nodes rather than collapsed to a string.
@@ -153,7 +157,7 @@ function LessonMediaBlock({
         <video controls preload="metadata" poster={asset.posterUrl} aria-label={asset.alt}>
           <source src={asset.url} type={asset.mime} />
 
-          {translate("ui.markdown.markdownContent.copy.你的浏览器无法播放这段本地录屏")}
+          {interfaceTranslator.t("ui.markdown.markdownContent.copy.你的浏览器无法播放这段本地录屏")}
         </video>
       ) : (
         <img src={asset.url} alt={asset.alt} loading="lazy" />
@@ -176,7 +180,7 @@ function LessonMediaBlock({
               invisible until it is spelled out. The hash stays because it is
               what anyone checking has to type.
             */}
-            {translate("ui.markdown.markdownContent.copy.来源")}{" "}
+            {interfaceTranslator.t("ui.markdown.markdownContent.copy.来源")}{" "}
             {formatCaptureDate(asset.sourceCommitDate)}
             {asset.sourceCommit ? `（${asset.sourceCommit.slice(0, 8)}）` : null} ·{" "}
             {asset.capture.route} · {asset.capture.locale} · {asset.capture.viewport.width}×
@@ -186,7 +190,7 @@ function LessonMediaBlock({
         {asset.aiNote ? <small>{asset.aiNote}</small> : null}
         {asset.transcript ? (
           <details>
-            <summary>{translate("ui.markdown.markdownContent.copy.文字稿")}</summary>
+            <summary>{interfaceTranslator.t("ui.markdown.markdownContent.copy.文字稿")}</summary>
             <p>{asset.transcript}</p>
           </details>
         ) : null}
@@ -312,7 +316,7 @@ const markdownComponents: Components = {
         {children}
         <span
           className="markdown-external-link__mark"
-          aria-label={translate("ui.markdown.markdownContent.copy.外部链接")}
+          aria-label={interfaceTranslator.t("ui.markdown.markdownContent.copy.外部链接")}
         >
           ↗
         </span>
@@ -326,7 +330,7 @@ const markdownComponents: Components = {
     // instead, so the lesson still reads and nothing is hidden.
     return (
       <span className="markdown-blocked-image">
-        <strong>{translate("ui.markdown.markdownContent.copy.外部图片已拦截")}</strong>
+        <strong>{interfaceTranslator.t("ui.markdown.markdownContent.copy.外部图片已拦截")}</strong>
         {alt ? <span>{alt}</span> : null}
         <code>{source}</code>
       </span>
@@ -419,6 +423,7 @@ export function MarkdownContent({
    */
   readonly inline?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const active = englishEnabled && language?.status === "annotated" ? language : null;
   const [openReference, setOpenReference] = useState<OpenReference | null>(null);
 
@@ -532,7 +537,9 @@ export function MarkdownContent({
           return (
             <span
               className="evidence-anchor evidence-anchor--broken"
-              title={translate("ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内")}
+              title={interfaceTranslator.t(
+                "ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内",
+              )}
             >
               {children}
             </span>
@@ -604,7 +611,9 @@ export function MarkdownContent({
           return (
             <span
               className="evidence-anchor evidence-anchor--broken"
-              title={translate("ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内")}
+              title={interfaceTranslator.t(
+                "ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内",
+              )}
             >
               {_children}
             </span>
@@ -653,7 +662,7 @@ export function MarkdownContent({
           return (
             <span
               className="lesson-link lesson-link--broken"
-              title={translate("ui.markdown.markdownContent.copy.链接指向的课程不存在")}
+              title={interfaceTranslator.t("ui.markdown.markdownContent.copy.链接指向的课程不存在")}
             >
               {children}
             </span>
@@ -704,7 +713,7 @@ export function MarkdownContent({
           return (
             <span
               className="term-link term-link--broken"
-              title={translate("ui.markdown.markdownContent.copy.词库里没有这个词义")}
+              title={interfaceTranslator.t("ui.markdown.markdownContent.copy.词库里没有这个词义")}
             >
               {children}
             </span>
@@ -789,7 +798,7 @@ export function MarkdownContent({
         if (!activity) {
           return (
             <p className="lesson-directive-unsupported" role="note">
-              {translate("ui.markdown.markdownContent.copy.找不到这个互动课件")}
+              {interfaceTranslator.t("ui.markdown.markdownContent.copy.找不到这个互动课件")}
               <code>{id}</code>
             </p>
           );
@@ -811,7 +820,7 @@ export function MarkdownContent({
       }) {
         return (
           <p className="lesson-directive-unsupported" role="note">
-            {translate("ui.markdown.markdownContent.copy.未启用的课程扩展")}
+            {interfaceTranslator.t("ui.markdown.markdownContent.copy.未启用的课程扩展")}
             <code>{directiveProperty(node, "name")}</code>
           </p>
         );
@@ -912,7 +921,9 @@ export function MarkdownContent({
       </ReactMarkdown>
       <ReferencePanel
         open={openReference !== null}
-        title={openReference?.title ?? translate("ui.markdown.markdownContent.copy.引用")}
+        title={
+          openReference?.title ?? interfaceTranslator.t("ui.markdown.markdownContent.copy.引用")
+        }
         kind={(openReference?.kind ?? "lesson") as ReferenceKind}
         trigger={openReference?.trigger ?? null}
         onClose={() => setOpenReference(null)}
@@ -945,11 +956,12 @@ function ReferenceBody({
   readonly placeTellsThemApart: boolean;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
+  const interfaceTranslator = useI18n();
   if (reference.kind === "lesson") {
     if (!reference.target) {
       return (
         <p className="reference-panel__note">
-          {translate("ui.markdown.markdownContent.copy.这一课还不存在")}
+          {interfaceTranslator.t("ui.markdown.markdownContent.copy.这一课还不存在")}
         </p>
       );
     }
@@ -960,7 +972,9 @@ function ReferenceBody({
           {reference.target.targetSectionId ? `#${reference.target.targetSectionId}` : ""}
         </p>
         <p className="reference-panel__note">
-          {translate("ui.markdown.markdownContent.copy.在侧栏打开-课文的阅读位置留在这里")}
+          {interfaceTranslator.t(
+            "ui.markdown.markdownContent.copy.在侧栏打开-课文的阅读位置留在这里",
+          )}
         </p>
       </>
     );

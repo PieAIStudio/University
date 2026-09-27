@@ -9,7 +9,7 @@ import {
   type DispatchState,
 } from "@pieai/university-core";
 
-import { formatNumber, translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
 import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
@@ -22,6 +22,7 @@ export function DispatchGame({
   onAttempt,
   guided = false,
 }: ActivityControls<DispatchActivity>) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<DispatchState>(createDispatchState);
   const stateRef = useRef(state);
   const [feedback, setFeedback] = useState("");
@@ -143,14 +144,14 @@ export function DispatchGame({
       setFeedback(
         result.reason === "cache-unavailable"
           ? card.cacheKey
-            ? translate("play.extra.dispatch.cacheMiss")
-            : translate("play.extra.dispatch.noCache", { why: card.why })
+            ? interfaceTranslator.t("play.extra.dispatch.cacheMiss")
+            : interfaceTranslator.t("play.extra.dispatch.noCache", { why: card.why })
           : result.reason === "lane-not-allowed"
-            ? translate("play.extra.dispatch.wrongLane", {
+            ? interfaceTranslator.t("play.extra.dispatch.wrongLane", {
                 lane: lane?.label ?? laneId,
                 why: card.why,
               })
-            : translate("play.extra.dispatch.invalidLane"),
+            : interfaceTranslator.t("play.extra.dispatch.invalidLane"),
       );
       return;
     }
@@ -160,14 +161,14 @@ export function DispatchGame({
     setRejected(false);
     setFeedback(
       [
-        translate("play.extra.dispatch.delivered", {
+        interfaceTranslator.t("play.extra.dispatch.delivered", {
           lane: lane?.label ?? laneId,
           cost: result.delivery.cost,
         }),
         result.delivery.cacheHit
-          ? translate("play.extra.dispatch.usedCache")
+          ? interfaceTranslator.t("play.extra.dispatch.usedCache")
           : result.delivery.warmed
-            ? translate("play.extra.dispatch.createdCache")
+            ? interfaceTranslator.t("play.extra.dispatch.createdCache")
             : "",
       ]
         .filter(Boolean)
@@ -193,13 +194,13 @@ export function DispatchGame({
         remainingSeconds: Math.ceil(remainingRef.current / 1_000),
       },
       passed
-        ? translate("play.extra.dispatch.success", {
+        ? interfaceTranslator.t("play.extra.dispatch.success", {
             count: result.state.cursor,
             spent: result.state.spent,
             budget: activity.budget,
             hits: result.state.deliveries.filter((delivery) => delivery.cacheHit).length,
           })
-        : translate("play.extra.dispatch.overBudget", {
+        : interfaceTranslator.t("play.extra.dispatch.overBudget", {
             spent: result.state.spent,
             budget: activity.budget,
           }),
@@ -210,7 +211,7 @@ export function DispatchGame({
     <div className="play-dispatch">
       {guided && !terminal ? (
         <PlayGuide
-          title={translate(
+          title={interfaceTranslator.t(
             state.cursor ? "play.usability.dispatch.next" : "play.usability.dispatch.first",
           )}
         />
@@ -219,7 +220,7 @@ export function DispatchGame({
       {waiting && !terminal ? (
         <div className="play-dispatch__pause" role="status">
           <p>
-            {translate(
+            {interfaceTranslator.t(
               clockMode === "expired"
                 ? "play.extra.dispatch.expired"
                 : "play.extra.dispatch.paused",
@@ -228,7 +229,7 @@ export function DispatchGame({
           <div>
             {clockMode === "paused" ? (
               <GameButton variant="primary" sound={false} disabled={disabled} onClick={startClock}>
-                {translate("play.extra.dispatch.resume")}
+                {interfaceTranslator.t("play.extra.dispatch.resume")}
               </GameButton>
             ) : (
               <GameButton
@@ -237,7 +238,7 @@ export function DispatchGame({
                 disabled={disabled}
                 onClick={useUntimedPractice}
               >
-                {translate("play.extra.dispatch.continuePractice")}
+                {interfaceTranslator.t("play.extra.dispatch.continuePractice")}
               </GameButton>
             )}
             {clockMode === "expired" ? (
@@ -247,7 +248,7 @@ export function DispatchGame({
                 disabled={disabled}
                 onClick={restartTimed}
               >
-                {translate("play.extra.dispatch.retryTimed")}
+                {interfaceTranslator.t("play.extra.dispatch.retryTimed")}
               </GameButton>
             ) : null}
           </div>
@@ -260,7 +261,7 @@ export function DispatchGame({
             <div className="play-dispatch__terminal">
               <span aria-hidden="true">{status === "completed" ? "✓" : "!"}</span>
               <h4>
-                {translate(
+                {interfaceTranslator.t(
                   status === "completed"
                     ? "play.extra.dispatch.completeTitle"
                     : "play.extra.dispatch.overBudgetTitle",
@@ -271,7 +272,7 @@ export function DispatchGame({
             <>
               <div className="play-dispatch__request-heading" aria-live="polite" aria-atomic="true">
                 <span className="play-dispatch__request-number">
-                  {translate("play.extra.dispatch.requestNumber", {
+                  {interfaceTranslator.t("play.extra.dispatch.requestNumber", {
                     number: state.cursor + 1,
                     total: activity.cards.length,
                   })}
@@ -280,7 +281,7 @@ export function DispatchGame({
                 <p>{current.detail}</p>
               </div>
               <p className="play-dispatch__cache-notice" data-warm={cacheReady}>
-                {translate(
+                {interfaceTranslator.t(
                   !current.cacheKey
                     ? "play.extra.dispatch.fresh"
                     : cacheReady
@@ -296,9 +297,9 @@ export function DispatchGame({
       <div
         className="play-dispatch__routing"
         role="group"
-        aria-label={translate("play.extra.dispatch.sendTo")}
+        aria-label={interfaceTranslator.t("play.extra.dispatch.sendTo")}
       >
-        <h4>{translate("play.extra.dispatch.sendTo")}</h4>
+        <h4>{interfaceTranslator.t("play.extra.dispatch.sendTo")}</h4>
         <div className="play-dispatch__lanes">
           {activity.lanes.map((lane) => {
             const isCache = lane.id === activity.cacheLaneId;
@@ -316,12 +317,14 @@ export function DispatchGame({
               >
                 <span className="play-dispatch__lane-heading">
                   <strong>{lane.label}</strong>
-                  <span>{translate("play.extra.dispatch.laneCost", { cost: lane.cost })}</span>
+                  <span>
+                    {interfaceTranslator.t("play.extra.dispatch.laneCost", { cost: lane.cost })}
+                  </span>
                 </span>
                 <span className="play-dispatch__lane-note">{lane.note}</span>
                 {isCache && current ? (
                   <span className="play-dispatch__lane-status">
-                    {translate(
+                    {interfaceTranslator.t(
                       !current.cacheKey
                         ? "play.extra.dispatch.cacheForbidden"
                         : cacheReady
@@ -343,13 +346,13 @@ export function DispatchGame({
         role="status"
         aria-atomic="true"
       >
-        {feedback || translate("play.extra.dispatch.historyEmpty")}
+        {feedback || interfaceTranslator.t("play.extra.dispatch.historyEmpty")}
       </p>
 
       <details className="play-dispatch__cache" open={guided ? undefined : true}>
-        <summary>{translate("play.extra.dispatch.cacheRack")}</summary>
+        <summary>{interfaceTranslator.t("play.extra.dispatch.cacheRack")}</summary>
         {state.warmedCacheKeys.length === 0 ? (
-          <p>{translate("play.extra.dispatch.cacheEmpty")}</p>
+          <p>{interfaceTranslator.t("play.extra.dispatch.cacheEmpty")}</p>
         ) : (
           <ul>
             {state.warmedCacheKeys.map((key) => (
@@ -366,9 +369,10 @@ export function DispatchGame({
       </details>
       <div className="play-dispatch__meters">
         <div>
-          <span>{translate("play.extra.dispatch.served")}</span>
+          <span>{interfaceTranslator.t("play.extra.dispatch.served")}</span>
           <strong>
-            {formatNumber(state.cursor)} / {formatNumber(activity.cards.length)}
+            {interfaceTranslator.number(state.cursor)} /{" "}
+            {interfaceTranslator.number(activity.cards.length)}
           </strong>
           {/*
             The kit's bar, not the browser's. A bare <progress> is styled by
@@ -378,21 +382,21 @@ export function DispatchGame({
             this: a quantity rising and holding.
           */}
           <GameProgress
-            label={translate("play.extra.dispatch.progress")}
+            label={interfaceTranslator.t("play.extra.dispatch.progress")}
             max={activity.cards.length}
             value={state.cursor}
           />
         </div>
         <div data-over-budget={state.spent > activity.budget}>
-          <span>{translate("play.extra.dispatch.cost")}</span>
+          <span>{interfaceTranslator.t("play.extra.dispatch.cost")}</span>
           <strong>
-            {translate("play.extra.dispatch.costValue", {
+            {interfaceTranslator.t("play.extra.dispatch.costValue", {
               cost: state.spent,
               budget: activity.budget,
             })}
           </strong>
           <GameProgress
-            label={translate("play.extra.dispatch.costProgress")}
+            label={interfaceTranslator.t("play.extra.dispatch.costProgress")}
             max={Math.max(1, activity.budget)}
             tone={state.spent > activity.budget ? "danger" : "accent"}
             value={Math.min(state.spent, activity.budget)}
@@ -401,7 +405,7 @@ export function DispatchGame({
       </div>
       {!terminal && activity.cards[state.cursor + 1] ? (
         <div className="play-dispatch__next">
-          <span>{translate("play.extra.dispatch.upNext")}</span>
+          <span>{interfaceTranslator.t("play.extra.dispatch.upNext")}</span>
           <span>
             {activity.cards
               .slice(state.cursor + 1, state.cursor + 3)
@@ -413,17 +417,19 @@ export function DispatchGame({
 
       {state.deliveries.length > 0 ? (
         <section className="play-dispatch__history">
-          <h4>{translate("play.extra.dispatch.history")}</h4>
+          <h4>{interfaceTranslator.t("play.extra.dispatch.history")}</h4>
           <ol>
             {state.deliveries.map((delivery, index) => (
               <li key={delivery.cardId} data-cache-hit={delivery.cacheHit}>
-                <span className="play-dispatch__history-index">{formatNumber(index + 1)}</span>
+                <span className="play-dispatch__history-index">
+                  {interfaceTranslator.number(index + 1)}
+                </span>
                 <span>{activity.cards.find((card) => card.id === delivery.cardId)?.label}</span>
                 <span className="play-dispatch__history-lane">
                   {activity.lanes.find((lane) => lane.id === delivery.laneId)?.label}
                 </span>
                 <strong>
-                  {translate("play.extra.dispatch.laneCost", { cost: delivery.cost })}
+                  {interfaceTranslator.t("play.extra.dispatch.laneCost", { cost: delivery.cost })}
                 </strong>
               </li>
             ))}
@@ -431,12 +437,12 @@ export function DispatchGame({
         </section>
       ) : null}
       <details className="play-dispatch__optional-clock" open={guided ? undefined : true}>
-        <summary>{translate("play.usability.dispatch.options")}</summary>
+        <summary>{interfaceTranslator.t("play.usability.dispatch.options")}</summary>
         <div className="play-dispatch__clock">
           <GameToggle
             checked={clockMode !== "untimed"}
             disabled={disabled || terminal}
-            label={translate("play.extra.dispatch.timed")}
+            label={interfaceTranslator.t("play.extra.dispatch.timed")}
             onClick={() => {
               if (clockRef.current === "untimed") {
                 if (remainingRef.current <= 0) {
@@ -451,8 +457,8 @@ export function DispatchGame({
           />
           <span className="play-dispatch__clock-time" role="timer">
             {clockMode === "untimed"
-              ? translate("play.extra.dispatch.untimed")
-              : translate("play.extra.dispatch.timeLeft", {
+              ? interfaceTranslator.t("play.extra.dispatch.untimed")
+              : interfaceTranslator.t("play.extra.dispatch.timeLeft", {
                   seconds: Math.ceil(remainingMs / 1_000),
                 })}
           </span>
@@ -466,10 +472,10 @@ export function DispatchGame({
                 playSound("ui.press");
               }}
             >
-              {translate("play.extra.dispatch.pause")}
+              {interfaceTranslator.t("play.extra.dispatch.pause")}
             </GameButton>
           ) : null}
-          <p>{translate("play.extra.dispatch.timerHelp")}</p>
+          <p>{interfaceTranslator.t("play.extra.dispatch.timerHelp")}</p>
         </div>
       </details>
     </div>

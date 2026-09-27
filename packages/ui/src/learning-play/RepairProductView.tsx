@@ -5,29 +5,31 @@ import type {
   RepairProduct,
   RepairTrace,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 
 export const repairChoiceLabel = (activity: RepairActivity, value: string): string =>
   activity.choices.find((choice) => choice.id === value)?.label ?? value;
 export function repairProductSummary(activity: RepairActivity, product: RepairProduct): string {
   return activity.model === "booking"
-    ? t("play.aiQuality.repair.bookingState", {
+    ? interfaceTranslator.t("play.aiQuality.repair.bookingState", {
         count: product.reservations.length,
         items:
           product.reservations.map((choice) => repairChoiceLabel(activity, choice)).join(" / ") ||
-          t("play.aiQuality.repair.none"),
+          interfaceTranslator.t("play.aiQuality.repair.none"),
       })
-    : t("play.aiQuality.repair.preferenceState", {
+    : interfaceTranslator.t("play.aiQuality.repair.preferenceState", {
         choice: repairChoiceLabel(activity, product.choice),
         saved: repairChoiceLabel(activity, product.savedChoice),
       });
 }
 export function repairEventLabel(activity: RepairActivity, event: RepairEvent): string {
   return event.type === "choose"
-    ? t("play.aiQuality.repair.choose", { choice: repairChoiceLabel(activity, event.value) })
+    ? interfaceTranslator.t("play.aiQuality.repair.choose", {
+        choice: repairChoiceLabel(activity, event.value),
+      })
     : event.type === "submit"
       ? activity.submitLabel
-      : t(`play.aiQuality.repair.${event.type}`);
+      : interfaceTranslator.t(`play.aiQuality.repair.${event.type}`);
 }
 export function RepairTraceRecord({
   activity,
@@ -36,17 +38,20 @@ export function RepairTraceRecord({
   readonly activity: RepairActivity;
   readonly trace: RepairTrace;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <details className="ai-repair__trace">
-      <summary>{t("play.aiQuality.repair.trace", { count: trace.entries.length })}</summary>
+      <summary>
+        {interfaceTranslator.t("play.aiQuality.repair.trace", { count: trace.entries.length })}
+      </summary>
       {trace.entries.length === 0 ? (
-        <p>{t("play.aiQuality.repair.traceEmpty")}</p>
+        <p>{interfaceTranslator.t("play.aiQuality.repair.traceEmpty")}</p>
       ) : (
         <ol>
           {trace.entries.map((entry, index) => (
             <li key={index}>
               <strong>{repairEventLabel(activity, entry.event)}</strong>
-              <span>{t(`play.aiQuality.repair.${entry.effect}`)}</span>
+              <span>{interfaceTranslator.t(`play.aiQuality.repair.${entry.effect}`)}</span>
               <p>{repairProductSummary(activity, entry.after)}</p>
             </li>
           ))}
@@ -69,6 +74,7 @@ export function RepairProductView({
   readonly effect?: RepairEffect;
   readonly compact?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <div className="ai-repair__state-view" data-compact={compact} role="group" aria-label={label}>
       <strong className="ai-repair__state-label">{label}</strong>
@@ -90,7 +96,7 @@ export function RepairProductView({
             ))}
           </div>
           <strong>
-            {t("play.aiQuality.repair.reservations", {
+            {interfaceTranslator.t("play.aiQuality.repair.reservations", {
               used: product.reservations.length,
               capacity: activity.capacity,
             })}
@@ -99,7 +105,7 @@ export function RepairProductView({
             <ol className="ai-repair__receipts">
               {product.reservations.map((choice, index) => (
                 <li key={index}>
-                  {t("play.aiQuality.repair.receipt", {
+                  {interfaceTranslator.t("play.aiQuality.repair.receipt", {
                     number: index + 1,
                     choice: repairChoiceLabel(activity, choice),
                   })}
@@ -107,18 +113,18 @@ export function RepairProductView({
               ))}
             </ol>
           ) : (
-            <p>{t("play.aiQuality.repair.noReservations")}</p>
+            <p>{interfaceTranslator.t("play.aiQuality.repair.noReservations")}</p>
           )}
         </>
       ) : (
         <>
           <strong>
-            {t("play.aiQuality.repair.selection", {
+            {interfaceTranslator.t("play.aiQuality.repair.selection", {
               choice: repairChoiceLabel(activity, product.choice),
             })}
           </strong>
           <p>
-            {t(
+            {interfaceTranslator.t(
               effect === "reloaded"
                 ? "play.aiQuality.repair.loaded"
                 : product.confirmed
@@ -129,7 +135,9 @@ export function RepairProductView({
         </>
       )}
       {effect ? (
-        <p className="ai-repair__last-effect">{t(`play.aiQuality.repair.${effect}`)}</p>
+        <p className="ai-repair__last-effect">
+          {interfaceTranslator.t(`play.aiQuality.repair.${effect}`)}
+        </p>
       ) : null}
     </div>
   );

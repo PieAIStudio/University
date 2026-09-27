@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -77,7 +78,7 @@ const BASE_PROPS = {
 describe("CourseIsland", () => {
   it("keeps the accessible unit control and shows the route quiz before progress", () => {
     const markup = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />,
+      withInterfaceLocale(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />),
     );
 
     expect(markup).toContain('aria-label="先看这一单元讲什么"');
@@ -88,7 +89,9 @@ describe("CourseIsland", () => {
 
   it("hides the route quiz after a course has started", () => {
     const markup = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={{ ...UNSTARTED, done: 1, complete: true }} />,
+      withInterfaceLocale(
+        <CourseIsland {...BASE_PROPS} viewedProgress={{ ...UNSTARTED, done: 1, complete: true }} />,
+      ),
     );
 
     expect(markup).not.toContain("先测测你的学习起点");
@@ -96,7 +99,7 @@ describe("CourseIsland", () => {
 
   it("starts collapsed, with the course name, progress, disclose control and map exit", () => {
     const markup = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />,
+      withInterfaceLocale(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />),
     );
 
     expect(markup).toContain("在开始之前");
@@ -117,7 +120,9 @@ describe("CourseIsland", () => {
 
   it("keeps a unit-only disclosure after the course has started", () => {
     const markup = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={{ ...UNSTARTED, done: 1, complete: true }} />,
+      withInterfaceLocale(
+        <CourseIsland {...BASE_PROPS} viewedProgress={{ ...UNSTARTED, done: 1, complete: true }} />,
+      ),
     );
 
     expect(markup).toMatch(/<details class="picked__route">/);
@@ -127,12 +132,14 @@ describe("CourseIsland", () => {
 
   it("omits the disclosure when there is no unit and no route quiz", () => {
     const markup = renderToStaticMarkup(
-      <CourseIsland
-        {...BASE_PROPS}
-        course={{ ...COURSE, id: "other-course" }}
-        pathUnit={undefined}
-        viewedProgress={{ ...UNSTARTED, done: 1, complete: true }}
-      />,
+      withInterfaceLocale(
+        <CourseIsland
+          {...BASE_PROPS}
+          course={{ ...COURSE, id: "other-course" }}
+          pathUnit={undefined}
+          viewedProgress={{ ...UNSTARTED, done: 1, complete: true }}
+        />,
+      ),
     );
 
     expect(markup).not.toContain("picked__route");
@@ -148,7 +155,9 @@ describe("CourseIsland", () => {
 
     try {
       await act(async () => {
-        root.render(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />);
+        root.render(
+          withInterfaceLocale(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />),
+        );
       });
 
       const firstRoute = host.querySelector<HTMLDetailsElement>(".picked__route");
@@ -156,7 +165,9 @@ describe("CourseIsland", () => {
       firstRoute!.open = true;
 
       await act(async () => {
-        root.render(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />);
+        root.render(
+          withInterfaceLocale(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />),
+        );
       });
 
       expect(host.querySelector<HTMLDetailsElement>(".picked__route")).toBe(firstRoute);
@@ -164,7 +175,9 @@ describe("CourseIsland", () => {
 
       await act(async () => {
         root.render(
-          <CourseIsland {...BASE_PROPS} course={anotherCourse} viewedProgress={UNSTARTED} />,
+          withInterfaceLocale(
+            <CourseIsland {...BASE_PROPS} course={anotherCourse} viewedProgress={UNSTARTED} />,
+          ),
         );
       });
 
@@ -203,12 +216,14 @@ describe("CourseIsland and an unmet prerequisite", () => {
     const root = createRoot(container);
     act(() => {
       root.render(
-        <CourseIsland
-          {...BASE_PROPS}
-          viewedProgress={UNSTARTED}
-          unmetPrerequisites={UNMET}
-          onOpenCourse={(courseId) => opened.push(courseId)}
-        />,
+        withInterfaceLocale(
+          <CourseIsland
+            {...BASE_PROPS}
+            viewedProgress={UNSTARTED}
+            unmetPrerequisites={UNMET}
+            onOpenCourse={(courseId) => opened.push(courseId)}
+          />,
+        ),
       );
     });
 
@@ -228,10 +243,12 @@ describe("CourseIsland and an unmet prerequisite", () => {
 
   it("takes nothing away — the panel is the same panel either way", () => {
     const withUnmet = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} unmetPrerequisites={UNMET} />,
+      withInterfaceLocale(
+        <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} unmetPrerequisites={UNMET} />,
+      ),
     );
     const without = renderToStaticMarkup(
-      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />,
+      withInterfaceLocale(<CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />),
     );
     /*
       Compared by what the panel offers rather than by its whole markup: the

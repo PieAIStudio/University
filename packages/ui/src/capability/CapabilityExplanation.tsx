@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import type {
   MeteredGradingExplanation,
@@ -28,6 +28,7 @@ export function CapabilityExplanation({
   readonly explanation: CapabilityExplanationData;
   readonly onClose: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const action = actionOf(explanation);
 
   return (
@@ -35,12 +36,12 @@ export function CapabilityExplanation({
       open
       className="capability-explanation"
       title={explanation.title}
-      closeLabel={translate("ui.capability.capabilityExplanation.copy.关闭说明")}
+      closeLabel={interfaceTranslator.t("ui.capability.capabilityExplanation.copy.关闭说明")}
       closeOnBackdrop
       onClose={onClose}
       footer={
         <GameButton variant="secondary" onClick={onClose}>
-          {translate("ui.capability.capabilityExplanation.copy.知道了")}
+          {interfaceTranslator.t("ui.capability.capabilityExplanation.copy.知道了")}
         </GameButton>
       }
     >
@@ -52,7 +53,7 @@ export function CapabilityExplanation({
           </p>
         ) : null}
         <details className="product-details">
-          <summary>{translate("product.feedback.moreDetails")}</summary>
+          <summary>{interfaceTranslator.t("product.feedback.moreDetails")}</summary>
           <p>{explanation.whatItDoes}</p>
           <p>{explanation.futureSupport}</p>
         </details>

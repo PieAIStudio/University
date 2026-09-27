@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameHudActions, GameInput, GamePanel, GameTabs } from "@pieai/swimmer-ui-kit";
 import { selectActivityLevel, type ActivityDifficulty } from "@pieai/university-core";
-import { translate as t, useI18n } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { AI_MODES, getLabExamples } from "../learning-play/LearningPlayLab.js";
 import { getExampleFamily } from "../learning-play/difficulty-examples.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
@@ -17,6 +17,7 @@ import {
 } from "./registry.js";
 
 function NativePlay({ kind }: { readonly kind: NativeKind }) {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const [variant, setVariant] = useState(0);
   const [difficulty, setDifficulty] = useState<ActivityDifficulty>("intro");
@@ -36,7 +37,7 @@ function NativePlay({ kind }: { readonly kind: NativeKind }) {
         variant="ghost"
         onClick={() => setVariant((variant + 1) % examples.length)}
       >
-        {t("play.lab.example")}
+        {interfaceTranslator.t("play.lab.example")}
       </GameButton>
       <LearningActivity
         key={family.id}
@@ -59,6 +60,7 @@ export function PlayCatalog({
   readonly presentation: string;
   readonly renderThree?: (mode: NonNullable<CatalogEntry["threeMode"]>) => ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const entries = useMemo(() => createCatalog(sources), [sources]);
   const [group, setGroup] = useState<CatalogGroup | "all">(
@@ -79,7 +81,7 @@ export function PlayCatalog({
   const picker = useRef<HTMLDetailsElement>(null);
   const listButton = useRef<HTMLButtonElement>(null);
   const shown = useMemo(
-    () => filterCatalog(entries, group, query, t),
+    () => filterCatalog(entries, group, query, interfaceTranslator.t),
     [entries, group, query, locale],
   );
   const selected = entries.find((entry) => entry.id === selectedId);
@@ -100,19 +102,19 @@ export function PlayCatalog({
   return (
     <div className="play-catalog">
       <header className="play-catalog__header">
-        <a href="/play-lab">{t("gallery.back")}</a>
-        <h1>{t("gallery.title")}</h1>
-        <p>{t("gallery.intro")}</p>
+        <a href="/play-lab">{interfaceTranslator.t("gallery.back")}</a>
+        <h1>{interfaceTranslator.t("gallery.title")}</h1>
+        <p>{interfaceTranslator.t("gallery.intro")}</p>
         <a href={`/play-lab/prop-finish?lang=${locale}`} data-testid="prop-finish-link">
-          {t("finish.open")}
+          {interfaceTranslator.t("finish.open")}
         </a>
       </header>
       <div className="play-catalog__layout">
         <details ref={picker} className="play-catalog__picker" open>
           <summary>
-            {t("gallery.title")} · {entries.length}
+            {interfaceTranslator.t("gallery.title")} · {entries.length}
           </summary>
-          <label htmlFor="play-catalog-search">{t("gallery.search")}</label>
+          <label htmlFor="play-catalog-search">{interfaceTranslator.t("gallery.search")}</label>
           <GameInput
             id="play-catalog-search"
             type="search"
@@ -136,12 +138,12 @@ export function PlayCatalog({
             }}
             tabs={["all", ...CATALOG_GROUPS].map((id) => ({
               id,
-              label: `${t(`gallery.${id}` as "gallery.all")} ${id === "all" ? entries.length : entries.filter((entry) => entry.group === id).length}`,
+              label: `${interfaceTranslator.t(`gallery.${id}` as "gallery.all")} ${id === "all" ? entries.length : entries.filter((entry) => entry.group === id).length}`,
               panelId: "play-catalog-results",
             }))}
           />
           <p className="play-catalog__count" role="status">
-            {t("gallery.results", { count: shown.length })}
+            {interfaceTranslator.t("gallery.results", { count: shown.length })}
           </p>
           <div
             id="play-catalog-results"
@@ -160,12 +162,14 @@ export function PlayCatalog({
                       data-entry-id={entry.id}
                       onClick={() => choose(entry)}
                     >
-                      <strong>{t(entry.name)}</strong>
-                      <span>{t(entry.action)}</span>
+                      <strong>{interfaceTranslator.t(entry.name)}</strong>
+                      <span>{interfaceTranslator.t(entry.action)}</span>
                       <small>{entry.id}</small>
                       {entry.threeMode ? (
                         <small>
-                          {t(entry.retained ? "gallery.three.retained" : "gallery.three.new")}
+                          {interfaceTranslator.t(
+                            entry.retained ? "gallery.three.retained" : "gallery.three.new",
+                          )}
                         </small>
                       ) : null}
                     </button>
@@ -173,7 +177,7 @@ export function PlayCatalog({
                 ))}
               </ul>
             ) : (
-              <p>{t("gallery.empty")}</p>
+              <p>{interfaceTranslator.t("gallery.empty")}</p>
             )}
           </div>
         </details>
@@ -181,23 +185,30 @@ export function PlayCatalog({
           className="play-catalog__play"
           ref={playArea}
           tabIndex={-1}
-          aria-label={selected ? t(selected.name) : t("gallery.choose")}
+          aria-label={
+            selected
+              ? interfaceTranslator.t(selected.name)
+              : interfaceTranslator.t("gallery.choose")
+          }
         >
           {selected ? (
             <>
               <div className="play-catalog__selection">
                 <div>
                   <p className="play-catalog__eyebrow">
-                    {t(`gallery.${selected.group}`)} · <code>{selected.id}</code>
+                    {interfaceTranslator.t(`gallery.${selected.group}`)} ·{" "}
+                    <code>{selected.id}</code>
                   </p>
-                  <h2>{t(selected.name)}</h2>
+                  <h2>{interfaceTranslator.t(selected.name)}</h2>
                   {selected.threeMode ? (
                     <small>
-                      {t(selected.retained ? "gallery.three.retained" : "gallery.three.new")}
+                      {interfaceTranslator.t(
+                        selected.retained ? "gallery.three.retained" : "gallery.three.new",
+                      )}
                     </small>
                   ) : null}
                 </div>
-                <GameHudActions label={t("gallery.controls")}>
+                <GameHudActions label={interfaceTranslator.t("gallery.controls")}>
                   {!selected.href && !selected.threeMode ? (
                     <GameButton
                       sound={false}
@@ -205,7 +216,7 @@ export function PlayCatalog({
                       variant="secondary"
                       onClick={() => setRound(round + 1)}
                     >
-                      {t("gallery.retry")}
+                      {interfaceTranslator.t("gallery.retry")}
                     </GameButton>
                   ) : null}
                   <GameButton
@@ -218,22 +229,26 @@ export function PlayCatalog({
                       requestAnimationFrame(() => listButton.current?.focus());
                     }}
                   >
-                    {t("gallery.exit")}
+                    {interfaceTranslator.t("gallery.exit")}
                   </GameButton>
                 </GameHudActions>
               </div>
-              <p className="play-catalog__action">{t(selected.action)}</p>
+              <p className="play-catalog__action">{interfaceTranslator.t(selected.action)}</p>
               {!selected.threeMode ? (
                 <p className="play-catalog__controls">
-                  <b>{t("gallery.controls")}：</b>
-                  {t(selected.controls)}
+                  <b>{interfaceTranslator.t("gallery.controls")}：</b>
+                  {interfaceTranslator.t(selected.controls)}
                 </p>
               ) : null}
               {selected.rhythm ? (
-                <p className="play-catalog__scope">{t(`gallery.${selected.rhythm}`)}</p>
+                <p className="play-catalog__scope">
+                  {interfaceTranslator.t(`gallery.${selected.rhythm}`)}
+                </p>
               ) : null}
               {selected.source ? (
-                <p className="play-catalog__limit">{t("gallery.researchLimit")}</p>
+                <p className="play-catalog__limit">
+                  {interfaceTranslator.t("gallery.researchLimit")}
+                </p>
               ) : null}
               <div key={`${selected.id}:${round}`} className="play-catalog__board">
                 {selected.threeMode ? renderThree?.(selected.threeMode) : null}
@@ -243,35 +258,35 @@ export function PlayCatalog({
                     source={sources[selected.source]}
                     presentation={presentation}
                     entryId={selected.prototypeId}
-                    title={t(selected.name)}
+                    title={interfaceTranslator.t(selected.name)}
                   />
                 ) : null}
                 {selected.href ? (
-                  <GamePanel title={t("gallery.paths")}>
-                    <p>{t("gallery.pathsScope")}</p>
-                    <p>{t("gallery.pathNote")}</p>
+                  <GamePanel title={interfaceTranslator.t("gallery.paths")}>
+                    <p>{interfaceTranslator.t("gallery.pathsScope")}</p>
+                    <p>{interfaceTranslator.t("gallery.pathNote")}</p>
                     <a className="play-catalog__lesson-link" href={selected.href}>
-                      {t("gallery.openLesson")} →
+                      {interfaceTranslator.t("gallery.openLesson")} →
                     </a>
                   </GamePanel>
                 ) : null}
               </div>
               <p className="play-catalog__scope">
-                <b>{t("gallery.scope")}：</b>
-                {t(selected.scope)}
+                <b>{interfaceTranslator.t("gallery.scope")}：</b>
+                {interfaceTranslator.t(selected.scope)}
               </p>
               {selected.source ? (
-                <p className="play-catalog__scope">{t("gallery.boundary")}</p>
+                <p className="play-catalog__scope">{interfaceTranslator.t("gallery.boundary")}</p>
               ) : null}
             </>
           ) : (
-            <p className="play-catalog__empty">{t("gallery.choose")}</p>
+            <p className="play-catalog__empty">{interfaceTranslator.t("gallery.choose")}</p>
           )}
         </section>
       </div>
       <details className="play-catalog__rationale">
-        <summary>{t("gallery.appearance")}</summary>
-        <p>{t("gallery.appearanceText")}</p>
+        <summary>{interfaceTranslator.t("gallery.appearance")}</summary>
+        <p>{interfaceTranslator.t("gallery.appearanceText")}</p>
         <a
           href="https://developer.apple.com/design/human-interface-guidelines/game-controls"
           target="_blank"

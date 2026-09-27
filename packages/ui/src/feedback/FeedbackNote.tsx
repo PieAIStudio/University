@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -39,32 +39,36 @@ export function feedbackNote(args: {
 }): string {
   const [width, height] = args.viewport;
   return [
-    `## ${args.said.trim() || translate("ui.feedback.feedbackNote.copy.没写内容")}`,
+    `## ${args.said.trim() || interfaceTranslator.t("ui.feedback.feedbackNote.copy.没写内容")}`,
     "",
-    translate("ui.feedback.feedbackNote.copy.壳-value0", { value0: args.shell }),
-    translate("ui.feedback.feedbackNote.copy.路由-value0", { value0: args.route }),
-    translate("ui.feedback.feedbackNote.copy.课程定位-value0", {
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.壳-value0", { value0: args.shell }),
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.路由-value0", { value0: args.route }),
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.课程定位-value0", {
       value0: args.locator
         ? lessonRefKey(args.locator)
-        : translate("ui.feedback.feedbackNote.copy.未定位到具体课程"),
+        : interfaceTranslator.t("ui.feedback.feedbackNote.copy.未定位到具体课程"),
     }),
-    translate("ui.feedback.feedbackNote.copy.内容版本-value0", {
-      value0: args.contentRevision ?? translate("ui.feedback.feedbackNote.copy.未定位到具体课程"),
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.内容版本-value0", {
+      value0:
+        args.contentRevision ??
+        interfaceTranslator.t("ui.feedback.feedbackNote.copy.未定位到具体课程"),
     }),
-    translate("ui.feedback.feedbackNote.copy.练习尝试次数-value0", {
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.练习尝试次数-value0", {
       value0: args.exerciseAttemptCount ?? 0,
     }),
-    translate("ui.feedback.feedbackNote.copy.登录状态-value0", {
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.登录状态-value0", {
       value0: args.signedIn
-        ? translate("ui.feedback.feedbackNote.copy.已登录")
-        : translate("ui.feedback.feedbackNote.copy.未登录"),
+        ? interfaceTranslator.t("ui.feedback.feedbackNote.copy.已登录")
+        : interfaceTranslator.t("ui.feedback.feedbackNote.copy.未登录"),
     }),
-    translate("ui.feedback.feedbackNote.copy.视口-value0-value1", {
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.视口-value0-value1", {
       value0: width,
       value1: height,
     }),
-    translate("ui.feedback.feedbackNote.copy.主题-value0", { value0: args.theme }),
-    translate("ui.feedback.feedbackNote.copy.时间-value0", { value0: args.at.toISOString() }),
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.主题-value0", { value0: args.theme }),
+    interfaceTranslator.t("ui.feedback.feedbackNote.copy.时间-value0", {
+      value0: args.at.toISOString(),
+    }),
   ].join("\n");
 }
 
@@ -146,19 +150,22 @@ function FeedbackTrigger({
   readonly open: boolean;
   readonly onOpen: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <button
       type="button"
       className={className}
       aria-haspopup="dialog"
       aria-expanded={open}
-      aria-label={translate("ui.feedback.feedbackNote.copy.提意见")}
+      aria-label={interfaceTranslator.t("ui.feedback.feedbackNote.copy.提意见")}
       onClick={onOpen}
     >
       <span className="nav-rail__icon">
         <FeedbackIcon />
       </span>
-      <span className="nav-rail__label">{translate("ui.feedback.feedbackNote.copy.提意见")}</span>
+      <span className="nav-rail__label">
+        {interfaceTranslator.t("ui.feedback.feedbackNote.copy.提意见")}
+      </span>
     </button>
   );
 }
@@ -166,10 +173,10 @@ function FeedbackTrigger({
 const unavailableFeedbackPort: FeedbackPort = {
   transport: "unavailable",
   async submit() {
-    throw new Error(translate("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
+    throw new Error(interfaceTranslator.t("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
   },
   async readMine() {
-    throw new Error(translate("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
+    throw new Error(interfaceTranslator.t("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
   },
 };
 
@@ -198,6 +205,7 @@ export function FeedbackNote({
   /** Phone-only safe-area treatment for dense account and lesson surfaces. */
   readonly surface?: "default" | "account" | "lesson";
 }) {
+  const interfaceTranslator = useI18n();
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "success" | "error">("idle");
@@ -226,7 +234,7 @@ export function FeedbackNote({
     } catch {
       setState("error");
       setErrorMessage(
-        translate(
+        interfaceTranslator.t(
           "ui.feedback.feedbackNote.copy.反馈没有送出-原话还在输入框里-你可以稍后重试或手动复制",
         ),
       );
@@ -236,21 +244,24 @@ export function FeedbackNote({
   const isBusy = state === "busy";
   const successMessage =
     receiptTransport === "clipboard"
-      ? translate(
+      ? interfaceTranslator.t(
           "ui.feedback.feedbackNote.copy.这次没有送到系统-但已经复制到剪贴板-你可以把整条贴给课程作者",
         )
       : lessonTitle && context.contentRevision !== null
-        ? translate("ui.feedback.feedbackNote.copy.收到-这条记在-value0-第-value1-版上了", {
-            value0: lessonTitle,
-            value1: context.contentRevision,
-          })
-        : translate("ui.feedback.feedbackNote.copy.收到-这条意见已经记下了");
+        ? interfaceTranslator.t(
+            "ui.feedback.feedbackNote.copy.收到-这条记在-value0-第-value1-版上了",
+            {
+              value0: lessonTitle,
+              value1: context.contentRevision,
+            },
+          )
+        : interfaceTranslator.t("ui.feedback.feedbackNote.copy.收到-这条意见已经记下了");
   const statusMessage =
     state === "error"
       ? errorMessage
       : state === "success"
         ? successMessage
-        : translate(
+        : interfaceTranslator.t(
             "ui.feedback.feedbackNote.copy.路由-课定位-版本-练习尝试次数-登录状态-视口和时间会自动带上",
           );
   const statusClass =
@@ -263,27 +274,27 @@ export function FeedbackNote({
           : "";
   const actionLabel =
     state === "busy"
-      ? translate("ui.feedback.feedbackNote.copy.正在发送")
+      ? interfaceTranslator.t("ui.feedback.feedbackNote.copy.正在发送")
       : state === "success"
         ? receiptTransport === "clipboard"
-          ? translate("ui.feedback.feedbackNote.copy.已复制")
-          : translate("ui.feedback.feedbackNote.copy.已收到")
+          ? interfaceTranslator.t("ui.feedback.feedbackNote.copy.已复制")
+          : interfaceTranslator.t("ui.feedback.feedbackNote.copy.已收到")
         : state === "error"
-          ? translate("ui.feedback.feedbackNote.copy.再试一次")
-          : translate("ui.feedback.feedbackNote.copy.发送意见");
+          ? interfaceTranslator.t("ui.feedback.feedbackNote.copy.再试一次")
+          : interfaceTranslator.t("ui.feedback.feedbackNote.copy.发送意见");
 
   const panel = open ? (
     <div
       className="feedback-note"
       role="dialog"
-      aria-label={translate("ui.feedback.feedbackNote.copy.提意见")}
+      aria-label={interfaceTranslator.t("ui.feedback.feedbackNote.copy.提意见")}
     >
       <textarea
         className="feedback-note__text"
         value={said}
         autoFocus
         rows={3}
-        placeholder={translate("ui.feedback.feedbackNote.copy.这一屏哪里不对")}
+        placeholder={interfaceTranslator.t("ui.feedback.feedbackNote.copy.这一屏哪里不对")}
         onChange={(event) => {
           setSaid(event.target.value);
           setState("idle");
@@ -313,7 +324,7 @@ export function FeedbackNote({
             setErrorMessage(null);
           }}
         >
-          {translate("ui.feedback.feedbackNote.copy.收起")}
+          {interfaceTranslator.t("ui.feedback.feedbackNote.copy.收起")}
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import { useMemo } from "react";
 
 import type { BootstrapData, StudySummary } from "@pieai/university-ui/view/lesson-view.js";
@@ -32,7 +32,6 @@ export function recentStudies(studies: readonly StudySummary[]): readonly StudyS
 /** "3 小时前" — the unit a learner thinks in, not a timestamp they have to subtract. */
 export function relativeTimeLabel(iso: string, now = Date.now()): string {
   const elapsedMs = now - Date.parse(iso);
-  const format = new Intl.RelativeTimeFormat("zh-CN", { numeric: "auto" });
   const scale: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
     ["year", 365 * 24 * 3_600_000],
     ["month", 30 * 24 * 3_600_000],
@@ -42,9 +41,9 @@ export function relativeTimeLabel(iso: string, now = Date.now()): string {
   ];
   for (const [unit, ms] of scale) {
     const value = Math.trunc(elapsedMs / ms);
-    if (value >= 1) return format.format(-value, unit);
+    if (value >= 1) return interfaceTranslator.relativeTime(-value, unit, { numeric: "auto" });
   }
-  return translate("app.authoring.studyShelf.copy.刚刚");
+  return interfaceTranslator.t("app.authoring.studyShelf.copy.刚刚");
 }
 
 export function StudyShelf({
@@ -56,6 +55,7 @@ export function StudyShelf({
   readonly selectedStudyId: string | null;
   readonly onSelect: (studyId: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   /*
     One list, not a shortcut row above the same list again.
 
@@ -78,9 +78,11 @@ export function StudyShelf({
   return (
     <aside
       className="study-shelf"
-      aria-label={translate("app.authoring.studyShelf.copy.学习项目列表")}
+      aria-label={interfaceTranslator.t("app.authoring.studyShelf.copy.学习项目列表")}
     >
-      <p className="eyebrow">{translate("app.authoring.studyShelf.copy.你的学习项目")}</p>
+      <p className="eyebrow">
+        {interfaceTranslator.t("app.authoring.studyShelf.copy.你的学习项目")}
+      </p>
       {data.studies.map((study) => (
         <button
           key={study.id}
@@ -96,10 +98,10 @@ export function StudyShelf({
           <span>{study.title}</span>
           <small>
             {study.activeCourseCount > 0
-              ? translate("app.authoring.studyShelf.copy.value0-门课可学习", {
+              ? interfaceTranslator.t("app.authoring.studyShelf.copy.value0-门课可学习", {
                   value0: study.activeCourseCount,
                 })
-              : translate("app.authoring.studyShelf.copy.准备中")}
+              : interfaceTranslator.t("app.authoring.studyShelf.copy.准备中")}
             {study.lastActivityAt ? ` · ${relativeTimeLabel(study.lastActivityAt)}` : null}
           </small>
         </button>

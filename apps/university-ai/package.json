@@ -9,13 +9,14 @@
     "build": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "oxlint --deny-warnings src api",
-    "format": "oxfmt --write package.json tsconfig.json vercel.json src api",
-    "format:check": "oxfmt --check package.json tsconfig.json vercel.json src api",
+    "format": "oxfmt --write package.json tsconfig.json vercel.json src api --ignore-path .oxfmtignore",
+    "format:check": "oxfmt --check package.json tsconfig.json vercel.json src api --ignore-path .oxfmtignore",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@pieai/swimmer-ai-provider-kit": "0.13.0",
     "@pieai/swimmer-backend-client": "0.6.0",
+    "@pieai/swimmer-i18n-kit": "0.1.1",
     "@pieai/university-core": "workspace:*",
     "@supabase/supabase-js": "2.110.3",
     "zod": "4.4.3"

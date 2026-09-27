@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameHudActions } from "@pieai/swimmer-ui-kit";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { isSoundEnabled, writeSoundEnabled } from "../sound/index.js";
 import { buildPrototypeDocument } from "./prototype-document.js";
 
@@ -15,6 +15,7 @@ export function PrototypeFrame({
   readonly entryId?: string;
   readonly title: string;
 }) {
+  const interfaceTranslator = useI18n();
   const frame = useRef<HTMLIFrameElement>(null);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => !isSoundEnabled());
@@ -65,7 +66,7 @@ export function PrototypeFrame({
   }, []);
   return (
     <div className="play-catalog__prototype">
-      <GameHudActions label={t("gallery.controls")}>
+      <GameHudActions label={interfaceTranslator.t("gallery.controls")}>
         <GameButton
           sound={false}
           static
@@ -73,7 +74,7 @@ export function PrototypeFrame({
           onClick={() => setPaused(!paused)}
           aria-pressed={paused}
         >
-          {t(paused ? "gallery.resume" : "gallery.pause")}
+          {interfaceTranslator.t(paused ? "gallery.resume" : "gallery.pause")}
         </GameButton>
         <GameButton
           sound={false}
@@ -85,10 +86,10 @@ export function PrototypeFrame({
             setMuted(!muted);
           }}
         >
-          {t(muted ? "gallery.unmute" : "gallery.mute")}
+          {interfaceTranslator.t(muted ? "gallery.unmute" : "gallery.mute")}
         </GameButton>
       </GameHudActions>
-      {paused ? <p role="status">{t("gallery.paused")}</p> : null}
+      {paused ? <p role="status">{interfaceTranslator.t("gallery.paused")}</p> : null}
       <iframe
         ref={frame}
         title={title}

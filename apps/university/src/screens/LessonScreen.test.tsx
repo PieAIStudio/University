@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -218,18 +219,20 @@ function stubLessonRects(topsById: Readonly<Record<string, number>>): void {
 function renderHost(onBack = vi.fn(), onWorthwhileProgress?: () => void) {
   return act(async () => {
     root.render(
-      <LessonScreen
-        locator={LOCATOR}
-        course={SHELF_COURSE}
-        studyTitle="Turing Pact"
-        returnDepth={0}
-        onBack={onBack}
-        onWorthwhileProgress={onWorthwhileProgress}
-        onSettled={() => undefined}
-        onFollowLink={() => undefined}
-        onOpenLesson={() => undefined}
-        onReturn={() => undefined}
-      />,
+      withInterfaceLocale(
+        <LessonScreen
+          locator={LOCATOR}
+          course={SHELF_COURSE}
+          studyTitle="Turing Pact"
+          returnDepth={0}
+          onBack={onBack}
+          onWorthwhileProgress={onWorthwhileProgress}
+          onSettled={() => undefined}
+          onFollowLink={() => undefined}
+          onOpenLesson={() => undefined}
+          onReturn={() => undefined}
+        />,
+      ),
     );
   });
 }

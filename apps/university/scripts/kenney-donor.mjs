@@ -26,10 +26,10 @@ const LICENSE_MATCH = /Creative Commons Zero,?\s*CC0/i;
 const COMMERCIAL_MATCH = /commercial/i;
 
 const DEFAULT_DONOR_ROOTS = [
-  // Normal checkout: PieAI/University/apps/university → PieAI/_donors.
-  resolve(appRoot, "../../../_donors/Kenney"),
+  // Normal checkout: PieAI/University/apps/university → PieAI/_Donors.
+  resolve(appRoot, "../../../_Donors/Kenney"),
   // In-repository worktree: University/.worktrees/<name>/apps/university.
-  resolve(appRoot, "../../../../../_donors/Kenney"),
+  resolve(appRoot, "../../../../../_Donors/Kenney"),
 ];
 
 export function sha256(bytes) {

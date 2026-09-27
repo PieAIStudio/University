@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -42,7 +43,9 @@ function reminder(status: ReviewReminderStatus): ReviewReminderPort {
 describe("ReviewReminderSettings", () => {
   it("reads status without asking, then enables only after the settings action", async () => {
     const reminders = reminder({ kind: "permission-default" });
-    await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<ReviewReminderSettings reminders={reminders} />)),
+    );
 
     expect(reminders.refresh).toHaveBeenCalledTimes(1);
     expect(reminders.enable).not.toHaveBeenCalled();
@@ -57,7 +60,9 @@ describe("ReviewReminderSettings", () => {
 
   it("keeps a denied browser state visible without trying to request again", async () => {
     const reminders = reminder({ kind: "permission-denied" });
-    await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<ReviewReminderSettings reminders={reminders} />)),
+    );
 
     expect(container.textContent).toContain("浏览器已拒绝");
     const toggle = [...container.querySelectorAll("button")].find((button) =>
@@ -74,7 +79,9 @@ describe("ReviewReminderSettings", () => {
       endpoint: "https://push.example/device",
       serverConnected: false,
     });
-    await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<ReviewReminderSettings reminders={reminders} />)),
+    );
 
     expect(container.querySelector('[role="status"]')?.textContent).toContain("等待提醒服务连接");
     expect(container.querySelector('[role="status"]')?.textContent).not.toContain("已开启");
@@ -86,7 +93,9 @@ describe("ReviewReminderSettings", () => {
       endpoint: "https://push.example/device",
       serverConnected: true,
     });
-    await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<ReviewReminderSettings reminders={reminders} />)),
+    );
 
     expect(container.querySelector('[role="status"]')?.textContent).toContain(
       "已开启 · 每天最多一条",

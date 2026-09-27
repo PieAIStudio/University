@@ -1,5 +1,5 @@
 import { hash } from "../island/random.js";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type { DomainSurfaceStyle } from "./globe-style.js";
 
 /**
@@ -178,11 +178,11 @@ export function studyClusterStyle(studyId: string): StudyClusterStyle {
  * nothing to say.
  */
 export function studyCounts(study: PlanetStudy): string {
-  const courses = translate(
+  const courses = interfaceTranslator.t(
     study.courseCount === 1 ? "world.picker.courseCount.one" : "world.picker.courseCount.other",
     { count: study.courseCount },
   );
-  const lessons = translate(
+  const lessons = interfaceTranslator.t(
     study.lessonCount === 1 ? "world.picker.lessonCount.one" : "world.picker.lessonCount.other",
     { count: study.lessonCount },
   );
@@ -208,13 +208,13 @@ export function studyStage(study: PlanetStudy): StudyStage {
 
 export const STUDY_STAGE_LABEL: Record<StudyStage, string> = {
   get "not-started"() {
-    return translate("world.picker.notStarted");
+    return interfaceTranslator.t("world.picker.notStarted");
   },
   get learning() {
-    return translate("world.picker.learning");
+    return interfaceTranslator.t("world.picker.learning");
   },
   get done() {
-    return translate("world.picker.done");
+    return interfaceTranslator.t("world.picker.done");
   },
 };
 
@@ -239,7 +239,7 @@ export function studyCourseList(
     rest,
     restLabel:
       rest > 0
-        ? translate(rest === 1 ? "world.picker.more.one" : "world.picker.more.other", {
+        ? interfaceTranslator.t(rest === 1 ? "world.picker.more.one" : "world.picker.more.other", {
             count: rest,
           })
         : null,

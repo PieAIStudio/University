@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type { Marker } from "@pieai/university-world/Maps.js";
 
 /**
@@ -84,9 +84,12 @@ export function markerDescriptor(
   if (marker.kind !== "course" || !marker.courseState) return { label };
   const count = courseProgress?.(marker.id);
   const facts = [
-    translate(`ui.world.courseState.${marker.courseState}`),
+    interfaceTranslator.t(`ui.world.courseState.${marker.courseState}`),
     count && count.total > 0
-      ? translate("map.guide.compare.progress", { done: count.done, total: count.total })
+      ? interfaceTranslator.t("map.guide.compare.progress", {
+          done: count.done,
+          total: count.total,
+        })
       : null,
   ].filter((fact): fact is string => Boolean(fact));
   return { label, description: facts.join(" · ") };
@@ -122,45 +125,66 @@ export function mapGuideAnswer(
   if (question === "start") {
     const marker = startMarker(view, markers);
     if (!marker)
-      return { question, text: translate("map.guide.a.startNone"), place: null, go: null };
+      return {
+        question,
+        text: interfaceTranslator.t("map.guide.a.startNone"),
+        place: null,
+        go: null,
+      };
     const title = (marker.lessonId && lessonTitle(marker.lessonId)) || marker.text;
     return {
       question,
-      text: translate(view === "course" ? "map.guide.a.startLesson" : "map.guide.a.startCourse", {
-        title,
-      }),
+      text: interfaceTranslator.t(
+        view === "course" ? "map.guide.a.startLesson" : "map.guide.a.startCourse",
+        {
+          title,
+        },
+      ),
       place: { kind: "marker", markerId: marker.id, label: title },
       go: marker.activate
-        ? { label: translate("map.guide.go.select"), run: marker.activate }
+        ? { label: interfaceTranslator.t("map.guide.go.select"), run: marker.activate }
         : null,
     };
   }
   if (question === "challenge") {
     const marker = challengeMarker(markers);
     if (!marker)
-      return { question, text: translate("map.guide.a.challengeNone"), place: null, go: null };
+      return {
+        question,
+        text: interfaceTranslator.t("map.guide.a.challengeNone"),
+        place: null,
+        go: null,
+      };
     return {
       question,
-      text: translate(marker.locked ? "map.guide.a.challengeLocked" : "map.guide.a.challengeOpen"),
+      text: interfaceTranslator.t(
+        marker.locked ? "map.guide.a.challengeLocked" : "map.guide.a.challengeOpen",
+      ),
       place: { kind: "marker", markerId: marker.id, label: marker.label ?? marker.text },
-      go: marker.activate ? { label: translate("map.guide.go.look"), run: marker.activate } : null,
+      go: marker.activate
+        ? { label: interfaceTranslator.t("map.guide.go.look"), run: marker.activate }
+        : null,
     };
   }
   if (question === "compare") {
-    return { question, text: translate("map.guide.a.compare"), place: null, go: null };
+    return { question, text: interfaceTranslator.t("map.guide.a.compare"), place: null, go: null };
   }
   if (question === "review") {
     return {
       question,
-      text: translate("map.guide.a.review"),
-      place: { kind: "nav", navId: "practice", label: translate("map.guide.place.practice") },
+      text: interfaceTranslator.t("map.guide.a.review"),
+      place: {
+        kind: "nav",
+        navId: "practice",
+        label: interfaceTranslator.t("map.guide.place.practice"),
+      },
       go: null,
     };
   }
   return {
     question,
-    text: translate("map.guide.a.shortcuts"),
-    place: { kind: "nav", navId: "more", label: translate("map.guide.place.more") },
-    go: { label: translate("map.guide.go.shortcuts"), run: onShortcuts },
+    text: interfaceTranslator.t("map.guide.a.shortcuts"),
+    place: { kind: "nav", navId: "more", label: interfaceTranslator.t("map.guide.place.more") },
+    go: { label: interfaceTranslator.t("map.guide.go.shortcuts"), run: onShortcuts },
   };
 }

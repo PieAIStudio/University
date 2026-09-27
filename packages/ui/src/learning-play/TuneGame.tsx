@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { GameButton, GameSlider } from "@pieai/swimmer-ui-kit";
 import { evaluateTuning, type TuneActivity } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
 import { PlayGuide } from "./PlayGuide.js";
 import { PlayIcon } from "./PlayIcon.js";
@@ -13,6 +13,7 @@ export function TuneGame({
   onAttempt,
   guided = false,
 }: ActivityControls<TuneActivity>) {
+  const interfaceTranslator = useI18n();
   const [values, setValues] = useState<Record<string, number>>(() =>
     Object.fromEntries(activity.controls.map((control) => [control.id, control.initial])),
   );
@@ -22,10 +23,14 @@ export function TuneGame({
   const result = evaluateTuning(activity, values);
   const target = (metric: TuneActivity["metrics"][number]) =>
     metric.min !== undefined && metric.max !== undefined
-      ? t("play.tune.range", { min: metric.min, max: metric.max, unit: metric.unit })
+      ? interfaceTranslator.t("play.tune.range", {
+          min: metric.min,
+          max: metric.max,
+          unit: metric.unit,
+        })
       : metric.min !== undefined
-        ? t("play.tune.min", { value: metric.min, unit: metric.unit })
-        : t("play.tune.max", { value: metric.max ?? 0, unit: metric.unit });
+        ? interfaceTranslator.t("play.tune.min", { value: metric.min, unit: metric.unit })
+        : interfaceTranslator.t("play.tune.max", { value: metric.max ?? 0, unit: metric.unit });
   const run = () => {
     if (disabled) return;
     const next = [...history, { values: { ...values }, result }].slice(-6);
@@ -37,29 +42,29 @@ export function TuneGame({
       result.passed,
       { parameters: { ...values }, metrics: result.metrics, experiments: next },
       result.passed
-        ? t("play.tune.win", { count: result.metrics.length })
-        : t("play.tune.try", { names: failed.join(" / ") }),
+        ? interfaceTranslator.t("play.tune.win", { count: result.metrics.length })
+        : interfaceTranslator.t("play.tune.try", { names: failed.join(" / ") }),
     );
   };
   return (
     <div className="play-tune">
       {guided ? (
         <PlayGuide
-          title={t(
+          title={interfaceTranslator.t(
             activity.controls.some((control) => values[control.id] !== control.initial)
               ? "play.usability.tune.changed"
               : "play.usability.tune.first",
             { name: activity.controls[0]!.label },
           )}
         >
-          {t("play.usability.tune.note")}
+          {interfaceTranslator.t("play.usability.tune.note")}
         </PlayGuide>
       ) : null}
       <div className="play-tune__workspace">
         <div className="play-tune__bench">
           <TuneVisualization activity={activity} values={values} metrics={result.metrics} />
           <fieldset className="play-tune__controls" disabled={disabled}>
-            <legend>{t("play.tune.live")}</legend>
+            <legend>{interfaceTranslator.t("play.tune.live")}</legend>
             {activity.controls.map((control) => (
               <div className="play-tune__control" key={control.id}>
                 <output className="play-tune__value">
@@ -108,7 +113,7 @@ export function TuneGame({
                   <strong>{metric.label}</strong>
                   <span className="play-tune__met">
                     {reading.passed ? <PlayIcon name="check" /> : null}
-                    {t(reading.passed ? "play.tune.met" : "play.tune.unmet")}
+                    {interfaceTranslator.t(reading.passed ? "play.tune.met" : "play.tune.unmet")}
                   </span>
                 </div>
                 <output>
@@ -139,21 +144,21 @@ export function TuneGame({
       </div>
       <div className="play-action-row">
         <GameButton sound={false} disabled={disabled} type="button" onClick={run}>
-          {t("play.tune.run")}
+          {interfaceTranslator.t("play.tune.run")}
         </GameButton>
         <span className="play-muted">
           {result.metrics.filter((metric) => metric.passed).length} / {activity.metrics.length}
         </span>
       </div>
       <div className="play-tune__history">
-        <h3>{t("play.tune.history")}</h3>
+        <h3>{interfaceTranslator.t("play.tune.history")}</h3>
         {history.length === 0 ? (
-          <p className="play-muted">{t("play.tune.noHistory")}</p>
+          <p className="play-muted">{interfaceTranslator.t("play.tune.noHistory")}</p>
         ) : (
           <ol>
             {history.map((trial, index) => (
               <li key={index}>
-                <strong>{t("play.tune.trial", { count: index + 1 })}</strong>
+                <strong>{interfaceTranslator.t("play.tune.trial", { count: index + 1 })}</strong>
                 <span>
                   {activity.controls
                     .map((control) => `${control.label} ${trial.values[control.id]}${control.unit}`)
@@ -161,7 +166,7 @@ export function TuneGame({
                 </span>
                 <span>
                   {trial.result.metrics.filter((metric) => metric.passed).length} /{" "}
-                  {activity.metrics.length} {t("play.tune.met")}
+                  {activity.metrics.length} {interfaceTranslator.t("play.tune.met")}
                 </span>
               </li>
             ))}
@@ -169,7 +174,7 @@ export function TuneGame({
         )}
       </div>
       <details className="play-model-note">
-        <summary>{t("play.lab.research")}</summary>
+        <summary>{interfaceTranslator.t("play.lab.research")}</summary>
         <p>{activity.modelNote}</p>
       </details>
     </div>

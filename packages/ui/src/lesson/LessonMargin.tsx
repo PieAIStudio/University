@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useCallback, useEffect, useState } from "react";
 
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
@@ -79,6 +79,7 @@ export function LessonMargin({
   readonly onResolve?: ((markId: string) => void) | undefined;
   readonly onDelete?: ((markId: string) => void) | undefined;
 }) {
+  const interfaceTranslator = useI18n();
   const [placed, setPlaced] = useState<readonly PlacedNote[]>([]);
   const [active, setActive] = useState<string | null>(null);
 
@@ -127,7 +128,10 @@ export function LessonMargin({
   if (marks.length === 0) return null;
 
   return (
-    <div className="lesson-margin" aria-label={translate("ui.lesson.lessonMargin.copy.页边批注")}>
+    <div
+      className="lesson-margin"
+      aria-label={interfaceTranslator.t("ui.lesson.lessonMargin.copy.页边批注")}
+    >
       {placed.map((note) => (
         <article
           key={note.mark.markId}
@@ -153,7 +157,7 @@ export function LessonMargin({
           >
             {note.orphaned ? (
               <small className="margin-note__orphan">
-                {translate("ui.lesson.lessonMargin.copy.这段已不在本版课文里")}
+                {interfaceTranslator.t("ui.lesson.lessonMargin.copy.这段已不在本版课文里")}
               </small>
             ) : note.mark.sectionTitle ? (
               <small>{note.mark.sectionTitle}</small>
@@ -163,12 +167,12 @@ export function LessonMargin({
           <div className="margin-note__actions">
             {note.mark.kind === "question" && onResolve ? (
               <button type="button" onClick={() => onResolve(note.mark.markId)}>
-                {translate("ui.lesson.lessonMargin.copy.已弄懂")}
+                {interfaceTranslator.t("ui.lesson.lessonMargin.copy.已弄懂")}
               </button>
             ) : null}
             {onDelete ? (
               <button type="button" onClick={() => onDelete(note.mark.markId)}>
-                {translate("ui.lesson.lessonMargin.copy.删除")}
+                {interfaceTranslator.t("ui.lesson.lessonMargin.copy.删除")}
               </button>
             ) : null}
           </div>

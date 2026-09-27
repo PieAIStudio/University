@@ -35,7 +35,7 @@ export const messages = {
   "finish.method.bevel": "Physical edge rounding",
   "finish.method.crafted": "Material-aware finish",
   "finish.about.original":
-    "Both sides use the map's original model and material. Lights, scale and pedestal are identical: this is the comparison baseline.",
+    "Both sides use the map''s original model and material. Lights, scale and pedestal are identical: this is the comparison baseline.",
   "finish.about.sculpted":
     "Soften shading between adjacent faces and tame sharp reflections. Silhouettes and triangle counts stay intact. Useful for rounded props such as rocks; not a wax effect.",
   "finish.about.bevel":
@@ -68,7 +68,7 @@ export const messages = {
     "Treatments are independent, not secretly stacked. Original assets, the procedural map and all nine games remain unchanged. This selection does not change the rest of the world.",
   "finish.technical": "Sources, cost and suitable uses",
   "finish.technicalNote":
-    "Originals use the map's existing asset loading, color and tree generation code. Sculpting changes derived normals and materials. Bevels are generated offline. Material finishing uses authored color roles, each wooden shell's direction, actual convex edges and indirect-light visibility; it does not stack the other two treatments. Transparent water stays original.",
+    "Originals use the map''s existing asset loading, color and tree generation code. Sculpting changes derived normals and materials. Bevels are generated offline. Material finishing uses authored color roles, each wooden shell''s direction, actual convex edges and indirect-light visibility; it does not stack the other two treatments. Transparent water stays original.",
   "finish.grade": "Use the shared final color grade",
   "finish.cost":
     "These are not three filters that must always be combined. Bevels suit hard-edged props; material finishing suits minerals, timber and coatings. Foliage does not receive bright triangle outlines; a convex surface gains little from occlusion alone. Choose per object and viewing distance when integrating.",

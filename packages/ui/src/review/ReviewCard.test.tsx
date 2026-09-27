@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -118,11 +119,13 @@ describe("ReviewCard recap path", () => {
 
     await act(async () => {
       root.render(
-        <ReviewCard
-          card={CARD}
-          review={{ preview: () => PREVIEW, reveal, rate }}
-          onReviewed={onReviewed}
-        />,
+        withInterfaceLocale(
+          <ReviewCard
+            card={CARD}
+            review={{ preview: () => PREVIEW, reveal, rate }}
+            onReviewed={onReviewed}
+          />,
+        ),
       );
     });
 
@@ -179,11 +182,13 @@ describe("ReviewCard recap path", () => {
 
     await act(async () => {
       root.render(
-        <ReviewCard
-          card={COURSE_CARD}
-          review={{ preview: () => PREVIEW, reveal, rate }}
-          onReviewed={async () => undefined}
-        />,
+        withInterfaceLocale(
+          <ReviewCard
+            card={COURSE_CARD}
+            review={{ preview: () => PREVIEW, reveal, rate }}
+            onReviewed={async () => undefined}
+          />,
+        ),
       );
     });
 
@@ -216,12 +221,14 @@ describe("ReviewCard recap path", () => {
 
     await act(async () => {
       root.render(
-        <ReviewCard
-          card={COURSE_CARD}
-          review={{ preview: () => PREVIEW, reveal, rate }}
-          readEntitlements={readEntitlements}
-          onReviewed={async () => undefined}
-        />,
+        withInterfaceLocale(
+          <ReviewCard
+            card={COURSE_CARD}
+            review={{ preview: () => PREVIEW, reveal, rate }}
+            readEntitlements={readEntitlements}
+            onReviewed={async () => undefined}
+          />,
+        ),
       );
     });
 
@@ -264,12 +271,14 @@ describe("ReviewCard recap path", () => {
 
     await act(async () => {
       root.render(
-        <ReviewCard
-          card={COURSE_CARD}
-          review={{ preview: () => PREVIEW, reveal, rate }}
-          readEntitlements={readEntitlements}
-          onReviewed={async () => undefined}
-        />,
+        withInterfaceLocale(
+          <ReviewCard
+            card={COURSE_CARD}
+            review={{ preview: () => PREVIEW, reveal, rate }}
+            readEntitlements={readEntitlements}
+            onReviewed={async () => undefined}
+          />,
+        ),
       );
     });
 

@@ -17,8 +17,8 @@ const course = SHIPPED_COURSES.find(
   (item) => item.studyId === "ai-literacy" && item.id === "understanding-ai",
 )!;
 
-async function openCourse(page: Page) {
-  await page.goto(`${ONLINE_ORIGIN}${coursePathOf(course)}?lang=zh-CN`, {
+async function openCourse(page: Page, locale = "zh-CN") {
+  await page.goto(`${ONLINE_ORIGIN}${coursePathOf(course)}?lang=${locale}`, {
     waitUntil: "domcontentloaded",
   });
   await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
@@ -175,4 +175,27 @@ test("map guide: two islands side by side, chosen in order, read-only", async ({
   // Another question retires the comparison.
   await ask(page, 0);
   await expect(page.locator(".map-guide__pair")).toHaveCount(0);
+});
+
+test("map guide: native Nerve providers preserve the English host and local catalog fallback", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await openCourse(page, "en");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await humanClick(page, body(page), "map guide");
+  await expect(
+    outlet(page).getByRole("button", { name: "Where should I start?", exact: true }),
+  ).toBeVisible();
+  await page.goto(`${ONLINE_ORIGIN}/settings?lang=en`);
+  const details = page.locator("#map-guide");
+  await expect(
+    details.getByRole("heading", { name: "Map guide: Lian", exact: true }),
+  ).toBeVisible();
+  await expect(details).toContainText("Map questions");
+  await expect(details).toContainText("Phase one connects to no model.");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  expect(errors).toEqual([]);
+  await details.screenshot({ path: info.outputPath("native-nerve-settings-en.png") });
 });

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 
 import type { RepositoryEvidenceView } from "../view/lesson-view.js";
@@ -14,6 +14,7 @@ import {
  */
 /* Repository citations only: a public page has no editor locator to paste. */
 export function CopyLocatorButton({ reference }: { readonly reference: RepositoryEvidenceView }) {
+  const interfaceTranslator = useI18n();
   const [copied, setCopied] = useState(false);
   const locator = evidenceEditorLocator(reference);
   const range = evidenceRangeLabel(reference);
@@ -31,10 +32,13 @@ export function CopyLocatorButton({ reference }: { readonly reference: Repositor
       <button
         type="button"
         className="evidence-item__copy"
-        title={translate("ui.evidence.copyLocatorButton.copy.复制-value0-供编辑器-value1-跳转", {
-          value0: locator,
-          value1: jumpKey,
-        })}
+        title={interfaceTranslator.t(
+          "ui.evidence.copyLocatorButton.copy.复制-value0-供编辑器-value1-跳转",
+          {
+            value0: locator,
+            value1: jumpKey,
+          },
+        )}
         aria-describedby={copied ? `copy-hint-${locator}` : undefined}
         onClick={() => {
           void navigator.clipboard?.writeText(locator).then(
@@ -44,8 +48,8 @@ export function CopyLocatorButton({ reference }: { readonly reference: Repositor
         }}
       >
         {copied
-          ? translate("ui.evidence.copyLocatorButton.copy.已复制")
-          : translate("ui.evidence.copyLocatorButton.copy.复制位置")}
+          ? interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.已复制")
+          : interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.复制位置")}
       </button>
       {copied ? (
         <p
@@ -55,17 +59,22 @@ export function CopyLocatorButton({ reference }: { readonly reference: Repositor
           aria-live="polite"
         >
           <span className="evidence-item__copy-hint-line">
-            {translate("ui.evidence.copyLocatorButton.copy.已复制")} <code>{locator}</code>
+            {interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.已复制")}{" "}
+            <code>{locator}</code>
           </span>
           <span className="evidence-item__copy-hint-line">
             {range
-              ? translate("ui.evidence.copyLocatorButton.copy.证据范围-value0", { value0: range })
+              ? interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.证据范围-value0", {
+                  value0: range,
+                })
               : null}
-            {translate("ui.evidence.copyLocatorButton.copy.钉在提交")} <code>{commitShort}</code>
+            {interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.钉在提交")}{" "}
+            <code>{commitShort}</code>
           </span>
           <span className="evidence-item__copy-hint-line">
-            {translate("ui.evidence.copyLocatorButton.copy.在被学项目工作区按")} {jumpKey}
-            {translate("ui.evidence.copyLocatorButton.copy.粘贴后回车即可跳转")}
+            {interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.在被学项目工作区按")}{" "}
+            {jumpKey}
+            {interfaceTranslator.t("ui.evidence.copyLocatorButton.copy.粘贴后回车即可跳转")}
           </span>
         </p>
       ) : null}

@@ -1,4 +1,4 @@
-import { translate, useI18n } from "../i18n/index.js";
+import { useI18n, interfaceTranslator } from "../i18n/index.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 import {
@@ -63,8 +63,8 @@ import {
 export const LINK_RETURN_DEPTH = 5;
 
 const DETAIL_OPTIONS = [
-  { id: "standard", label: translate("ui.lesson.lessonReader.copy.标准讲解") },
-  { id: "all", label: translate("ui.lesson.lessonReader.copy.详细讲解") },
+  { id: "standard", label: interfaceTranslator.t("ui.lesson.lessonReader.copy.标准讲解") },
+  { id: "all", label: interfaceTranslator.t("ui.lesson.lessonReader.copy.详细讲解") },
 ] as const;
 
 type SourceTriggerKind = "inline" | "rail" | "unknown";
@@ -146,6 +146,7 @@ function LegacyLessonReader({
   breadcrumb,
   answerDraftScope = "local-guest",
 }: LessonReaderProps) {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const interactionPath = view.lesson.activities?.find(
     (activity) => activity.kind === "interaction-path",
@@ -317,7 +318,7 @@ function LegacyLessonReader({
       setMarkError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.lesson.lessonReader.copy.这条标记没有保存"),
+          : interfaceTranslator.t("ui.lesson.lessonReader.copy.这条标记没有保存"),
       );
     } finally {
       setMarkBusy(false);
@@ -343,7 +344,7 @@ function LegacyLessonReader({
       setMarkError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.lesson.lessonReader.copy.标记没有更新"),
+          : interfaceTranslator.t("ui.lesson.lessonReader.copy.标记没有更新"),
       );
     }
   }
@@ -360,7 +361,7 @@ function LegacyLessonReader({
       setVocabularyError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.lesson.lessonReader.copy.词义状态没有保存"),
+          : interfaceTranslator.t("ui.lesson.lessonReader.copy.词义状态没有保存"),
       );
     }
   }
@@ -448,7 +449,7 @@ function LegacyLessonReader({
       setConfirmationError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.lesson.lessonReader.copy.暂时无法记录阅读确认"),
+          : interfaceTranslator.t("ui.lesson.lessonReader.copy.暂时无法记录阅读确认"),
       );
     } finally {
       setConfirming(false);
@@ -574,16 +575,16 @@ function LegacyLessonReader({
         <Tip term="english-mode">
           <GameToggle
             checked={englishMode}
-            label={translate("ui.lesson.lessonReader.copy.外语模式")}
+            label={interfaceTranslator.t("ui.lesson.lessonReader.copy.外语模式")}
             onClick={() => setEnglishModePersisted(!englishMode)}
           />
         </Tip>
       ) : null}
       <span className="lesson-toolbar__label" id="lesson-detail-label">
-        {translate("ui.lesson.lessonReader.copy.讲解层级")}
+        {interfaceTranslator.t("ui.lesson.lessonReader.copy.讲解层级")}
       </span>
       <GameSegmentedControl
-        label={translate("ui.lesson.lessonReader.copy.讲解层级")}
+        label={interfaceTranslator.t("ui.lesson.lessonReader.copy.讲解层级")}
         activeId={detailed ? "all" : "standard"}
         options={DETAIL_OPTIONS}
         onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
@@ -603,7 +604,7 @@ function LegacyLessonReader({
               ? {
                   current: completedRounds,
                   total: interactionPath.steps.length,
-                  label: translate("path.progress", {
+                  label: interfaceTranslator.t("path.progress", {
                     current: completedRounds,
                     total: interactionPath.steps.length,
                   }),
@@ -630,12 +631,12 @@ function LegacyLessonReader({
           ref={marginRef}
           className="lesson-margin-column"
           {...(showLeftContent
-            ? { "aria-label": translate("ui.lesson.lessonReader.copy.页边批注") }
+            ? { "aria-label": interfaceTranslator.t("ui.lesson.lessonReader.copy.页边批注") }
             : { "aria-hidden": true })}
         >
           {onReturn ? (
             <button type="button" className="lesson-return" onClick={onReturn}>
-              {translate("ui.lesson.lessonReader.copy.回到刚才那一课")}
+              {interfaceTranslator.t("ui.lesson.lessonReader.copy.回到刚才那一课")}
             </button>
           ) : null}
           <LessonMargin
@@ -652,8 +653,9 @@ function LegacyLessonReader({
               <p className="eyebrow">
                 <Tip term="content-revision">
                   <span>
-                    {translate("ui.lesson.lessonReader.copy.第")} {view.lesson.contentRevision}{" "}
-                    {translate("ui.lesson.lessonReader.copy.版")}
+                    {interfaceTranslator.t("ui.lesson.lessonReader.copy.第")}{" "}
+                    {view.lesson.contentRevision}{" "}
+                    {interfaceTranslator.t("ui.lesson.lessonReader.copy.版")}
                   </span>
                 </Tip>
               </p>
@@ -698,7 +700,7 @@ function LegacyLessonReader({
                   exercisesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
               >
-                {translate("ui.lesson.lessonReader.copy.已经会了-直接答这一节的题")}
+                {interfaceTranslator.t("ui.lesson.lessonReader.copy.已经会了-直接答这一节的题")}
               </button>
             </p>
           ) : null}
@@ -741,7 +743,9 @@ function LegacyLessonReader({
           ) : null}
           {readConfirmed && !completed ? (
             <section className="lesson-completion lesson-completion--confirmed">
-              <p>{translate("ui.lesson.lessonReader.copy.已确认读过这一版-还差练习")}</p>
+              <p>
+                {interfaceTranslator.t("ui.lesson.lessonReader.copy.已确认读过这一版-还差练习")}
+              </p>
             </section>
           ) : null}
           {interactionPath ? (
@@ -775,7 +779,9 @@ function LegacyLessonReader({
           {completed && view.lesson.cards.length > 0 ? (
             <section className="lesson-practice">
               <div>
-                <h2>{translate("ui.lesson.lessonReader.copy.通过答题巩固刚学到的内容")}</h2>
+                <h2>
+                  {interfaceTranslator.t("ui.lesson.lessonReader.copy.通过答题巩固刚学到的内容")}
+                </h2>
               </div>
               {view.lesson.cards.map((card) => (
                 <ReviewCard
@@ -810,7 +816,7 @@ function LegacyLessonReader({
         <aside
           className="lesson-rail lesson-rail--right"
           {...(showRightContent
-            ? { "aria-label": translate("ui.lesson.lessonReader.copy.阅读笔记") }
+            ? { "aria-label": interfaceTranslator.t("ui.lesson.lessonReader.copy.阅读笔记") }
             : { "aria-hidden": true })}
         >
           {showRightContent ? (
@@ -912,6 +918,7 @@ function LessonReadConfirm({
   readonly onConfirm: () => void;
   readonly interaction?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <section
       className="lesson-completion"
@@ -921,19 +928,21 @@ function LessonReadConfirm({
       <div>
         <h3 id="lesson-completion-title">
           {interaction
-            ? translate("path.confirmTitle")
+            ? interfaceTranslator.t("path.confirmTitle")
             : remaining
-              ? translate("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
-              : translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
+              ? interfaceTranslator.t("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
+              : interfaceTranslator.t(
+                  "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新",
+                )}
         </h3>
         <p>
           {interaction
-            ? translate("path.confirmNote")
+            ? interfaceTranslator.t("path.confirmNote")
             : remaining
-              ? translate(
+              ? interfaceTranslator.t(
                   "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上",
                 )
-              : translate(
+              : interfaceTranslator.t(
                   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
                 )}
         </p>
@@ -945,10 +954,10 @@ function LessonReadConfirm({
         disabled={confirming}
       >
         {confirming
-          ? translate("ui.lesson.lessonReader.copy.正在记录")
+          ? interfaceTranslator.t("ui.lesson.lessonReader.copy.正在记录")
           : interaction
-            ? translate("path.confirm")
-            : translate("ui.lesson.lessonReader.copy.我读完了")}
+            ? interfaceTranslator.t("path.confirm")
+            : interfaceTranslator.t("ui.lesson.lessonReader.copy.我读完了")}
       </LiquidCtaButton>
       {error ? (
         <p className="inline-error" role="alert">

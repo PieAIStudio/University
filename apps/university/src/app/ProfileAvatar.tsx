@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
 import { AvatarPreviewControls, guestAvatarRecipe } from "@pieai/university-world/avatar.js";
 import { hasWebGLContext } from "@pieai/university-world/webgl-capability.js";
@@ -16,6 +16,7 @@ export function ProfileAvatar({
   readonly avatarRecipe?: AvatarRecipe | null;
   readonly signedIn?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const guest = useMemo(() => guestAvatarRecipe(), []);
   const [bounds, setBounds] = useState<AvatarBounds | null>(null);
   const recipe = signedIn && avatarRecipe ? avatarRecipe : guest;
@@ -52,7 +53,7 @@ export function ProfileAvatar({
       )}
       {/* Not `ghost`: that variant is transparent, and this sits on a canvas. */}
       <a className="profile-avatar__lab" href="/avatar-lab">
-        {translate("app.app.profileAvatar.copy.打开头像工坊")}
+        {interfaceTranslator.t("app.app.profileAvatar.copy.打开头像工坊")}
       </a>
     </div>
   );

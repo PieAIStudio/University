@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import {
   GameBadge,
@@ -153,6 +153,7 @@ export function DemoMiniature({
   readonly caption?: string;
   readonly states: readonly DemoState[];
 }) {
+  const interfaceTranslator = useI18n();
   const first = states[0];
   const [activeId, setActiveId] = useState(first?.id ?? "");
   const known = useRef(states);
@@ -169,7 +170,7 @@ export function DemoMiniature({
     <figure className="demo">
       {states.length > 1 ? (
         <GameSegmentedControl
-          label={translate("ui.entry.demoMiniature.copy.切换状态")}
+          label={interfaceTranslator.t("ui.entry.demoMiniature.copy.切换状态")}
           activeId={active.id}
           options={states.map((state) => ({ id: state.id, label: state.label }))}
           onSelect={setActiveId}

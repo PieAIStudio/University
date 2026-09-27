@@ -3,7 +3,7 @@ import { GameButton, GameField, GameInput, GameModal } from "@pieai/swimmer-ui-k
 import { AuthForm } from "@pieaistudio/swimmer-auth-kit/react";
 import type { AuthPort, AuthResult } from "@pieaistudio/swimmer-auth-kit";
 import type { IdentityPort } from "@pieai/university-core";
-import { translate as t, useI18n } from "../../i18n/index.js";
+import { useI18n } from "../../i18n/index.js";
 
 type ClosureReceipt = {
   readonly status: "review-required";
@@ -28,6 +28,7 @@ export function AccountClosurePanel({
       ) => Promise<ClosureReceipt>)
     | null;
 }) {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const identityState = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
   const [owner, setOwner] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export function AccountClosurePanel({
     if (result.status !== "authenticated" || !owner || !auth) return;
     const user = await auth.getCurrentUser();
     if (user?.id !== owner || user.is_anonymous || latest() !== owner) {
-      setError(t("account.closure.changed"));
+      setError(interfaceTranslator.t("account.closure.changed"));
       return;
     }
     setError(null);
@@ -77,11 +78,11 @@ export function AccountClosurePanel({
       }
     } catch (reason) {
       const code = reason && typeof reason === "object" && "code" in reason ? reason.code : null;
-      if (latest() !== expected) setError(t("account.closure.changed"));
+      if (latest() !== expected) setError(interfaceTranslator.t("account.closure.changed"));
       else if (code === "reauthentication-required") {
         setStage("verify");
-        setError(t("account.closure.reauthenticate"));
-      } else setError(t("account.closure.failed"));
+        setError(interfaceTranslator.t("account.closure.reauthenticate"));
+      } else setError(interfaceTranslator.t("account.closure.failed"));
     } finally {
       sending.current = false;
       setBusy(false);
@@ -93,7 +94,7 @@ export function AccountClosurePanel({
   return (
     <>
       <details className="product-details">
-        <summary>{t("account.closure.section")}</summary>
+        <summary>{interfaceTranslator.t("account.closure.section")}</summary>
         <GameButton
           type="button"
           variant="ghost"
@@ -107,35 +108,35 @@ export function AccountClosurePanel({
             operation.current = null;
           }}
         >
-          {t("account.closure.open")}
+          {interfaceTranslator.t("account.closure.open")}
         </GameButton>
       </details>
       {owner ? (
         <GameModal
           open
-          title={t("account.closure.title")}
-          closeLabel={t("account.closure.close")}
+          title={interfaceTranslator.t("account.closure.title")}
+          closeLabel={interfaceTranslator.t("account.closure.close")}
           closeOnBackdrop={!busy}
           onClose={() => {
             if (!busy) setOwner(null);
           }}
         >
-          <p>{t("account.closure.scope")}</p>
+          <p>{interfaceTranslator.t("account.closure.scope")}</p>
           {error ? <p role="alert">{error}</p> : null}
           {!sameAccount ? (
-            <p role="alert">{t("account.closure.changed")}</p>
+            <p role="alert">{interfaceTranslator.t("account.closure.changed")}</p>
           ) : !auth || !requestClosure ? (
-            <p role="status">{t("account.closure.unavailable")}</p>
+            <p role="status">{interfaceTranslator.t("account.closure.unavailable")}</p>
           ) : stage === "review" ? (
             <div role="status">
-              <p>{t("account.closure.review")}</p>
+              <p>{interfaceTranslator.t("account.closure.review")}</p>
               <p>
-                {t("account.closure.request")}: <code>{receipt}</code>
+                {interfaceTranslator.t("account.closure.request")}: <code>{receipt}</code>
               </p>
             </div>
           ) : stage === "verify" ? (
             <>
-              <p>{t("account.closure.verify")}</p>
+              <p>{interfaceTranslator.t("account.closure.verify")}</p>
               <AuthForm
                 key={owner}
                 port={auth}
@@ -155,9 +156,9 @@ export function AccountClosurePanel({
               <p>
                 <code>{confirmationPhrase}</code>
               </p>
-              <GameField label={t("account.closure.confirm")}>
+              <GameField label={interfaceTranslator.t("account.closure.confirm")}>
                 <GameInput
-                  aria-label={t("account.closure.confirm")}
+                  aria-label={interfaceTranslator.t("account.closure.confirm")}
                   autoComplete="off"
                   value={confirmation}
                   disabled={busy}
@@ -171,12 +172,14 @@ export function AccountClosurePanel({
                 fullWidth
                 disabled={busy || confirmation !== confirmationPhrase}
               >
-                {t(busy ? "account.closure.working" : "account.closure.submit")}
+                {interfaceTranslator.t(busy ? "account.closure.working" : "account.closure.submit")}
               </GameButton>
             </form>
           )}
           <GameButton type="button" variant="ghost" disabled={busy} onClick={() => setOwner(null)}>
-            {t(stage === "review" ? "account.closure.close" : "account.closure.cancel")}
+            {interfaceTranslator.t(
+              stage === "review" ? "account.closure.close" : "account.closure.cancel",
+            )}
           </GameButton>
         </GameModal>
       ) : null}

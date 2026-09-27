@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -46,7 +47,11 @@ afterEach(() => {
 
 function render(activity: ConnectActivity): HTMLElement {
   act(() => {
-    root.render(<ConnectGame activity={activity} disabled={false} onAttempt={() => {}} />);
+    root.render(
+      withInterfaceLocale(
+        <ConnectGame activity={activity} disabled={false} onAttempt={() => {}} />,
+      ),
+    );
   });
   return container.querySelector<HTMLElement>(".play-connect__board")!;
 }

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useCallback, useEffect, useState } from "react";
 import {
   hasFavourite,
@@ -23,6 +23,7 @@ export function FavouritesScreen({
   readonly onOpen?: (senseId: string) => void;
   readonly onBrowse?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState(() => store.read());
   useEffect(() => store.subscribe?.(() => setState(store.read())), [store]);
   const toggle = useCallback(
@@ -46,7 +47,7 @@ export function FavouritesScreen({
   if (total === 0) return <FavouritesEmpty onBrowse={onBrowse} />;
   return (
     <div>
-      <h1>{translate("ui.favourites.favouritesScreen.copy.收藏")}</h1>
+      <h1>{interfaceTranslator.t("ui.favourites.favouritesScreen.copy.收藏")}</h1>
       {groups.map((group) => (
         <section key={group.track}>
           <h2>

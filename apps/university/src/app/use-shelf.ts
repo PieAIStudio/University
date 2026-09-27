@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { courseNodesOf } from "@pieai/university-world/course.js";
@@ -33,7 +33,9 @@ export function useShelf() {
     const reportError = (reason: unknown) => {
       if (!alive) return;
       setShelfError(
-        reason instanceof Error ? reason.message : translate("app.app.useshelf.copy.读不到课程"),
+        reason instanceof Error
+          ? reason.message
+          : interfaceTranslator.t("app.app.useshelf.copy.读不到课程"),
       );
     };
     void contentPort

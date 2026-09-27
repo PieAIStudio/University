@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { exerciseGradeOutcome, type ExerciseAttemptResult } from "@pieai/university-core";
-import { useI18n } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
 import type { PrimmActivity, PrimmEvaluation, PrimmWork } from "../learning-play/primm-types.js";
 import { LessonToolbar } from "./LessonNav.js";
@@ -17,7 +17,8 @@ export function composePrimmAnswer(work: PrimmWork): string {
   });
 }
 export function primmEvaluationOf(result: ExerciseAttemptResult): PrimmEvaluation {
-  if (result.answerStored === false) throw new Error("Answer not stored");
+  if (result.answerStored === false)
+    throw new Error(interfaceTranslator.t("product.errors.answerNotStored"));
   return result.hostGrade
     ? { outcome: exerciseGradeOutcome(result.hostGrade), explanation: result.hostGrade.evaluation }
     : { outcome: result.correct ? "pass" : "undecided", explanation: "" };

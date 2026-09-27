@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, type ComponentProps } from "react";
@@ -61,7 +62,7 @@ async function renderMarkdown(
   props: Partial<ComponentProps<typeof MarkdownContent>> = {},
 ) {
   await act(async () => {
-    root.render(<MarkdownContent {...props}>{markdown}</MarkdownContent>);
+    root.render(withInterfaceLocale(<MarkdownContent {...props}>{markdown}</MarkdownContent>));
   });
   await act(async () => {
     await new Promise((resolve) => window.setTimeout(resolve, 100));

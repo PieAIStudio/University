@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -22,7 +23,11 @@ describe("the three map levels share an accessible hierarchy", () => {
   it.each(["world", "course"] as const)(
     "keeps %s current when asynchronous titles are absent",
     (layer) => {
-      act(() => root.render(<MapBreadcrumbs layer={layer} onNavigate={() => undefined} />));
+      act(() =>
+        root.render(
+          withInterfaceLocale(<MapBreadcrumbs layer={layer} onNavigate={() => undefined} />),
+        ),
+      );
       expect(host.querySelector("[aria-current=page]")?.textContent).toBe(
         layer === "world" ? "飞岛群" : "课程岛",
       );
@@ -34,12 +39,14 @@ describe("the three map levels share an accessible hierarchy", () => {
     (layer) => {
       act(() =>
         root.render(
-          <MapBreadcrumbs
-            layer={layer}
-            studyTitle="学会用 AI 做游戏"
-            courseTitle="在开始之前：App、代码、和你"
-            onNavigate={() => {}}
-          />,
+          withInterfaceLocale(
+            <MapBreadcrumbs
+              layer={layer}
+              studyTitle="学会用 AI 做游戏"
+              courseTitle="在开始之前：App、代码、和你"
+              onNavigate={() => {}}
+            />,
+          ),
         ),
       );
       expect(host.querySelector("nav")?.getAttribute("aria-label")).toBe("当前位置");
@@ -64,12 +71,14 @@ describe("the three map levels share an accessible hierarchy", () => {
     const title = "这个课程的完整名称即使很长也不能丢失".repeat(4);
     act(() =>
       root.render(
-        <MapBreadcrumbs
-          layer="course"
-          studyTitle="游戏系列"
-          courseTitle={title}
-          onNavigate={onNavigate}
-        />,
+        withInterfaceLocale(
+          <MapBreadcrumbs
+            layer="course"
+            studyTitle="游戏系列"
+            courseTitle={title}
+            onNavigate={onNavigate}
+          />,
+        ),
       ),
     );
     const links = host.querySelectorAll(
@@ -93,7 +102,11 @@ describe("the three map levels share an accessible hierarchy", () => {
     (key) => {
       const onNavigate = vi.fn();
       act(() =>
-        root.render(<MapBreadcrumbs layer="world" studyTitle="游戏系列" onNavigate={onNavigate} />),
+        root.render(
+          withInterfaceLocale(
+            <MapBreadcrumbs layer="world" studyTitle="游戏系列" onNavigate={onNavigate} />,
+          ),
+        ),
       );
       const event = new MouseEvent("click", { bubbles: true, cancelable: true, [key]: true });
       // Cancel at the outer listener only AFTER the React handler: jsdom must

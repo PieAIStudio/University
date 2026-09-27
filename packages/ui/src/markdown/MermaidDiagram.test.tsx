@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { describe, it, expect, beforeAll } from "vitest";
 
@@ -39,7 +40,9 @@ describe("mermaid four-layer diagram end-to-end", () => {
     document.body.appendChild(host);
     const root = createRoot(host);
     await act(async () => {
-      root.render((await import("react")).createElement(MermaidDiagram, { source }));
+      root.render(
+        withInterfaceLocale((await import("react")).createElement(MermaidDiagram, { source })),
+      );
     });
     // wait for async render
     for (let i = 0; i < 30; i++) {

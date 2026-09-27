@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { act } from "react";
@@ -47,7 +48,7 @@ describe("PRIMM investigate-game lab", () => {
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
-    await act(async () => root.render(<PrimmGameLab />));
+    await act(async () => root.render(withInterfaceLocale(<PrimmGameLab />)));
     const switches = [...host.querySelectorAll("[data-primm-game]")].map((button) =>
       button.getAttribute("data-primm-game"),
     );

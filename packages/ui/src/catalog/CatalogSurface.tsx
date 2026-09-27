@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { LessonRef } from "@pieai/university-core";
 import { GameButton, GameField, GameInput } from "@pieai/swimmer-ui-kit";
@@ -60,36 +60,42 @@ export function CatalogSurface({
   readonly onOpenLesson: (lesson: LessonRef) => void;
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
+  const interfaceTranslator = useI18n();
   const here = listing.nextLesson;
   const [query, setQuery] = useState("");
   const searchInput = useRef<HTMLInputElement>(null);
   const matches = useMemo(() => searchCatalogLessons(listing, query), [listing, query]);
   const searching = query.trim().length > 0;
   return (
-    <div className="catalog" aria-label={translate("ui.catalog.catalogSurface.copy.课程目录")}>
+    <div
+      className="catalog"
+      aria-label={interfaceTranslator.t("ui.catalog.catalogSurface.copy.课程目录")}
+    >
       <div className="catalog__inner">
         <button type="button" className="linkish" onClick={onBack}>
-          {translate("ui.catalog.catalogSurface.copy.在地图上看")}
+          {interfaceTranslator.t("ui.catalog.catalogSurface.copy.在地图上看")}
         </button>
-        <h1>{translate("ui.catalog.catalogSurface.copy.目录")}</h1>
+        <h1>{interfaceTranslator.t("ui.catalog.catalogSurface.copy.目录")}</h1>
         <p className="catalog__lede">
           {listing.totals.studies}{" "}
-          {translate("ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺")}
+          {interfaceTranslator.t(
+            "ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺",
+          )}
         </p>
         <p className="catalog__totals">
-          {listing.totals.studies} {translate("ui.catalog.catalogSurface.copy.个世界")}{" "}
-          {listing.totals.courses} {translate("ui.catalog.catalogSurface.copy.门课")}{" "}
-          {listing.totals.units} {translate("ui.catalog.catalogSurface.copy.单元")}{" "}
-          {listing.totals.lessons} {translate("ui.catalog.catalogSurface.copy.节")}
+          {listing.totals.studies} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.个世界")}{" "}
+          {listing.totals.courses} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.门课")}{" "}
+          {listing.totals.units} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.单元")}{" "}
+          {listing.totals.lessons} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.节")}
         </p>
         <div className="catalog__search">
-          <GameField label={translate("product.catalog.search")}>
+          <GameField label={interfaceTranslator.t("product.catalog.search")}>
             <GameInput
               ref={searchInput}
               type="search"
               value={query}
               maxLength={160}
-              placeholder={translate("product.catalog.placeholder")}
+              placeholder={interfaceTranslator.t("product.catalog.placeholder")}
               onChange={(event) => setQuery(event.currentTarget.value)}
             />
           </GameField>
@@ -102,20 +108,23 @@ export function CatalogSurface({
                 searchInput.current?.focus();
               }}
             >
-              {translate("product.catalog.clear")}
+              {interfaceTranslator.t("product.catalog.clear")}
             </GameButton>
           ) : null}
         </div>
         {searching ? (
           <>
             <p role="status" className="catalog__search-status">
-              {translate(matches.length > 50 ? "product.catalog.more" : "product.catalog.found", {
-                count: matches.length,
-                shown: Math.min(50, matches.length),
-              })}
+              {interfaceTranslator.t(
+                matches.length > 50 ? "product.catalog.more" : "product.catalog.found",
+                {
+                  count: matches.length,
+                  shown: Math.min(50, matches.length),
+                },
+              )}
             </p>
             {matches.length === 0 ? (
-              <p>{translate("product.catalog.empty")}</p>
+              <p>{interfaceTranslator.t("product.catalog.empty")}</p>
             ) : (
               <ul className="catalog__search-results">
                 {matches.slice(0, 50).map((match) => (
@@ -173,19 +182,21 @@ function StudyBlock({
   readonly onOpenLesson: (lesson: LessonRef) => void;
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <CatalogDetails className="catalog__study" startOpen={defaultOpen}>
       <summary>
         <h2>
           {study.title}{" "}
           <span className="catalog__count">
-            {study.courses.length} {translate("ui.catalog.catalogSurface.copy.门课-qlwl1n")}
+            {study.courses.length}{" "}
+            {interfaceTranslator.t("ui.catalog.catalogSurface.copy.门课-qlwl1n")}
           </span>
         </h2>
       </summary>
       {study.flat ? (
         <p className="catalog__flat">
-          {translate("ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出")}
+          {interfaceTranslator.t("ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出")}
         </p>
       ) : null}
       {study.courses.map((course) => (
@@ -221,6 +232,7 @@ function CourseBlock({
   readonly onOpenLesson: (lesson: LessonRef) => void;
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <CatalogDetails className="catalog__course" startOpen={defaultOpen}>
       <summary>
@@ -228,7 +240,7 @@ function CourseBlock({
           <span className="catalog__title-row">
             <span
               className="catalog__depth"
-              aria-label={translate("ui.catalog.catalogSurface.copy.第-value0-层", {
+              aria-label={interfaceTranslator.t("ui.catalog.catalogSurface.copy.第-value0-层", {
                 value0: course.depth + 1,
               })}
             >
@@ -240,11 +252,12 @@ function CourseBlock({
             </span>
           </span>
           <span className="catalog__progress">
-            {course.done}/{course.total} {translate("ui.catalog.catalogSurface.copy.节")}
+            {course.done}/{course.total}{" "}
+            {interfaceTranslator.t("ui.catalog.catalogSurface.copy.节")}
           </span>
           {course.prerequisiteTitles.length > 0 ? (
             <span className="catalog__prereq">
-              {translate("ui.catalog.catalogSurface.copy.先修")}
+              {interfaceTranslator.t("ui.catalog.catalogSurface.copy.先修")}
               {course.prerequisiteTitles.join("、")}
             </span>
           ) : null}
@@ -283,13 +296,14 @@ function UnitBlock({
   readonly onOpenLesson: (lesson: LessonRef) => void;
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <CatalogDetails className="catalog__unit" startOpen={defaultOpen}>
       <summary>
         <h4>
           {unit.title}{" "}
           <span className="catalog__count">
-            {unit.lessons.length} {translate("ui.catalog.catalogSurface.copy.节")}
+            {unit.lessons.length} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.节")}
           </span>
         </h4>
       </summary>
@@ -357,6 +371,7 @@ function LessonLink({
   readonly onOpenLesson: (lesson: LessonRef) => void;
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
+  const interfaceTranslator = useI18n();
   const ref = { studyId, courseId, unitId, lessonId: lesson.id };
   return (
     <a
@@ -374,12 +389,12 @@ function LessonLink({
       {lesson.variant ? <span className="catalog__variant">{lesson.variant}</span> : null}
       {lesson.state === "done" ? (
         <span className="catalog__gate catalog__gate--done">
-          {translate("ui.catalog.catalogSurface.copy.已完成")}
+          {interfaceTranslator.t("ui.catalog.catalogSurface.copy.已完成")}
         </span>
       ) : null}
       {lesson.state === "live" ? (
         <span className="catalog__gate catalog__gate--live">
-          {translate("product.catalog.next")}
+          {interfaceTranslator.t("product.catalog.next")}
         </span>
       ) : null}
     </a>
@@ -389,12 +404,14 @@ function LessonLink({
 function gateLabel(state: CatalogCourse["state"], completedCount: number): string {
   switch (state) {
     case "done":
-      return translate("ui.catalog.catalogSurface.copy.已完成");
+      return interfaceTranslator.t("ui.catalog.catalogSurface.copy.已完成");
     case "live":
-      return translate(completedCount > 0 ? "product.catalog.next" : "product.catalog.start");
+      return interfaceTranslator.t(
+        completedCount > 0 ? "product.catalog.next" : "product.catalog.start",
+      );
     case "open":
-      return translate("ui.catalog.catalogSurface.copy.可以学");
+      return interfaceTranslator.t("ui.catalog.catalogSurface.copy.可以学");
     case "idle":
-      return translate("ui.catalog.catalogSurface.copy.未解锁");
+      return interfaceTranslator.t("ui.catalog.catalogSurface.copy.未解锁");
   }
 }

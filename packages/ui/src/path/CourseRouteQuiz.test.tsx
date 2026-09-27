@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -49,14 +50,16 @@ function withoutComments(source: string): string {
 
 function render(course: CourseView = COURSE) {
   return renderToStaticMarkup(
-    <CourseRouteQuiz
-      studyId="turing-pact"
-      course={course}
-      content={NOTHING_LOADED}
-      proven={new Set()}
-      onProven={() => undefined}
-      onOpenLesson={() => undefined}
-    />,
+    withInterfaceLocale(
+      <CourseRouteQuiz
+        studyId="turing-pact"
+        course={course}
+        content={NOTHING_LOADED}
+        proven={new Set()}
+        onProven={() => undefined}
+        onOpenLesson={() => undefined}
+      />,
+    ),
   );
 }
 

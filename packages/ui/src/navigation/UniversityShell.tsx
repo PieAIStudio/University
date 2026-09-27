@@ -69,6 +69,10 @@ export function UniversityShell({
   };
   return (
     <AppShell
+      navigationLabels={{
+        primary: t("product.navigation.primary"),
+        tabs: t("product.navigation.tabs"),
+      }}
       mapMode={mapMode}
       asideTitle={asideTitle}
       nav={railItemsWithExtra(extraMoreItems)}

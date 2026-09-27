@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameAssetIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import {
   LEAGUE_TIERS,
@@ -16,7 +16,7 @@ import {
  * leaderboard the learner later finds out was fictional discredits every real
  * number sitting next to it.
  */
-export const LEAGUE_TITLE = translate("product.growth.title");
+export const LEAGUE_TITLE = interfaceTranslator.t("product.growth.title");
 
 export function LeagueScreen({
   document: progress,
@@ -26,13 +26,14 @@ export function LeagueScreen({
   readonly now?: number;
   readonly signedIn?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const standing = leagueStanding(progress, now);
 
   return (
     <section className="shell-screen">
       <header className="shell-screen__head">
         <h1>{LEAGUE_TITLE}</h1>
-        <p className="shell-screen__lede">{translate("product.growth.intro")}</p>
+        <p className="shell-screen__lede">{interfaceTranslator.t("product.growth.intro")}</p>
       </header>
 
       <GamePanel tone="strong">
@@ -41,16 +42,17 @@ export function LeagueScreen({
             <GameAssetIcon icon="medal" size="lg" />
             <span className="league-standing__name">{standing.tier.name}</span>
             <GameBadge tone="success">
-              {standing.cards} {translate("ui.navigation.screens.leagueScreen.copy.张记牢了")}
+              {standing.cards}{" "}
+              {interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.张记牢了")}
             </GameBadge>
           </div>
           <GameProgress
             label={
               standing.next
-                ? translate("ui.navigation.screens.leagueScreen.copy.到value0", {
+                ? interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.到value0", {
                     value0: standing.next.name,
                   })
-                : translate("ui.navigation.screens.leagueScreen.copy.已在顶阶")
+                : interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.已在顶阶")
             }
             value={standing.progress}
             max={1}
@@ -60,14 +62,14 @@ export function LeagueScreen({
             }
           />
           <p className="league-standing__note">
-            {translate("product.growth.week", { count: standing.lessonsThisWeek })}
+            {interfaceTranslator.t("product.growth.week", { count: standing.lessonsThisWeek })}
           </p>
         </div>
       </GamePanel>
 
       <details className="product-details" data-growth-details>
-        <summary>{translate("product.growth.details")}</summary>
-        <p>{translate("product.growth.rule", { days: LONG_TERM_STABILITY_DAYS })}</p>
+        <summary>{interfaceTranslator.t("product.growth.details")}</summary>
+        <p>{interfaceTranslator.t("product.growth.rule", { days: LONG_TERM_STABILITY_DAYS })}</p>
         <ol className="league-ladder">
           {LEAGUE_TIERS.map((tier) => (
             <li
@@ -77,14 +79,14 @@ export function LeagueScreen({
             >
               <span className="league-rung__name">{tier.name}</span>
               <span className="league-rung__at">
-                {tier.at} {translate("ui.navigation.screens.leagueScreen.copy.张")}
+                {tier.at} {interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.张")}
               </span>
             </li>
           ))}
         </ol>
       </details>
       <a className="linkish" href="/practice">
-        {translate("product.growth.action")}
+        {interfaceTranslator.t("product.growth.action")}
       </a>
     </section>
   );

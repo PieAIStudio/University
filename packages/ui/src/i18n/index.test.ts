@@ -1,78 +1,70 @@
 import { describe, expect, it } from "vitest";
+import { createI18n } from "@pieai/swimmer-i18n-kit";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { interfaceI18n, INTERFACE_LOCALES } from "./core.js";
+import { localeNavigationUrl } from "./browser.js";
+import { InterfaceProvider, useI18n } from "./react.js";
+import { messages as source } from "./catalogs/zh-CN.js";
 
-import {
-  availableLocales,
-  createTranslator,
-  localeCompleteness,
-  LOCALE_REGISTRY,
-  ENGLISH_LOCALE,
-  localeNavigationUrl,
-  resolveLocale,
-  SOURCE_LOCALE,
-} from "./index.js";
-import { messages as sourceMessages } from "./catalogs/zh-CN.js";
-
-describe("message catalogs", () => {
-  it("lists only complete locales", () => {
-    expect(availableLocales()).toEqual([ENGLISH_LOCALE, SOURCE_LOCALE]);
-    expect(localeCompleteness(sourceMessages).complete).toBe(true);
+describe("native University ICU catalogs", () => {
+  it("offers only complete product catalogs", () => {
+    expect(INTERFACE_LOCALES).toEqual(["zh-CN", "en"]);
+    expect(interfaceI18n.completeness("en").complete).toBe(true);
+    const independent = createI18n({
+      sourceLocale: "zh-CN",
+      source,
+      catalogs: { ja: { "locale.zhCN.name": "Fake" } },
+    });
+    expect(independent.completeness("ja").complete).toBe(false);
+    expect(independent.resolve("ja")).toBe("zh-CN");
   });
-
-  it("keeps an intentionally incomplete fake locale out of the choices", () => {
-    const fakeLocale = {
-      ...LOCALE_REGISTRY,
-      fake: {
-        direction: "ltr" as const,
-        displayNameKey: "locale.zhCN.name" as const,
-        messages: { "locale.zhCN.name": "Fake" },
-      },
-    };
-    expect(availableLocales(fakeLocale)).not.toContain("fake");
-    expect(localeCompleteness(fakeLocale.fake.messages).missingKeys.length).toBeGreaterThan(0);
+  it("matches language variants and falls back to complete English", () => {
+    expect(interfaceI18n.resolve("zh-TW")).toBe("zh-CN");
+    expect(interfaceI18n.resolve("en-GB")).toBe("en");
+    expect(interfaceI18n.resolve("ja-JP")).toBe("en");
   });
-
-  it("uses the complete English catalog and Intl helpers", () => {
-    const translator = createTranslator("en");
-    expect(translator.locale).toBe(ENGLISH_LOCALE);
-    expect(translator.t("locale.zhCN.name")).toBeTruthy();
-    expect(translator.number(1234)).toBe("1,234");
-    expect(translator.plural(2, { one: "locale.zhCN.name", other: "locale.en.name" })).toBe(
-      "English",
+  it("formats ICU arguments directly and accepts existing Chinese keys", () => {
+    const zh = interfaceI18n.translator("zh-CN"),
+      en = interfaceI18n.translator("en");
+    expect(zh.t("path.progress", { current: 2, total: 5 })).toBe("互动 2 / 5");
+    expect(en.t("path.progress", { current: 2, total: 5 })).toBe("Practice 2 / 5");
+    expect(zh.t("ui.navigation.slots.copy.更多")).toBe("更多");
+    expect(en.number(1234)).toBe("1,234");
+  });
+  it("keeps Node request translators independent of browser selection", async () => {
+    const results = await Promise.all(
+      ["zh-CN", "en"].map(async (locale) => {
+        const translator = interfaceI18n.translator(locale);
+        await Promise.resolve();
+        return translator.t("path.progress", { current: 1, total: 2 });
+      }),
     );
+    expect(results).toEqual(["互动 1 / 2", "Practice 1 / 2"]);
   });
-
-  it("matches Chinese/English variants and uses English for unsupported languages", () => {
-    expect(resolveLocale("zh-TW")).toBe(SOURCE_LOCALE);
-    expect(resolveLocale("en-GB")).toBe(ENGLISH_LOCALE);
-    expect(resolveLocale("ja-JP")).toBe(ENGLISH_LOCALE);
+  it("renders with the real catalog-bound React Provider", () => {
+    function Label() {
+      return createElement("span", null, useI18n().t("path.progress", { current: 1, total: 2 }));
+    }
+    expect(
+      renderToStaticMarkup(
+        createElement(InterfaceProvider, { locale: "en", children: createElement(Label) }),
+      ),
+    ).toContain("Practice 1 / 2");
   });
-
-  it("changes only the language query while retaining the learner route", () => {
+  it("retains route and other query fields when changing language", () => {
     expect(localeNavigationUrl("https://example.test/course?view=lesson#/settings", "en")).toBe(
       "https://example.test/course?view=lesson&lang=en#/settings",
     );
     expect(() => localeNavigationUrl("https://example.test/", "javascript:evil")).toThrow();
   });
 });
-
-describe("shared i18n compatibility", () => {
-  it("preserves every existing Chinese message and omitted placeholder", () => {
-    const translator = createTranslator("zh-Hans");
-    for (const [key, original] of Object.entries(sourceMessages)) {
-      expect(translator.t(key as keyof typeof sourceMessages), key).toBe(original);
-    }
-  });
-
-  it("keeps missing values literal and formats legacy numbers through Intl", () => {
-    const key = Object.keys(sourceMessages).find((key) =>
-      /\{\{\s*[A-Za-z0-9_]+\s*\}\}/.test(sourceMessages[key as keyof typeof sourceMessages]),
-    ) as keyof typeof sourceMessages;
-    const message = sourceMessages[key];
-    const values = Object.fromEntries(
-      [...message.matchAll(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g)].map((match) => [match[1]!, 1234]),
-    );
-    expect(createTranslator("zh-CN").t(key, values)).toBe(
-      message.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, "1,234"),
-    );
-  });
-});
+// This function participates in the real tsc gate without executing invalid calls.
+function typeContract() {
+  const translator = interfaceI18n.translator("en");
+  // @ts-expect-error A product key must exist in the source catalog.
+  translator.t("unknown.product.key");
+  // @ts-expect-error ICU placeholders are mandatory and inferred from the catalog.
+  translator.t("path.progress", { current: 1 });
+}
+void typeContract;

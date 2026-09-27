@@ -1,4 +1,4 @@
-import { formatNumber as formatLocaleNumber, translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import { useControls, useCreateStore } from "leva";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { progressSourceOf, type ProgressPort } from "@pieai/university-core";
@@ -71,17 +71,17 @@ interface MapStudioScreenProps {
 const TABS = [
   {
     id: "planet",
-    label: translate("app.mapstudio.mapStudioScreen.copy.行星"),
+    label: interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.行星"),
     panelId: "map-studio-panel",
   },
   {
     id: "world",
-    label: translate("app.mapstudio.mapStudioScreen.copy.群岛"),
+    label: interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.群岛"),
     panelId: "map-studio-panel",
   },
   {
     id: "island",
-    label: translate("app.mapstudio.mapStudioScreen.copy.课程岛"),
+    label: interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.课程岛"),
     panelId: "map-studio-panel",
   },
 ] as const;
@@ -99,13 +99,14 @@ function parameterByPreviewKey(
 
 function formatNumber(value: number | null): string {
   return value === null
-    ? translate("app.mapstudio.mapStudioScreen.copy.加载中")
-    : formatLocaleNumber(value);
+    ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.加载中")
+    : interfaceTranslator.number(value);
 }
 
 function formatBytes(value: number | null): string {
-  if (value === null) return translate("app.mapstudio.mapStudioScreen.copy.程序化-未使用-GLB");
-  return `${formatLocaleNumber(value)} B`;
+  if (value === null)
+    return interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.程序化-未使用-GLB");
+  return `${interfaceTranslator.number(value)} B`;
 }
 
 const ZERO_WIDTH_BREAK = "\u200B";
@@ -214,14 +215,14 @@ function ModificationPreview({ text }: { readonly text: string }) {
 
 function layerTitle(layer: StudioLayer): string {
   return layer === "planet"
-    ? translate("app.mapstudio.mapStudioScreen.copy.行星")
+    ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.行星")
     : layer === "world"
-      ? translate("app.mapstudio.mapStudioScreen.copy.群岛")
-      : translate("app.mapstudio.mapStudioScreen.copy.课程岛");
+      ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.群岛")
+      : interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.课程岛");
 }
 
 function valueText(value: number | string, unit?: string): string {
-  return `${typeof value === "number" ? formatLocaleNumber(value) : value}${unit ? ` ${unit}` : ""}`;
+  return `${typeof value === "number" ? interfaceTranslator.number(value) : value}${unit ? ` ${unit}` : ""}`;
 }
 
 function mutableParameterIds(
@@ -238,7 +239,7 @@ function roleCurrentLabel(role: InspectorRoleChoice, assets: readonly InspectorA
       role.currentKeys.includes(asset.key) ||
       asset.requestedKeys?.some((key) => role.currentKeys.includes(key)),
   );
-  if (!current) return translate("app.mapstudio.mapStudioScreen.copy.沿用配方");
+  if (!current) return interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.沿用配方");
   return `${current.pack} / ${current.assetId}`;
 }
 
@@ -296,7 +297,7 @@ function changeValue(
 function sourceLine(source: InspectorParameter["source"]): ReactNode {
   return (
     <SourceReference
-      label={<span>{translate("app.mapstudio.mapStudioScreen.copy.出处")}</span>}
+      label={<span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.出处")}</span>}
       source={source}
     />
   );
@@ -317,6 +318,7 @@ function ParameterRow({
   };
   readonly onChange: (parameter: InspectorParameter, value: number) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const editable = parameter.mutable && Boolean(parameter.previewKey);
   const current = changeValue(parameter, values);
   const step = parameter.unit === "instances" ? 1000 : 0.05;
@@ -326,10 +328,10 @@ function ParameterRow({
         <span>{parameter.label}</span>
         {editable ? (
           <GameBadge tone="success">
-            {translate("app.mapstudio.mapStudioScreen.copy.实时预览")}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.实时预览")}
           </GameBadge>
         ) : (
-          <GameBadge>{translate("app.mapstudio.mapStudioScreen.copy.只读")}</GameBadge>
+          <GameBadge>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.只读")}</GameBadge>
         )}
       </div>
       <div className="map-studio__parameter-value">
@@ -355,10 +357,11 @@ function ParameterRow({
 }
 
 function ColorStrip({ colors }: { readonly colors: readonly InspectorColorStop[] }) {
+  const interfaceTranslator = useI18n();
   return (
     <div
       className="map-studio__colors"
-      aria-label={translate("app.mapstudio.mapStudioScreen.copy.颜色分带")}
+      aria-label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.颜色分带")}
     >
       {colors.map((color) => (
         <div className="map-studio__color" key={color.id}>
@@ -403,6 +406,7 @@ function AssetCard({
   readonly asset: InspectorAsset;
   readonly onInspectCourse: (studyId: string, courseId: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const uses = asset.uses ?? [];
   const courses = [...new Map(uses.map((use) => [`${use.studyId}/${use.courseId}`, use])).values()];
   const size = asset.model?.size;
@@ -423,17 +427,18 @@ function AssetCard({
       </div>
       <dl className="map-studio__asset-paths">
         <div>
-          <dt>{translate("app.mapstudio.mapStudioScreen.copy.运行时文件")}</dt>
+          <dt>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.运行时文件")}</dt>
           <dd>
             <SourceCode
               path={
-                asset.runtimePath ?? translate("app.mapstudio.mapStudioScreen.copy.无-程序化生成")
+                asset.runtimePath ??
+                interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.无-程序化生成")
               }
             />
           </dd>
         </div>
         <div>
-          <dt>{translate("app.mapstudio.mapStudioScreen.copy.资源来源")}</dt>
+          <dt>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.资源来源")}</dt>
           <dd>
             <SourceCode
               path={asset.sourcePath ?? "packages/world/src/island/island-grass-render.tsx"}
@@ -443,26 +448,26 @@ function AssetCard({
       </dl>
       <div className="map-studio__metrics">
         <Metric
-          label={translate("app.mapstudio.mapStudioScreen.copy.文件字节")}
+          label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.文件字节")}
           value={formatBytes(asset.bytes)}
           source={asset.bytesSource}
         />
         <Metric
-          label={translate("app.mapstudio.mapStudioScreen.copy.单模型三角形")}
+          label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.单模型三角形")}
           value={
             asset.triangles === null && asset.totalTriangles != null
-              ? translate("app.mapstudio.mapStudioScreen.copy.按当前投影计量")
+              ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.按当前投影计量")
               : formatNumber(asset.triangles)
           }
           source={asset.trianglesSource}
         />
         <Metric
-          label={translate("app.mapstudio.mapStudioScreen.copy.当前实例")}
+          label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.当前实例")}
           value={formatNumber(asset.instances)}
           source={asset.instancesSource}
         />
         <Metric
-          label={translate("app.mapstudio.mapStudioScreen.copy.实际投影三角形")}
+          label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.实际投影三角形")}
           value={formatNumber(
             asset.totalTriangles !== undefined
               ? asset.totalTriangles
@@ -476,18 +481,23 @@ function AssetCard({
       {asset.runtimePath ? (
         <dl className="map-studio__asset-paths">
           <div>
-            <dt>{translate("app.mapstudio.mapStudioScreen.copy.原始模型尺寸")}</dt>
+            <dt>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.原始模型尺寸")}</dt>
             <dd>
-              {size ? dimensions(size) : translate("app.mapstudio.mapStudioScreen.copy.加载中")}
+              {size
+                ? dimensions(size)
+                : interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.加载中")}
             </dd>
           </div>
           <div>
-            <dt>{translate("app.mapstudio.mapStudioScreen.copy.场景尺寸范围")}</dt>
+            <dt>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.场景尺寸范围")}</dt>
             <dd>
               {uses.length && regularSize
                 ? `${dimensions(size.map((axis) => (axis / size[1]) * minHeight))} — ${dimensions(size.map((axis) => (axis / size[1]) * maxHeight))}`
                 : uses.length
-                  ? `height ${minHeight.toFixed(3)} — ${maxHeight.toFixed(3)}`
+                  ? interfaceTranslator.t("studio.asset.heightRange", {
+                      minimum: minHeight.toFixed(3),
+                      maximum: maxHeight.toFixed(3),
+                    })
                   : "—"}
             </dd>
           </div>
@@ -496,10 +506,11 @@ function AssetCard({
       {uses.length ? (
         <details data-asset-uses>
           <summary>
-            {translate("app.mapstudio.mapStudioScreen.copy.实际使用与语义组")} · {uses.length}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.实际使用与语义组")} ·{" "}
+            {uses.length}
           </summary>
           <p className="map-studio__asset-note">
-            {translate(
+            {interfaceTranslator.t(
               "app.mapstudio.mapStudioScreen.copy.尺寸来自原始节点变换-场景统一归一化高度-树干是多变体骨架不能按整包宽度相乘",
             )}
           </p>
@@ -518,8 +529,12 @@ function AssetCard({
                 {use.id} · {use.group}
               </summary>
               <code>
-                xyz {dimensions(use.position)} · height {use.height.toFixed(3)} · yaw{" "}
-                {use.turn.toFixed(3)} · {use.state}
+                {interfaceTranslator.t("studio.asset.position", {
+                  position: dimensions(use.position),
+                  height: use.height.toFixed(3),
+                  yaw: use.turn.toFixed(3),
+                  state: use.state,
+                })}
               </code>
             </details>
           ))}
@@ -528,19 +543,22 @@ function AssetCard({
       <div className="map-studio__lock">
         <div>
           <GameBadge>
-            {translate("app.mapstudio.mapStudioScreen.copy.技术锁")} {asset.techniqueLock}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.技术锁")}{" "}
+            {asset.techniqueLock}
           </GameBadge>
           <p>{asset.technique}</p>
           <p className="map-studio__lock-note">
-            {translate("app.mapstudio.mapStudioScreen.copy.要改这条技术锁-必须先修订-ADR-0008")}
+            {interfaceTranslator.t(
+              "app.mapstudio.mapStudioScreen.copy.要改这条技术锁-必须先修订-ADR-0008",
+            )}
           </p>
         </div>
         <span className="map-studio__readonly">
-          {translate("app.mapstudio.mapStudioScreen.copy.只读")}
+          {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.只读")}
         </span>
       </div>
       <SourceReference
-        label={<span>{translate("app.mapstudio.mapStudioScreen.copy.技术出处")}</span>}
+        label={<span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.技术出处")}</span>}
         source={asset.techniqueSource}
       />
       {asset.note ? <p className="map-studio__asset-note">{asset.note}</p> : null}
@@ -549,22 +567,29 @@ function AssetCard({
 }
 
 function BudgetPanel({ budget }: { readonly budget: InspectorLayerDescription["budget"] }) {
+  const interfaceTranslator = useI18n();
   return (
     <GamePanel
       className="map-studio__recipe"
-      title={translate("app.mapstudio.mapStudioScreen.copy.预算-按屏幕像素分配")}
+      title={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预算-按屏幕像素分配")}
     >
       <div className="map-studio__budget-hero">
         <div>
-          <span>{translate("app.mapstudio.mapStudioScreen.copy.预算基线")}</span>
-          <strong>{formatNumber(budget.triangleBudget)} tris</strong>
+          <span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预算基线")}</span>
+          <strong>
+            {interfaceTranslator.t("studio.asset.triangles", {
+              count: formatNumber(budget.triangleBudget),
+            })}
+          </strong>
         </div>
         <div>
-          <span>{translate("app.mapstudio.mapStudioScreen.copy.当前实际用量")}</span>
+          <span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.当前实际用量")}</span>
           <strong>
             {budget.actualTriangles === null
-              ? translate("app.mapstudio.mapStudioScreen.copy.加载中")
-              : `${formatNumber(budget.actualTriangles)} tris`}
+              ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.加载中")
+              : interfaceTranslator.t("studio.asset.triangles", {
+                  count: formatNumber(budget.actualTriangles),
+                })}
           </strong>
         </div>
       </div>
@@ -603,12 +628,13 @@ function RecipePanel({
   readonly onParameterChange: (parameter: InspectorParameter, value: number) => void;
   readonly onInspectCourse: (studyId: string, courseId: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const parameters = mutableParameterIds(description);
   return (
     <>
       <GamePanel
         className="map-studio__recipe"
-        title={translate("app.mapstudio.mapStudioScreen.copy.地形配方")}
+        title={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.地形配方")}
       >
         <p className="map-studio__generator">{description.terrain.generator}</p>
         <div className="map-studio__parameter-list">
@@ -622,14 +648,16 @@ function RecipePanel({
           ))}
         </div>
         <div className="map-studio__subheading">
-          <span>{translate("app.mapstudio.mapStudioScreen.copy.颜色分带")}</span>
-          <GameBadge>{translate("app.mapstudio.mapStudioScreen.copy.来自真实-palette")}</GameBadge>
+          <span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.颜色分带")}</span>
+          <GameBadge>
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.来自真实-palette")}
+          </GameBadge>
         </div>
         <ColorStrip colors={description.terrain.colors} />
         <SourceReference
           label={
             <>
-              <span>{translate("app.mapstudio.mapStudioScreen.copy.网格三角形")}</span>
+              <span>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.网格三角形")}</span>
               <strong>{formatNumber(description.terrain.geometryTriangles)}</strong>
             </>
           }
@@ -639,7 +667,7 @@ function RecipePanel({
 
       <GamePanel
         className="map-studio__recipe"
-        title={translate("app.mapstudio.mapStudioScreen.copy.植被-装饰配方")}
+        title={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.植被-装饰配方")}
       >
         {parameters.length > 0 ? (
           <div className="map-studio__parameter-list">
@@ -671,7 +699,9 @@ function RecipePanel({
             ))
           ) : (
             <p className="map-studio__empty">
-              {translate("app.mapstudio.mapStudioScreen.copy.这一层没有外部植被-装饰模型")}
+              {interfaceTranslator.t(
+                "app.mapstudio.mapStudioScreen.copy.这一层没有外部植被-装饰模型",
+              )}
             </p>
           )}
         </div>
@@ -680,7 +710,7 @@ function RecipePanel({
 
       <GamePanel
         className="map-studio__recipe"
-        title={translate("app.mapstudio.mapStudioScreen.copy.组合与降级")}
+        title={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.组合与降级")}
       >
         {(description.dressing.compositions ?? []).map((composition) => (
           <details
@@ -691,11 +721,14 @@ function RecipePanel({
               {composition.id} · {composition.status} · {composition.members.length}
             </summary>
             <p>
-              {composition.courseId} · attempts {composition.attempts} ·{" "}
-              {composition.fallback ?? "—"}
+              {interfaceTranslator.t("studio.asset.attempts", {
+                course: composition.courseId,
+                count: composition.attempts,
+                fallback: composition.fallback ?? "—",
+              })}
             </p>
             <p>
-              {translate("app.mapstudio.mapStudioScreen.copy.占地-高差-坡度")} ·{" "}
+              {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.占地-高差-坡度")} ·{" "}
               {composition.footprint ? dimensions(composition.footprint) : "—"} /{" "}
               {composition.span?.toFixed(3) ?? "—"} / {composition.slope?.toFixed(3) ?? "—"}
             </p>
@@ -707,8 +740,13 @@ function RecipePanel({
             {composition.members.map((member) => (
               <p key={member.id}>
                 <code>
-                  {member.assetKey} · {member.id} · xyz {dimensions(member.position)} · height{" "}
-                  {member.height.toFixed(3)} · yaw {member.turn.toFixed(3)} · {member.state}
+                  {member.assetKey} · {member.id} ·{" "}
+                  {interfaceTranslator.t("studio.asset.position", {
+                    position: dimensions(member.position),
+                    height: member.height.toFixed(3),
+                    yaw: member.turn.toFixed(3),
+                    state: member.state,
+                  })}
                 </code>
               </p>
             ))}
@@ -736,7 +774,7 @@ function RecipePanel({
 
       <GamePanel
         className="map-studio__recipe"
-        title={translate("app.mapstudio.mapStudioScreen.copy.光照与颜色")}
+        title={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.光照与颜色")}
       >
         <div className="map-studio__parameter-list">
           {description.lighting.parameters.map((parameter) => (
@@ -767,16 +805,17 @@ function RolePicker({
   readonly value: string;
   readonly onChange: (roleId: string, targetKey: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const hasInstances = role.currentKeys.length > 0;
   return (
     <GameField
-      label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", {
+      label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.value0模型", {
         value0: role.label,
       })}
-      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : translate("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")} ${role.note ?? ""}`}
+      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")} ${role.note ?? ""}`}
     >
       <select
-        aria-label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", {
+        aria-label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.value0模型", {
           value0: role.label,
         })}
         className="map-studio__select"
@@ -784,7 +823,9 @@ function RolePicker({
         onChange={(event) => onChange(role.id, event.currentTarget.value)}
         value={value}
       >
-        <option value="">{translate("app.mapstudio.mapStudioScreen.copy.沿用配方原资源")}</option>
+        <option value="">
+          {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.沿用配方原资源")}
+        </option>
         {description.dressing.catalog
           .filter((asset) => role.compatibleKeys?.includes(asset.key))
           .map((asset) => (
@@ -808,6 +849,7 @@ export function MapStudioScreen({
   planetDomainCatalog,
   onSelectStudy,
 }: MapStudioScreenProps) {
+  const interfaceTranslator = useI18n();
   const [activeLayer, setActiveLayer] = useState<StudioLayer>("planet");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [runtime, setRuntime] = useState<InspectorRuntimeMetrics>({});
@@ -1128,24 +1170,24 @@ export function MapStudioScreen({
       <header className="map-studio__header">
         <div>
           <p className="map-studio__eyebrow">
-            {translate("app.mapstudio.mapStudioScreen.copy.作者工作台-PROCEDURAL-MAP")}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.作者工作台-PROCEDURAL-MAP")}
           </p>
-          <h1>{translate("app.mapstudio.mapStudioScreen.copy.地图配方台")}</h1>
+          <h1>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.地图配方台")}</h1>
           <p className="map-studio__lede">
-            {translate(
+            {interfaceTranslator.t(
               "app.mapstudio.mapStudioScreen.copy.一眼看清三层地图从哪里来-左边是正在运行的场景-右边是可追溯-可预览的配方",
             )}
           </p>
         </div>
         <div className="map-studio__actions">
-          <GameBadge tone="success">AUTHORING ONLY</GameBadge>
+          <GameBadge tone="success">{interfaceTranslator.t("studio.authoringOnly")}</GameBadge>
           <GameButton variant="secondary" onClick={exportConfig}>
-            {translate("app.mapstudio.mapStudioScreen.copy.导出配置-JSON")}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.导出配置-JSON")}
           </GameButton>
           <GameButton variant="primary" onClick={() => void copyModification()}>
             {copyState === "copied"
-              ? translate("app.mapstudio.mapStudioScreen.copy.已复制修改说明")
-              : translate("app.mapstudio.mapStudioScreen.copy.复制修改说明")}
+              ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.已复制修改说明")
+              : interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.复制修改说明")}
           </GameButton>
         </div>
       </header>
@@ -1167,17 +1209,19 @@ export function MapStudioScreen({
           <div className="map-studio__preview-header">
             <div>
               <span className="map-studio__kicker">
-                LIVE PREVIEW /{" "}
+                {interfaceTranslator.t("studio.livePreview")}{" "}
                 {activeLayer === "planet"
-                  ? translate("app.mapstudio.mapStudioScreen.copy.研究项目选择器")
+                  ? interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.研究项目选择器")
                   : description.projection}
               </span>
               <h2>{layerTitle(activeLayer)}</h2>
             </div>
             <div className="map-studio__context-fields">
-              <GameField label={translate("app.mapstudio.mapStudioScreen.copy.预览项目")}>
+              <GameField
+                label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预览项目")}
+              >
                 <select
-                  aria-label={translate("app.mapstudio.mapStudioScreen.copy.预览项目")}
+                  aria-label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预览项目")}
                   className="map-studio__select"
                   disabled={projectOptions.length === 0}
                   onChange={(event) => onSelectStudy(event.currentTarget.value)}
@@ -1191,9 +1235,13 @@ export function MapStudioScreen({
                 </select>
               </GameField>
               {activeLayer === "island" ? (
-                <GameField label={translate("app.mapstudio.mapStudioScreen.copy.预览课程")}>
+                <GameField
+                  label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预览课程")}
+                >
                   <select
-                    aria-label={translate("app.mapstudio.mapStudioScreen.copy.预览课程")}
+                    aria-label={interfaceTranslator.t(
+                      "app.mapstudio.mapStudioScreen.copy.预览课程",
+                    )}
                     className="map-studio__select"
                     disabled={!selectedStudy || selectedStudy.courses.length === 0}
                     onChange={(event) => setSelectedCourseId(event.currentTarget.value)}
@@ -1270,7 +1318,11 @@ export function MapStudioScreen({
             </div>
             <div className="map-studio__canvas-caption">
               <SourceReference
-                label={<span>{translate("app.mapstudio.mapStudioScreen.copy.场景实现")}</span>}
+                label={
+                  <span>
+                    {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.场景实现")}
+                  </span>
+                }
                 source={description.liveSource}
               />
             </div>
@@ -1279,27 +1331,31 @@ export function MapStudioScreen({
 
         <aside
           className="map-studio__inspector"
-          aria-label={translate("app.mapstudio.mapStudioScreen.copy.地图配方检视面板")}
+          aria-label={interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.地图配方检视面板")}
         >
           <div className="map-studio__inspector-intro">
             <div>
-              <span className="map-studio__kicker">RECIPE INSPECTOR</span>
-              <h2>{translate("app.mapstudio.mapStudioScreen.copy.检视面板")}</h2>
+              <span className="map-studio__kicker">
+                {interfaceTranslator.t("studio.recipeInspector")}
+              </span>
+              <h2>{interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.检视面板")}</h2>
             </div>
             <GameBadge tone="ai">
-              {translate("app.mapstudio.mapStudioScreen.copy.来源可追溯")}
+              {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.来源可追溯")}
             </GameBadge>
           </div>
           <div className="map-studio__runtime-callout">
-            <strong>{translate("app.mapstudio.mapStudioScreen.copy.预览覆盖层")}</strong>
+            <strong>
+              {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.预览覆盖层")}
+            </strong>
             <span>
-              {translate(
+              {interfaceTranslator.t(
                 "app.mapstudio.mapStudioScreen.copy.数值改动和资源替换只存在于这个页面-不会写回磁盘",
               )}
             </span>
           </div>
           <p className="map-studio__inspector-scroll-hint">
-            {translate("app.mapstudio.mapStudioScreen.copy.向下滚动查看更多配方")}
+            {interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.向下滚动查看更多配方")}
           </p>
           <RecipePanel
             description={description}
@@ -1324,7 +1380,9 @@ export function MapStudioScreen({
           />
           <GamePanel
             className="map-studio__recipe map-studio__modification"
-            title={translate("app.mapstudio.mapStudioScreen.copy.可直接交给-AI-的修改说明")}
+            title={interfaceTranslator.t(
+              "app.mapstudio.mapStudioScreen.copy.可直接交给-AI-的修改说明",
+            )}
           >
             <ModificationPreview text={modificationText} />
           </GamePanel>
@@ -1364,19 +1422,22 @@ function buildModificationText(
     );
     lines.push("packages/world/src/island/island-dressing.ts");
     lines.push(
-      translate("app.mapstudio.mapStudioScreen.copy.value0的资源-value1-value2-value3", {
-        value0: role.label,
-        value1: current
-          ? `${current.pack}/${current.assetId}`
-          : translate("app.mapstudio.mapStudioScreen.copy.配方原资源"),
-        value2: target.pack,
-        value3: target.assetId,
-      }),
+      interfaceTranslator.t(
+        "app.mapstudio.mapStudioScreen.copy.value0的资源-value1-value2-value3",
+        {
+          value0: role.label,
+          value1: current
+            ? `${current.pack}/${current.assetId}`
+            : interfaceTranslator.t("app.mapstudio.mapStudioScreen.copy.配方原资源"),
+          value2: target.pack,
+          value3: target.assetId,
+        },
+      ),
     );
   }
   return lines.length > 0
     ? lines.join("\n")
-    : translate(
+    : interfaceTranslator.t(
         "app.mapstudio.mapStudioScreen.copy.当前预览没有未写回的修改-所有显示数值都来自真实-renderer-模块",
       );
 }

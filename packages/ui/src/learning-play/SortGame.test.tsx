@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -56,7 +57,11 @@ afterEach(async () => {
 
 async function render(onAttempt = vi.fn()) {
   await act(async () => {
-    root.render(<SortGame activity={ACTIVITY} disabled={false} onAttempt={onAttempt} guided />);
+    root.render(
+      withInterfaceLocale(
+        <SortGame activity={ACTIVITY} disabled={false} onAttempt={onAttempt} guided />,
+      ),
+    );
   });
   return onAttempt;
 }

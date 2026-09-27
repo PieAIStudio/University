@@ -31,12 +31,13 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "oxlint --deny-warnings src",
-    "format": "oxfmt --write package.json tsconfig.json src",
-    "format:check": "oxfmt --check package.json tsconfig.json src",
+    "format": "oxfmt --write package.json tsconfig.json src --ignore-path .oxfmtignore",
+    "format:check": "oxfmt --check package.json tsconfig.json src --ignore-path .oxfmtignore",
     "test": "vitest run --passWithNoTests",
     "build": "tsc -p tsconfig.json && cp src/domain/url-evidence-hosts.json dist/domain/url-evidence-hosts.json"
   },
   "dependencies": {
+    "@pieai/swimmer-i18n-kit": "0.1.1",
     "ts-fsrs": "5.4.1",
     "zod": "4.4.3"
   },

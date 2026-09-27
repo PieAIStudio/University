@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 
 import { IslandIcon } from "../shell/icons.js";
@@ -15,10 +15,10 @@ export interface StudySwitchItem {
 
 export function studySwitchMeta(item: StudySwitchItem): string {
   if (item.done <= 0)
-    return translate("ui.navigation.studySwitcher.copy.value0-门-没开始", {
+    return interfaceTranslator.t("ui.navigation.studySwitcher.copy.value0-门-没开始", {
       value0: item.courseCount,
     });
-  return translate("ui.navigation.studySwitcher.copy.value0-门-学到-value1-value2", {
+  return interfaceTranslator.t("ui.navigation.studySwitcher.copy.value0-门-学到-value1-value2", {
     value0: item.courseCount,
     value1: item.done,
     value2: item.total,
@@ -60,12 +60,14 @@ export function StudySwitcher({
    */
   readonly onOpenPlanet?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const focused = studies.find((study) => study.id === focusedId);
   // Only reachable when the id names a study the catalogue no longer has;
   // `focusedStudyId` already rejects those, so this is a seatbelt.
-  const label = focused?.title ?? translate("ui.navigation.studySwitcher.copy.选一个项目");
+  const label =
+    focused?.title ?? interfaceTranslator.t("ui.navigation.studySwitcher.copy.选一个项目");
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +90,7 @@ export function StudySwitcher({
       <button
         type="button"
         className="study-switcher__trigger counter-row__item"
-        aria-label={translate("ui.navigation.studySwitcher.copy.当前系列-value0", {
+        aria-label={interfaceTranslator.t("ui.navigation.studySwitcher.copy.当前系列-value0", {
           value0: label,
         })}
         aria-haspopup="listbox"
@@ -107,7 +109,7 @@ export function StudySwitcher({
         <ul
           className="study-switcher__menu"
           role="listbox"
-          aria-label={translate("ui.navigation.studySwitcher.copy.换系列")}
+          aria-label={interfaceTranslator.t("ui.navigation.studySwitcher.copy.换系列")}
         >
           {studies.map((study) => (
             <li key={study.id} role="presentation">
@@ -138,7 +140,7 @@ export function StudySwitcher({
                   onOpenPlanet();
                 }}
               >
-                {translate("ui.navigation.studySwitcher.copy.看所有课程系列")}
+                {interfaceTranslator.t("ui.navigation.studySwitcher.copy.看所有课程系列")}
               </button>
             </li>
           ) : null}

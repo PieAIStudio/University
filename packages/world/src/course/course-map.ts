@@ -9,7 +9,7 @@
  * lived in an app file where the second shell could not reach it.
  */
 import { COURSE_DISTANCE, COURSE_POLAR } from "../camera/controls.js";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { courseSprites } from "../labels/path-overlay.js";
 import { renderTier } from "../sky/tier.js";
 import type { Course } from "./course.js";
@@ -296,10 +296,10 @@ export function courseMarkers(
 ): readonly Marker[] {
   const stateLabel = (state: LessonPlacement["state"]) =>
     ({
-      live: translate("ui.world.lessonState.current"),
-      idle: translate("ui.world.lessonState.available"),
-      done: translate("ui.view.lessonview.copy.已完成"),
-      locked: translate("ui.world.lessonState.later"),
+      live: interfaceTranslator.t("ui.world.lessonState.current"),
+      idle: interfaceTranslator.t("ui.world.lessonState.available"),
+      done: interfaceTranslator.t("ui.view.lessonview.copy.已完成"),
+      locked: interfaceTranslator.t("ui.world.lessonState.later"),
     })[state];
   const fromPath: Marker[] = courseSprites(lessons).map((sprite) => {
     const lesson = sprite.lessonId
@@ -339,7 +339,8 @@ export function courseMarkers(
         truncate, and the stone you are standing on only has to say 「开始」 —
         what it is called belongs to the card that opens when you choose it.
       */
-      text: lesson.state === "live" ? translate("world.path.start") : lesson.lessonTitle,
+      text:
+        lesson.state === "live" ? interfaceTranslator.t("world.path.start") : lesson.lessonTitle,
       kind: "lesson" as const,
       label: `${lesson.lessonTitle} · ${stateLabel(lesson.state)}`,
       lessonState: lesson.state,

@@ -13,13 +13,15 @@
  * in a document that has no layout to measure.
  */
 import { beforeEach } from "vitest";
-import { setActiveLocale } from "@pieai/university-ui/i18n.js";
+import { setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 
 if (typeof navigator !== "undefined") {
   Object.defineProperty(navigator, "language", { configurable: true, value: "zh-CN" });
 }
-setActiveLocale("zh-CN");
-beforeEach(() => { setActiveLocale("zh-CN"); });
+setInterfaceLocale("zh-CN");
+beforeEach(() => {
+  setInterfaceLocale("zh-CN");
+});
 
 class NoopResizeObserver implements ResizeObserver {
   observe(): void {}

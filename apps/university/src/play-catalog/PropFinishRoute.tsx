@@ -14,7 +14,7 @@ import {
 import "./prop-finish.css";
 
 export default function PropFinishRoute() {
-  const { t, locale } = useI18n();
+  const { t, number, locale } = useI18n();
   const [selected, setSelected] = useState<PropId>(() =>
     parsePropId(new URLSearchParams(location.search).get("object")),
   );
@@ -247,8 +247,8 @@ export default function PropFinishRoute() {
       </div>
       {cost ? (
         <p className="prop-finish__cost" data-testid="finish-cost">
-          {t("finish.triangles")}: {cost.triangles.original.toLocaleString(locale)} →{" "}
-          {cost.triangles[finish].toLocaleString(locale)} ·{" "}
+          {t("finish.triangles")}: {number(cost.triangles.original)} →{" "}
+          {number(cost.triangles[finish])} ·{" "}
           {t(
             finish === "bevel"
               ? "finish.costGeometry"

@@ -1,9 +1,10 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EvalActivity, RepairActivity } from "@pieai/university-core";
-import { activeLocale, setActiveLocale, translate as t } from "../i18n/index.js";
+import { setInterfaceLocale, interfaceTranslator } from "../i18n/index.js";
 import { EvalGame } from "./EvalGame.js";
 import { RepairGame } from "./RepairGame.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
@@ -67,8 +68,8 @@ async function nextReplay() {
 }
 
 beforeEach(() => {
-  previousLocale = activeLocale();
-  setActiveLocale("zh-CN");
+  previousLocale = interfaceTranslator.locale;
+  setInterfaceLocale("zh-CN");
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   scrollDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
@@ -86,7 +87,7 @@ afterEach(async () => {
   if (scrollDescriptor)
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", scrollDescriptor);
   else Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
-  setActiveLocale(previousLocale);
+  setInterfaceLocale(previousLocale);
   vi.unstubAllGlobals();
 });
 
@@ -97,23 +98,29 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = family.levels.intro;
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
     expect(container.querySelector(".quality-guide__requirements summary")?.textContent).toBe(
-      t("play.qualityDifficulty.eval.requirements", { count: 2, cross: "" }),
+      interfaceTranslator.t("play.qualityDifficulty.eval.requirements", { count: 2, cross: "" }),
     );
-    await click(t("play.qualityGuide.eval.startAction"));
-    await click(t("play.aiQuality.eval.repeat"));
-    await click(t("play.qualityGuide.eval.ownQuestion"));
+    await click(interfaceTranslator.t("play.qualityGuide.eval.startAction"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.repeat"));
+    await click(interfaceTranslator.t("play.qualityGuide.eval.ownQuestion"));
     await click(activity.outcomes.fulfilled.label);
-    await click(t("play.aiQuality.eval.freezeAndProbe"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.freezeAndProbe"));
     expect(
       container.querySelector(".quality-guide__collection-fold > summary")?.textContent,
-    ).toContain(t("play.qualityDifficulty.eval.coverage", { count: 2, total: 2 }));
+    ).toContain(
+      interfaceTranslator.t("play.qualityDifficulty.eval.coverage", { count: 2, total: 2 }),
+    );
     await click(activity.inputs.information.guard);
-    await click(t("play.aiQuality.eval.runBoundary"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.runBoundary"));
     expect(onAttempt).not.toHaveBeenCalled();
-    await click(t("play.aiQuality.eval.finish"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.finish"));
     expect(onAttempt).toHaveBeenLastCalledWith(
       true,
       expect.objectContaining({ cases: expect.any(Array) }),
@@ -128,11 +135,15 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = family.levels.challenge;
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<EvalGame activity={activity} disabled={false} onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} onAttempt={onAttempt} />,
+        ),
+      ),
     );
     const categories = ["fulfilled", "clarify", "unavailable", "out-of-scope"] as const;
     for (const [index, category] of categories.entries()) {
-      if (index) await click(t("play.aiQuality.eval.newQuestion"));
+      if (index) await click(interfaceTranslator.t("play.aiQuality.eval.newQuestion"));
       const condition =
         category === "clarify"
           ? "information"
@@ -146,11 +157,15 @@ describe("quality activity guidance uses real evidence", () => {
         await click(activity.inputs[condition].absent);
       }
       await click(activity.outcomes[category].label);
-      await click(t("play.aiQuality.eval.freezeAndProbe"));
+      await click(interfaceTranslator.t("play.aiQuality.eval.freezeAndProbe"));
     }
-    await click(t("play.aiQuality.eval.newQuestion"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.newQuestion"));
     await act(async () =>
-      root.render(<EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
     const prompt = container.querySelector(".play-guide")?.textContent;
     expect(prompt).toContain(activity.inputs.information.absent);
@@ -173,11 +188,15 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = family.levels.intro;
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
     await click(activity.submitLabel);
     await click(activity.submitLabel);
-    await click(t("play.aiQuality.repair.capture"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.capture"));
     const offers = container.querySelectorAll(".ai-repair__patch-offers button");
     expect(offers).toHaveLength(2);
     expect([...offers].map((offer) => offer.textContent)).toEqual([
@@ -197,37 +216,43 @@ describe("quality activity guidance uses real evidence", () => {
       const starter = evalStarterQuestion(activity);
       const onAttempt = vi.fn();
       await act(async () =>
-        root.render(<EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+        root.render(
+          withInterfaceLocale(
+            <EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+          ),
+        ),
       );
       expect(container.querySelectorAll(".ai-eval__response-strip li")).toHaveLength(0);
       expect(container.querySelectorAll(".ai-eval__expectations")).toHaveLength(0);
       expect(container.textContent).toContain(activity.outcomes[starter.expected].label);
-      await click(t("play.qualityGuide.eval.startAction"));
+      await click(interfaceTranslator.t("play.qualityGuide.eval.startAction"));
       expect(container.querySelectorAll(".ai-eval__response-strip li")).toHaveLength(1);
       expect(container.querySelectorAll(".ai-eval__case-sheet > li")).toHaveLength(1);
       for (let trial = 1; trial < activity.trials; trial++)
-        await click(t("play.aiQuality.eval.repeat"));
+        await click(interfaceTranslator.t("play.aiQuality.eval.repeat"));
       expect(
         container.querySelectorAll('.ai-eval__response-strip li[data-passed="false"]'),
       ).toHaveLength(1);
       expect(onAttempt).not.toHaveBeenCalled();
 
-      await click(t("play.qualityGuide.eval.ownQuestion"));
+      await click(interfaceTranslator.t("play.qualityGuide.eval.ownQuestion"));
       expect(
         container.querySelectorAll('.ai-eval__expectations [aria-pressed="true"]'),
       ).toHaveLength(0);
       await click(activity.outcomes.fulfilled.label);
-      await click(t("play.aiQuality.eval.freezeAndProbe"));
+      await click(interfaceTranslator.t("play.aiQuality.eval.freezeAndProbe"));
       expect(container.querySelectorAll(".ai-eval__case-sheet > li")).toHaveLength(2);
 
       // The shared mode switch changes presentation, never the receipt collection.
       await act(async () =>
         root.render(
-          <EvalGame activity={activity} disabled={false} guided={false} onAttempt={onAttempt} />,
+          withInterfaceLocale(
+            <EvalGame activity={activity} disabled={false} guided={false} onAttempt={onAttempt} />,
+          ),
         ),
       );
       expect(container.querySelectorAll(".ai-eval__case-sheet > li")).toHaveLength(2);
-      await click(t("play.aiQuality.eval.finish"));
+      await click(interfaceTranslator.t("play.aiQuality.eval.finish"));
       expect(onAttempt).toHaveBeenLastCalledWith(
         false,
         expect.objectContaining({
@@ -246,26 +271,33 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = evaluation("schedule");
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
-    await click(t("play.qualityGuide.eval.startAction"));
-    await click(t("play.aiQuality.eval.repeat"));
-    await click(t("play.qualityGuide.eval.ownQuestion"));
+    await click(interfaceTranslator.t("play.qualityGuide.eval.startAction"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.repeat"));
+    await click(interfaceTranslator.t("play.qualityGuide.eval.ownQuestion"));
     await click(activity.outcomes.fulfilled.label);
-    await click(t("play.aiQuality.eval.freezeAndProbe"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.freezeAndProbe"));
     await act(async () =>
       root.render(
-        <EvalGame activity={activity} disabled={false} guided={false} onAttempt={onAttempt} />,
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} guided={false} onAttempt={onAttempt} />,
+        ),
       ),
     );
     const firstCase = container.querySelector(".ai-eval__case-sheet > li")!;
     const view = [...firstCase.querySelectorAll<HTMLButtonElement>("button")].find(
-      (candidate) => candidate.textContent === t("play.aiQuality.eval.viewCase"),
+      (candidate) =>
+        candidate.textContent === interfaceTranslator.t("play.aiQuality.eval.viewCase"),
     )!;
     await act(async () => view.click());
-    await click(t("play.aiQuality.eval.edit"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.edit"));
     expect(container.querySelectorAll(".ai-eval__case-sheet > li")).toHaveLength(1);
-    await click(t("play.aiQuality.eval.finish"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.finish"));
     const evidence = onAttempt.mock.calls[0]![1];
     expect(evidence.cases).toHaveLength(1);
     expect(evidence.trialReceipts).toHaveLength(1);
@@ -279,44 +311,52 @@ describe("quality activity guidance uses real evidence", () => {
       const onAttempt = vi.fn();
       await act(async () =>
         root.render(
-          <RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+          withInterfaceLocale(
+            <RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+          ),
         ),
       );
       expect(
         [...container.querySelectorAll("button")]
           .filter(available)
-          .some((candidate) => candidate.textContent === t("play.aiQuality.repair.capture")),
+          .some(
+            (candidate) =>
+              candidate.textContent === interfaceTranslator.t("play.aiQuality.repair.capture"),
+          ),
       ).toBe(false);
       if (model === "preference") await click(activity.choices[1]!.label);
       await click(activity.submitLabel);
       if (model === "booking") await click(activity.submitLabel);
-      else await click(t("play.aiQuality.repair.reload"));
-      await click(t("play.aiQuality.repair.capture"));
-      expect(document.activeElement?.textContent).toBe(t("play.aiQuality.repair.patch"));
+      else await click(interfaceTranslator.t("play.aiQuality.repair.reload"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.capture"));
+      expect(document.activeElement?.textContent).toBe(
+        interfaceTranslator.t("play.aiQuality.repair.patch"),
+      );
       expect(container.querySelector(".ai-repair__live")?.hasAttribute("hidden")).toBe(true);
       await click(activity.patches.scoped.label);
       expect(container.querySelector(".ai-repair__scope")?.textContent).toContain(
         activity.patches.scoped.scope,
       );
       expect(container.querySelector(".ai-repair__scope details")?.hasAttribute("open")).toBe(true);
-      await click(t("play.aiQuality.repair.apply"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.apply"));
       expect(document.activeElement?.textContent).toBe(activity.product);
       for (let step = 0; step < (model === "booking" ? 2 : 3); step++) await nextReplay();
-      await click(t("play.aiQuality.repair.checkReplay"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.checkReplay"));
       expect(onAttempt).not.toHaveBeenCalled();
-      await click(t("play.aiQuality.repair.regressionStart"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.regressionStart"));
 
       if (model === "preference") await click(activity.choices[1]!.label);
       await click(activity.submitLabel);
       if (model === "booking") {
-        await click(t("play.aiQuality.repair.cancel"));
+        await click(interfaceTranslator.t("play.aiQuality.repair.cancel"));
         await click(activity.choices[1]!.label);
       } else await click(activity.choices[0]!.label);
       await click(activity.submitLabel);
-      if (model === "preference") await click(t("play.aiQuality.repair.reload"));
-      await click(t("play.aiQuality.repair.regressionCheck"));
+      if (model === "preference")
+        await click(interfaceTranslator.t("play.aiQuality.repair.reload"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.regressionCheck"));
       expect(onAttempt).not.toHaveBeenCalled();
-      await click(t("play.aiQuality.repair.finish"));
+      await click(interfaceTranslator.t("play.aiQuality.repair.finish"));
       expect(onAttempt).toHaveBeenLastCalledWith(
         true,
         expect.objectContaining({
@@ -335,36 +375,40 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = repair("booking");
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <RepairGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
     await click(activity.submitLabel);
     await click(activity.submitLabel);
-    await click(t("play.aiQuality.repair.capture"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.capture"));
     await click(activity.patches.rewrite.label);
-    await click(t("play.aiQuality.repair.apply"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.apply"));
     await nextReplay();
     await nextReplay();
-    await click(t("play.aiQuality.repair.checkReplay"));
-    await click(t("play.aiQuality.repair.regressionStart"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.checkReplay"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.regressionStart"));
     await click(activity.submitLabel);
-    await click(t("play.aiQuality.repair.cancel"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.cancel"));
     expect(container.querySelector(".ai-repair__live .play-guide")?.textContent).toContain(
-      t("play.qualityGuide.repair.blocked"),
+      interfaceTranslator.t("play.qualityGuide.repair.blocked"),
     );
     expect(container.querySelector(".ai-repair__paired-products")?.textContent).toContain(
-      t("play.aiQuality.repair.rewrite-blocked"),
+      interfaceTranslator.t("play.aiQuality.repair.rewrite-blocked"),
     );
-    await click(t("play.aiQuality.repair.regressionCheck"));
-    await click(t("play.qualityGuide.repair.historyTab"));
-    await click(t("play.aiQuality.repair.finish"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.regressionCheck"));
+    await click(interfaceTranslator.t("play.qualityGuide.repair.historyTab"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.finish"));
     expect(onAttempt).toHaveBeenLastCalledWith(
       false,
       expect.objectContaining({ regression: undefined }),
       expect.any(String),
     );
-    await click(t("play.qualityGuide.repair.patchTab"));
+    await click(interfaceTranslator.t("play.qualityGuide.repair.patchTab"));
     await click(activity.patches.scoped.label);
-    await click(t("play.aiQuality.repair.apply"));
+    await click(interfaceTranslator.t("play.aiQuality.repair.apply"));
     expect(container.querySelector(".ai-repair__paired-products")?.textContent).toContain(
       activity.patches.scoped.label,
     );
@@ -374,13 +418,17 @@ describe("quality activity guidance uses real evidence", () => {
     const activity = evaluation("schedule");
     const onAttempt = vi.fn();
     await act(async () =>
-      root.render(<EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />),
+      root.render(
+        withInterfaceLocale(
+          <EvalGame activity={activity} disabled={false} guided onAttempt={onAttempt} />,
+        ),
+      ),
     );
-    await click(t("play.qualityGuide.eval.startAction"));
+    await click(interfaceTranslator.t("play.qualityGuide.eval.startAction"));
     await openDetails(activity.candidates[0]!.label);
     await click(activity.candidates[1]!.label);
     expect(container.querySelectorAll(".ai-eval__response-strip li")).toHaveLength(0);
-    await click(t("play.aiQuality.eval.probeCurrent"));
+    await click(interfaceTranslator.t("play.aiQuality.eval.probeCurrent"));
     expect(
       container.querySelectorAll('.ai-eval__response-strip li[data-passed="false"]'),
     ).toHaveLength(1);

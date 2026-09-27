@@ -14,7 +14,7 @@ import {
   type AgentState,
   type ContextActivity,
 } from "@pieai/university-core";
-import { activeLocale, setActiveLocale } from "../i18n/index.js";
+import { setInterfaceLocale, interfaceTranslator } from "../i18n/index.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getWorkflowFamily } from "./workflow-difficulty.js";
 
@@ -24,10 +24,10 @@ const agentIds = ["ai-agent-event", "ai-agent-recipe"] as const;
 let previousLocale: string;
 
 beforeEach(() => {
-  previousLocale = activeLocale();
-  setActiveLocale("zh-CN");
+  previousLocale = interfaceTranslator.locale;
+  setInterfaceLocale("zh-CN");
 });
-afterEach(() => setActiveLocale(previousLocale));
+afterEach(() => setInterfaceLocale(previousLocale));
 
 function contextFamily(id: string) {
   const family = getWorkflowFamily(getAIWorkflowExamples().find((item) => item.id === id)!);

@@ -24,7 +24,7 @@ export const messages = {
   "ui.world.navigation.archipelago": "Course archipelago",
   "ui.world.navigation.island": "Course island",
   "ui.world.domain.empty": "There are no course series in this domain yet.",
-  "ui.world.domain.return": "Back to {{title}}",
+  "ui.world.domain.return": "Back to {title}",
   "ui.world.domain.unclassified": "Uncategorized",
   "app.mapstudio.mapStudioScreen.copy.按当前投影计量": "Measure by current projection",
   "ui.world.lessonState.current": "Current level",
@@ -59,30 +59,30 @@ export const messages = {
   "app.app.courseIsland.copy.关-还剩": "Levels · Remaining",
   "app.app.courseIsland.copy.单元": "Unit ·",
   "app.app.mainRouter.copy.正在打开校园档案": "Opening campus profile…",
-  "app.app.maplabels.copy.value0-门课": "{{value0}} courses",
-  "app.app.maplabels.copy.已学-value0-关": "Completed {{value0}} levels",
+  "app.app.maplabels.copy.value0-门课": "{value0} courses",
+  "app.app.maplabels.copy.已学-value0-关": "Completed {value0} levels",
   "app.app.pagemetadata.copy.University-在群岛上把一件事学到会":
     "University — Master one thing on the islands.",
-  "app.app.pagemetadata.copy.value0-本节-value1": "{{value0}} This lesson: {{value1}}.",
-  "app.app.pagemetadata.copy.value0-本节-value1-m4ij3g": "{{value0}}, this lesson: {{value1}}.",
+  "app.app.pagemetadata.copy.value0-本节-value1": "{value0} This lesson: {value1}.",
+  "app.app.pagemetadata.copy.value0-本节-value1-m4ij3g": "{value0}, this lesson: {value1}.",
   "app.app.profileAvatar.copy.打开头像工坊": "Open Avatar Studio",
   "app.app.todaydata.copy.找不到这节课的版本-value0":
-    "Could not find a version for this lesson: {{value0}}",
+    "Could not find a version for this lesson: {value0}",
   "app.app.useshelf.copy.读不到课程": "Unable to load courses",
-  "app.app.worldmodel.copy.回到value0地图": "← Back to {{value0}} map",
+  "app.app.worldmodel.copy.回到value0地图": "← Back to {value0} map",
   "app.app.worldmodel.copy.回到课程地图": "← Back to course map",
   "app.app.worldmodel.copy.改写中": "Rewriting",
   "app.authoring.answerOverview.copy.value0-道题的首答还在等待宿主判定-暂不计算通过率":
-    "First responses for {{value0}} questions are still awaiting host evaluation; pass rate is not calculated yet",
-  "app.authoring.answerOverview.copy.value0答题指标": "{{value0}} response metrics",
+    "First responses for {value0} questions are still awaiting host evaluation; pass rate is not calculated yet",
+  "app.authoring.answerOverview.copy.value0答题指标": "{value0} response metrics",
   "app.authoring.answerOverview.copy.作者答题": "Author answers",
-  "app.authoring.answerOverview.copy.作者自己的答题汇总": "Author's own answer summary",
-  "app.authoring.answerOverview.copy.作者自己的进度": "Author's own progress",
+  "app.authoring.answerOverview.copy.作者自己的答题汇总": "Author''s own answer summary",
+  "app.authoring.answerOverview.copy.作者自己的进度": "Author''s own progress",
   "app.authoring.answerOverview.copy.先选择一个项目": "Select a project first",
   "app.authoring.answerOverview.copy.再看一眼-哪一节卡住了":
     "Take another look: which lesson got stuck",
   "app.authoring.answerOverview.copy.只读当前浏览器的-ProgressDocument-它代表作者本人-不代表其他学习者-全体学习者的答题汇总还没接":
-    "Only reads the current browser's ProgressDocument. It represents the author, not other learners; the answer summary for all learners is not connected yet, so aggregate numbers are not shown here. This column will be replaced once the owner-only aggregation API is connected in the future.",
+    "Only reads the current browser''s ProgressDocument. It represents the author, not other learners; the answer summary for all learners is not connected yet, so aggregate numbers are not shown here. This column will be replaced once the owner-only aggregation API is connected in the future.",
   "app.authoring.answerOverview.copy.暂无答题数据": "No answer data yet",
   "app.authoring.answerOverview.copy.本机": "This device",
   "app.authoring.answerOverview.copy.次尝试": "attempts",
@@ -95,18 +95,17 @@ export const messages = {
     "lessons have no first-attempt records yet. Go through the course yourself and answer a few questions; the lessons where you get stuck will appear at the top here.",
   "app.authoring.answerOverview.copy.课程结构读到后-答题总览会在这里出现":
     "Once the course structure is loaded, the answer overview will appear here.",
-  "app.authoring.answerOverview.copy.还有-value0-节没答过":
-    " · {{value0}} lessons not answered yet",
+  "app.authoring.answerOverview.copy.还有-value0-节没答过": " · {value0} lessons not answered yet",
   "app.authoring.answerOverview.copy.还没有可统计的课": "No courses available for statistics yet",
   "app.authoring.answerOverview.copy.这个浏览器的进度文档里":
-    "In this browser's progress document,",
+    "In this browser''s progress document,",
   "app.authoring.answerOverview.copy.这个项目你还没答过题":
-    "You haven't answered any questions in this project yet",
+    "You haven''t answered any questions in this project yet",
   "app.authoring.answerOverview.copy.选中项目后-这里会从本机进度文档逐节列出答题事实":
     "After selecting a project, answer facts will be listed here lesson by lesson from the local progress document.",
   "app.authoring.answerOverview.copy.道题有首答记录": "questions have first-attempt records",
   "app.authoring.answerOverview.copy.首答待判定": "First attempt pending grading",
-  "app.authoring.courseSection.copy.value0-value1-节": "{{value0}} / {{value1}} lessons",
+  "app.authoring.courseSection.copy.value0-value1-节": "{value0} / {value1} lessons",
   "app.authoring.courseSection.copy.个单元": "units ·",
   "app.authoring.courseSection.copy.从头再看一遍": "Review from the beginning",
   "app.authoring.courseSection.copy.件事": "things",
@@ -114,7 +113,7 @@ export const messages = {
   "app.authoring.courseSection.copy.已学完": "Completed",
   "app.authoring.courseSection.copy.开始第-1-节": "Start lesson 1",
   "app.authoring.courseSection.copy.张卡片": "cards",
-  "app.authoring.courseSection.copy.继续第-value0-节": "Continue lesson {{value0}}",
+  "app.authoring.courseSection.copy.继续第-value0-节": "Continue lesson {value0}",
   "app.authoring.courseSection.copy.节课": "lessons",
   "app.authoring.courseSection.copy.课程完成度": "Course completion",
   "app.authoring.courseSection.copy.道练习": "exercises ·",
@@ -129,7 +128,7 @@ export const messages = {
   "app.authoring.feedbackOverview.copy.先选择一个项目": "Select a project first",
   "app.authoring.feedbackOverview.copy.反馈数据还没接好": "Feedback data is not connected yet",
   "app.authoring.feedbackOverview.copy.只读-SwimmerBackend-的意见-还没有读到时不会先填一个数字":
-    "Only reads feedback from SwimmerBackend; a number will not be filled in beforehand if it hasn't been read yet.",
+    "Only reads feedback from SwimmerBackend; a number will not be filled in beforehand if it hasn''t been read yet.",
   "app.authoring.feedbackOverview.copy.学习者意见": "Learner feedback",
   "app.authoring.feedbackOverview.copy.意见会按课程和内容版本确定性分组-有真实记录后-原话会出现在这里":
     "Feedback will be deterministically grouped by course and content version; once real records exist, the original comments will appear here.",
@@ -162,7 +161,7 @@ export const messages = {
     "Courses on this machine grow from here",
   "app.authoring.studioSection.copy.源码不会被学习资料污染":
     ". Source code will not be polluted by learning materials.",
-  "app.authoring.studyDetail.copy.value0-个提交": "{{value0}} commits",
+  "app.authoring.studyDetail.copy.value0-个提交": "{value0} commits",
   "app.authoring.studyDetail.copy.与课程资料一致": "Matches course materials",
   "app.authoring.studyDetail.copy.个源码版本": "source code versions",
   "app.authoring.studyDetail.copy.主攻路线": "Main track ·",
@@ -193,13 +192,13 @@ export const messages = {
   "app.authoring.studyDetail.copy.项目": "Project ·",
   "app.authoring.studyDetail.copy.项目最新版本": "Latest project version",
   "app.authoring.studyDetail.copy.项目分析": "Project analysis",
-  "app.authoring.studyShelf.copy.value0-门课可学习": "{{value0}} courses available to learn",
+  "app.authoring.studyShelf.copy.value0-门课可学习": "{value0} courses available to learn",
   "app.authoring.studyShelf.copy.你的学习项目": "Your learning projects",
   "app.authoring.studyShelf.copy.准备中": "Preparing",
   "app.authoring.studyShelf.copy.刚刚": "Just now",
   "app.authoring.studyShelf.copy.学习项目列表": "Learning project list",
   "app.avatarlab.avatarLab.copy.value0-件-value1-顶点-value2ms-种子-value3":
-    "{{value0}} items · {{value1}} vertices · {{value2}}ms · Seed {{value3}}",
+    "{value0} items · {value1} vertices · {value2}ms · Seed {value3}",
   "app.avatarlab.avatarLab.copy.个物种": "species",
   "app.avatarlab.avatarLab.copy.回到地图": "Back to map",
   "app.avatarlab.avatarLab.copy.头像工坊": "Avatar Lab",
@@ -214,7 +213,7 @@ export const messages = {
   "app.avatarlab.avatarLab.copy.注视开": "Gaze on",
   "app.avatarlab.avatarLab.copy.物种": "Species",
   "app.avatarlab.avatarLab.copy.种子": "Seed",
-  "app.avatarlab.avatarLab.copy.种子-value0": "Seed {{value0}}",
+  "app.avatarlab.avatarLab.copy.种子-value0": "Seed {value0}",
   "app.avatarlab.avatarLab.copy.色盘": "Color palette",
   "app.avatarlab.avatarLab.copy.配方": "Recipe",
   "app.avatarlab.avatarLab.copy.重掷部位": "Reroll part",
@@ -225,15 +224,15 @@ export const messages = {
   "app.catalog.courseCatalog.copy.课程目录读不出来-刷新这一页再试":
     "Could not load course catalog. Refresh this page and try again.",
   "app.content.evidencesource.copy.无法读取固定源码-value0":
-    "Unable to read fixed source code ({{value0}})",
+    "Unable to read fixed source code ({value0})",
   "app.learner.uaDashboardButton.copy.打开项目地图": "Open project map",
   "app.learner.uaDashboardButton.copy.正在打开项目地图": "Opening project map…",
   "app.learner.uaDashboardButton.copy.项目地图暂时打不开": "Project map is temporarily unavailable",
   "app.lesson.assembleview.copy.自检": "Self-check",
-  "app.lesson.settlement.copy.value0-value1-关": "Level {{value0}} / {{value1}}",
-  "app.lesson.settlement.copy.value0-分钟后回来": "Come back in {{value0}} minutes",
-  "app.lesson.settlement.copy.value0-天后回来": "Come back in {{value0}} days",
-  "app.lesson.settlement.copy.value0-小时后回来": "Come back in {{value0}} hours",
+  "app.lesson.settlement.copy.value0-value1-关": "Level {value0} / {value1}",
+  "app.lesson.settlement.copy.value0-分钟后回来": "Come back in {value0} minutes",
+  "app.lesson.settlement.copy.value0-天后回来": "Come back in {value0} days",
+  "app.lesson.settlement.copy.value0-小时后回来": "Come back in {value0} hours",
   "app.lesson.settlement.copy.下一关": "Next level",
   "app.lesson.settlement.copy.今天记下的是这些": "Here is what you remembered today",
   "app.lesson.settlement.copy.回关卡地图": "Back to level map",
@@ -246,16 +245,16 @@ export const messages = {
   "app.lesson.settlement.copy.明天回来": "Come back tomorrow",
   "app.lesson.settlement.copy.明天有": "Tomorrow you have",
   "app.lesson.settlement.copy.现在不用背-到期时它们会自己回来-这是间隔重复该做的事":
-    "No need to memorize them now. They will come back on their own when due—that's what spaced repetition is for.",
+    "No need to memorize them now. They will come back on their own when due—that''s what spaced repetition is for.",
   "app.lesson.settlement.copy.现在就可以复习": "You can review now",
   "app.lesson.settlement.copy.读完了": "Finished reading.",
   "app.lesson.settlement.copy.课程进度": "Course progress",
   "app.lesson.settlement.copy.这一节记下的概念": "Concepts remembered in this lesson",
   "app.lesson.settlement.copy.这座岛建成了-村子中央立起了会堂":
     "This island is complete—a town hall now stands in the center of the village.",
-  "app.mapstudio.mapStudioScreen.copy.value0模型": "{{value0}} model",
+  "app.mapstudio.mapStudioScreen.copy.value0模型": "{value0} model",
   "app.mapstudio.mapStudioScreen.copy.value0的资源-value1-value2-value3":
-    "  {{value0}} resources: {{value1}} -> {{value2}}/{{value3}}",
+    "  {value0} resources: {value1} -> {value2}/{value3}",
   "app.mapstudio.mapStudioScreen.copy.一眼看清三层地图从哪里来-左边是正在运行的场景-右边是可追溯-可预览的配方":
     "See at a glance where the three-layer map comes from. On the left is the running scene; on the right is the traceable, previewable recipe.",
   "app.mapstudio.mapStudioScreen.copy.作者工作台-PROCEDURAL-MAP":
@@ -322,16 +321,16 @@ export const messages = {
   "app.ports.feedback.copy.当前浏览器不提供复制功能":
     "The current browser does not support copying.",
   "app.ports.local.content.copy.这个项目的地址不对-value0":
-    "The address for this project is incorrect: {{value0}}",
+    "The address for this project is incorrect: {value0}",
   "app.ports.local.content.copy.这节课的地址不对-value0":
-    "The address for this lesson is incorrect: {{value0}}",
+    "The address for this lesson is incorrect: {value0}",
   "app.ports.local.content.copy.这道题的地址不对-value0":
-    "The address for this question is incorrect: {{value0}}",
+    "The address for this question is incorrect: {value0}",
   "app.ports.local.reader.copy.标记没有更新": "Markers were not updated",
   "app.ports.local.sourceaccess.copy.作者端现在也读不到这份项目分析-value0":
-    "The authoring client cannot read this project analysis right now either: {{value0}}",
+    "The authoring client cannot read this project analysis right now either: {value0}",
   "app.ports.local.sourceaccess.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件":
-    "It will list the files this course has referenced and has not yet reached, based on Understand Anything's project layers.",
+    "It will list the files this course has referenced and has not yet reached, based on Understand Anything''s project layers.",
   "app.ports.local.sourceaccess.copy.完成一次项目分析后-作者端会在这里直接显示-交付端以后会在桌面端提供已授权的分析快照-浏览器和移动端则提供同一份":
     "After completing a project analysis, the authoring client will display it directly here; the delivery client will later provide authorized analysis snapshots on desktop, while browser and mobile clients will provide the same manual viewing instructions.",
   "app.ports.local.sourceaccess.copy.查看项目分层": "View project layers",
@@ -352,7 +351,7 @@ export const messages = {
   "app.ports.online.content.copy.这节课不在这门课里": "This lesson is not in this course",
   "app.ports.online.content.copy.这道题不在这门课里": "This question is not in this course",
   "app.ports.online.reader.copy.无法读取固定源码-value0":
-    "Cannot read pinned source code ({{value0}})",
+    "Cannot read pinned source code ({value0})",
   "app.ports.online.sourceaccess.copy.交付端拿到的是已发布的课程包-不携带被学习项目的本地仓库-也不能替项目启动本地进程-这样才能在浏览器里安全地阅读":
     "The delivery client receives published course packages, does not carry the local repository of the project being studied, and cannot launch local processes for the project; this ensures courses can be read safely in the browser.",
   "app.ports.online.sourceaccess.copy.以后会在桌面端启动已授权的项目图谱-浏览器端会提供图谱地址或手动打开步骤-移动端会提供同一份说明":
@@ -364,13 +363,13 @@ export const messages = {
   "app.ports.online.sourceaccess.copy.删除正在学习的-App-版本":
     "Delete the app version you are studying",
   "app.ports.online.sourceaccess.copy.它会删除为这节课准备的临时项目检出-避免一份用完的源码继续占用空间":
-    "This will delete the temporary project checkout prepared for this lesson so finished source code doesn't keep taking up space.",
+    "This will delete the temporary project checkout prepared for this lesson so finished source code doesn''t keep taking up space.",
   "app.ports.online.sourceaccess.copy.它会取出这节课钉住的源码版本-并给出启动步骤-让你把课文中的代码和真实-App-对上":
     "This pulls the pinned source code version for this lesson and provides launch steps so you can connect the code in the lesson with the real app.",
   "app.ports.online.sourceaccess.copy.它会打开完整的-Understand-Anything-图谱-让你从这节课引用的文件继续看整个项目的结构":
     "This opens the full Understand Anything graph so you can explore the overall project structure starting from the files referenced in this lesson.",
   "app.ports.online.sourceaccess.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件":
-    "This lists the files this course has already referenced and hasn't reached yet, organized by Understand Anything project layers.",
+    "This lists the files this course has already referenced and hasn''t reached yet, organized by Understand Anything project layers.",
   "app.ports.online.sourceaccess.copy.打开-UA-项目地图": "Open UA project map",
   "app.ports.online.sourceaccess.copy.打开正在学习的-App": "Open the app you are studying",
   "app.ports.online.sourceaccess.copy.查看项目分层": "View project layers",
@@ -384,7 +383,7 @@ export const messages = {
   "app.screens.lessonScreen.copy.回到课程岛": "Back to Course Island",
   "app.screens.lessonScreen.copy.无法读取课程": "Unable to load course",
   "app.screens.lessonScreen.copy.正在打开这节课": "Opening this lesson…",
-  "app.screens.lessonScreen.copy.这节课打不开": "Can't open this lesson",
+  "app.screens.lessonScreen.copy.这节课打不开": "Can''t open this lesson",
   "app.screens.lessonScreen.copy.重试这节课": "Retry this lesson",
   "app.screens.practiceHost.copy.概念图解": "Concept diagrams",
   "app.screens.termEntryHost.copy.词义索引": "← Term index",
@@ -394,13 +393,13 @@ export const messages = {
   "locale.zhCN.name": "Chinese",
   "ui.api.client.copy.本地服务重启过-安全令牌换新了-再点一次就能提交":
     "The local service restarted and your security token was refreshed. Click again to submit.",
-  "ui.api.client.copy.请求失败-value0": "Request failed ({{value0}})",
+  "ui.api.client.copy.请求失败-value0": "Request failed ({value0})",
   "ui.capability.aientitlements.copy.value0-因此页面不会猜测你是否有会员-也不会把请求发给-AI":
-    "{{value0}} As a result, this page will not guess whether you have a membership or send requests to AI.",
+    "{value0} As a result, this page will not guess whether you have a membership or send requests to AI.",
   "ui.capability.aientitlements.copy.今天的开放式辅导次数已用完":
-    "Today's open-ended tutoring sessions are used up",
+    "Today''s open-ended tutoring sessions are used up",
   "ui.capability.aientitlements.copy.免费方案不包含开放式辅导-课文-关卡和今天的免费结构化批改尝试仍然可用":
-    "The free plan does not include open-ended tutoring; lessons, challenges, and today's free structured grading attempts are still available.",
+    "The free plan does not include open-ended tutoring; lessons, challenges, and today''s free structured grading attempts are still available.",
   "ui.capability.aientitlements.copy.它会把这张复习卡交给-AI-用自己的话再讲一遍-直到你真的弄明白":
     "It gives this review card to AI to explain it in different words until you truly understand it.",
   "ui.capability.aientitlements.copy.开放式辅导属于会员权益":
@@ -408,7 +407,7 @@ export const messages = {
   "ui.capability.aientitlements.copy.开放式辅导权益暂时读不到":
     "Unable to check open-ended tutoring benefits right now",
   "ui.capability.aientitlements.copy.开通会员后-这个按钮会按账号当前方案开放-没有会员也不会影响复习卡本身":
-    "Once you become a member, this button unlocks based on your account plan; not having a membership won't affect the review card itself.",
+    "Once you become a member, this button unlocks based on your account plan; not having a membership won''t affect the review card itself.",
   "ui.capability.aientitlements.copy.当前账号的开放式辅导每日次数是-0-所以这个请求不会发给-AI":
     "This account has 0 daily open-ended tutoring sessions, so this request will not be sent to AI.",
   "ui.capability.aientitlements.copy.权益服务恢复后-重新点击这个按钮就会按账号方案判断":
@@ -417,7 +416,7 @@ export const messages = {
   "ui.capability.aientitlements.copy.每日次数恢复或方案更新后-这里会重新检查-不需要把卡片重新做一遍":
     "Once your daily limit resets or your plan updates, this will be rechecked—no need to redo the card.",
   "ui.capability.capabilityExplanation.copy.为什么这一端现在做不到":
-    "Why this platform can't do this right now",
+    "Why this platform can''t do this right now",
   "ui.capability.capabilityExplanation.copy.以后怎么支持": "How it will be supported in the future",
   "ui.capability.capabilityExplanation.copy.关闭说明": "Close explanation",
   "ui.capability.capabilityExplanation.copy.它是什么": "What it is",
@@ -433,7 +432,7 @@ export const messages = {
   "ui.catalog.catalogSurface.copy.未解锁": "Locked",
   "ui.catalog.catalogSurface.copy.正在学": "In progress",
   "ui.catalog.catalogSurface.copy.目录": "Contents",
-  "ui.catalog.catalogSurface.copy.第-value0-层": "Level {{value0}}",
+  "ui.catalog.catalogSurface.copy.第-value0-层": "Level {value0}",
   "ui.catalog.catalogSurface.copy.节": "lessons",
   "ui.catalog.catalogSurface.copy.课程目录": "Course catalog",
   "ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出":
@@ -450,8 +449,8 @@ export const messages = {
   "ui.entry.defaultrenderers.copy.本页重点": "Key points of this page",
   "ui.entry.defaultrenderers.copy.该用": "When to use",
   "ui.entry.demoMiniature.copy.切换状态": "Switch state",
-  "ui.entry.entryFloatNav.copy.上一个-value0": "Previous: {{value0}}",
-  "ui.entry.entryFloatNav.copy.下一个-value0": "Next: {{value0}}",
+  "ui.entry.entryFloatNav.copy.上一个-value0": "Previous: {value0}",
+  "ui.entry.entryFloatNav.copy.下一个-value0": "Next: {value0}",
   "ui.entry.entryFloatNav.copy.相邻条目": "Adjacent entries",
   "ui.entry.entryPage.copy.你可能会说": "You might say",
   "ui.entry.entryPage.copy.你正常说就行": "Just speak naturally",
@@ -462,10 +461,10 @@ export const messages = {
   "ui.entry.entryPage.copy.防止-AI-味儿": "Avoid sounding like AI",
   "ui.entry.entryPage.copy.面包屑": "Breadcrumbs",
   "ui.entry.pronunciationButton.copy.听-value0-的英文发音":
-    "Listen to the English pronunciation of {{value0}}",
+    "Listen to the English pronunciation of {value0}",
   "ui.entry.pronunciationButton.copy.听发音": "Listen to pronunciation",
   "ui.entry.regionQuiz.copy.再看一眼-还有哪些块没试过":
-    "\". Take another look to see which blocks you haven't tried yet.",
+    "\". Take another look to see which blocks you haven''t tried yet.",
   "ui.entry.regionQuiz.copy.找到了": "Found it",
   "ui.entry.regionQuiz.copy.这一块是什么": "What is this block?",
   "ui.entry.regionQuiz.copy.那一块是": 'That block is "',
@@ -473,18 +472,17 @@ export const messages = {
   "ui.evidence.copyLocatorButton.copy.在被学项目工作区按":
     "In the studied project workspace, press",
   "ui.evidence.copyLocatorButton.copy.复制-value0-供编辑器-value1-跳转":
-    "Copy {{value0}} to jump to it in editor {{value1}}",
+    "Copy {value0} to jump to it in editor {value1}",
   "ui.evidence.copyLocatorButton.copy.复制位置": "Copy location",
   "ui.evidence.copyLocatorButton.copy.已复制": "Copied",
   "ui.evidence.copyLocatorButton.copy.粘贴后回车即可跳转": ", then paste and press Enter to jump",
-  "ui.evidence.copyLocatorButton.copy.证据范围-value0": "Evidence range {{value0}} · ",
+  "ui.evidence.copyLocatorButton.copy.证据范围-value0": "Evidence range {value0} · ",
   "ui.evidence.copyLocatorButton.copy.钉在提交": "Pinned to commit",
   "ui.evidence.evidenceCode.copy.value0-第-value1-到-value2-行":
-    "{{value0}} lines {{value1}} to {{value2}}",
+    "{value0} lines {value1} to {value2}",
   "ui.evidence.evidenceInlineSource.copy.固定提交": "· Pinned commit",
-  "ui.evidence.evidenceInlineSource.copy.固定提交-value0": "Pinned commit {{value0}}",
-  "ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1":
-    "Pinned source {{value0}} {{value1}}",
+  "ui.evidence.evidenceInlineSource.copy.固定提交-value0": "Pinned commit {value0}",
+  "ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1": "Pinned source {value0} {value1}",
   "ui.evidence.evidenceInlineSource.copy.点击查看固定源码":
     'Click "View full file" to load this pinned source code',
   "ui.evidence.evidenceInlineSource.copy.无法读取固定源码": "Unable to read pinned source code ·",
@@ -511,7 +509,7 @@ export const messages = {
   "ui.evidence.evidenceSourceSheet.copy.关闭源码证据": "Close source evidence",
   "ui.evidence.evidenceSourceSheet.copy.只显示已批准的本课证据":
     "Only show approved evidence for this lesson",
-  "ui.evidence.evidenceSourceSheet.copy.命中-value0-行": "Matched {{value0}} lines",
+  "ui.evidence.evidenceSourceSheet.copy.命中-value0-行": "Matched {value0} lines",
   "ui.evidence.evidenceSourceSheet.copy.固定提交": "Pinned commit",
   "ui.evidence.evidenceSourceSheet.copy.在这份源码中查找": "Search in this source code",
   "ui.evidence.evidenceSourceSheet.copy.复制失败": "Copy failed",
@@ -526,7 +524,7 @@ export const messages = {
     "The file exceeds the reader limit; only a bounded range is shown. Referenced lines are still marked with actual line numbers.",
   "ui.evidence.evidenceSourceSheet.copy.正在从不可变提交读取完整源码":
     "Reading full source code from immutable commit…",
-  "ui.evidence.evidenceSourceSheet.copy.源码证据-value0": "Source evidence · {{value0}}",
+  "ui.evidence.evidenceSourceSheet.copy.源码证据-value0": "Source evidence · {value0}",
   "ui.evidence.evidenceSourceSheet.copy.源码证据定位": "Source evidence location",
   "ui.evidence.evidenceUaPlace.copy.在完整项目地图里看": "View in full project map",
   "ui.evidence.evidenceUaPlace.copy.正在打开项目地图": "Opening project map…",
@@ -535,7 +533,7 @@ export const messages = {
   "ui.evidence.evidenceUaPlace.copy.项目里的位置-这份课程引用的源码":
     "Location in project · Source code referenced in this course",
   "ui.evidence.layerCoverage.copy.value0-value1-个文件里有-value2-个被课程引用":
-    "{{value0}}: {{value2}} of {{value1}} files referenced by the course",
+    "{value0}: {value2} of {value1} files referenced by the course",
   "ui.evidence.layerCoverage.copy.个文件": "files",
   "ui.evidence.layerCoverage.copy.个被课程引用的文件尚未出现在项目分析里":
     "files referenced by the course have not yet appeared in the project analysis.",
@@ -546,12 +544,12 @@ export const messages = {
   "ui.evidence.layerCoverage.copy.关于项目地图": "About project map",
   "ui.evidence.layerCoverage.copy.关闭项目分层": "Close project layers",
   "ui.evidence.layerCoverage.copy.几乎没有课程引用-可能是有意跳过-生成产物-测试代码通常不必逐个讲-也可能是大纲根本没想到-这一栏分不出这两者-":
-    "Almost no course references. It may have been intentionally skipped (generated artifacts and test code usually don't need to be covered one by one), or simply overlooked in the course outline—this column cannot distinguish between the two, only tell you where it is.",
+    "Almost no course references. It may have been intentionally skipped (generated artifacts and test code usually don''t need to be covered one by one), or simply overlooked in the course outline—this column cannot distinguish between the two, only tell you where it is.",
   "ui.evidence.layerCoverage.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件":
     "It lists files already referenced and not yet covered by this course, organized by Understand Anything project layers.",
   "ui.evidence.layerCoverage.copy.已讲到": "Covered",
   "ui.evidence.layerCoverage.copy.当前也读不到这份项目分析-value0":
-    "Unable to read this project analysis right now either: {{value0}}",
+    "Unable to read this project analysis right now either: {value0}",
   "ui.evidence.layerCoverage.copy.当前无法读取项目分析":
     "Unable to read project analysis right now.",
   "ui.evidence.layerCoverage.copy.当前没有可用的-Understand-Anything-分析-所以现在没有可信的分层可以展示":
@@ -561,7 +559,7 @@ export const messages = {
   "ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖": "View file coverage by code layer",
   "ui.evidence.layerCoverage.copy.有": "There are",
   "ui.evidence.layerCoverage.copy.为什么这一端没有完整项目分层":
-    "Why doesn't this client have full project layers",
+    "Why doesn''t this client have full project layers",
   "ui.evidence.layerCoverage.copy.查看项目分层": "View project layers",
   "ui.evidence.layerCoverage.copy.正在读取项目分层": "Reading project layers…",
   "ui.evidence.layerCoverage.copy.完整项目分层需要仓库分析-课文已经引用的文件可以直接看":
@@ -578,69 +576,69 @@ export const messages = {
   "ui.favourites.favouritesEmpty.copy.浏览词义": "Browse definitions",
   "ui.favourites.favouritesEmpty.copy.还没有收藏术语": "No saved terms yet",
   "ui.favourites.favouritesScreen.copy.收藏": "Favorites",
-  "ui.favourites.favouritestar.copy.取消收藏value0": "Remove {{value0}} from favorites",
-  "ui.favourites.favouritestar.copy.收藏value0": "Add {{value0}} to favorites",
+  "ui.favourites.favouritestar.copy.取消收藏value0": "Remove {value0} from favorites",
+  "ui.favourites.favouritestar.copy.收藏value0": "Add {value0} to favorites",
   "ui.favourites.favouritestar.copy.这个词义": "this definition",
-  "ui.feedback.feedbackNote.copy.主题-value0": "- Theme: {{value0}}",
-  "ui.feedback.feedbackNote.copy.内容版本-value0": "- Content version: {{value0}}",
+  "ui.feedback.feedbackNote.copy.主题-value0": "- Theme: {value0}",
+  "ui.feedback.feedbackNote.copy.内容版本-value0": "- Content version: {value0}",
   "ui.feedback.feedbackNote.copy.再试一次": "Try again",
   "ui.feedback.feedbackNote.copy.反馈没有送出-原话还在输入框里-你可以稍后重试或手动复制":
-    "Feedback wasn't sent. Your message is still in the input box, so you can try again later or copy it manually.",
+    "Feedback wasn''t sent. Your message is still in the input box, so you can try again later or copy it manually.",
   "ui.feedback.feedbackNote.copy.反馈通道还没有接好": "The feedback channel is not connected yet.",
   "ui.feedback.feedbackNote.copy.发送意见": "Send feedback",
-  "ui.feedback.feedbackNote.copy.壳-value0": "- Shell: {{value0}}",
+  "ui.feedback.feedbackNote.copy.壳-value0": "- Shell: {value0}",
   "ui.feedback.feedbackNote.copy.已复制": "Copied",
   "ui.feedback.feedbackNote.copy.已收到": "Received ✓",
   "ui.feedback.feedbackNote.copy.提意见": "Give feedback",
   "ui.feedback.feedbackNote.copy.收到-这条意见已经记下了":
     "Received. This feedback has been recorded.",
   "ui.feedback.feedbackNote.copy.收到-这条记在-value0-第-value1-版上了":
-    'Received. This has been recorded for "{{value0}}", version {{value1}}.',
+    'Received. This has been recorded for "{value0}", version {value1}.',
   "ui.feedback.feedbackNote.copy.收起": "Collapse",
-  "ui.feedback.feedbackNote.copy.时间-value0": "- Time: {{value0}}",
+  "ui.feedback.feedbackNote.copy.时间-value0": "- Time: {value0}",
   "ui.feedback.feedbackNote.copy.正在发送": "Sending…",
   "ui.feedback.feedbackNote.copy.没写内容": "(No content)",
   "ui.feedback.feedbackNote.copy.未定位到具体课程": "No specific course identified",
   "ui.feedback.feedbackNote.copy.已登录": "Logged in",
   "ui.feedback.feedbackNote.copy.未登录": "Not logged in",
-  "ui.feedback.feedbackNote.copy.登录状态-value0": "- Login status: {{value0}}",
-  "ui.feedback.feedbackNote.copy.视口-value0-value1": "- Viewport: {{value0}}×{{value1}}",
-  "ui.feedback.feedbackNote.copy.练习尝试次数-value0": "- Exercise attempts: {{value0}}",
-  "ui.feedback.feedbackNote.copy.课程定位-value0": "- Course location: {{value0}}",
-  "ui.feedback.feedbackNote.copy.路由-value0": "- Route: {{value0}}",
+  "ui.feedback.feedbackNote.copy.登录状态-value0": "- Login status: {value0}",
+  "ui.feedback.feedbackNote.copy.视口-value0-value1": "- Viewport: {value0}×{value1}",
+  "ui.feedback.feedbackNote.copy.练习尝试次数-value0": "- Exercise attempts: {value0}",
+  "ui.feedback.feedbackNote.copy.课程定位-value0": "- Course location: {value0}",
+  "ui.feedback.feedbackNote.copy.路由-value0": "- Route: {value0}",
   "ui.feedback.feedbackNote.copy.路由-课定位-版本-练习尝试次数-登录状态-视口和时间会自动带上":
     "Route, lesson location, version, exercise attempts, login status, viewport, and timestamp will be included automatically.",
   "ui.feedback.feedbackNote.copy.这一屏哪里不对": "What looks wrong on this screen?",
   "ui.feedback.feedbackNote.copy.这次没有送到系统-但已经复制到剪贴板-你可以把整条贴给课程作者":
-    "This wasn't sent to the system, but it has been copied to the clipboard. You can paste the whole message to the course author.",
+    "This wasn''t sent to the system, but it has been copied to the clipboard. You can paste the whole message to the course author.",
   "ui.glossary.copy.FSRS-间隔复习算法": "FSRS · Spaced Repetition Algorithm",
   "ui.glossary.copy.REV-课文版本号": "REV · Lesson Version Number",
   "ui.glossary.copy.一个被拿来研究的真实代码项目-比如-图灵密约-课程都是从它的真实文件里长出来的":
-    'A real code project used for study, such as "Turing\'s Pact". Courses grow directly out of its real files.',
+    "A real code project used for study, such as \"Turing''s Pact\". Courses grow directly out of its real files.",
   "ui.glossary.copy.主攻": "Main Focus",
   "ui.glossary.copy.交给-AI-批改": "Submit for AI grading",
   "ui.glossary.copy.今天该复习的卡片数量-一次只出一张-评分之后下一张会自动补上":
     "The number of cards due for review today. They appear one at a time, and the next card loads automatically once you rate it.",
   "ui.glossary.copy.你在正文里选中一段话后记下的东西-没看懂-会攒成一份清单-高亮-只是留个记号":
-    'Notes you make after selecting text in a lesson. "Didn\'t understand" gathers into a list, while "Highlight" is just a marker.',
+    'Notes you make after selecting text in a lesson. "Didn\'\'t understand" gathers into a list, while "Highlight" is just a marker.',
   "ui.glossary.copy.你当前主要在学的那个项目-首页的-下一节课-只从它里面挑":
     'The project you are currently focusing on. "Next lesson" on the home page is chosen only from it.',
   "ui.glossary.copy.你的-已完成-和复习进度记在具体某一版上-课文重写会生成新版本-所以旧的完成记录不会假装还有效":
-    'Your "Completed" status and review progress are tied to a specific version. Rewriting a lesson creates a new version, so old completion records won\'t pretend to still be valid.',
+    "Your \"Completed\" status and review progress are tied to a specific version. Rewriting a lesson creates a new version, so old completion records won''t pretend to still be valid.",
   "ui.glossary.copy.决定这张卡片下次什么时候再问你的算法-答得越轻松-下次间隔越长-答得吃力-很快就会再见到它":
-    "The algorithm that decides when to quiz you on this card again. The easier it was to recall, the longer the next interval; the harder it was, the sooner you'll see it again.",
+    "The algorithm that decides when to quiz you on this card again. The easier it was to recall, the longer the next interval; the harder it was, the sooner you''ll see it again.",
   "ui.glossary.copy.别的课在正文里链接到了这一节-点开可以直接跳过去-不必先回到目录":
     "Other lessons link to this one in their text. You can tap the link to jump straight there without going back to the table of contents.",
   "ui.glossary.copy.到期卡片": "Due cards",
   "ui.glossary.copy.名字是-Free-Spaced-Repetition-Scheduler-它的目标不是考你-而是尽量在你-快要忘":
-    "Its name is Free Spaced Repetition Scheduler. Its goal isn't to test you, but to appear right when you are about to forget—reviewing at that moment helps you remember best.",
+    "Its name is Free Spaced Repetition Scheduler. Its goal isn''t to test you, but to appear right when you are about to forget—reviewing at that moment helps you remember best.",
   "ui.glossary.copy.哪些课用到这节": "Lessons that use this one",
   "ui.glossary.copy.回答之后-你自己说这次-想起来有多费劲-这不是判对错":
-    "After answering, you say how hard it was to recall this time. This isn't about right or wrong.",
+    "After answering, you say how hard it was to recall this time. This isn''t about right or wrong.",
   "ui.glossary.copy.回答之后-你自己说这次-想起来有多费劲-这不是判对错-对错你自己看参考答案就知道了":
-    "After answering, you say how hard it was to recall this time. This isn't about right or wrong—you can check whether you were right by looking at the reference answer.",
+    "After answering, you say how hard it was to recall this time. This isn''t about right or wrong—you can check whether you were right by looking at the reference answer.",
   "ui.glossary.copy.复习卡片不受影响-已经学过的东西-不管来自哪个项目-都该按时复习":
-    "Review cards aren't affected—what you've already learned should be reviewed on schedule, no matter which project it came from.",
+    "Review cards aren''t affected—what you''ve already learned should be reviewed on schedule, no matter which project it came from.",
   "ui.glossary.copy.外语模式": "Foreign Language Mode",
   "ui.glossary.copy.学习项目-study": "Study project · study",
   "ui.glossary.copy.它只回答一个问题-课程引用过项目里哪些源码文件-覆盖了每一层多少-它不是学习进度":
@@ -655,13 +653,13 @@ export const messages = {
   "ui.glossary.copy.把题目-你的答案和判分标准打包复制走-粘贴给任何-AI-助手-它来点评":
     "Copy the question, your answer, and the grading criteria together, then paste them into any AI assistant to get feedback.",
   "ui.glossary.copy.数字会随着你的评分往下走-清零就是今天的复习做完了":
-    "The number counts down as you rate cards. When it reaches zero, today's review is finished.",
+    "The number counts down as you rate cards. When it reaches zero, today''s review is finished.",
   "ui.glossary.copy.朗读用的也是系统自带的语音-不会把单词发到任何服务器":
-    "Pronunciation also uses your system's built-in voice and never sends words to any server.",
+    "Pronunciation also uses your system''s built-in voice and never sends words to any server.",
   "ui.glossary.copy.点-在完整项目地图里看-会打开测绘那张大图-学习进度仍留在这节课-没有这一行-只说明测绘还没给这个文件建档-不代":
-    "Clicking 'View in Full Project Map' opens the full codebase map; your learning progress remains on this lesson. If this line is missing, it only means codebase mapping hasn't indexed this file yet—not that the file isn't important.",
+    "Clicking ''View in Full Project Map'' opens the full codebase map; your learning progress remains on this lesson. If this line is missing, it only means codebase mapping hasn''t indexed this file yet—not that the file isn''t important.",
   "ui.glossary.copy.点某一条会滚回正文里那段话并选中它-攒够了用-拷贝全部去问-AI-拷出来的内容带上每段话的出处和小节名-这样对方":
-    "Clicking an item scrolls back to that paragraph in the text and selects it. Once you have enough, use 'Copy All to Ask AI'—the copied content includes each paragraph's sources and section name so the assistant knows what you are asking about. Marks are stored only in this project's study library on this machine.",
+    "Clicking an item scrolls back to that paragraph in the text and selects it. Once you have enough, use ''Copy All to Ask AI''—the copied content includes each paragraph''s sources and section name so the assistant knows what you are asking about. Marks are stored only in this project''s study library on this machine.",
   "ui.glossary.copy.点某个词会滚到正文里第一次出现的位置-状态会影响之后复习队列里是否再见到它":
     "Clicking a word scrolls to where it first appears in the text. Its status determines whether it will appear in your review queue later.",
   "ui.glossary.copy.生词": "New words",
@@ -684,30 +682,29 @@ export const messages = {
   "ui.glossary.copy.这节课文改过几次-第-1-版就是-REV-1":
     "How many times this lesson text has been revised. Version 1 is REV 1.",
   "ui.glossary.copy.这节课的说法出自被学项目里的哪个文件-哪几行-点开就能看到原文":
-    "Which file and line numbers in the project under study this lesson's statements come from. Click to see the original text.",
+    "Which file and line numbers in the project under study this lesson''s statements come from. Click to see the original text.",
   "ui.glossary.copy.选-重来-不丢人-它只是让这张卡片更早回来找你-诚实评分-算法才能算准间隔":
-    "Choosing 'Again' is nothing to be ashamed of—it just brings this card back to you sooner. Rate honestly so the algorithm can calculate intervals accurately.",
+    "Choosing ''Again'' is nothing to be ashamed of—it just brings this card back to you sooner. Rate honestly so the algorithm can calculate intervals accurately.",
   "ui.glossary.copy.通过答题复习": "Review by answering questions",
   "ui.glossary.copy.重来-困难-良好-简单": "Again / Hard / Good / Easy",
   "ui.glossary.copy.项目分析-文件覆盖": "Project Analysis · File Coverage",
   "ui.glossary.copy.项目的文件先按职责分层-再把课程引用过的文件数标出来-比如-24-241-表示这一层共有-241-个文件-其中-":
-    "Project files are first grouped into layers by responsibility, and the number of files referenced by courses is marked. For example, '24 / 241' means this layer has 241 files in total, with 24 referenced by courses; it does not mean you completed 24 learning tasks. Click a layer to see specific file names.",
+    "Project files are first grouped into layers by responsibility, and the number of files referenced by courses is marked. For example, ''24 / 241'' means this layer has 241 files in total, with 24 referenced by courses; it does not mean you completed 24 learning tasks. Click a layer to see specific file names.",
   "ui.glossary.copy.项目里的位置": "Location in project",
   "ui.lesson.lessonMargin.copy.删除": "Delete",
   "ui.lesson.lessonMargin.copy.已弄懂": "Understood",
   "ui.lesson.lessonMargin.copy.这段已不在本版课文里":
     "This section is no longer in this version of the lesson text",
   "ui.lesson.lessonMargin.copy.页边批注": "Margin notes",
-  "ui.lesson.lessonMarkList.copy.value0-处没看懂": "{{value0}} unclear",
-  "ui.lesson.lessonMarkList.copy.value0-处高亮": " · {{value0}} highlighted",
+  "ui.lesson.lessonMarkList.copy.value0-处没看懂": "{value0} unclear",
+  "ui.lesson.lessonMarkList.copy.value0-处高亮": " · {value0} highlighted",
   "ui.lesson.lessonMarkList.copy.关于标记": "About marks",
-  "ui.lesson.lessonMarkList.copy.已拷贝-value0-条-去问-AI": "Copied {{value0}} items · Ask AI",
+  "ui.lesson.lessonMarkList.copy.已拷贝-value0-条-去问-AI": "Copied {value0} items · Ask AI",
   "ui.lesson.lessonMarkList.copy.我的标记": "My marks",
-  "ui.lesson.lessonMarkList.copy.拷贝全部去问-AI-value0-条":
-    "Copy all to ask AI ({{value0}} items)",
+  "ui.lesson.lessonMarkList.copy.拷贝全部去问-AI-value0-条": "Copy all to ask AI ({value0} items)",
   "ui.lesson.lessonMarkList.copy.没有待解决的疑问": "No unresolved questions",
   "ui.lesson.lessonBreadcrumbs.copy.当前位置": "Current location",
-  "ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0": "Back to course map: {{value0}}",
+  "ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0": "Back to course map: {value0}",
   "ui.lesson.lessonNav.copy.离开课文": "Exit lesson text",
   "ui.lesson.lessonNav.copy.课文进度": "Lesson text progress",
   "ui.lesson.lessonNextStep.copy.下一节": "Next lesson",
@@ -723,23 +720,23 @@ export const messages = {
   "ui.lesson.lessonNextStep.copy.节-共": " of ",
   "ui.lesson.lessonNextStep.copy.节-这门课的最后一节": "Lesson · Last lesson of this course",
   "ui.lesson.lessonNextStep.copy.题目过了-还差确认你读过这一版-这节才会计入进度":
-    "Exercises passed. You still need to confirm you've read this version for this lesson to count toward your progress.",
+    "Exercises passed. You still need to confirm you''ve read this version for this lesson to count toward your progress.",
   "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度":
     "This lesson is not marked complete yet. Once you confirm the text above and finish the exercises, this lesson will count toward your progress.",
-  "ui.lesson.lessonNextStep.copy.这门课到这里就走完了": "You've reached the end of this course.",
+  "ui.lesson.lessonNextStep.copy.这门课到这里就走完了": "You''ve reached the end of this course.",
   "ui.lesson.lessonReader.copy.再次确认本次更新": "Reconfirm this update",
   "ui.lesson.lessonReader.copy.回到刚才那一课": "← Back to the previous lesson",
   "ui.lesson.lessonReader.copy.外语模式": "Foreign language mode",
   "ui.lesson.lessonReader.copy.完成本次更新": "Complete this update",
   "ui.lesson.lessonReader.copy.已经会了-直接答这一节的题":
-    "Already know this? Jump straight to this lesson's exercises",
+    "Already know this? Jump straight to this lesson''s exercises",
   "ui.lesson.lessonReader.copy.已确认读过这一版-还差练习":
     "Reading confirmed for this version. Exercises remaining.",
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
-    "Answering questions correctly doesn't mean you've read the text. Tap here to mark this lesson as read.",
-  "ui.lesson.lessonReader.copy.我读完了": "I've finished reading",
+    "Answering questions correctly doesn''t mean you''ve read the text. Tap here to mark this lesson as read.",
+  "ui.lesson.lessonReader.copy.我读完了": "I''ve finished reading",
   "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上":
-    "Answering correctly won't automatically complete the lesson. Confirm you've read this version to record your progress and schedule review cards.",
+    "Answering correctly won''t automatically complete the lesson. Confirm you''ve read this version to record your progress and schedule review cards.",
   "ui.lesson.lessonReader.copy.暂时无法记录阅读确认":
     "Unable to record reading confirmation right now",
   "ui.lesson.lessonReader.copy.标准讲解": "Standard",
@@ -751,9 +748,9 @@ export const messages = {
   "ui.lesson.lessonReader.copy.词义状态没有保存": "Word status was not saved",
   "ui.lesson.lessonReader.copy.详细讲解": "Detailed",
   "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新":
-    "Read up to here, then confirm you've finished this version",
+    "Read up to here, then confirm you''ve finished this version",
   "ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版":
-    "Exercises passed. You still need to confirm you've read this version.",
+    "Exercises passed. You still need to confirm you''ve read this version.",
   "ui.lesson.lessonReader.copy.这条标记没有保存": "This highlight was not saved",
   "ui.lesson.lessonReader.copy.这版课文已经记录过阅读确认-练习通过后-系统才会把本课标为完成并安排卡片":
     "Reading confirmation has been recorded for this version of the text; once you pass the exercises, the system will mark this lesson as complete and schedule review cards.",
@@ -763,17 +760,17 @@ export const messages = {
   "ui.lesson.lessonReader.copy.页边批注": "Margin notes",
   "ui.lesson.lessonRelated.copy.关于反向链接": "About backlinks",
   "ui.lesson.lessonRelated.copy.哪些课用到这节": "Which lessons use this one",
-  "ui.lesson.lessonSourceVersion.copy.value0年value1月value2日": "{{value0}}-{{value1}}-{{value2}}",
-  "ui.lesson.lessonSourceVersion.copy.value0月value1日": "{{value0}}/{{value1}}",
+  "ui.lesson.lessonSourceVersion.copy.value0年value1月value2日": "{value0}-{value1}-{value2}",
+  "ui.lesson.lessonSourceVersion.copy.value0月value1日": "{value0}/{value1}",
   "ui.lesson.lessonSourceVersion.copy.复制命令": "Copy command",
   "ui.lesson.lessonSourceVersion.copy.复制失败-剪贴板不可用":
     "Copy failed: clipboard is unavailable",
   "ui.lesson.lessonSourceVersion.copy.已取出到": "Checked out to",
   "ui.lesson.lessonSourceVersion.copy.已复制": "Copied",
-  "ui.lesson.lessonSourceVersion.copy.打不开正在学习的-App": "Can't open the app you're studying",
-  "ui.lesson.lessonSourceVersion.copy.打开正在学习的-App": "Open the app you're studying",
+  "ui.lesson.lessonSourceVersion.copy.打不开正在学习的-App": "Can''t open the app you''re studying",
+  "ui.lesson.lessonSourceVersion.copy.打开正在学习的-App": "Open the app you''re studying",
   "ui.lesson.lessonSourceVersion.copy.为什么浏览器打不开这个-App":
-    "Why can't the browser open this app",
+    "Why can''t the browser open this app",
   "ui.lesson.lessonSourceVersion.copy.浏览器端读的是课程包-不能在这里启动这个-App":
     "The browser loads the course package and cannot launch this app here.",
   "ui.lesson.lessonSourceVersion.copy.正在删除": "Deleting…",
@@ -781,13 +778,13 @@ export const messages = {
   "ui.lesson.lessonSourceVersion.copy.用完了-删掉": "Done with it? Delete it",
   "ui.lesson.lessonSourceVersion.copy.的版本": " version (",
   "ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本":
-    "This lesson is pinned to version {{value0}}",
+    "This lesson is pinned to version {value0}",
   "ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0":
-    "This lesson is pinned to commit {{value0}}",
-  "ui.lesson.lessonSourceVersion.copy.完整提交号-value0": "Full commit hash {{value0}}",
+    "This lesson is pinned to commit {value0}",
+  "ui.lesson.lessonSourceVersion.copy.完整提交号-value0": "Full commit hash {value0}",
   "ui.lesson.lessonSourceVersion.copy.这个版本已经在": "This version is already in",
   "ui.lesson.lessonSourceVersion.copy.这节课钉在": "This lesson is pinned to",
-  "ui.lesson.lessonWordList.copy.value0-个已处理": " · {{value0}} handled",
+  "ui.lesson.lessonWordList.copy.value0-个已处理": " · {value0} handled",
   "ui.lesson.lessonWordList.copy.个要留意": " need attention",
   "ui.lesson.lessonWordList.copy.关于生词": "About vocabulary",
   "ui.lesson.lessonWordList.copy.可撤销": "(can be undone)",
@@ -814,7 +811,7 @@ export const messages = {
     "Each island is a course. Read first, then practice.",
   "ui.loading.loadingTrivia.copy.点一座岛-开始学": "Click an island to start learning",
   "ui.recovery.recoveryState.copy.3D-地图还没有准备好-可以再试一次-也可以先直接开始今天的课":
-    "The 3D map is not ready yet. You can try again, or start today's lesson directly.",
+    "The 3D map is not ready yet. You can try again, or start today''s lesson directly.",
   "ui.recovery.recoveryState.copy.地图刚刚失去连接-再试一次可以重新打开它-课程文字和练习不受影响":
     "The map just lost connection. Try again to reopen it; course text and exercises are not affected.",
   "ui.recovery.recoveryState.copy.地图加载得有点久": "The map is taking a while to load",
@@ -827,10 +824,10 @@ export const messages = {
     "Could not retrieve course materials this time; the network may have briefly disconnected. Try again, or return to the course list first.",
   "ui.recovery.recoveryState.copy.先看课程列表": "View course list first",
   "ui.recovery.recoveryState.copy.再试一次": "Try again",
-  "ui.recovery.recoveryState.copy.直接开始今天的课": "Start today's lesson directly",
+  "ui.recovery.recoveryState.copy.直接开始今天的课": "Start today''s lesson directly",
   "ui.recovery.recoveryState.copy.重试课程资料": "Retry course materials",
-  "ui.markdown.markdownContent.copy.value0年value1月value2日": "{{value1}}/{{value2}}/{{value0}}",
-  "ui.markdown.markdownContent.copy.value0月value1日": "{{value0}}/{{value1}}",
+  "ui.markdown.markdownContent.copy.value0年value1月value2日": "{value1}/{value2}/{value0}",
+  "ui.markdown.markdownContent.copy.value0月value1日": "{value0}/{value1}",
   "ui.markdown.markdownContent.copy.你的浏览器无法播放这段本地录屏":
     "Your browser cannot play this local screen recording.",
   "ui.markdown.markdownContent.copy.在侧栏打开-课文的阅读位置留在这里":
@@ -858,17 +855,17 @@ export const messages = {
   "ui.markdown.mermaidDiagram.copy.关系图包含外部或可执行地址-UniversityLocal-只渲染纯本地关系图":
     "The diagram contains external or executable addresses; UniversityLocal only renders purely local diagrams.",
   "ui.markdown.mermaidDiagram.copy.关系图源码超过-value0-个字符的本地上限":
-    "Diagram source code exceeds the local limit of {{value0}} characters.",
+    "Diagram source code exceeds the local limit of {value0} characters.",
   "ui.markdown.mermaidDiagram.copy.关系图超过-value0-行的本地上限-请拆成几张小图":
-    "This diagram exceeds the local limit of {{value0}} lines. Please split it into smaller diagrams.",
+    "This diagram exceeds the local limit of {value0} lines. Please split it into smaller diagrams.",
   "ui.markdown.mermaidDiagram.copy.正在绘制关系图": "Rendering diagram…",
   "ui.markdown.mermaidDiagram.copy.这张关系图暂时无法渲染-value0-原始-Mermaid-源码已保留-可以继续阅读或修复":
-    "This diagram cannot be rendered right now ({{value0}}). The original Mermaid source code has been preserved so you can keep reading or fix it.",
+    "This diagram cannot be rendered right now ({value0}). The original Mermaid source code has been preserved so you can keep reading or fix it.",
   "ui.markdown.remarklessonlinks.copy.这一课还不存在": "This lesson does not exist yet",
   "ui.navigation.counters.copy.你": "You",
   "ui.navigation.counters.copy.当前系列": "Current course series",
   "ui.navigation.counters.copy.连击": "Streak",
-  "ui.navigation.empty.accountPanel.copy.value0-现在是-value1": "{{value0}} is now {{value1}}.",
+  "ui.navigation.empty.accountPanel.copy.value0-现在是-value1": "{value0} is now {value1}.",
   "ui.navigation.empty.accountPanel.copy.云端账号还未配置-当前仅保留本机离线缓存-配置完成后登录即可跨设备同步":
     "Cloud accounts are not configured yet; only the local offline cache is kept. Once configured, sign in to sync across devices.",
   "ui.navigation.empty.accountPanel.copy.免密码登录": "Passwordless sign-in",
@@ -885,7 +882,7 @@ export const messages = {
     "There is no valid sign-in redirect URL for the current page.",
   "ui.navigation.empty.accountPanel.copy.暂未开放-了解原因": "Not available yet · Learn why",
   "ui.navigation.empty.accountPanel.copy.正在登录": "Signing in…",
-  "ui.navigation.empty.accountPanel.copy.没登上": "Couldn't sign in",
+  "ui.navigation.empty.accountPanel.copy.没登上": "Couldn''t sign in",
   "ui.navigation.empty.accountPanel.copy.登录": "Sign in",
   "ui.navigation.empty.accountPanel.copy.登录后跨设备同步": "Sync across devices after signing in",
   "ui.navigation.empty.accountPanel.copy.登录后进度-批注-答案-复习和收藏会跟账号走-断网时本机继续-联网后同步":
@@ -922,15 +919,15 @@ export const messages = {
   "ui.navigation.empty.profileScreen.copy.设置": "Settings",
   "ui.navigation.empty.profileScreen.copy.读过真实代码": "Read real code",
   "ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始":
-    "Haven't completed a lesson yet — start here",
+    "Haven''t completed a lesson yet — start here",
   "ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有":
-    "Haven't read real code yet — it's right in the first lesson",
-  "ui.navigation.empty.questsEmpty.copy.任务还没开张": "Quests haven't started yet",
+    "Haven''t read real code yet — it''s right in the first lesson",
+  "ui.navigation.empty.questsEmpty.copy.任务还没开张": "Quests haven''t started yet",
   "ui.navigation.empty.questsEmpty.copy.回到学习": "Back to learning",
   "ui.navigation.empty.questsEmpty.copy.日-周-月三层任务会长在这里-今天该做的那一件事-在学习页上等着":
     "Daily, weekly, and monthly quests will appear here. The one thing to do today is waiting on the Learn page.",
   "ui.navigation.empty.reviewReminderSettings.copy.iPhone-上的-Safari-只把这项-Web-Push-能力给已经添加到主屏幕的-web-app-当前还是":
-    "Safari on iPhone only gives this Web Push capability to web apps added to the Home Screen; this is currently a standard Safari page. If the option to 'Open as Web App' appears in Safari, keep it turned on—selecting a standard bookmark will still not receive push notifications.",
+    "Safari on iPhone only gives this Web Push capability to web apps added to the Home Screen; this is currently a standard Safari page. If the option to ''Open as Web App'' appears in Safari, keep it turned on—selecting a standard bookmark will still not receive push notifications.",
   "ui.navigation.empty.reviewReminderSettings.copy.允许后-University-才能在明天有复习卡时显示一条提醒":
     "Once allowed, University can show a reminder when there are review cards tomorrow.",
   "ui.navigation.empty.reviewReminderSettings.copy.在-iPhone-上先添加到主屏幕":
@@ -983,7 +980,7 @@ export const messages = {
   "ui.navigation.empty.reviewReminderSettings.copy.浏览器的拒绝决定只能由你在浏览器设置里改回-App-不能代替你改-也不会反复弹窗":
     "A browser denial can only be reversed by you in your browser settings. The app cannot change it for you and will not prompt you repeatedly.",
   "ui.navigation.empty.reviewReminderSettings.copy.请到浏览器的网站通知设置里允许-University-这里不会反复弹窗":
-    "Please allow University in your browser's site notification settings; it will not prompt you repeatedly here.",
+    "Please allow University in your browser''s site notification settings; it will not prompt you repeatedly here.",
   "ui.navigation.empty.reviewReminderSettings.copy.这台设备暂时不支持复习提醒":
     "This device does not currently support review reminders",
   "ui.navigation.empty.reviewReminderSettings.copy.这台设备需要先准备好":
@@ -1009,27 +1006,28 @@ export const messages = {
   "ui.navigation.empty.settingsScreen.copy.自动每次按高品质-在线-本机顺序选择当前能拿到的一档-不会把-自动-存成具体档位-高品质语音暂未开放-钱包和付费":
     '"Auto" selects the best available tier in order—high quality, online, then on-device—without saving "Auto" as a specific tier. High-quality voice is not yet available; it will be enabled once wallet and paid benefits are connected.',
   "ui.navigation.empty.settingsScreen.copy.订阅": "Subscription",
-  "ui.navigation.empty.settingsScreen.copy.让小组看到我在学什么": "Let group see what I'm studying",
+  "ui.navigation.empty.settingsScreen.copy.让小组看到我在学什么":
+    "Let group see what I''m studying",
   "ui.navigation.empty.settingsScreen.copy.设置": "Settings",
   "ui.navigation.empty.settingsScreen.copy.语言层": "Language layer",
   "ui.navigation.empty.settingsScreen.copy.选择-跟随系统-后-会按设备的深色模式设置自动切换":
-    '. Selecting "Match System" will automatically switch based on your device\'s Dark Mode settings.',
+    ". Selecting \"Match System\" will automatically switch based on your device''s Dark Mode settings.",
   "ui.navigation.empty.settingsScreen.copy.高品质语音暂未开放-钱包和付费权益尚未接入":
     "High-quality voice is not yet available; wallet and paid benefits are not yet connected.",
   "ui.navigation.screens.badgeWall.copy.十枚-其中四枚不是靠量能拿到的-三枚要真的过了那么多天-一枚要排程同意你确实记住了-一下午就能刷完的墙-一周后就":
     "Seventeen badges. Some need that many days to actually pass, and one needs the scheduler to agree you have truly remembered—a wall you could clear in an afternoon would say nothing about you a week later.",
   "ui.navigation.screens.badgeWall.copy.已获得": "Earned",
   "ui.navigation.screens.badgeWall.copy.徽章墙": "Badge Wall",
-  "ui.navigation.screens.leagueScreen.copy.到value0": "To {{value0}}",
+  "ui.navigation.screens.leagueScreen.copy.到value0": "To {value0}",
   "ui.navigation.screens.leagueScreen.copy.和真人排名要有账号-我们不打算先摆三十个编出来的名字在这儿-那样等你发现是假的-旁边那些真数字你也不会再信了":
-    "You need an account to rank with real people. We don't plan to put thirty made-up names here—once you find out they're fake, you won't trust the real numbers next to them either.",
+    "You need an account to rank with real people. We don''t plan to put thirty made-up names here—once you find out they''re fake, you won''t trust the real numbers next to them either.",
   "ui.navigation.screens.leagueScreen.copy.天的卡片-本周读了": " days. Read this week: ",
   "ui.navigation.screens.leagueScreen.copy.已在顶阶": "Already at the top tier",
   "ui.navigation.screens.leagueScreen.copy.张": "cards",
   "ui.navigation.screens.leagueScreen.copy.张记牢了": "cards remembered",
   "ui.navigation.screens.leagueScreen.copy.排行榜": "Leaderboard",
   "ui.navigation.screens.leagueScreen.copy.段位不看你今天学了多少-看你三周之后还记得多少-今天再拼命也涨不了-这一格只有等时间过去-而你还答得对-才会动":
-    "Your tier isn't about how much you study today, but how much you still remember three weeks from now. No matter how hard you push today, it won't go up—this bar only moves when time has passed and you still answer correctly.",
+    "Your tier isn''t about how much you study today, but how much you still remember three weeks from now. No matter how hard you push today, it won''t go up—this bar only moves when time has passed and you still answer correctly.",
   "ui.navigation.screens.leagueScreen.copy.节": "lessons.",
   "ui.navigation.screens.leagueScreen.copy.记牢了-指记忆间隔已经超过":
     '"Remembered" refers to cards with a memory interval of over ',
@@ -1038,7 +1036,7 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.也就是": ", which is ",
   "ui.navigation.screens.plansScreen.copy.价格暂时无法显示": "Price temporarily unavailable",
   "ui.navigation.screens.plansScreen.copy.会员": "Membership",
-  "ui.navigation.screens.plansScreen.copy.你现在就在用": "You're currently using this",
+  "ui.navigation.screens.plansScreen.copy.你现在就在用": "You''re currently using this",
   "ui.navigation.screens.plansScreen.copy.免费": "Free",
   "ui.navigation.screens.plansScreen.copy.刷新订单状态": "Refresh order status",
   "ui.navigation.screens.plansScreen.copy.已取消": "Canceled",
@@ -1074,13 +1072,13 @@ export const messages = {
     "Purchase request temporarily failed. Please try again later.",
   "ui.navigation.screens.questsScreen.copy.不计分": "Not scored",
   "ui.navigation.screens.questsScreen.copy.今天": "Today",
-  "ui.navigation.screens.questsScreen.copy.今天到这儿就够了": "That's enough for today",
-  "ui.navigation.screens.questsScreen.copy.今天的进度": "Today's progress",
+  "ui.navigation.screens.questsScreen.copy.今天到这儿就够了": "That''s enough for today",
+  "ui.navigation.screens.questsScreen.copy.今天的进度": "Today''s progress",
   "ui.navigation.screens.questsScreen.copy.再学下去当然可以-但今天该记住的东西已经安排好了-真正决定你记不记得住的是明天来不来-不是今天学了多少":
     "You can certainly keep studying, but what you need to remember today has already been scheduled. What really determines whether you remember is whether you show up tomorrow, not how much you study today.",
   "ui.navigation.screens.questsScreen.copy.完成": "Complete",
   "ui.navigation.screens.questsScreen.copy.每天都是同样几件-换着花样出任务是让人来开-App-的手段-天天一样才养得成习惯-而间隔重复要的就是习惯":
-    "It's the same few things every day. Switching up tasks is just a way to get people to open the app; doing the same thing every day is how habits form—and spaced repetition is all about habit.",
+    "It''s the same few things every day. Switching up tasks is just a way to get people to open the app; doing the same thing every day is how habits form—and spaced repetition is all about habit.",
   "ui.navigation.slots.copy.个人档案": "Profile",
   "ui.navigation.slots.copy.任务": "Tasks",
   "ui.navigation.slots.copy.会员": "Membership",
@@ -1096,9 +1094,9 @@ export const messages = {
   "ui.navigation.slots.copy.练习": "Practice",
   "ui.navigation.slots.copy.设置": "Settings",
   "ui.navigation.studySwitcher.copy.value0-门-学到-value1-value2":
-    "{{value0}} courses · At {{value1}}/{{value2}}",
-  "ui.navigation.studySwitcher.copy.value0-门-没开始": "{{value0}} courses · Not started",
-  "ui.navigation.studySwitcher.copy.当前系列-value0": "Current course series {{value0}}",
+    "{value0} courses · At {value1}/{value2}",
+  "ui.navigation.studySwitcher.copy.value0-门-没开始": "{value0} courses · Not started",
+  "ui.navigation.studySwitcher.copy.当前系列-value0": "Current course series {value0}",
   "ui.navigation.studySwitcher.copy.换系列": "Switch course series",
   "ui.navigation.studySwitcher.copy.看所有课程系列": "View all course series",
   "ui.navigation.studySwitcher.copy.选一个项目": "Select a project",
@@ -1109,7 +1107,7 @@ export const messages = {
   "ui.notifications.reviewReminderPrompt.copy.提醒没有开启-请稍后重试":
     "Reminders were not turned on. Please try again later.",
   "ui.notifications.reviewReminderPrompt.copy.明天有": "Tomorrow you have",
-  "ui.notifications.reviewReminderPrompt.copy.明天的复习": "Tomorrow's review",
+  "ui.notifications.reviewReminderPrompt.copy.明天的复习": "Tomorrow''s review",
   "ui.notifications.reviewReminderPrompt.copy.正在开启": "Turning on…",
   "ui.notifications.reviewReminderPrompt.copy.要我提醒你吗-每天最多一条-有卡才提醒-随时可以在设置里关掉":
     "Want me to remind you? At most once a day, only when cards are due, and you can turn it off in Settings anytime.",
@@ -1134,9 +1132,9 @@ export const messages = {
     ". Want to test yourself in that course first?",
   "app.app.courseIsland.copy.去": "Go to:",
   "app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声":
-    "We won't stop you if you haven't. Just a heads-up—whether you stay or go is up to you.",
+    "We won''t stop you if you haven''t. Just a heads-up—whether you stay or go is up to you.",
   "ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去":
-    "This course assumes you have already taken the courses above. You can still enter if you haven't, but it will take more effort.",
+    "This course assumes you have already taken the courses above. You can still enter if you haven''t, but it will take more effort.",
   "ui.path.courseRouteQuiz.copy.已回答": "Answered",
   "ui.path.courseRouteQuiz.copy.根据你的回答": "Based on your answers:",
   "ui.path.courseRouteQuiz.copy.看起来你可以跳过前面": "It looks like you can skip the first",
@@ -1145,7 +1143,7 @@ export const messages = {
     "Starting this course from the first lesson takes the least effort.",
   "ui.path.courseRouteQuiz.copy.从第一节开始": "Start from the first lesson",
   "ui.path.courseRouteQuiz.copy.回答本身不会解锁任何一节-做对题才会":
-    "Answering these questions won't skip any lessons by itself. Only getting them right will.",
+    "Answering these questions won''t skip any lessons by itself. Only getting them right will.",
   "ui.path.unitSkipTest.copy.我会了": "I already know this",
   "ui.path.unitSkipTest.copy.再测一次": "Test again",
   "ui.path.unitSkipTest.copy.再试一次": "Try again",
@@ -1155,45 +1153,45 @@ export const messages = {
   "ui.path.unitSkipTest.copy.先写下你的答案-再交": "Write your answer first, then submit.",
   "ui.path.unitSkipTest.copy.正在从这一单元里抽题": "Selecting questions from this unit...",
   "ui.path.unitSkipTest.copy.这一单元的题没读出来-再试一次":
-    "Couldn't load questions for this unit. Try again.",
+    "Couldn''t load questions for this unit. Try again.",
   "ui.path.unitSkipTest.copy.这一单元你已经会了-做三道它自己的题就能跳过去":
     "Already know this? Answer 3 questions from this unit correctly to skip it.",
   "ui.path.unitSkipTest.copy.这一单元你已经证明过了-想再试一次也可以":
-    "You've already skipped this unit. You can take it again if you'd like.",
+    "You''ve already skipped this unit. You can take it again if you''d like.",
   "ui.path.unitSkipTest.copy.这一单元凑不出三道能当场判对错的题-所以没法用做题跳过":
-    "This unit doesn't have 3 questions that can be graded instantly—most of its exercises require writing full sentences. So you can't skip this unit by taking a test.",
+    "This unit doesn''t have 3 questions that can be graded instantly—most of its exercises require writing full sentences. So you can''t skip this unit by taking a test.",
   "ui.path.unitSkipTest.copy.三道全对-这一单元你不用从头学了":
-    "All 3 correct. You don't need to start this unit from scratch.",
+    "All 3 correct. You don''t need to start this unit from scratch.",
   "ui.path.unitSkipTest.copy.错了一道-那一节读一下-其余的算你会了":
     "You missed 1. Read that lesson, and the rest will count as completed.",
   "ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧":
-    "You missed {{wrong}}. It's best to go through this unit from the beginning.",
+    "You missed {wrong}. It''s best to go through this unit from the beginning.",
   "ui.path.unitSkipTest.copy.跳过不等于学过-这几节的复习卡不会进复习队列-想正式读随时点进来-那时才开始排期":
-    "Skipping isn't the same as studying: review cards for these lessons won't enter your review queue. If you want to study them properly, tap in anytime—they'll be scheduled then.",
+    "Skipping isn''t the same as studying: review cards for these lessons won''t enter your review queue. If you want to study them properly, tap in anytime—they''ll be scheduled then.",
   "ui.path.courseRouteQuiz.copy.你以前把一个项目改过-并重新跑起来吗":
     "Have you ever modified a project and got it running again?",
   "ui.path.courseRouteQuiz.copy.你会先建立-屏幕上的东西和文件里的代码有关-这条最重要的连接":
-    "You'll start by building the most important connection: what's on screen connects to code in files.",
+    "You''ll start by building the most important connection: what''s on screen connects to code in files.",
   "ui.path.courseRouteQuiz.copy.你已经改过并运行过项目-直接整理文件职责和运行链路更合适":
-    "Since you've already modified and run projects, organizing file responsibilities and execution flow is a better fit.",
+    "Since you''ve already modified and run projects, organizing file responsibilities and execution flow is a better fit.",
   "ui.path.courseRouteQuiz.copy.你已经见过项目文件-先把代码怎样组成界面这条线接起来更省力":
-    "You've already seen project files, so connecting how code builds an interface is the smoothest next step.",
-  "ui.path.courseRouteQuiz.copy.先测测你的学习起点": "First, let's find your starting point",
+    "You''ve already seen project files, so connecting how code builds an interface is the smoothest next step.",
+  "ui.path.courseRouteQuiz.copy.先测测你的学习起点": "First, let''s find your starting point",
   "ui.path.courseRouteQuiz.copy.凭直觉回答就好": "Just go with your intuition",
   "ui.path.courseRouteQuiz.copy.如果-App-里的按钮文字不对-你第一反应更接近哪一种":
     "If button text in an app is wrong, which is closest to your first reaction?",
   "ui.path.courseRouteQuiz.copy.学习路线": "Learning path",
-  "ui.path.courseRouteQuiz.copy.我会在界面里继续找": "I'd keep looking around the interface",
+  "ui.path.courseRouteQuiz.copy.我会在界面里继续找": "I''d keep looking around the interface",
   "ui.path.courseRouteQuiz.copy.我会打开项目找代码并运行检查":
-    "I'd open the project, find the code, and run it to check",
+    "I''d open the project, find the code, and run it to check",
   "ui.path.courseRouteQuiz.copy.我会猜某个文件可能负责它":
-    "I'd guess which file might be responsible for it",
+    "I''d guess which file might be responsible for it",
   "ui.path.courseRouteQuiz.copy.我能大致说出它们分别做什么":
     "I can roughly describe what each of them does",
   "ui.path.courseRouteQuiz.copy.改过-也能自己排查问题":
-    "I've modified code and can troubleshoot issues on my own",
+    "I''ve modified code and can troubleshoot issues on my own",
   "ui.path.courseRouteQuiz.copy.改过小地方-但过程不太稳定":
-    "I've made small tweaks, but the process wasn't very smooth",
+    "I''ve made small tweaks, but the process wasn''t very smooth",
   "ui.path.courseRouteQuiz.copy.看到-tsx-package-json-这些名字时-你大概处在什么状态":
     "When you see names like `.tsx` and `package.json`, which best describes you?",
   "ui.path.courseRouteQuiz.copy.看起来都很陌生": "They all look unfamiliar",
@@ -1201,26 +1199,24 @@ export const messages = {
   "ui.path.courseRouteQuiz.copy.继续回答-系统会自动判断":
     "Keep answering, and the system will assess automatically",
   "ui.path.courseRouteQuiz.copy.见过-但需要有人带着看":
-    "I've seen them, but I need someone to walk me through",
+    "I''ve seen them, but I need someone to walk me through",
   "ui.path.courseRouteQuiz.copy.还没有": "Not yet",
   "ui.path.courseRouteQuiz.copy.重新回答": "Answer again",
   "ui.path.courseRouteQuiz.copy.题": "Question",
   "ui.path.pathDialog.copy.关闭": "Close",
   "ui.path.pathDialog.copy.关闭-也可按-Esc": "Close (or press Esc)",
-  "ui.path.pathstats.copy.value0-条真实代码引用": "{{value0}} real code references",
-  "ui.path.pathstats.copy.value0-节-约-value1-分钟":
-    "{{value0}} lessons · about {{value1}} minutes",
-  "ui.path.pathstats.copy.value0-道题": "{{value0}} questions",
+  "ui.path.pathstats.copy.value0-条真实代码引用": "{value0} real code references",
+  "ui.path.pathstats.copy.value0-节-约-value1-分钟": "{value0} lessons · about {value1} minutes",
+  "ui.path.pathstats.copy.value0-道题": "{value0} questions",
   "ui.path.pathstats.copy.从第-1-节开始": "Start from Lesson 1",
   "ui.path.pathstats.copy.先看这一单元讲什么": "See what this unit covers first",
-  "ui.path.pathstats.copy.学完这一单元-你能": "After completing this unit, you'll be able to—",
+  "ui.path.pathstats.copy.学完这一单元-你能": "After completing this unit, you''ll be able to—",
   "ui.path.pathstats.copy.开始": "Start",
-  "ui.path.pathstats.copy.开始-学完解锁-value0-个词条":
-    "Start · Complete to unlock {{value0}} terms",
-  "ui.path.pathstats.copy.读-value0-分钟": "Read for {{value0}} minutes",
-  "ui.path.pathstats.copy.这一单元会带你读的真实代码": "Real code you'll read in this unit",
-  "ui.practice.mistakeList.copy.value0-道-都订正过了": "{{value0}} questions, all corrected",
-  "ui.practice.mistakeList.copy.value0-道还没订正": "{{value0}} questions not yet corrected",
+  "ui.path.pathstats.copy.开始-学完解锁-value0-个词条": "Start · Complete to unlock {value0} terms",
+  "ui.path.pathstats.copy.读-value0-分钟": "Read for {value0} minutes",
+  "ui.path.pathstats.copy.这一单元会带你读的真实代码": "Real code you''ll read in this unit",
+  "ui.practice.mistakeList.copy.value0-道-都订正过了": "{value0} questions, all corrected",
+  "ui.practice.mistakeList.copy.value0-道还没订正": "{value0} questions not yet corrected",
   "ui.practice.mistakeList.copy.你当时答": "You answered",
   "ui.practice.mistakeList.copy.你答过": "You answered:",
   "ui.practice.mistakeList.copy.共错": "· Total incorrect",
@@ -1237,14 +1233,14 @@ export const messages = {
   "ui.practice.mistakeList.copy.空答案": "(No answer)",
   "ui.practice.mistakeList.copy.答错于": "Missed on",
   "ui.practice.mistakeList.copy.答错的题会留在这里-先去上一道练习-错过的地方就有了回头路":
-    "Missed questions will stay here. Complete a practice question first, and you'll have a way back to review what you missed.",
+    "Missed questions will stay here. Complete a practice question first, and you''ll have a way back to review what you missed.",
   "ui.practice.mistakeList.copy.订正": "Correct",
   "ui.practice.mistakeList.copy.课程内容暂时不可用": "Course content is temporarily unavailable",
   "ui.practice.mistakeList.copy.还没有错题": "No missed questions yet",
   "ui.practice.mistakeList.copy.这个版本不随课程包下发参考答案-题目和你当时的答案都在上面-先自己再想一遍":
     "This version does not include reference answers with the course pack. The question and your answer from that time are above—think through it on your own first.",
   "ui.practice.mistakeList.copy.这本错题本已经清空-之前绊住你的题都被你修好了-它们还留在下面-随时可以再看":
-    "This mistake notebook is clear: you've resolved every question that held you back. They remain below so you can review them anytime.",
+    "This mistake notebook is clear: you''ve resolved every question that held you back. They remain below so you can review them anytime.",
   "ui.practice.mistakeList.copy.这道练习题": "This practice question",
   "ui.practice.mistakeList.copy.这道题已经换版": "This question has been updated to a new version",
   "ui.practice.mistakeList.copy.道未订正": " uncorrected",
@@ -1253,23 +1249,23 @@ export const messages = {
   "ui.practice.mistakeList.copy.错题本-4d8qe0": "Mistake notebook",
   "ui.practice.mistakeList.copy.错题本-全部已订正": "Mistake notebook, all corrected",
   "ui.practice.mistakeList.copy.题目": "Question",
-  "ui.practice.practiceOverview.copy.value0-张": "{{value0}} cards",
-  "ui.practice.practiceOverview.copy.value0-张到期": "{{value0}} cards due",
+  "ui.practice.practiceOverview.copy.value0-张": "{value0} cards",
+  "ui.practice.practiceOverview.copy.value0-张到期": "{value0} cards due",
   "ui.practice.practiceOverview.copy.个概念": "concepts",
   "ui.practice.practiceOverview.copy.个概念题": "concept questions",
   "ui.practice.practiceOverview.copy.今天复习": "Review today",
   "ui.practice.practiceOverview.copy.今天无到期": "None due today",
   "ui.practice.practiceOverview.copy.今天有-value0-张复习卡到期-先复习它们最有价值-也可以练一道概念判断":
-    "You have {{value0}} review cards due today. Reviewing them first offers the most value, or you can practice a true/false concept question.",
+    "You have {value0} review cards due today. Reviewing them first offers the most value, or you can practice a true/false concept question.",
   "ui.practice.practiceOverview.copy.今天没有到期复习卡-想巩固-可以练一道判断-答对后会打开完整词条":
-    "No review cards are due today. To reinforce what you've learned, you can practice a true/false question; answering correctly unlocks the full entry.",
+    "No review cards are due today. To reinforce what you''ve learned, you can practice a true/false question; answering correctly unlocks the full entry.",
   "ui.practice.practiceOverview.copy.今天没有到期复习卡-明天有-value0-张回来-想巩固-就练一道概念判断":
-    "No review cards are due today, and {{value0}} will return tomorrow. To reinforce what you've learned, practice a true/false concept question.",
+    "No review cards are due today, and {value0} will return tomorrow. To reinforce what you''ve learned, practice a true/false concept question.",
   "ui.practice.practiceOverview.copy.今天适合练吗": "Is today a good day to practice?",
   "ui.practice.practiceOverview.copy.先去复习": "Review first",
   "ui.practice.practiceOverview.copy.最近练过": "Recently practiced",
   "ui.practice.practiceOverview.copy.图鉴里还没有带判断题的概念-先去翻翻词条-等题目准备好":
-    "The guide doesn't have concepts with true/false questions yet. Browse entries first while questions are being prepared.",
+    "The guide doesn''t have concepts with true/false questions yet. Browse entries first while questions are being prepared.",
   "ui.practice.practiceOverview.copy.学习-练习-概念图鉴": "Learn / Practice / Concept Guide",
   "ui.practice.practiceOverview.copy.掌握度": "Mastery",
   "ui.practice.practiceOverview.copy.明天复习": "Review tomorrow",
@@ -1286,7 +1282,7 @@ export const messages = {
   "ui.practice.practiceStream.copy.今天练一道判断": "Practice a true/false question today",
   "ui.practice.practiceStream.copy.去翻翻词条": "Browse entries",
   "ui.practice.practiceStream.copy.开始一道判断": "Start a true/false question",
-  "ui.practice.practiceStream.copy.本次已答对-value0": "Correct this session: {{value0}}",
+  "ui.practice.practiceStream.copy.本次已答对-value0": "Correct this session: {value0}",
   "ui.practice.practiceStream.copy.概念自己带着判断题-答对一道-展开这一条-题流没有尽头-停下来就行":
     "Concepts come with their own true/false questions. Answer one correctly to reveal the entry. The question stream never ends—just stop whenever you want.",
   "ui.practice.practiceStream.copy.每一条词条自己带着一道判断题-带题的那些会出现在这里":
@@ -1301,10 +1297,10 @@ export const messages = {
   "ui.presence.store.copy.我": "Me",
   "ui.reference.antiPatternIndex.copy.全部": "All",
   "ui.reference.antiPatternIndex.copy.可以搜条目的名字-那句口语抱怨-或直接描述你看见的不对劲-例如-稳稳接住-三张一样大-点了没反应-不必先知道它在":
-    'You can search by entry name, everyday complaints, or directly describe what feels wrong—such as "catch reliably", "three equal sizes", or "clicked but no response". You don\'t need to know what it\'s called in the directory first.',
+    'You can search by entry name, everyday complaints, or directly describe what feels wrong—such as "catch reliably", "three equal sizes", or "clicked but no response". You don\'\'t need to know what it\'\'s called in the directory first.',
   "ui.reference.antiPatternIndex.copy.搜索反模式": "Search anti-patterns",
   "ui.reference.antiPatternIndex.copy.没有找到-value0-相关的条目":
-    'No entries found for "{{value0}}"',
+    'No entries found for "{value0}"',
   "ui.reference.antiPatternIndex.copy.目录载入后会出现在这里":
     "The directory will appear here once loaded.",
   "ui.reference.antiPatternIndex.copy.试试-稳稳接住-别再说灯塔":
@@ -1313,19 +1309,19 @@ export const messages = {
   "ui.reference.collectionIndex.copy.按类别筛选": "Filter by category",
   "ui.reference.conceptIndex.copy.全部": "All",
   "ui.reference.conceptIndex.copy.可以搜中文名-英文名-或者直接把你看见的现象写出来-例如-点了没反应-刷新就没了-怎么退回上一版-不必先知道它叫":
-    'You can search by Chinese name, English name, or directly describe what you see—such as "clicked but nothing happens", "gone after refresh", or "how to revert to the previous version". You don\'t need to know what it\'s called first.',
+    'You can search by Chinese name, English name, or directly describe what you see—such as "clicked but nothing happens", "gone after refresh", or "how to revert to the previous version". You don\'\'t need to know what it\'\'s called first.',
   "ui.reference.conceptIndex.copy.搜索概念": "Search concepts",
-  "ui.reference.conceptIndex.copy.没有找到-value0-相关的条目": 'No entries found for "{{value0}}"',
+  "ui.reference.conceptIndex.copy.没有找到-value0-相关的条目": 'No entries found for "{value0}"',
   "ui.reference.conceptIndex.copy.目录载入后会出现在这里":
     "The directory will appear here once loaded.",
   "ui.reference.conceptIndex.copy.试试-点了没反应-怎么退回上一版":
     'Try "clicked but nothing happens" or "how to revert to the previous version"',
   "ui.reference.conceptIndex.copy.还没有条目": "No entries yet",
   "ui.reference.knowledgeNotes.copy.AI-宿主沉淀": "AI host distillations",
-  "ui.reference.knowledgeNotes.copy.value0-张卡片可进入复习": "{{value0}} cards ready for review",
+  "ui.reference.knowledgeNotes.copy.value0-张卡片可进入复习": "{value0} cards ready for review",
   "ui.reference.knowledgeNotes.copy.value0-条固定源码证据":
-    "{{value0}} pinned source code evidence items",
-  "ui.reference.knowledgeNotes.copy.value0-的知识证据": "Knowledge evidence for {{value0}}",
+    "{value0} pinned source code evidence items",
+  "ui.reference.knowledgeNotes.copy.value0-的知识证据": "Knowledge evidence for {value0}",
   "ui.reference.knowledgeNotes.copy.个人理解": "Personal understanding",
   "ui.reference.knowledgeNotes.copy.可复习": "Reviewable",
   "ui.reference.knowledgeNotes.copy.在-AI-宿主中把一次追问保存为知识点后-它会出现在这里":
@@ -1370,10 +1366,10 @@ export const messages = {
   "ui.reference.referencePanel.copy.课文": "Lesson text",
   "ui.reference.termIndex.copy.全部": "All",
   "ui.reference.termIndex.copy.可以搜英文词-中文释义-或直接描述你想说的那句话-例如-应用-接口-点开图标就能用-词库会按你的说法去找对应的术":
-    "Search by English words, Chinese definitions, or describe what you want to say in your own words, such as “app,” “interface,” or “tap the icon to use it.” The glossary will find matching terms based on your phrasing, so you don't need to know what it's called first.",
+    "Search by English words, Chinese definitions, or describe what you want to say in your own words, such as “app,” “interface,” or “tap the icon to use it.” The glossary will find matching terms based on your phrasing, so you don''t need to know what it''s called first.",
   "ui.reference.termIndex.copy.技术用语": "Technical terms",
   "ui.reference.termIndex.copy.搜索词义": "Search definitions",
-  "ui.reference.termIndex.copy.没有找到-value0-相关的词义": "No definitions found for “{{value0}}”",
+  "ui.reference.termIndex.copy.没有找到-value0-相关的词义": "No definitions found for “{value0}”",
   "ui.reference.termIndex.copy.词义": "Definitions",
   "ui.reference.termIndex.copy.词义索引": "Definition index",
   "ui.reference.termIndex.copy.词库载入后会出现在这里":
@@ -1395,7 +1391,7 @@ export const messages = {
   "ui.review.recapPrompt.copy.你的复述": "Your recap",
   "ui.review.recapPrompt.copy.保存为复习卡": "Save as review card",
   "ui.review.recapPrompt.copy.到期时它会回来-请再讲一遍":
-    "When it's due, it will return for you to explain again.",
+    "When it''s due, it will return for you to explain again.",
   "ui.review.recapPrompt.copy.在这里写你的复述": "Write your recap here…",
   "ui.review.recapPrompt.copy.复习卡已保存": "Review card saved",
   "ui.review.recapPrompt.copy.复习卡已保存-但界面没有刷新-请重新加载页面":
@@ -1442,7 +1438,7 @@ export const messages = {
   "ui.review.reviewCard.copy.让-AI-讲讲这张卡": "Ask AI to explain this card",
   "ui.review.reviewCard.copy.讲一遍": "Explain it",
   "ui.review.reviewCard.copy.评分已保存-但界面没能刷新-请重新加载页面":
-    "Rating saved, but the page couldn't refresh. Please reload the page.",
+    "Rating saved, but the page couldn''t refresh. Please reload the page.",
   "ui.review.reviewCard.copy.请用自己的话-讲给一个完全不知道这件事的人听":
     "In your own words, explain this to someone who knows nothing about it.",
   "ui.review.reviewCard.copy.贴到任意-AI-宿主-它只负责讲解-下面这四个按钮问的是-你回忆得费不费劲-只有你答得了":
@@ -1455,12 +1451,12 @@ export const messages = {
   "ui.review.reviewCard.copy.重试揭示": "Retry reveal",
   "ui.review.reviewCard.copy.重试查看": "Retry view",
   "ui.review.reviewempty.copy.今天没有到期卡片": "No cards due today",
-  "ui.review.reviewempty.copy.今天的复习已经清空": "Today's reviews are all done.",
+  "ui.review.reviewempty.copy.今天的复习已经清空": "Today''s reviews are all done.",
   "ui.review.reviewempty.copy.学一节新课-它会掉落新的卡片-明天就有事做了":
-    "Take a new lesson—it will drop new cards, so you'll have something to do tomorrow.",
-  "ui.review.reviewinterval.copy.value0-分钟": "{{value0}} minutes",
-  "ui.review.reviewinterval.copy.value0-天": "{{value0}} days",
-  "ui.review.reviewinterval.copy.value0-小时": "{{value0}} hours",
+    "Take a new lesson—it will drop new cards, so you''ll have something to do tomorrow.",
+  "ui.review.reviewinterval.copy.value0-分钟": "{value0} minutes",
+  "ui.review.reviewinterval.copy.value0-天": "{value0} days",
+  "ui.review.reviewinterval.copy.value0-小时": "{value0} hours",
   "ui.review.reviewinterval.copy.马上": "Right away",
   "ui.review.schedulerports.copy.复习卡内容已更新-请重新加载":
     "Review card content has been updated. Please reload",
@@ -1475,9 +1471,9 @@ export const messages = {
   "ui.review.vocabularyReview.copy.勉强想起": "Barely remembered",
   "ui.review.vocabularyReview.copy.复习中": "Reviewing",
   "ui.review.vocabularyReview.copy.想起来了": "Remembered",
-  "ui.review.vocabularyReview.copy.我想好了-看释义": "I'm ready, show definition",
+  "ui.review.vocabularyReview.copy.我想好了-看释义": "I''m ready, show definition",
   "ui.review.vocabularyReview.copy.根据回忆难度评分": "Rate how hard it was to recall",
-  "ui.review.vocabularyReview.copy.没想起来": "Couldn't remember",
+  "ui.review.vocabularyReview.copy.没想起来": "Couldn''t remember",
   "ui.review.vocabularyReview.copy.生词": "New words ·",
   "ui.review.vocabularyReview.copy.生词复习服务尚未接通":
     "Vocabulary review service is not connected",
@@ -1494,12 +1490,12 @@ export const messages = {
   "ui.theme.copy.深色": "Dark",
   "ui.theme.copy.深色纸面-适合昏暗环境": "Dark paper, suitable for dim environments.",
   "ui.theme.copy.跟随系统": "Match system",
-  "ui.today.todaySection.copy.value0-还剩-value1-关": "{{value0}} · {{value1}} levels remaining",
+  "ui.today.todaySection.copy.value0-还剩-value1-关": "{value0} · {value1} levels remaining",
   "ui.today.todaySection.copy.今天-从回忆开始": "Today, start with recall",
   "ui.today.todaySection.copy.今天到期的复习卡片": "Review cards due today",
   "ui.today.todaySection.copy.今天的第一件事": "First thing today",
-  "ui.today.todaySection.copy.复习-value0-张到期": "Review · {{value0}} due",
-  "ui.today.todaySection.copy.复习-明天-value0-张": "Review · {{value0}} tomorrow",
+  "ui.today.todaySection.copy.复习-value0-张到期": "Review · {value0} due",
+  "ui.today.todaySection.copy.复习-明天-value0-张": "Review · {value0} tomorrow",
   "ui.today.todaySection.copy.开始学习": "Start learning",
   "ui.today.todaySection.copy.有学习数据暂时无法使用":
     "Some learning data is temporarily unavailable",
@@ -1508,28 +1504,28 @@ export const messages = {
     "Courses build understanding; cards only keep key knowledge in long-term memory.",
   "ui.today.todaySection.copy.课程这边暂时没有待办": "No course tasks for now.",
   "ui.view.lessonview.copy.1-指出我的回答和参考答案之间-实质-的差距-措辞不同不算":
-    "1. Point out any **substantive** gaps between my answer and the reference answer (different wording doesn't count).",
+    "1. Point out any **substantive** gaps between my answer and the reference answer (different wording doesn''t count).",
   "ui.view.lessonview.copy.2-如果我以前答过-说说我的理解有没有变化":
-    "2. If I've answered before, let me know if my understanding has changed.",
+    "2. If I''ve answered before, let me know if my understanding has changed.",
   "ui.view.lessonview.copy.3-补一个能帮我记住它的具体例子或类比":
     "3. Add a concrete example or analogy to help me remember it.",
-  "ui.view.lessonview.copy.value0-不在书架上": "{{value0}} (not on bookshelf)",
+  "ui.view.lessonview.copy.value0-不在书架上": "{value0} (not on bookshelf)",
   "ui.view.lessonview.copy.不要给我打分-也不要说我该选-困难-还是-良好-那个我自己判断":
-    "Do not grade me, and do not tell me whether to choose 'Hard' or 'Good'—I'll judge that myself.",
+    "Do not grade me, and do not tell me whether to choose ''Hard'' or ''Good''—I''ll judge that myself.",
   "ui.view.lessonview.copy.从value0开始-主攻路线-value1-门":
-    "Start from {{value0}} · Main track: {{value1}} courses",
-  "ui.view.lessonview.copy.卡片问题-value0": "## Card Question\n{{value0}}",
-  "ui.view.lessonview.copy.参考答案-value0": "## Reference Answer\n{{value0}}",
+    "Start from {value0} · Main track: {value1} courses",
+  "ui.view.lessonview.copy.卡片问题-value0": "## Card Question\n{value0}",
+  "ui.view.lessonview.copy.参考答案-value0": "## Reference Answer\n{value0}",
   "ui.view.lessonview.copy.尚未开始": "Not started",
   "ui.view.lessonview.copy.已完成": "Completed",
-  "ui.view.lessonview.copy.我以前的回答-value0": "## My Previous Answer\n{{value0}}",
+  "ui.view.lessonview.copy.我以前的回答-value0": "## My Previous Answer\n{value0}",
   "ui.view.lessonview.copy.我在用间隔重复复习一张卡片-想请你-讲解-不要判分":
-    "I'm reviewing a card using spaced repetition, and I'd like you to **explain** it, not grade it.",
-  "ui.view.lessonview.copy.我这次的回答-value0": "## My Answer This Time\n{{value0}}",
+    "I''m reviewing a card using spaced repetition, and I''d like you to **explain** it, not grade it.",
+  "ui.view.lessonview.copy.我这次的回答-value0": "## My Answer This Time\n{value0}",
   "ui.view.lessonview.copy.请": "Please:",
   "ui.view.lessonview.copy.课文已确认-练习待完成": "Lesson text confirmed · Exercises pending",
   "ui.view.lessonview.copy.课文有新版-待阅读确认": "New lesson text available · Review to confirm",
-  "ui.view.lessonview.copy.进行中-value0": "In progress · {{value0}}%",
+  "ui.view.lessonview.copy.进行中-value0": "In progress · {value0}%",
   "ui.world.mapControlsHint.copy.双指缩放": "Pinch to zoom",
   "ui.world.mapControlsHint.copy.拖动平移": "Drag to pan",
   "ui.world.mapControlsHint.copy.滚轮缩放": "Scroll to zoom",

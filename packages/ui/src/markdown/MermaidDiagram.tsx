@@ -1,4 +1,4 @@
-import { formatNumber, translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useId, useRef, useState } from "react";
 
 type MermaidRenderer = Pick<(typeof import("mermaid"))["default"], "initialize" | "render">;
@@ -74,19 +74,22 @@ function safeDiagramId(reactId: string): string {
 
 function validateSource(source: string): string | undefined {
   if (source.length > MAX_MERMAID_SOURCE_CHARS) {
-    return translate("ui.markdown.mermaidDiagram.copy.关系图源码超过-value0-个字符的本地上限", {
-      value0: formatNumber(MAX_MERMAID_SOURCE_CHARS),
-    });
+    return interfaceTranslator.t(
+      "ui.markdown.mermaidDiagram.copy.关系图源码超过-value0-个字符的本地上限",
+      {
+        value0: interfaceTranslator.number(MAX_MERMAID_SOURCE_CHARS),
+      },
+    );
   }
   const nonemptyLines = source.split(/\r?\n/).filter((line) => line.trim() !== "").length;
   if (nonemptyLines > MAX_MERMAID_NONEMPTY_LINES) {
-    return translate(
+    return interfaceTranslator.t(
       "ui.markdown.mermaidDiagram.copy.关系图超过-value0-行的本地上限-请拆成几张小图",
       { value0: MAX_MERMAID_NONEMPTY_LINES },
     );
   }
   if (UNSAFE_SOURCE_URI.test(source)) {
-    return translate(
+    return interfaceTranslator.t(
       "ui.markdown.mermaidDiagram.copy.关系图包含外部或可执行地址-UniversityLocal-只渲染纯本地关系图",
     );
   }
@@ -114,7 +117,7 @@ function sanitizeRenderedSvg(svg: string): string {
   );
   const root = htmlDocument.querySelector("#university-mermaid-root > svg");
   if (!root) {
-    throw new Error("Mermaid returned an invalid SVG document");
+    throw new Error(interfaceTranslator.t("product.errors.invalidDiagram"));
   }
 
   root.querySelectorAll(REMOTE_CAPABLE_ELEMENTS).forEach((element) => element.remove());
@@ -145,6 +148,7 @@ function sanitizeRenderedSvg(svg: string): string {
 }
 
 export function MermaidDiagram({ source }: { readonly source: string }) {
+  const interfaceTranslator = useI18n();
   const reactId = useId();
   const diagramId = safeDiagramId(reactId);
   const renderVersion = useRef(0);
@@ -177,10 +181,11 @@ export function MermaidDiagram({ source }: { readonly source: string }) {
         setState({ status: "ready", svg: sanitizeRenderedSvg(rendered.svg) });
       } catch (error) {
         if (cancelled || version !== renderVersion.current) return;
-        const detail = error instanceof Error ? error.message : "unknown error";
+        const detail =
+          error instanceof Error ? error.message : interfaceTranslator.t("product.errors.unknown");
         setState({
           status: "error",
-          message: translate(
+          message: interfaceTranslator.t(
             "ui.markdown.mermaidDiagram.copy.这张关系图暂时无法渲染-value0-原始-Mermaid-源码已保留-可以继续阅读或修复",
             { value0: detail },
           ),
@@ -215,7 +220,9 @@ export function MermaidDiagram({ source }: { readonly source: string }) {
         className="mermaid-diagram mermaid-diagram--loading"
         id={diagramId}
       >
-        <figcaption>{translate("ui.markdown.mermaidDiagram.copy.正在绘制关系图")}</figcaption>
+        <figcaption>
+          {interfaceTranslator.t("ui.markdown.mermaidDiagram.copy.正在绘制关系图")}
+        </figcaption>
       </figure>
     );
   }

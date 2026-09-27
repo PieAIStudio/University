@@ -1,5 +1,5 @@
 import type { ActivityFamily, AgentActivity, ContextActivity } from "@pieai/university-core";
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 function requireRole<T>(value: T | undefined, role: string, activityId: string): T {
   if (value === undefined) throw new Error(`Workflow family ${activityId} is missing ${role}`);
@@ -34,14 +34,16 @@ function contextFamily(base: ContextActivity): Extract<ActivityFamily, { kind: "
     ...base,
     id: `${base.id}:intro:v1`,
     difficulty: "intro",
-    title: translate("play.ai.context.difficulty.intro.title", { name: visitor.name }),
-    brief: translate("play.ai.context.difficulty.intro.brief", { work: base.workTitle }),
-    goal: translate("play.ai.context.difficulty.intro.goal", {
+    title: interfaceTranslator.t("play.ai.context.difficulty.intro.title", { name: visitor.name }),
+    brief: interfaceTranslator.t("play.ai.context.difficulty.intro.brief", {
+      work: base.workTitle,
+    }),
+    goal: interfaceTranslator.t("play.ai.context.difficulty.intro.goal", {
       name: visitor.name,
       question: visitor.question,
     }),
-    hint: translate("play.ai.context.difficulty.intro.hint"),
-    authorityNote: translate("play.ai.context.difficulty.intro.authority", {
+    hint: interfaceTranslator.t("play.ai.context.difficulty.intro.hint"),
+    authorityNote: interfaceTranslator.t("play.ai.context.difficulty.intro.authority", {
       slot: slot.label,
       source: documents[0]!.title,
       trial: documents[1]!.title,
@@ -64,20 +66,23 @@ function contextFamily(base: ContextActivity): Extract<ActivityFamily, { kind: "
         id: `${base.id}:challenge:v1`,
         difficulty: "challenge",
         capacity,
-        title: translate("play.ai.context.difficulty.challenge.title", { capacity }),
-        brief: translate("play.ai.context.difficulty.challenge.brief", {
+        title: interfaceTranslator.t("play.ai.context.difficulty.challenge.title", { capacity }),
+        brief: interfaceTranslator.t("play.ai.context.difficulty.challenge.brief", {
           brief: base.brief,
           capacity,
         }),
-        goal: translate("play.ai.context.difficulty.challenge.goal", {
+        goal: interfaceTranslator.t("play.ai.context.difficulty.challenge.goal", {
           capacity,
           labels: base.slots.map((item) => item.label).join("、"),
         }),
-        authorityNote: translate("play.ai.context.difficulty.challenge.authority", {
+        authorityNote: interfaceTranslator.t("play.ai.context.difficulty.challenge.authority", {
           authority: base.authorityNote,
           capacity,
         }),
-        hint: translate("play.ai.context.difficulty.challenge.hint", { hint: base.hint, capacity }),
+        hint: interfaceTranslator.t("play.ai.context.difficulty.challenge.hint", {
+          hint: base.hint,
+          capacity,
+        }),
       },
     },
   };
@@ -109,18 +114,21 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
     base.id,
   );
   const values = { source: source.label, draft: draftFile.label };
-  const authorization = translate("play.ai.agent.difficulty.intro.authorization", values);
+  const authorization = interfaceTranslator.t(
+    "play.ai.agent.difficulty.intro.authorization",
+    values,
+  );
   const actions = [
     {
       ...read,
-      title: translate("play.ai.agent.difficulty.intro.readTitle", values),
-      intent: translate("play.ai.agent.difficulty.intro.readIntent", values),
+      title: interfaceTranslator.t("play.ai.agent.difficulty.intro.readTitle", values),
+      intent: interfaceTranslator.t("play.ai.agent.difficulty.intro.readIntent", values),
       authorityText: authorization,
     },
     {
       ...draft,
-      title: translate("play.ai.agent.difficulty.intro.writeTitle", values),
-      intent: translate("play.ai.agent.difficulty.intro.writeIntent", values),
+      title: interfaceTranslator.t("play.ai.agent.difficulty.intro.writeTitle", values),
+      intent: interfaceTranslator.t("play.ai.agent.difficulty.intro.writeIntent", values),
       authorityText: authorization,
     },
   ];
@@ -138,10 +146,10 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
     ...base,
     id: `${base.id}:intro:v1`,
     difficulty: "intro",
-    title: translate("play.ai.agent.difficulty.intro.title", values),
-    brief: translate("play.ai.agent.difficulty.intro.brief", values),
-    goal: translate("play.ai.agent.difficulty.intro.goal", values),
-    hint: translate("play.ai.agent.difficulty.intro.hint"),
+    title: interfaceTranslator.t("play.ai.agent.difficulty.intro.title", values),
+    brief: interfaceTranslator.t("play.ai.agent.difficulty.intro.brief", values),
+    goal: interfaceTranslator.t("play.ai.agent.difficulty.intro.goal", values),
+    hint: interfaceTranslator.t("play.ai.agent.difficulty.intro.hint"),
     authorization,
     actions,
     files: base.files.filter((file) => fileIds.has(file.id)),
@@ -152,7 +160,7 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
         taskFileIds: tool.taskFileIds.filter((id) => fileIds.has(id)),
         description:
           tool.id === draft.toolId
-            ? translate("play.ai.agent.difficulty.intro.writeTool", values)
+            ? interfaceTranslator.t("play.ai.agent.difficulty.intro.writeTool", values)
             : tool.description,
       })),
     goals: base.goals.filter((goal) =>
@@ -172,10 +180,13 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
     base.id,
   );
   const challengeValues = { draft: draftFile.label, public: publicFile.label };
-  const challengeAuthorization = translate("play.ai.agent.difficulty.challenge.authorization", {
-    authorization: base.authorization,
-    ...challengeValues,
-  });
+  const challengeAuthorization = interfaceTranslator.t(
+    "play.ai.agent.difficulty.challenge.authorization",
+    {
+      authorization: base.authorization,
+      ...challengeValues,
+    },
+  );
   return {
     id: base.id,
     kind: base.kind,
@@ -186,14 +197,14 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
         ...base,
         id: `${base.id}:challenge:v1`,
         difficulty: "challenge",
-        title: translate("play.ai.agent.difficulty.challenge.title"),
-        brief: translate("play.ai.agent.difficulty.challenge.brief", {
+        title: interfaceTranslator.t("play.ai.agent.difficulty.challenge.title"),
+        brief: interfaceTranslator.t("play.ai.agent.difficulty.challenge.brief", {
           brief: base.brief,
           ...challengeValues,
         }),
-        goal: translate("play.ai.agent.difficulty.challenge.goal", { goal: base.goal }),
+        goal: interfaceTranslator.t("play.ai.agent.difficulty.challenge.goal", { goal: base.goal }),
         authorization: challengeAuthorization,
-        hint: translate("play.ai.agent.difficulty.challenge.hint", {
+        hint: interfaceTranslator.t("play.ai.agent.difficulty.challenge.hint", {
           hint: base.hint,
           ...challengeValues,
         }),
@@ -203,8 +214,11 @@ function agentFamily(base: AgentActivity): Extract<ActivityFamily, { kind: "ai-a
                 ...action,
                 // The changed required decision needs fresh evidence from this payload.
                 id: `${action.id}-with-public-copy`,
-                title: translate("play.ai.agent.difficulty.challenge.writeTitle", challengeValues),
-                intent: translate(
+                title: interfaceTranslator.t(
+                  "play.ai.agent.difficulty.challenge.writeTitle",
+                  challengeValues,
+                ),
+                intent: interfaceTranslator.t(
                   "play.ai.agent.difficulty.challenge.writeIntent",
                   challengeValues,
                 ),

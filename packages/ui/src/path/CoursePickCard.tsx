@@ -13,7 +13,7 @@
  * LabelProbe translates. Kit components that cannot be placed at a point are
  * the wrong shape; the ones that can, we use.
  */
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useId, type RefObject } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -53,6 +53,7 @@ export function CoursePickCard({
   readonly onDismiss: () => void;
   readonly cardRef: RefObject<HTMLElement | null>;
 }) {
+  const interfaceTranslator = useI18n();
   const headingId = useId();
   const outcomesHeadingId = useId();
   const inventoryHeadingId = useId();
@@ -118,14 +119,16 @@ export function CoursePickCard({
             type="button"
             className="picked__close"
             onClick={onDismiss}
-            aria-label={translate("ui.path.coursePickCard.copy.关闭")}
+            aria-label={interfaceTranslator.t("ui.path.coursePickCard.copy.关闭")}
           >
             ×
           </GameButton>
         </div>
         <p className="picked__study">{studyTitle}</p>
         <section className="picked__outcomes" aria-labelledby={outcomesHeadingId}>
-          <h4 id={outcomesHeadingId}>{translate("ui.path.coursePickCard.copy.学完这门课-你能")}</h4>
+          <h4 id={outcomesHeadingId}>
+            {interfaceTranslator.t("ui.path.coursePickCard.copy.学完这门课-你能")}
+          </h4>
           <ul className="picked__objectives">
             {objectives.map((objective, index) => (
               <li key={`${index}-${objective}`}>{objective}</li>
@@ -140,40 +143,45 @@ export function CoursePickCard({
         */}
         {stats.evidenceCount !== undefined ? (
           <p className="picked__evidence">
-            {translate("ui.path.coursePickCard.copy.这些本事来自")} {stats.evidenceCount}{" "}
-            {translate("ui.path.coursePickCard.copy.段真实项目代码")}
+            {interfaceTranslator.t("ui.path.coursePickCard.copy.这些本事来自")}{" "}
+            {stats.evidenceCount}{" "}
+            {interfaceTranslator.t("ui.path.coursePickCard.copy.段真实项目代码")}
           </p>
         ) : null}
         <dl className="picked__meta">
-          <dt>{translate("ui.path.coursePickCard.copy.层")}</dt>
+          <dt>{interfaceTranslator.t("ui.path.coursePickCard.copy.层")}</dt>
           <dd>{depth + 1}</dd>
-          <dt>{translate("ui.path.coursePickCard.copy.先修")}</dt>
+          <dt>{interfaceTranslator.t("ui.path.coursePickCard.copy.先修")}</dt>
           <dd>
             {unmetPrerequisites.length > 0
               ? unmetPrerequisites.map((course) => course.title).join("、")
-              : translate("ui.path.coursePickCard.copy.无")}
+              : interfaceTranslator.t("ui.path.coursePickCard.copy.无")}
           </dd>
         </dl>
         {unmetPrerequisites.length > 0 ? (
           <p className="picked__assumes">
-            {translate("ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去")}
+            {interfaceTranslator.t(
+              "ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去",
+            )}
           </p>
         ) : null}
         <div className="picked__action">
           <section className="picked__inventory" aria-labelledby={inventoryHeadingId}>
-            <h4 id={inventoryHeadingId}>{translate("ui.path.coursePickCard.copy.这门课有")}</h4>
+            <h4 id={inventoryHeadingId}>
+              {interfaceTranslator.t("ui.path.coursePickCard.copy.这门课有")}
+            </h4>
             <dl className="picked__inventory-list">
-              <dt>{translate("ui.path.coursePickCard.copy.课时数")}</dt>
+              <dt>{interfaceTranslator.t("ui.path.coursePickCard.copy.课时数")}</dt>
               <dd>{stats.lessons}</dd>
-              <dt>{translate("ui.path.coursePickCard.copy.练习数")}</dt>
+              <dt>{interfaceTranslator.t("ui.path.coursePickCard.copy.练习数")}</dt>
               <dd>{stats.exercises}</dd>
-              <dt>{translate("ui.path.coursePickCard.copy.最多可得-XP")}</dt>
+              <dt>{interfaceTranslator.t("ui.path.coursePickCard.copy.最多可得-XP")}</dt>
               <dd>{stats.maxXp}</dd>
             </dl>
           </section>
           {isBeingRewritten ? (
             <p className="picked__rewrite-notice" data-course-rewrite-notice="true">
-              {translate("ui.path.coursePickCard.copy.早期版本提示")}
+              {interfaceTranslator.t("ui.path.coursePickCard.copy.早期版本提示")}
             </p>
           ) : null}
           <GameButton
@@ -184,7 +192,7 @@ export function CoursePickCard({
             className="university-cta picked__enter"
             onClick={onEnter}
           >
-            {translate("ui.path.coursePickCard.copy.进入这门课")}
+            {interfaceTranslator.t("ui.path.coursePickCard.copy.进入这门课")}
           </GameButton>
         </div>
       </GamePanel>

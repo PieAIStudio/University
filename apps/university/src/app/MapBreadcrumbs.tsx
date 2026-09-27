@@ -1,6 +1,6 @@
 import { LocationBreadcrumbs } from "@pieai/university-ui/navigation/LocationBreadcrumbs.js";
 import { toPath, type View } from "@pieai/university-core";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import "./map-breadcrumbs.css";
 
 interface MapBreadcrumbsProps {
@@ -17,18 +17,22 @@ export function MapBreadcrumbs({
   courseTitle,
   onNavigate,
 }: MapBreadcrumbsProps) {
+  const interfaceTranslator = useI18n();
   const items: { title: string; destination: View }[] = [
-    { title: translate("ui.world.navigation.planets"), destination: { kind: "planet" } },
+    {
+      title: interfaceTranslator.t("ui.world.navigation.planets"),
+      destination: { kind: "planet" },
+    },
   ];
   if (layer !== "planet") {
     items.push({
-      title: studyTitle ?? translate("ui.world.navigation.archipelago"),
+      title: studyTitle ?? interfaceTranslator.t("ui.world.navigation.archipelago"),
       destination: { kind: "world" },
     });
   }
   if (layer === "course") {
     items.push({
-      title: courseTitle ?? translate("ui.world.navigation.island"),
+      title: courseTitle ?? interfaceTranslator.t("ui.world.navigation.island"),
       destination: { kind: "world" },
     });
   }

@@ -19,7 +19,7 @@ import {
   GameStatList,
 } from "@pieai/swimmer-ui-kit";
 import { useEffect, useId, useMemo } from "react";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 
 import { PlanetStage } from "./PlanetScene.js";
 import { buildDomainPlan, type DomainPlanGroup } from "./domain-plan.js";
@@ -76,6 +76,7 @@ export function PlanetRail({
   onEnter,
   onClose,
 }: PlanetPageProps) {
+  const interfaceTranslator = useI18n();
   /*
     One order, both shells.
 
@@ -144,15 +145,15 @@ export function PlanetRail({
     >
       <header className="planet-rail__head">
         <h2 id={titleId} className="planet-rail__title">
-          {translate("world.picker.title")}
+          {interfaceTranslator.t("world.picker.title")}
         </h2>
         <GameButton
           variant="ghost"
           type="button"
           onClick={onClose}
-          aria-label={translate("world.picker.close")}
+          aria-label={interfaceTranslator.t("world.picker.close")}
         >
-          {translate("world.picker.close")}
+          {interfaceTranslator.t("world.picker.close")}
         </GameButton>
       </header>
 
@@ -160,7 +161,7 @@ export function PlanetRail({
         <div
           className="planet-rail__domains"
           role="toolbar"
-          aria-label={translate("world.picker.domains")}
+          aria-label={interfaceTranslator.t("world.picker.domains")}
         >
           {domainPlan.map((domain) => {
             const isActive = activeDomain?.id === domain.id;
@@ -177,7 +178,7 @@ export function PlanetRail({
                 {domain.title}
                 {domain.studies.length === 0 ? (
                   <span className="planet-rail__domain-state">
-                    {translate("ui.world.domain.unpublished")}
+                    {interfaceTranslator.t("ui.world.domain.unpublished")}
                   </span>
                 ) : null}
               </button>
@@ -187,7 +188,10 @@ export function PlanetRail({
       ) : null}
 
       <div className="planet-page__rail">
-        <nav className="planet-page__list" aria-label={translate("world.picker.studies")}>
+        <nav
+          className="planet-page__list"
+          aria-label={interfaceTranslator.t("world.picker.studies")}
+        >
           {(activeDomain ? [activeDomain] : domainPlan).map((domain) => (
             <div key={domain.id} className="planet-page__domain-group" data-domain-id={domain.id}>
               <div className="planet-page__domain-title">{domain.title}</div>
@@ -231,7 +235,9 @@ export function PlanetRail({
                       <span>{studyCounts(study)}</span>
                       {study.lessonCount > 0 ? (
                         <span>
-                          {translate("world.picker.percent", { percent: studyPercent(study) })}
+                          {interfaceTranslator.t("world.picker.percent", {
+                            percent: studyPercent(study),
+                          })}
                         </span>
                       ) : null}
                     </span>
@@ -251,11 +257,15 @@ export function PlanetRail({
           ) : activeDomain?.studies.length === 0 ? (
             <div className="planet-page__empty" data-domain-empty={activeDomain.id}>
               <div role="status">
-                <GameBadge tone="neutral">{translate("ui.world.domain.unpublished")}</GameBadge>
+                <GameBadge tone="neutral">
+                  {interfaceTranslator.t("ui.world.domain.unpublished")}
+                </GameBadge>
                 {activeDomain.description ? (
                   <p className="planet-page__domain-description">{activeDomain.description}</p>
                 ) : null}
-                <p className="planet-page__hint">{translate("ui.world.domain.empty")}</p>
+                <p className="planet-page__hint">
+                  {interfaceTranslator.t("ui.world.domain.empty")}
+                </p>
               </div>
               {returnDomain ? (
                 <GameButton
@@ -264,13 +274,15 @@ export function PlanetRail({
                   className="planet-page__return"
                   onClick={() => selectDomain(returnDomain)}
                 >
-                  {translate("ui.world.domain.return", { title: returnDomain.title })}
+                  {interfaceTranslator.t("ui.world.domain.return", { title: returnDomain.title })}
                 </GameButton>
               ) : null}
             </div>
           ) : (
             <p className="planet-page__hint" role="status">
-              {translate(domainPlan.length === 0 ? "world.picker.empty" : "world.picker.choose")}
+              {interfaceTranslator.t(
+                domainPlan.length === 0 ? "world.picker.empty" : "world.picker.choose",
+              )}
             </p>
           )}
         </div>
@@ -288,7 +300,7 @@ export function PlanetRail({
               looking at, and the wrong category word — 通用课 is nobody's project.
             */}
             <span className="planet-page__enter-label">
-              {translate("world.picker.enter", { title: selected.title })}
+              {interfaceTranslator.t("world.picker.enter", { title: selected.title })}
             </span>
           </GameButton>
         ) : null}
@@ -305,12 +317,13 @@ export function PlanetRail({
  * surface that wants the picker without the shell around it.
  */
 export function PlanetPage(props: PlanetPageProps) {
+  const interfaceTranslator = useI18n();
   return (
     <div
       className="planet-page"
       role="dialog"
       aria-modal="true"
-      aria-label={translate("world.picker.title")}
+      aria-label={interfaceTranslator.t("world.picker.title")}
     >
       <div className="planet-page__globe" data-planet-globe="true">
         <PlanetStage
@@ -328,6 +341,7 @@ export function PlanetPage(props: PlanetPageProps) {
 }
 
 function StudyDetail({ study }: { readonly study: PlanetStudy }) {
+  const interfaceTranslator = useI18n();
   const listed = studyCourseList(study);
   return (
     <GamePanel tone="strong" className="planet-page__card" title={study.title}>
@@ -339,7 +353,7 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
       <p className="planet-page__counts">{studyCounts(study)}</p>
       {study.lessonCount > 0 ? (
         <GameProgress
-          label={translate("world.picker.progress")}
+          label={interfaceTranslator.t("world.picker.progress")}
           value={study.lessonsDone}
           max={study.lessonCount}
           valueLabel={`${study.lessonsDone} / ${study.lessonCount}`}
@@ -352,12 +366,24 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
         nobody looked.
       */}
       <GameStatList
-        label={translate("world.picker.overview", { title: study.title })}
+        label={interfaceTranslator.t("world.picker.overview", { title: study.title })}
         density="dense"
         facts={[
-          { id: "courses", label: translate("world.picker.courses"), value: study.courseCount },
-          { id: "lessons", label: translate("world.picker.lessons"), value: study.lessonCount },
-          { id: "done", label: translate("world.picker.completed"), value: study.lessonsDone },
+          {
+            id: "courses",
+            label: interfaceTranslator.t("world.picker.courses"),
+            value: study.courseCount,
+          },
+          {
+            id: "lessons",
+            label: interfaceTranslator.t("world.picker.lessons"),
+            value: study.lessonCount,
+          },
+          {
+            id: "done",
+            label: interfaceTranslator.t("world.picker.completed"),
+            value: study.lessonsDone,
+          },
         ]}
       />
       {listed.shown.length > 0 ? (

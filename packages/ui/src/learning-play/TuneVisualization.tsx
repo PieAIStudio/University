@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { TuneActivity } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 /** A deliberately synthetic specimen: no real JPEG encoder or hardware benchmark. */
 function GardenSpecimen() {
@@ -42,6 +42,7 @@ export function TuneVisualization({
   readonly values: Readonly<Record<string, number>>;
   readonly metrics: readonly { readonly id: string; readonly value: number }[];
 }) {
+  const interfaceTranslator = useI18n();
   const [original, setOriginal] = useState(false);
   const visual = activity.visualization;
   if (!visual) return null;
@@ -53,8 +54,10 @@ export function TuneVisualization({
     return (
       <figure className="play-tune__specimen">
         <div className="play-tune__specimen-label">
-          <strong>{t(original ? "play.tune.original" : "play.tune.preview")}</strong>
-          <span>{t("play.tune.modelBadge")}</span>
+          <strong>
+            {interfaceTranslator.t(original ? "play.tune.original" : "play.tune.preview")}
+          </strong>
+          <span>{interfaceTranslator.t("play.tune.modelBadge")}</span>
         </div>
         <div
           className="play-tune__image"
@@ -70,9 +73,9 @@ export function TuneVisualization({
           aria-pressed={original}
           onClick={() => setOriginal(!original)}
         >
-          {t(original ? "play.tune.backPreview" : "play.tune.compareOriginal")}
+          {interfaceTranslator.t(original ? "play.tune.backPreview" : "play.tune.compareOriginal")}
         </GameButton>
-        <figcaption>{t("play.tune.previewNote")}</figcaption>
+        <figcaption>{interfaceTranslator.t("play.tune.previewNote")}</figcaption>
       </figure>
     );
   }
@@ -81,8 +84,8 @@ export function TuneVisualization({
   return (
     <figure className="play-tune__specimen">
       <div className="play-tune__specimen-label">
-        <strong>{t("play.tune.queuePreview")}</strong>
-        <span>{t("play.tune.modelBadge")}</span>
+        <strong>{interfaceTranslator.t("play.tune.queuePreview")}</strong>
+        <span>{interfaceTranslator.t("play.tune.modelBadge")}</span>
       </div>
       <div className="play-tune__queue" aria-hidden="true">
         {Array.from({ length: workers }, (_, worker) => (
@@ -98,7 +101,7 @@ export function TuneVisualization({
         ))}
       </div>
       <figcaption>
-        {t("play.tune.queueNote", { workers, batch, total: workers * batch })}
+        {interfaceTranslator.t("play.tune.queueNote", { workers, batch, total: workers * batch })}
       </figcaption>
     </figure>
   );

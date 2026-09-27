@@ -9,7 +9,7 @@ import {
   type ActivityResult,
 } from "@pieai/university-core";
 import { getExampleFamily } from "./difficulty-examples.js";
-import { translate as t, useI18n } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { SoundToggle } from "../sound/index.js";
 import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
@@ -71,6 +71,7 @@ export function LearningPlayLab({
 }: {
   readonly collection?: "foundations" | "ai";
 }) {
+  const interfaceTranslator = useI18n();
   const modes: readonly LabKind[] = collection === "ai" ? AI_MODES : FOUNDATION_MODES;
   const { locale } = useI18n();
   const examples = useMemo(() => getLabExamples(collection), [locale, collection]);
@@ -142,24 +143,30 @@ export function LearningPlayLab({
   return (
     <div className="learning-play-lab">
       <h1 className="play-visually-hidden">
-        {t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
+        {interfaceTranslator.t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
       </h1>
       <div className="learning-play-lab__top">
-        <a href="/practice">{t("play.lab.back")}</a>
+        <a href="/practice">{interfaceTranslator.t("play.lab.back")}</a>
         <SoundToggle />
       </div>
-      <nav className="learning-play-lab__collections" aria-label={t("play.ai.collection")}>
-        <a href="/play-lab/catalog">{t("gallery.title")}</a>
+      <nav
+        className="learning-play-lab__collections"
+        aria-label={interfaceTranslator.t("play.ai.collection")}
+      >
+        <a href="/play-lab/catalog">{interfaceTranslator.t("gallery.title")}</a>
         <a href="/play-lab/ai" aria-current={collection === "ai" ? "page" : undefined}>
-          {t("play.ai.collection.ai")}
+          {interfaceTranslator.t("play.ai.collection.ai")}
         </a>
         <a href="/play-lab" aria-current={collection === "foundations" ? "page" : undefined}>
-          {t("play.ai.collection.foundations")}
+          {interfaceTranslator.t("play.ai.collection.foundations")}
         </a>
-        <a href="/play-lab/primm">{t("play.ai.collection.primm")}</a>
+        <a href="/play-lab/primm">{interfaceTranslator.t("play.ai.collection.primm")}</a>
       </nav>
 
-      <nav className="learning-play-lab__modes" aria-label={t("play.lab.select")}>
+      <nav
+        className="learning-play-lab__modes"
+        aria-label={interfaceTranslator.t("play.lab.select")}
+      >
         {modes.map((kind) => (
           <GameButton
             sound={false}
@@ -173,7 +180,7 @@ export function LearningPlayLab({
           >
             <PlayIcon name={kind} />
             <span>
-              <strong>{t(`play.mode.${kind}`)}</strong>
+              <strong>{interfaceTranslator.t(`play.mode.${kind}`)}</strong>
             </span>
             {completed.has(`${kind}:${difficulty}`) ? (
               <PlayIcon name="check" className="learning-play-lab__mode-check" />
@@ -184,15 +191,15 @@ export function LearningPlayLab({
       {playlistDone ? (
         <section className="learning-play-lab__finish" aria-live="polite">
           <PlayIcon name="spark" />
-          <h2>{t("play.lab.mixDone")}</h2>
+          <h2>{interfaceTranslator.t("play.lab.mixDone")}</h2>
           <p>
-            {t("play.lab.mixSummary", {
+            {interfaceTranslator.t("play.lab.mixSummary", {
               complete: playlist?.filter((result) => result.status === "completed").length ?? 0,
               skipped: playlist?.filter((result) => result.status === "skipped").length ?? 0,
             })}
           </p>
           <GameButton sound={false} onClick={startPlaylist}>
-            {t("play.lab.again")}
+            {interfaceTranslator.t("play.lab.again")}
           </GameButton>
         </section>
       ) : (
@@ -201,8 +208,8 @@ export function LearningPlayLab({
             <div className="learning-play-lab__variant">
               <span>
                 {playlist !== null
-                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / ${modes.length}`
-                  : t("play.lab.variant", { count: variant + 1 })}
+                  ? `${interfaceTranslator.t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / ${modes.length}`
+                  : interfaceTranslator.t("play.lab.variant", { count: variant + 1 })}
               </span>
               {playlist === null ? (
                 <GameButton
@@ -215,7 +222,7 @@ export function LearningPlayLab({
                     setRound((value) => value + 1);
                   }}
                 >
-                  {t("play.lab.example")}
+                  {interfaceTranslator.t("play.lab.example")}
                   <PlayIcon name="arrow" />
                 </GameButton>
               ) : null}
@@ -236,7 +243,7 @@ export function LearningPlayLab({
               onNext={next}
               nextLabel={
                 playlist !== null && mode === modes[modes.length - 1]
-                  ? t("play.lab.mixDone")
+                  ? interfaceTranslator.t("play.lab.mixDone")
                   : undefined
               }
             />
@@ -246,7 +253,7 @@ export function LearningPlayLab({
       <header className="learning-play-lab__intro">
         <div>
           <p className="learning-play-lab__closing-title">
-            {t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
+            {interfaceTranslator.t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
           </p>
         </div>
         <div className="learning-play-lab__session">
@@ -257,7 +264,7 @@ export function LearningPlayLab({
               progress line, which was correct for exactly as long as there were
               five games — and `sort` was the sixth.
             */}
-            {t("play.lab.session", {
+            {interfaceTranslator.t("play.lab.session", {
               count: modes.filter((kind) =>
                 ACTIVITY_DIFFICULTIES.some((level) => completed.has(`${kind}:${level}`)),
               ).length,
@@ -278,19 +285,23 @@ export function LearningPlayLab({
             }
           >
             {playlist !== null && !playlistDone
-              ? t("play.lab.cancelMix")
-              : t("play.lab.mix", { total: modes.length })}
+              ? interfaceTranslator.t("play.lab.cancelMix")
+              : interfaceTranslator.t("play.lab.mix", { total: modes.length })}
           </GameButton>
         </div>
       </header>
-      <p className="play-muted">{t("play.difficulty.change")}</p>
+      <p className="play-muted">{interfaceTranslator.t("play.difficulty.change")}</p>
       <p className="learning-play-lab__intro-detail">
-        {t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}
+        {interfaceTranslator.t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}
       </p>
-      <p className="learning-play-lab__note">{t("play.lab.note")}</p>
+      <p className="learning-play-lab__note">{interfaceTranslator.t("play.lab.note")}</p>
       <details className="play-model-note learning-play-lab__research">
-        <summary>{t("play.lab.research")}</summary>
-        <p>{t(collection === "ai" ? "play.ai.researchCopy" : "play.lab.researchCopy")}</p>
+        <summary>{interfaceTranslator.t("play.lab.research")}</summary>
+        <p>
+          {interfaceTranslator.t(
+            collection === "ai" ? "play.ai.researchCopy" : "play.lab.researchCopy",
+          )}
+        </p>
         <div>
           {collection === "ai" ? (
             <>

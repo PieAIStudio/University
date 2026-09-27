@@ -1,0 +1,21 @@
+{
+  "grading.quantity.unavailable": "Currently unavailable",
+  "grading.quantity.zero": "Not enough for one grading",
+  "grading.quantity.count": "{count, plural, one {{amount} grading} other {{amount} gradings}}",
+  "grading.free.unavailable": "Today''s remaining allowance is unavailable",
+  "grading.free.zero": "No complete free grading remains today",
+  "grading.free.count": "{count, plural, one {{amount} free grading remains today} other {{amount} free gradings remain today}}",
+  "grading.wallet.unavailable": "Your wallet balance is currently unavailable",
+  "grading.wallet.zero": "Your wallet does not cover one grading",
+  "grading.wallet.count": "{count, plural, one {Your wallet covers {amount} grading} other {Your wallet covers {amount} gradings}}",
+  "grading.host.automatic": "Automatic check",
+  "grading.host.ai": "AI evaluation",
+  "billing.free.name": "Free",
+  "billing.free.line1": "Read every published course",
+  "billing.free.line2": "Practice and review cards",
+  "billing.free.line3": "Link your email for a daily AI-grading trial",
+  "billing.member.name": "Member",
+  "billing.member.line1": "Sync learning progress and review cards",
+  "billing.member.line2": "Continue on your phone, computer or tablet",
+  "billing.member.line3": "AI grading beyond the daily free allowance"
+}

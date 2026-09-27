@@ -1,6 +1,6 @@
 import { toPath, type ActivityKind } from "@pieai/university-core";
 import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
-import type { MessageKey } from "../i18n/types.js";
+import type { PlainMessageKey } from "../i18n/types.js";
 import { SAMPLE_PATHS } from "./sample-paths.js";
 import { THREE_GAMES, type ThreeGame } from "./three-games.js";
 export { THREE_GAMES, type ThreeGame } from "./three-games.js";
@@ -13,10 +13,10 @@ export type NativeKind = Exclude<ActivityKind, "interaction-path" | "primm">;
 export interface CatalogEntry {
   readonly id: string;
   readonly group: CatalogGroup;
-  readonly name: MessageKey;
-  readonly action: MessageKey;
-  readonly controls: MessageKey;
-  readonly scope: MessageKey;
+  readonly name: PlainMessageKey;
+  readonly action: PlainMessageKey;
+  readonly controls: PlainMessageKey;
+  readonly scope: PlainMessageKey;
   readonly nativeKind?: NativeKind;
   readonly href?: string;
   readonly source?: PrototypeSource;
@@ -45,7 +45,7 @@ export function prototypeRegistrations(source: string): readonly { id: string; t
 // A session is a structural distinction, never a measured duration claim.
 const SESSION_IDS = new Set(["forge", "shift", "defenseline", "invaders", "cloze-tetris"]);
 const itemKey = (id: string, field: "name" | "action" | "controls") =>
-  `gallery.item.${id}.${field}` as MessageKey;
+  `gallery.item.${id}.${field}` as PlainMessageKey;
 
 export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[] {
   const native: CatalogEntry[] = [...FOUNDATION_MODES, ...AI_MODES].map((kind) => ({
@@ -139,9 +139,9 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
                 ? "arcade:slice"
                 : `blocks:${mode}`,
       name: `arcade3d.${mode}`,
-      action: `gallery.three.${mode}` as MessageKey,
+      action: `gallery.three.${mode}` as PlainMessageKey,
       controls:
-        `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as MessageKey,
+        `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as PlainMessageKey,
       scope: "arcade3d.boundary",
       rhythm: "session",
       retained: false,
@@ -153,7 +153,7 @@ export function filterCatalog(
   entries: readonly CatalogEntry[],
   group: CatalogGroup | "all",
   query: string,
-  label: (key: MessageKey) => string,
+  label: (key: PlainMessageKey) => string,
 ): readonly CatalogEntry[] {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return entries.filter(

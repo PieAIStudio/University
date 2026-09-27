@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 /// <reference types="node" />
 
@@ -39,7 +40,7 @@ async function renderHint(node: ReactNode): Promise<{
   document.body.append(host);
   const root = createRoot(host);
   await act(async () => {
-    root.render(<p className="hint">{node}</p>);
+    root.render(withInterfaceLocale(<p className="hint">{node}</p>));
   });
   return {
     host,
@@ -97,8 +98,8 @@ describe("separate map hints", () => {
     const fn = src.slice(fnStart, fnEnd);
     expect(fnStart).toBeGreaterThan(-1);
     expect(fn).toMatch(/pointer === "touch"/);
-    expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.双指缩放"\)/);
-    expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.滚轮缩放"\)/);
+    expect(fn).toMatch(/interfaceTranslator\.t\("ui.world.mapControlsHint.copy.双指缩放"\)/);
+    expect(fn).toMatch(/interfaceTranslator\.t\("ui.world.mapControlsHint.copy.滚轮缩放"\)/);
     expect(fn).not.toMatch(/右键/);
     expect(fn).not.toMatch(/hintItem\("enter"/);
     const entryStart = src.indexOf("export function mapEntryHint");

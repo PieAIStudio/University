@@ -16,7 +16,7 @@ import type {
 } from "@pieai/university-core";
 import { METERED_GRADING_COST_POWER_UNITS as METERED_COST } from "@pieai/university-core";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 
 import { createLocalRequestHeaders } from "./bootstrap.js";
 
@@ -42,7 +42,7 @@ export function createLocalGradingPort(options: {
         }),
       );
       if ((options.progress?.syncState().userId ?? null) !== accountScope) {
-        throw new Error(translate("grading.account.changedBeforeSave"));
+        throw new Error(interfaceTranslator.t("grading.account.changedBeforeSave"));
       }
       options.progress?.recordExerciseAttempt({
         commandId: input.commandId,
@@ -68,10 +68,10 @@ export function createLocalGradingPort(options: {
         availablePowerUnits: null,
         explanation: {
           kind: "explanation",
-          title: translate("grading.local.title"),
-          whatItDoes: translate("grading.local.whatItDoes"),
-          whyUnavailable: translate("grading.local.whyUnavailable"),
-          futureSupport: translate("grading.local.futureSupport"),
+          title: interfaceTranslator.t("grading.local.title"),
+          whatItDoes: interfaceTranslator.t("grading.local.whatItDoes"),
+          whyUnavailable: interfaceTranslator.t("grading.local.whyUnavailable"),
+          futureSupport: interfaceTranslator.t("grading.local.futureSupport"),
         },
       };
     },

@@ -1,4 +1,4 @@
-import { formatDate, translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 import {
   GameBadge,
@@ -33,6 +33,7 @@ interface ResolvedMistake {
 
 /** The review page's one way into the mistake book. */
 export function MistakesEntry({ count, hasMistakes }: MistakesEntryProps) {
+  const interfaceTranslator = useI18n();
   if (!hasMistakes) return null;
   return (
     <a
@@ -40,22 +41,22 @@ export function MistakesEntry({ count, hasMistakes }: MistakesEntryProps) {
       href="/mistakes"
       aria-label={
         count > 0
-          ? translate("ui.practice.mistakeList.copy.错题本") +
+          ? interfaceTranslator.t("ui.practice.mistakeList.copy.错题本") +
             count +
-            translate("ui.practice.mistakeList.copy.道未订正")
-          : translate("ui.practice.mistakeList.copy.错题本-全部已订正")
+            interfaceTranslator.t("ui.practice.mistakeList.copy.道未订正")
+          : interfaceTranslator.t("ui.practice.mistakeList.copy.错题本-全部已订正")
       }
     >
       <span>
         <span className="mistakes-entry__eyebrow">
-          {translate("ui.practice.mistakeList.copy.复习里的另一条路")}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.复习里的另一条路")}
         </span>
-        <strong>{translate("ui.practice.mistakeList.copy.错题本-4d8qe0")}</strong>
+        <strong>{interfaceTranslator.t("ui.practice.mistakeList.copy.错题本-4d8qe0")}</strong>
       </span>
       {count > 0 ? <GameBadge tone="warning">{count}</GameBadge> : null}
       {count === 0 ? (
         <span className="mistakes-entry__done">
-          {translate("ui.practice.mistakeList.copy.已订正")}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.已订正")}
         </span>
       ) : null}
     </a>
@@ -63,6 +64,7 @@ export function MistakesEntry({ count, hasMistakes }: MistakesEntryProps) {
 }
 
 export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProps) {
+  const interfaceTranslator = useI18n();
   const [resolved, setResolved] = useState<readonly ResolvedMistake[] | null>(null);
   const signature = mistakes
     .map((mistake) =>
@@ -112,8 +114,8 @@ export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProp
     return (
       <GameEmptyState
         className="mistake-list mistake-list--empty"
-        title={translate("ui.practice.mistakeList.copy.还没有错题")}
-        description={translate(
+        title={interfaceTranslator.t("ui.practice.mistakeList.copy.还没有错题")}
+        description={interfaceTranslator.t(
           "ui.practice.mistakeList.copy.答错的题会留在这里-先去上一道练习-错过的地方就有了回头路",
         )}
       />
@@ -124,9 +126,9 @@ export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProp
     return (
       <GamePanel
         className="mistake-list mistake-list--loading"
-        title={translate("ui.practice.mistakeList.copy.错题本-4d8qe0")}
+        title={interfaceTranslator.t("ui.practice.mistakeList.copy.错题本-4d8qe0")}
       >
-        <p>{translate("ui.practice.mistakeList.copy.正在找回错题内容")}</p>
+        <p>{interfaceTranslator.t("ui.practice.mistakeList.copy.正在找回错题内容")}</p>
       </GamePanel>
     );
   }
@@ -147,11 +149,15 @@ export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProp
         to where you were was that the rail had lit 「更多」.
       */}
       <header className="mistake-list__head">
-        <h2 id="mistake-list-title">{translate("ui.practice.mistakeList.copy.错题本-4d8qe0")}</h2>
+        <h2 id="mistake-list-title">
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.错题本-4d8qe0")}
+        </h2>
         <p className="mistake-list__count">
           {pending > 0
-            ? translate("ui.practice.mistakeList.copy.value0-道还没订正", { value0: pending })
-            : translate("ui.practice.mistakeList.copy.value0-道-都订正过了", {
+            ? interfaceTranslator.t("ui.practice.mistakeList.copy.value0-道还没订正", {
+                value0: pending,
+              })
+            : interfaceTranslator.t("ui.practice.mistakeList.copy.value0-道-都订正过了", {
                 value0: mistakes.length,
               })}
         </p>
@@ -159,20 +165,20 @@ export function MistakeList({ mistakes, content, onOpenLesson }: MistakeListProp
       {allCorrected ? (
         <GameCallout
           className="mistake-list__celebration"
-          heading={translate("ui.practice.mistakeList.copy.都订正好了")}
+          heading={interfaceTranslator.t("ui.practice.mistakeList.copy.都订正好了")}
           tone="success"
         >
-          {translate(
+          {interfaceTranslator.t(
             "ui.practice.mistakeList.copy.这本错题本已经清空-之前绊住你的题都被你修好了-它们还留在下面-随时可以再看",
           )}
         </GameCallout>
       ) : null}
       {visible.length === 0 ? (
         <GameCallout
-          heading={translate("ui.practice.mistakeList.copy.这道题已经换版")}
+          heading={interfaceTranslator.t("ui.practice.mistakeList.copy.这道题已经换版")}
           tone="neutral"
         >
-          {translate(
+          {interfaceTranslator.t(
             "ui.practice.mistakeList.copy.旧题已经从当前课程里撤下-这条记录不再指向一道存在的题",
           )}
         </GameCallout>
@@ -192,24 +198,26 @@ function MistakeCard({
   exercise,
   onOpenLesson,
 }: ResolvedMistake & { readonly onOpenLesson: (locator: LessonRef) => void }) {
+  const interfaceTranslator = useI18n();
   const answer =
     exercise?.options?.find((option) => option.id === mistake.wrongAnswer)?.text ??
-    (mistake.wrongAnswer || translate("ui.practice.mistakeList.copy.空答案"));
+    (mistake.wrongAnswer || interfaceTranslator.t("ui.practice.mistakeList.copy.空答案"));
   return (
     <GamePanel
       className="mistake-card"
-      title={exercise?.title ?? translate("ui.practice.mistakeList.copy.这道练习题")}
+      title={exercise?.title ?? interfaceTranslator.t("ui.practice.mistakeList.copy.这道练习题")}
     >
       <header className="mistake-card__header">
         <div>
           <p className="mistake-card__lesson">
-            {exercise?.lessonTitle ?? translate("ui.practice.mistakeList.copy.课程内容暂时不可用")}
+            {exercise?.lessonTitle ??
+              interfaceTranslator.t("ui.practice.mistakeList.copy.课程内容暂时不可用")}
           </p>
           <p className="mistake-card__status">
             <GameBadge tone={mistake.corrected ? "success" : "danger"}>
               {mistake.corrected
-                ? translate("ui.practice.mistakeList.copy.已订正")
-                : translate("ui.practice.mistakeList.copy.待订正")}
+                ? interfaceTranslator.t("ui.practice.mistakeList.copy.已订正")
+                : interfaceTranslator.t("ui.practice.mistakeList.copy.待订正")}
             </GameBadge>
           </p>
         </div>
@@ -218,12 +226,12 @@ function MistakeCard({
       {exercise ? (
         <div className="mistake-card__content">
           <section>
-            <h3>{translate("ui.practice.mistakeList.copy.题目")}</h3>
+            <h3>{interfaceTranslator.t("ui.practice.mistakeList.copy.题目")}</h3>
             <MarkdownContent>{exercise.prompt}</MarkdownContent>
           </section>
           <div className="mistake-card__answers">
             <section>
-              <h3>{translate("ui.practice.mistakeList.copy.你当时答")}</h3>
+              <h3>{interfaceTranslator.t("ui.practice.mistakeList.copy.你当时答")}</h3>
               <p>{answer}</p>
             </section>
             {/*
@@ -233,10 +241,10 @@ function MistakeCard({
               the answer's place would read as a fault; this is a boundary.
             */}
             <section>
-              <h3>{translate("ui.practice.mistakeList.copy.正确答案")}</h3>
+              <h3>{interfaceTranslator.t("ui.practice.mistakeList.copy.正确答案")}</h3>
               {exercise.correctAnswer === null ? (
                 <p className="mistake-card__withheld">
-                  {translate(
+                  {interfaceTranslator.t(
                     "ui.practice.mistakeList.copy.这个版本不随课程包下发参考答案-题目和你当时的答案都在上面-先自己再想一遍",
                   )}
                 </p>
@@ -248,28 +256,28 @@ function MistakeCard({
         </div>
       ) : (
         <p className="mistake-card__fallback">
-          {translate("ui.practice.mistakeList.copy.你答过")}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.你答过")}
           {answer}
         </p>
       )}
 
       <footer className="mistake-card__footer">
         <p>
-          {translate("ui.practice.mistakeList.copy.答错于")}{" "}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.答错于")}{" "}
           <time dateTime={mistake.wrongAt}>{formatMistakeDate(mistake.wrongAt)}</time>{" "}
-          {translate("ui.practice.mistakeList.copy.共错")} {mistake.wrongCount}{" "}
-          {translate("ui.practice.mistakeList.copy.次")}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.共错")} {mistake.wrongCount}{" "}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.次")}
           {mistake.correctedAt ? (
             <>
               {" "}
-              {translate("ui.practice.mistakeList.copy.已于")}{" "}
+              {interfaceTranslator.t("ui.practice.mistakeList.copy.已于")}{" "}
               <time dateTime={mistake.correctedAt}>{formatMistakeDate(mistake.correctedAt)}</time>{" "}
-              {translate("ui.practice.mistakeList.copy.订正")}
+              {interfaceTranslator.t("ui.practice.mistakeList.copy.订正")}
             </>
           ) : null}
         </p>
         <GameButton variant="ghost" type="button" onClick={() => onOpenLesson(mistake.locator)}>
-          {translate("ui.practice.mistakeList.copy.回到这课")}
+          {interfaceTranslator.t("ui.practice.mistakeList.copy.回到这课")}
         </GameButton>
       </footer>
     </GamePanel>
@@ -290,7 +298,7 @@ function mistakeKey(mistake: Mistake): string {
 function formatMistakeDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return formatDate(date, {
+  return interfaceTranslator.date(date, {
     year: "numeric",
     month: "long",
     day: "numeric",

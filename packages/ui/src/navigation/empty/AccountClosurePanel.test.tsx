@@ -1,10 +1,11 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryIdentityPort } from "@pieai/university-core";
 import type { AuthPort } from "@pieaistudio/swimmer-auth-kit";
-import { setActiveLocale } from "../../i18n/index.js";
+import { setInterfaceLocale } from "../../i18n/index.js";
 import { AccountClosurePanel } from "./AccountClosurePanel.js";
 
 let root: Root;
@@ -15,7 +16,7 @@ const user = {
   is_anonymous: false,
 };
 beforeEach(() => {
-  setActiveLocale("en");
+  setInterfaceLocale("en");
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   HTMLDialogElement.prototype.showModal ??= function () {
     this.setAttribute("open", "");
@@ -60,12 +61,14 @@ async function setup(result: "review-required" = "review-required") {
   };
   await act(async () =>
     root.render(
-      <AccountClosurePanel
-        identity={identity}
-        auth={auth}
-        confirmationPhrase="REQUEST ACCOUNT DELETION"
-        requestClosure={request}
-      />,
+      withInterfaceLocale(
+        <AccountClosurePanel
+          identity={identity}
+          auth={auth}
+          confirmationPhrase="REQUEST ACCOUNT DELETION"
+          requestClosure={request}
+        />,
+      ),
     ),
   );
   await act(async () => button("Request account deletion").click());

@@ -31,11 +31,11 @@ minimumReleaseAgeExclude:
   # Existing Owner-approved provider release: use the exact reviewed version only.
   - '@pieai/swimmer-ai-provider-kit@0.13.0'
   # SwimmerNerveKit's grounded presence release (ADR-0012).
-  - '@pieai/swimmer-nerve-kit@0.2.0'
+  - '@pieai/swimmer-nerve-kit@0.2.0 || 0.5.0'
   - '@pieai/swimmer-avatar-kit@0.2.0 || 0.4.0 || 0.5.1 || 0.6.0 || 0.7.0'
   - '@pieai/swimmer-backend-client@0.5.0 || 0.6.0'
   - '@pieaistudio/swimmer-auth-kit@0.1.9'
-  - '@pieai/swimmer-i18n-kit@0.1.0'
+  - '@pieai/swimmer-i18n-kit@0.1.0 || 0.1.1'
 
 # Drei's tunnel-rat pins Zustand 4.3.2, whose old 1.2.0 shim declares no React
 # 19 support. Use the compatible 1.7.0 shim already consumed by Drei, only on

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
@@ -71,7 +72,7 @@ describe("one shared world style across canvases", () => {
     expect(current.accountData().preferences.worldStyle).toBe("clay");
   });
   it("renders accessible choices server-side without browser storage", () => {
-    const html = renderToString(<WorldStyleControl />);
+    const html = renderToString(withInterfaceLocale(<WorldStyleControl />));
     expect(html).toContain('role="group"');
     expect(html).toContain('data-world-style-choice="clay"');
     expect(html).toContain('aria-pressed="true"');

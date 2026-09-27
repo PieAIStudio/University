@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -104,12 +105,14 @@ describe("lesson layer coverage when this shell cannot open the map", () => {
   it("shows cited files and an honest label before anyone clicks", async () => {
     await act(async () => {
       root.render(
-        <LayerCoverage
-          variant="lesson"
-          studyId="turing-pact"
-          evidence={EVIDENCE}
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LayerCoverage
+            variant="lesson"
+            studyId="turing-pact"
+            evidence={EVIDENCE}
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
     await act(async () => {
@@ -133,12 +136,14 @@ describe("lesson layer coverage when this shell cannot open the map", () => {
   it("opens the explanation only after the honest control is pressed", async () => {
     await act(async () => {
       root.render(
-        <LayerCoverage
-          variant="lesson"
-          studyId="turing-pact"
-          evidence={EVIDENCE}
-          sourceAccess={explanationPort()}
-        />,
+        withInterfaceLocale(
+          <LayerCoverage
+            variant="lesson"
+            studyId="turing-pact"
+            evidence={EVIDENCE}
+            sourceAccess={explanationPort()}
+          />,
+        ),
       );
     });
     await act(async () => {
@@ -159,12 +164,14 @@ describe("lesson layer coverage when this shell cannot open the map", () => {
   it("keeps the live map label when the port can actually open coverage", async () => {
     await act(async () => {
       root.render(
-        <LayerCoverage
-          variant="lesson"
-          studyId="turing-pact"
-          evidence={EVIDENCE}
-          sourceAccess={actionPort()}
-        />,
+        withInterfaceLocale(
+          <LayerCoverage
+            variant="lesson"
+            studyId="turing-pact"
+            evidence={EVIDENCE}
+            sourceAccess={actionPort()}
+          />,
+        ),
       );
     });
     await act(async () => {

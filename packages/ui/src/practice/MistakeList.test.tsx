@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -85,19 +86,25 @@ async function renderList(
   port: ContentPort = content(EXERCISE),
 ): Promise<void> {
   await act(async () => {
-    root.render(<MistakeList mistakes={mistakes} content={port} onOpenLesson={() => undefined} />);
+    root.render(
+      withInterfaceLocale(
+        <MistakeList mistakes={mistakes} content={port} onOpenLesson={() => undefined} />,
+      ),
+    );
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 }
 
 describe("MistakesEntry", () => {
   it("does not render an entry when the book has no rows", () => {
-    expect(renderToStaticMarkup(<MistakesEntry count={0} hasMistakes={false} />)).toBe("");
+    expect(
+      renderToStaticMarkup(withInterfaceLocale(<MistakesEntry count={0} hasMistakes={false} />)),
+    ).toBe("");
   });
 
   it("shows the uncorrected count without a noisy zero badge", () => {
-    const open = renderToStaticMarkup(<MistakesEntry count={3} hasMistakes />);
-    const done = renderToStaticMarkup(<MistakesEntry count={0} hasMistakes />);
+    const open = renderToStaticMarkup(withInterfaceLocale(<MistakesEntry count={3} hasMistakes />));
+    const done = renderToStaticMarkup(withInterfaceLocale(<MistakesEntry count={0} hasMistakes />));
     expect(open).toContain("错题本");
     expect(open).toContain(">3<");
     expect(done).toContain("已订正");

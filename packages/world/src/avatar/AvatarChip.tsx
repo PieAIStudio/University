@@ -10,7 +10,7 @@
  * on the reader and the profile page too.
  */
 import { Canvas } from "@react-three/fiber";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import type { AvatarBounds, AvatarRecipe } from "@pieai/swimmer-avatar-kit";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -35,6 +35,7 @@ export function AvatarChip({
   readonly label?: string;
   readonly onClick?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const [live, setLive] = useState(true);
@@ -108,7 +109,9 @@ export function AvatarChip({
       onClick={onClick}
       aria-label={
         label ??
-        translate(signedIn ? "product.account.profileLabel" : "product.account.avatarSignInLabel")
+        interfaceTranslator.t(
+          signedIn ? "product.account.profileLabel" : "product.account.avatarSignInLabel",
+        )
       }
     >
       {body}

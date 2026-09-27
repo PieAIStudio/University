@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameInput, GameModal } from "@pieai/swimmer-ui-kit";
-import { translate as t } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { isMapSpace } from "./map-keyboard.js";
 import "./map-navigation.css";
 
@@ -72,9 +72,10 @@ export function MapQuickActions({
   /** The world appearance choice: an on-demand command, never map chrome. */
   readonly appearance?: ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const [page, setPage] = useState<"commands" | "directory" | "route" | "help">("commands");
   const [query, setQuery] = useState("");
-  const heading = t(
+  const heading = interfaceTranslator.t(
     page === "directory"
       ? "map.directory"
       : page === "route"
@@ -111,13 +112,13 @@ export function MapQuickActions({
       open={open}
       onClose={onClose}
       title={heading}
-      closeLabel={t("map.close")}
+      closeLabel={interfaceTranslator.t("map.close")}
       size="sm"
       className="map-quick-actions"
     >
       {page !== "commands" ? (
         <GameButton variant="ghost" onClick={() => setPage("commands")}>
-          {t("map.backCommands")}
+          {interfaceTranslator.t("map.backCommands")}
         </GameButton>
       ) : null}
       {page === "commands" ? (
@@ -127,7 +128,7 @@ export function MapQuickActions({
             data-map-command="directory"
             onClick={() => setPage("directory")}
           >
-            {t("map.directory")}
+            {interfaceTranslator.t("map.directory")}
           </GameButton>
           {commands.map((command) => (
             <GameButton
@@ -148,13 +149,13 @@ export function MapQuickActions({
               data-map-command="route"
               onClick={() => setPage("route")}
             >
-              {t("map.route")}
+              {interfaceTranslator.t("map.route")}
             </GameButton>
           ) : null}
           {sourceControls}
           {appearance}
           <GameButton variant="secondary" data-map-command="help" onClick={() => setPage("help")}>
-            {t("map.help")}
+            {interfaceTranslator.t("map.help")}
           </GameButton>
         </div>
       ) : null}
@@ -162,8 +163,8 @@ export function MapQuickActions({
         <div className="map-quick-actions__directory">
           <GameInput
             type="search"
-            aria-label={t("map.search")}
-            placeholder={t("map.search")}
+            aria-label={interfaceTranslator.t("map.search")}
+            placeholder={interfaceTranslator.t("map.search")}
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
@@ -175,7 +176,7 @@ export function MapQuickActions({
                     variant="ghost"
                     fullWidth
                     data-map-destination={item.id}
-                    aria-label={t("map.selectNamed", { title: item.title })}
+                    aria-label={interfaceTranslator.t("map.selectNamed", { title: item.title })}
                     onClick={() => {
                       onClose();
                       item.select();
@@ -190,7 +191,7 @@ export function MapQuickActions({
               ))}
             </ul>
           ) : (
-            <p role="status">{t("map.noResults")}</p>
+            <p role="status">{interfaceTranslator.t("map.noResults")}</p>
           )}
         </div>
       ) : null}
@@ -201,7 +202,7 @@ export function MapQuickActions({
           {route}
         </div>
       ) : null}
-      {page === "help" ? <p>{t("map.helpBody")}</p> : null}
+      {page === "help" ? <p>{interfaceTranslator.t("map.helpBody")}</p> : null}
     </GameModal>
   );
 }

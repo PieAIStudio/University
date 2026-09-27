@@ -9,7 +9,7 @@ import type {
   BriefActivity,
   ActivityDifficulty,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 type Foundation =
   | ConnectActivity
@@ -38,14 +38,15 @@ const constantControl = (
 
 /** Curated task differences. Engines do not inspect difficulty or apply numeric multipliers. */
 export function getFoundationFamily(activity: Foundation): ActivityFamily {
-  const goal = (level: ActivityDifficulty) => t(`play.difficulty.${activity.kind}.${level}`);
+  const goal = (level: ActivityDifficulty) =>
+    interfaceTranslator.t(`play.difficulty.${activity.kind}.${level}`);
   switch (activity.kind) {
     case "connect": {
       const startNodes = activity.nodes.slice(0, 3);
       const retry = {
         id: "retry",
-        label: t("play.difficulty.connect.retry"),
-        note: t("play.difficulty.connect.retryNote"),
+        label: interfaceTranslator.t("play.difficulty.connect.retry"),
+        note: interfaceTranslator.t("play.difficulty.connect.retryNote"),
         x: 16,
         y: 50,
       };
@@ -61,7 +62,7 @@ export function getFoundationFamily(activity: Foundation): ActivityFamily {
               edges: activity.edges.slice(0, 2),
               probes: [
                 {
-                  label: t("play.difficulty.connect.firstChain"),
+                  label: interfaceTranslator.t("play.difficulty.connect.firstChain"),
                   path: startNodes.map((node) => node.id),
                 },
               ],
@@ -76,13 +77,21 @@ export function getFoundationFamily(activity: Foundation): ActivityFamily {
               nodes: [...activity.nodes, retry],
               edges: [
                 ...activity.edges,
-                { from: "f", to: "retry", why: t("play.difficulty.connect.retryWhy") },
-                { from: "retry", to: "b", why: t("play.difficulty.connect.againWhy") },
+                {
+                  from: "f",
+                  to: "retry",
+                  why: interfaceTranslator.t("play.difficulty.connect.retryWhy"),
+                },
+                {
+                  from: "retry",
+                  to: "b",
+                  why: interfaceTranslator.t("play.difficulty.connect.againWhy"),
+                },
               ],
               probes: [
                 activity.probes[0]!,
                 {
-                  label: t("play.difficulty.connect.recovery"),
+                  label: interfaceTranslator.t("play.difficulty.connect.recovery"),
                   path: ["a", "b", "c", "d", "f", "retry", "b", "c", "d", "e"],
                 },
               ],
@@ -116,13 +125,13 @@ export function getFoundationFamily(activity: Foundation): ActivityFamily {
               ...activity.metrics.filter((metric) => metric.id !== "time"),
               {
                 id: "minimum-width",
-                label: t("play.difficulty.tune.minimumWidth"),
+                label: interfaceTranslator.t("play.difficulty.tune.minimumWidth"),
                 unit: " px",
                 expression: { control: "width" },
                 min: 1000,
                 scale: 1600,
                 precision: 0,
-                explanation: t("play.difficulty.tune.widthWhy"),
+                explanation: interfaceTranslator.t("play.difficulty.tune.widthWhy"),
               },
             ],
           }
@@ -189,8 +198,8 @@ export function getFoundationFamily(activity: Foundation): ActivityFamily {
       const revised = {
         ...first,
         id: `${first.id}-revision`,
-        label: t("play.difficulty.dispatch.revised", { name: first.label }),
-        detail: t("play.difficulty.dispatch.newVersion"),
+        label: interfaceTranslator.t("play.difficulty.dispatch.revised", { name: first.label }),
+        detail: interfaceTranslator.t("play.difficulty.dispatch.newVersion"),
         cacheKey: `${first.cacheKey}-revised`,
       };
       return {

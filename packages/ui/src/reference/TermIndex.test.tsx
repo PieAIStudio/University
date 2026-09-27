@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -63,7 +64,7 @@ afterEach(async () => {
 
 async function renderIndex(props: Partial<Parameters<typeof TermIndex>[0]> = {}) {
   await act(async () => {
-    root.render(<TermIndex entries={ENTRIES} {...props} />);
+    root.render(withInterfaceLocale(<TermIndex entries={ENTRIES} {...props} />));
   });
 }
 

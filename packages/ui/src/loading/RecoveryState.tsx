@@ -1,6 +1,6 @@
 import { GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 
 export type RecoveryReason = "context-lost" | "webgl-unavailable" | "scene-timeout" | "content";
 
@@ -15,39 +15,39 @@ function recoveryCopy(reason: RecoveryReason): RecoveryCopy {
   switch (reason) {
     case "context-lost":
       return {
-        heading: translate("ui.recovery.recoveryState.copy.地图暂时停了一下"),
-        body: translate(
+        heading: interfaceTranslator.t("ui.recovery.recoveryState.copy.地图暂时停了一下"),
+        body: interfaceTranslator.t(
           "ui.recovery.recoveryState.copy.地图刚刚失去连接-再试一次可以重新打开它-课程文字和练习不受影响",
         ),
-        retryLabel: translate("ui.recovery.recoveryState.copy.再试一次"),
-        continueLabel: translate("ui.recovery.recoveryState.copy.直接开始今天的课"),
+        retryLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.再试一次"),
+        continueLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.直接开始今天的课"),
       };
     case "webgl-unavailable":
       return {
-        heading: translate("ui.recovery.recoveryState.copy.这台设备打不开-3D-地图"),
-        body: translate(
+        heading: interfaceTranslator.t("ui.recovery.recoveryState.copy.这台设备打不开-3D-地图"),
+        body: interfaceTranslator.t(
           "ui.recovery.recoveryState.copy.浏览器没有提供可用的-3D-画面-课程文字和练习仍然可以继续-不必等地图",
         ),
-        retryLabel: translate("ui.recovery.recoveryState.copy.再试一次"),
-        continueLabel: translate("ui.recovery.recoveryState.copy.直接开始今天的课"),
+        retryLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.再试一次"),
+        continueLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.直接开始今天的课"),
       };
     case "scene-timeout":
       return {
-        heading: translate("ui.recovery.recoveryState.copy.地图加载得有点久"),
-        body: translate(
+        heading: interfaceTranslator.t("ui.recovery.recoveryState.copy.地图加载得有点久"),
+        body: interfaceTranslator.t(
           "ui.recovery.recoveryState.copy.3D-地图还没有准备好-可以再试一次-也可以先直接开始今天的课",
         ),
-        retryLabel: translate("ui.recovery.recoveryState.copy.再试一次"),
-        continueLabel: translate("ui.recovery.recoveryState.copy.直接开始今天的课"),
+        retryLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.再试一次"),
+        continueLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.直接开始今天的课"),
       };
     case "content":
       return {
-        heading: translate("ui.recovery.recoveryState.copy.课程资料没有打开"),
-        body: translate(
+        heading: interfaceTranslator.t("ui.recovery.recoveryState.copy.课程资料没有打开"),
+        body: interfaceTranslator.t(
           "ui.recovery.recoveryState.copy.这次没有拿到课程资料-可能是网络刚刚断了一下-再试一次-或先回到课程列表",
         ),
-        retryLabel: translate("ui.recovery.recoveryState.copy.重试课程资料"),
-        continueLabel: translate("ui.recovery.recoveryState.copy.先看课程列表"),
+        retryLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.重试课程资料"),
+        continueLabel: interfaceTranslator.t("ui.recovery.recoveryState.copy.先看课程列表"),
       };
   }
 }

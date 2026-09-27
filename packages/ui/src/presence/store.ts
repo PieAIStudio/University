@@ -12,7 +12,7 @@
  * query-param seam, not a fake backend: the production build does not read it,
  * and the Supabase adapter stays unwired regardless.
  */
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import {
   createMemoryPresencePort,
   type PresencePort,
@@ -30,7 +30,10 @@ const FIXTURE_LESSON = {
 };
 
 export function createBrowserPresencePort(self?: PresenceSelf): PresencePort {
-  const me = self ?? { userId: "local-guest", displayName: translate("ui.presence.store.copy.我") };
+  const me = self ?? {
+    userId: "local-guest",
+    displayName: interfaceTranslator.t("ui.presence.store.copy.我"),
+  };
   const port = createMemoryPresencePort({
     self: me,
     sharesPresence: readSharesPresence(),

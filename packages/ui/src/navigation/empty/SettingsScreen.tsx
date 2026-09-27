@@ -1,4 +1,4 @@
-import { translate, useI18n, writeLocalePreference } from "../../i18n/index.js";
+import { useI18n, writeLocalePreference } from "../../i18n/index.js";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
 import type {
@@ -50,6 +50,7 @@ export function SettingsScreen({
   /** The map guide's capabilities, cost and privacy (ADR-0012), from the app. */
   readonly guide?: ReactNode;
 } = {}) {
+  const interfaceTranslator = useI18n();
   useI18n();
   const [settings, setSettings] = useState(
     () => progress?.accountData().preferences.foreignSettings ?? readForeignSettings(),
@@ -63,7 +64,7 @@ export function SettingsScreen({
   return (
     <div className="settings-screen">
       <h1 className="settings-screen__title">
-        {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
+        {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.偏好设置")}
       </h1>
       <ThemePreferenceControl progress={progress} />
       <section className="settings-screen__block">
@@ -72,7 +73,7 @@ export function SettingsScreen({
       <InterfaceLanguageControl progress={progress} />
       <section className="settings-screen__block" aria-labelledby="settings-sound">
         <h2 id="settings-sound" className="settings-screen__heading">
-          {translate("ui.navigation.empty.settingsScreen.copy.声音")}
+          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.声音")}
         </h2>
         <SoundToggle progress={progress} />
         <SpeechQualityControl progress={progress} />
@@ -82,7 +83,7 @@ export function SettingsScreen({
       {guide ? (
         <section id="map-guide" className="settings-screen__block" aria-labelledby="settings-guide">
           <h2 id="settings-guide" className="settings-screen__heading">
-            {translate("map.guide.details.heading")}
+            {interfaceTranslator.t("map.guide.details.heading")}
           </h2>
           {guide}
         </section>
@@ -91,7 +92,9 @@ export function SettingsScreen({
         className="settings-screen__block product-details"
         aria-labelledby="settings-language"
       >
-        <summary id="settings-language">{translate("product.settings.readingDetails")}</summary>
+        <summary id="settings-language">
+          {interfaceTranslator.t("product.settings.readingDetails")}
+        </summary>
         <ForeignSettingsPanel
           embedded
           settings={settings}
@@ -113,6 +116,7 @@ export function SettingsScreen({
 }
 
 function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPort }) {
+  const interfaceTranslator = useI18n();
   const { locale } = useI18n();
   const choose = (next: "en" | "zh-CN") => {
     writeLocalePreference(next);
@@ -130,9 +134,9 @@ function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPo
   return (
     <section className="settings-screen__block" aria-labelledby="settings-interface-language">
       <h2 id="settings-interface-language" className="settings-screen__heading">
-        {translate("product.settings.interfaceLanguage")}
+        {interfaceTranslator.t("product.settings.interfaceLanguage")}
       </h2>
-      <div role="group" aria-label={translate("product.settings.interfaceLanguage")}>
+      <div role="group" aria-label={interfaceTranslator.t("product.settings.interfaceLanguage")}>
         {(["en", "zh-CN"] as const).map((option) => (
           <GameButton
             key={option}
@@ -141,7 +145,9 @@ function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPo
             aria-pressed={locale === option}
             onClick={() => choose(option)}
           >
-            {option === "en" ? translate("locale.en.name") : translate("locale.zhCN.nativeName")}
+            {option === "en"
+              ? interfaceTranslator.t("locale.en.name")
+              : interfaceTranslator.t("locale.zhCN.nativeName")}
           </GameButton>
         ))}
       </div>
@@ -150,6 +156,7 @@ function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPo
 }
 
 function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort }) {
+  const interfaceTranslator = useI18n();
   const [theme, setTheme] = useState<ThemePreference>(
     () => progress?.accountData().preferences.theme ?? "system",
   );
@@ -176,19 +183,19 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
   const resolved = resolvedThemeOf(theme, systemDark);
   const resolvedLabel =
     resolved === "dark"
-      ? translate("ui.navigation.empty.settingsScreen.copy.深色")
-      : translate("ui.navigation.empty.settingsScreen.copy.浅色");
+      ? interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.深色")
+      : interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.浅色");
 
   return (
     <section className="settings-screen__block" aria-labelledby="settings-theme">
       <h2 id="settings-theme" className="settings-screen__heading">
-        {translate("ui.navigation.empty.settingsScreen.copy.外观")}
+        {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.外观")}
       </h2>
       <div className="theme-preference-control">
         <div
           className="theme-preference-control__options"
           role="group"
-          aria-label={translate("ui.navigation.empty.settingsScreen.copy.主题")}
+          aria-label={interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.主题")}
         >
           {THEME_PREFERENCE_OPTIONS.map((option) => (
             <GameButton
@@ -205,7 +212,7 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
           ))}
         </div>
         <p className="settings-screen__hint">
-          {translate("product.settings.themeCurrent", { theme: resolvedLabel })}
+          {interfaceTranslator.t("product.settings.themeCurrent", { theme: resolvedLabel })}
         </p>
       </div>
     </section>
@@ -213,6 +220,7 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
 }
 
 function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }) {
+  const interfaceTranslator = useI18n();
   const voices = useEnglishVoices();
   const [speechQuality, setSpeechQuality] = useState<SpeechQuality>(
     () => progress?.accountData().preferences.speechQuality ?? readSpeechQualityPreference(),
@@ -247,7 +255,7 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
       <div
         className="speech-quality-control__options"
         role="group"
-        aria-label={translate("ui.navigation.empty.settingsScreen.copy.朗读语音质量")}
+        aria-label={interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.朗读语音质量")}
       >
         {SPEECH_QUALITY_OPTIONS.map((option) => {
           const premium = option.id === "premium";
@@ -261,7 +269,7 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
               disabled={premium}
               title={
                 premium
-                  ? translate(
+                  ? interfaceTranslator.t(
                       "ui.navigation.empty.settingsScreen.copy.高品质语音暂未开放-钱包和付费权益尚未接入",
                     )
                   : undefined
@@ -277,10 +285,10 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
       </div>
       <p className="settings-screen__hint">{explainSpeechResolution(resolution, availability)}</p>
       <details className="product-details">
-        <summary>{translate("product.settings.speechDetails")}</summary>
-        <p>{translate("product.settings.speechAuto")}</p>
+        <summary>{interfaceTranslator.t("product.settings.speechDetails")}</summary>
+        <p>{interfaceTranslator.t("product.settings.speechAuto")}</p>
         <p>
-          {translate(
+          {interfaceTranslator.t(
             "ui.navigation.empty.settingsScreen.copy.在线语音只发送产品挑选的一个英文单词-学习者自己写的字-说的话和私有仓库内容不会因为打开朗读而外发-学习者口述自",
           )}
         </p>
@@ -301,15 +309,16 @@ function PresenceSettings({
   readonly presence: PresencePort;
   readonly progress?: ProgressPort;
 }) {
+  const interfaceTranslator = useI18n();
   const snapshot = useSyncExternalStore(presence.subscribe, presence.snapshot, presence.snapshot);
   return (
     <section className="settings-screen__block" aria-labelledby="settings-presence">
       <h2 id="settings-presence" className="settings-screen__heading">
-        {translate("ui.navigation.empty.settingsScreen.copy.一起学")}
+        {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.一起学")}
       </h2>
       <GameToggle
         checked={snapshot.sharesPresence}
-        label={translate("product.settings.presence")}
+        label={interfaceTranslator.t("product.settings.presence")}
         onClick={() => {
           const next = !snapshot.sharesPresence;
           presence.setSharesPresence(next);
@@ -323,10 +332,12 @@ function PresenceSettings({
           }
         }}
       />
-      <p className="settings-screen__hint">{translate("product.settings.presenceBrief")}</p>
+      <p className="settings-screen__hint">
+        {interfaceTranslator.t("product.settings.presenceBrief")}
+      </p>
       <details className="product-details">
-        <summary>{translate("product.settings.presenceDetails")}</summary>
-        <p>{translate("product.settings.presenceAudience")}</p>
+        <summary>{interfaceTranslator.t("product.settings.presenceDetails")}</summary>
+        <p>{interfaceTranslator.t("product.settings.presenceAudience")}</p>
       </details>
     </section>
   );
@@ -334,25 +345,28 @@ function PresenceSettings({
 
 /** Right-column subnav, matching W6's stacked groups of destinations we have. */
 export function SettingsSubnav() {
+  const interfaceTranslator = useI18n();
   return (
     <nav
       className="settings-subnav"
-      aria-label={translate("ui.navigation.empty.settingsScreen.copy.设置")}
+      aria-label={interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.设置")}
     >
       <section className="settings-subnav__group">
         <p className="settings-subnav__label">
-          {translate("ui.navigation.empty.settingsScreen.copy.帐户")}
+          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.帐户")}
         </p>
         <a href="/settings" aria-current="page">
-          {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
+          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.偏好设置")}
         </a>
-        <a href="/me">{translate("ui.navigation.empty.settingsScreen.copy.个人档案")}</a>
+        <a href="/me">
+          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.个人档案")}
+        </a>
       </section>
       <section className="settings-subnav__group">
         <p className="settings-subnav__label">
-          {translate("ui.navigation.empty.settingsScreen.copy.订阅")}
+          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.订阅")}
         </p>
-        <a href="/plans">{translate("ui.navigation.empty.settingsScreen.copy.会员")}</a>
+        <a href="/plans">{interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.会员")}</a>
       </section>
     </nav>
   );

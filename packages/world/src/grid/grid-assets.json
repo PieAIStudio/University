@@ -3,7 +3,7 @@
   "assetSet": "grid-biome-library",
   "status": "prototype/local donor; PGS donor registered",
   "sourceRoot": "local-donor:Kenney",
-  "sourceRootHint": "../../../_donors/Kenney or KENNEY_DONOR_ROOT",
+  "sourceRootHint": "../../../_Donors/Kenney or KENNEY_DONOR_ROOT",
   "outputRoot": "public/kenney/grid",
   "runtimeBasePath": "/kenney/grid",
   "selection": {

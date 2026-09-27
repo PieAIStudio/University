@@ -7,8 +7,10 @@ import {
   type PrimmActivity,
   type PrimmStepsActivity,
 } from "../packages/core/dist/index.js";
+import type { PlainMessageKey } from "../packages/ui/src/i18n/types.js";
 import { messages as zh } from "../packages/ui/src/i18n/catalogs/primm.zh-CN.js";
 import { messages as en } from "../packages/ui/src/i18n/catalogs/primm.en.js";
+import { interfaceI18n } from "../packages/ui/src/i18n/core.js";
 import { SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { humanClick, scrollIntoView } from "./harness/click.js";
@@ -150,9 +152,28 @@ for (const [mode, origin] of [
       test(`PRIMM ${mode} ${locale} ${lesson.id}: linear phases, actual input seam, game, repair and one ending`, async ({
         page,
       }, info) => {
-        const a = localizeActivity(raw, locale),
-          dict = locale === "en" ? en : zh;
-        const text = (key: keyof typeof zh, label = "") => dict[key].replace("{{label}}", label);
+        const a = localizeActivity(raw, locale);
+        const translator = interfaceI18n.translator(locale);
+        type LabelKey =
+          | "primm.moveDown"
+          | "primm.collect"
+          | "primm.reject"
+          | "primm.addPiece"
+          | "primm.moveUp"
+          | "primm.removePiece";
+        type PlainKey = keyof typeof zh & PlainMessageKey;
+        const text = (key: PlainKey | LabelKey, label = "") => {
+          if (
+            key === "primm.moveDown" ||
+            key === "primm.collect" ||
+            key === "primm.reject" ||
+            key === "primm.addPiece" ||
+            key === "primm.moveUp" ||
+            key === "primm.removePiece"
+          )
+            return translator.t(key, { label });
+          return translator.t(key);
+        };
         await page.setViewportSize({ width: 390, height: 844 });
         await page.emulateMedia({
           reducedMotion: "reduce",
@@ -229,7 +250,7 @@ for (const [mode, origin] of [
         });
         await page.goto(`${origin}${lessonPathOf(course, lesson)}?lang=${locale}`);
         const area = page.locator(".primm");
-        const click = async (key: keyof typeof zh) =>
+        const click = async (key: PlainKey) =>
           humanClick(page, area.getByRole("button", { name: text(key), exact: true }), key);
         const stage = async (name: string) => {
           await expect(area).toHaveAttribute("data-primm-stage", name);

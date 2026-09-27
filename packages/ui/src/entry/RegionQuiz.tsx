@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 
@@ -36,6 +36,7 @@ export function RegionQuiz({
   readonly correctRegionId: string;
   readonly reveal: string;
 }) {
+  const interfaceTranslator = useI18n();
   const [solved, setSolved] = useState(false);
   const [missed, setMissed] = useState<readonly string[]>([]);
 
@@ -89,7 +90,7 @@ export function RegionQuiz({
               aria-label={
                 solved || isMissed
                   ? region.label
-                  : translate("ui.entry.regionQuiz.copy.这一块是什么")
+                  : interfaceTranslator.t("ui.entry.regionQuiz.copy.这一块是什么")
               }
               aria-pressed={isMissed ? true : undefined}
               disabled={solved}
@@ -102,14 +103,17 @@ export function RegionQuiz({
       </div>
       <div aria-live="polite">
         {solved ? (
-          <GameCallout tone="success" heading={translate("ui.entry.regionQuiz.copy.找到了")}>
+          <GameCallout
+            tone="success"
+            heading={interfaceTranslator.t("ui.entry.regionQuiz.copy.找到了")}
+          >
             {reveal}
           </GameCallout>
         ) : wrong ? (
           <GameCallout tone="warning">
-            {translate("ui.entry.regionQuiz.copy.那一块是")}
+            {interfaceTranslator.t("ui.entry.regionQuiz.copy.那一块是")}
             {regions.find((region) => region.id === missed[missed.length - 1])?.label}
-            {translate("ui.entry.regionQuiz.copy.再看一眼-还有哪些块没试过")}
+            {interfaceTranslator.t("ui.entry.regionQuiz.copy.再看一眼-还有哪些块没试过")}
           </GameCallout>
         ) : null}
       </div>

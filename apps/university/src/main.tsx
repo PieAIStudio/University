@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { NerveI18nProvider } from "@pieai/swimmer-nerve-kit/i18n/react";
 
 // Brand tokens first, product layout second: the kit defines the custom
 // properties everything below reads.
@@ -89,7 +90,11 @@ import "@pieai/university-ui/path/map-entry-action.css";
 import "@pieai/university-ui/shell/map-shell.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
-import { I18nProvider, localeNavigationUrl } from "@pieai/university-ui/i18n.js";
+import {
+  InterfaceLanguageProvider,
+  localeNavigationUrl,
+  useI18n,
+} from "@pieai/university-ui/i18n.js";
 import { applyThemePreference } from "@pieai/university-ui/theme.js";
 import { localeDemandPort, recordLocaleRequest } from "./analytics/locale-demand";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
@@ -114,11 +119,20 @@ window.addEventListener("university:locale-change", (event) => {
 
 void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 
-createRoot(container).render(
-  <StrictMode>
-    <I18nProvider>
+function UniversityApplication() {
+  const { locale } = useI18n();
+  return (
+    <NerveI18nProvider locale={locale}>
       <App />
       <LiquidCtaTransitionLayer />
-    </I18nProvider>
+    </NerveI18nProvider>
+  );
+}
+
+createRoot(container).render(
+  <StrictMode>
+    <InterfaceLanguageProvider>
+      <UniversityApplication />
+    </InterfaceLanguageProvider>
   </StrictMode>,
 );

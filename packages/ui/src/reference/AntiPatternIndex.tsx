@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useMemo, useState } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import {
@@ -20,7 +20,7 @@ import { CollectionIndex } from "./CollectionIndex.js";
  * complaint, a spoken fragment, so you can find an entry before you have
  * its official title.
  */
-export const ANTI_PATTERN_SEARCH_PLACEHOLDER = translate(
+export const ANTI_PATTERN_SEARCH_PLACEHOLDER = interfaceTranslator.t(
   "ui.reference.antiPatternIndex.copy.试试-稳稳接住-别再说灯塔",
 );
 
@@ -30,7 +30,7 @@ const CHIP_ORDER: readonly CategoryFilter[] = ["all", ...ANTI_PATTERN_CATEGORY_I
 
 function chipLabel(id: CategoryFilter): string {
   return id === "all"
-    ? translate("ui.reference.antiPatternIndex.copy.全部")
+    ? interfaceTranslator.t("ui.reference.antiPatternIndex.copy.全部")
     : ANTI_PATTERN_CATEGORY_LABEL[id];
 }
 
@@ -52,6 +52,7 @@ export function AntiPatternIndex({
   readonly onQueryChange?: (query: string) => void;
   readonly onOpen?: (entry: AntiPatternEntry) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [uncontrolledQuery, setUncontrolledQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
 
@@ -90,7 +91,7 @@ export function AntiPatternIndex({
           {ANTI_PATTERN_NOTICE}
         </GameCallout>
       }
-      searchLabel={translate("ui.reference.antiPatternIndex.copy.搜索反模式")}
+      searchLabel={interfaceTranslator.t("ui.reference.antiPatternIndex.copy.搜索反模式")}
       placeholder={ANTI_PATTERN_SEARCH_PLACEHOLDER}
       query={value}
       onQueryChange={setQuery}
@@ -109,16 +110,21 @@ export function AntiPatternIndex({
       }))}
       searched={searched}
       emptyMiss={{
-        title: translate("ui.reference.antiPatternIndex.copy.没有找到-value0-相关的条目", {
-          value0: result.query,
-        }),
-        description: translate(
+        title: interfaceTranslator.t(
+          "ui.reference.antiPatternIndex.copy.没有找到-value0-相关的条目",
+          {
+            value0: result.query,
+          },
+        ),
+        description: interfaceTranslator.t(
           "ui.reference.antiPatternIndex.copy.可以搜条目的名字-那句口语抱怨-或直接描述你看见的不对劲-例如-稳稳接住-三张一样大-点了没反应-不必先知道它在",
         ),
       }}
       emptyIdle={{
-        title: translate("ui.reference.antiPatternIndex.copy.还没有条目"),
-        description: translate("ui.reference.antiPatternIndex.copy.目录载入后会出现在这里"),
+        title: interfaceTranslator.t("ui.reference.antiPatternIndex.copy.还没有条目"),
+        description: interfaceTranslator.t(
+          "ui.reference.antiPatternIndex.copy.目录载入后会出现在这里",
+        ),
       }}
       onOpenHit={(id) => {
         const entry = byId.get(id);

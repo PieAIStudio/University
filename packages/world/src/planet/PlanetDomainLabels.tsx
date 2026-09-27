@@ -2,7 +2,7 @@
 import { SceneLabelText } from "../labels/SceneLabelText.js";
 import { useMemo } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import type { DomainResourceStatus } from "./use-domain-resources.js";
 import { buildDomainPlan } from "./domain-plan.js";
 import type { PlanetStudy, PlanetStudyDomain } from "./planet-copy.js";
@@ -28,6 +28,7 @@ export function PlanetDomainLabels({
   readonly onSelectStudy?: (id: string) => void;
   readonly onEnterStudy?: (id: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const domains = useMemo(() => buildDomainPlan(studies, domainCatalog), [studies, domainCatalog]);
   const active =
     selectedDomainId ??
@@ -61,9 +62,15 @@ export function PlanetDomainLabels({
             >
               <SceneLabelText
                 title={domain.title}
-                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                status={
+                  domain.id === active
+                    ? interfaceTranslator.t("ui.world.domain.selected")
+                    : undefined
+                }
                 note={
-                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                  domain.studies.length === 0
+                    ? interfaceTranslator.t("ui.world.domain.unpublished")
+                    : undefined
                 }
               />
             </button>
@@ -71,9 +78,15 @@ export function PlanetDomainLabels({
             <span className="scene-label">
               <SceneLabelText
                 title={domain.title}
-                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                status={
+                  domain.id === active
+                    ? interfaceTranslator.t("ui.world.domain.selected")
+                    : undefined
+                }
                 note={
-                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                  domain.studies.length === 0
+                    ? interfaceTranslator.t("ui.world.domain.unpublished")
+                    : undefined
                 }
               />
             </span>
@@ -82,7 +95,7 @@ export function PlanetDomainLabels({
             <div className="planet-domain-label__actions">
               {domain.studies.length > 1 ? (
                 <details>
-                  <summary>{translate("map.chooseStudy")}</summary>
+                  <summary>{interfaceTranslator.t("map.chooseStudy")}</summary>
                   <div className="planet-domain-label__study-list">
                     {domain.studies.map((study) => (
                       <GameButton
@@ -107,7 +120,7 @@ export function PlanetDomainLabels({
                   surface="liquid"
                   liquidFinish="glossy"
                   data-map-entry="true"
-                  aria-label={translate("map.enterNamed", {
+                  aria-label={interfaceTranslator.t("map.enterNamed", {
                     title:
                       domain.studies.length === 1
                         ? domain.studies[0]!.title
@@ -117,7 +130,7 @@ export function PlanetDomainLabels({
                     onEnterStudy(domain.studies.length === 1 ? domain.studies[0]!.id : selectedId!)
                   }
                 >
-                  {translate("map.enter")}
+                  {interfaceTranslator.t("map.enter")}
                 </GameButton>
               ) : null}
             </div>
@@ -137,6 +150,7 @@ export function PlanetResourceStatus({
   readonly states: Readonly<Record<string, DomainResourceStatus["state"]>>;
   readonly onRetry: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const failed = domainIds.some((id) => states[id] === "error");
   const pending = domainIds.filter((id) => states[id] !== "ready").length;
   if (pending === 0) return null;
@@ -144,14 +158,14 @@ export function PlanetResourceStatus({
     <div className="planet-resource-status" data-planet-resources={failed ? "error" : "loading"}>
       <p role="status">
         {failed
-          ? translate("world.resources.error")
-          : translate(
+          ? interfaceTranslator.t("world.resources.error")
+          : interfaceTranslator.t(
               pending === 1 ? "world.resources.pending.one" : "world.resources.pending.other",
               { count: pending },
             )}
       </p>
       {failed ? (
-        <GameButton onClick={onRetry}>{translate("world.resources.retry")}</GameButton>
+        <GameButton onClick={onRetry}>{interfaceTranslator.t("world.resources.retry")}</GameButton>
       ) : null}
     </div>
   );

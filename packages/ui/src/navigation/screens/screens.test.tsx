@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 import { emptyProgress, type ProgressDocument } from "@pieai/university-core";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -22,10 +23,10 @@ describe("the four screens are open", () => {
   it("none of them still says it has not opened", () => {
     const document = emptyProgress();
     const pages = [
-      renderToStaticMarkup(<QuestsScreen document={document} now={NOW} />),
-      renderToStaticMarkup(<BadgeWall document={document} />),
-      renderToStaticMarkup(<LeagueScreen document={document} now={NOW} />),
-      renderToStaticMarkup(<PlansScreen />),
+      renderToStaticMarkup(withInterfaceLocale(<QuestsScreen document={document} now={NOW} />)),
+      renderToStaticMarkup(withInterfaceLocale(<BadgeWall document={document} />)),
+      renderToStaticMarkup(withInterfaceLocale(<LeagueScreen document={document} now={NOW} />)),
+      renderToStaticMarkup(withInterfaceLocale(<PlansScreen />)),
     ];
     for (const markup of pages) {
       expect(markup).not.toContain("还没开");
@@ -42,7 +43,9 @@ describe("QuestsScreen", () => {
     kind of number that makes every other number on the screen suspect.
   */
   it("does not score a quest the scheduler has nothing for", () => {
-    const markup = renderToStaticMarkup(<QuestsScreen document={emptyProgress()} now={NOW} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<QuestsScreen document={emptyProgress()} now={NOW} />),
+    );
     expect(markup).toContain("学一节新课");
     expect(markup).toContain("把连击接上");
     expect(markup).toContain("0 / 2");
@@ -69,7 +72,7 @@ describe("QuestsScreen", () => {
       },
     } as ProgressDocument["cards"][string];
     const markup = renderToStaticMarkup(
-      <QuestsScreen document={docWith({ cards: { k: due } })} now={NOW} />,
+      withInterfaceLocale(<QuestsScreen document={docWith({ cards: { k: due } })} now={NOW} />),
     );
     expect(markup).toContain("0 / 3");
     expect(markup).not.toContain("不计分");
@@ -79,7 +82,9 @@ describe("QuestsScreen", () => {
     const document = docWith({
       lessons: { a: { progress: 1, completedAt: NOW - 3600_000, attempts: 1 } },
     });
-    const markup = renderToStaticMarkup(<QuestsScreen document={document} now={NOW} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<QuestsScreen document={document} now={NOW} />),
+    );
     expect(markup).toContain("完成");
   });
 });
@@ -90,7 +95,9 @@ describe("BadgeWall", () => {
     this is not a game about guessing what the game wants.
   */
   it("shows every rule, including the locked ones", () => {
-    const markup = renderToStaticMarkup(<BadgeWall document={emptyProgress()} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<BadgeWall document={emptyProgress()} />),
+    );
     expect(markup).toContain("连续 7 天来学");
     expect(markup).toContain("连续 100 天来学");
     expect(markup).toContain("0 / 17");
@@ -99,7 +106,9 @@ describe("BadgeWall", () => {
 
 describe("LeagueScreen", () => {
   it("shows the ladder and where you stand on it", () => {
-    const markup = renderToStaticMarkup(<LeagueScreen document={emptyProgress()} now={NOW} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<LeagueScreen document={emptyProgress()} now={NOW} />),
+    );
     expect(markup).toContain("石阶");
     expect(markup).toContain("黑曜阶");
   });
@@ -109,14 +118,16 @@ describe("LeagueScreen", () => {
     fictional discredits every real number sitting next to it.
   */
   it("describes personal growth without an empty leaderboard disclaimer", () => {
-    const markup = renderToStaticMarkup(<LeagueScreen document={emptyProgress()} now={NOW} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<LeagueScreen document={emptyProgress()} now={NOW} />),
+    );
     expect(markup).toContain("这里记录你自己的积累");
     expect(markup).toContain("data-growth-details");
   });
 
   it("does not invent a real leaderboard after sign-in", () => {
     const markup = renderToStaticMarkup(
-      <LeagueScreen document={emptyProgress()} now={NOW} signedIn />,
+      withInterfaceLocale(<LeagueScreen document={emptyProgress()} now={NOW} signedIn />),
     );
     expect(markup).not.toContain("还没有别人可以比");
     expect(markup).toContain("这里记录你自己的积累");
@@ -125,7 +136,7 @@ describe("LeagueScreen", () => {
 
 describe("PlansScreen", () => {
   it("states in plain language that courses stay free while AI is gated by plan and quota", () => {
-    const markup = renderToStaticMarkup(<PlansScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
     expect(markup).toContain("全部课程免费学");
     expect(markup).toContain("绑定邮箱，每天体验 AI 批改");
     expect(markup).toContain("AI 批改按次另计");
@@ -152,7 +163,7 @@ describe("PlansScreen", () => {
     // The page still does not claim you can buy this today. No payment
     // provider is connected, and the purchase control says so itself rather
     // than letting the reader find out by clicking.
-    const markup = renderToStaticMarkup(<PlansScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
     expect(markup).toContain("不受每日免费额度限制");
     expect(markup).not.toContain("开放式辅导按用量计费");
     expect(markup).not.toContain("尚未开放");
@@ -165,7 +176,7 @@ describe("PlansScreen", () => {
   });
 
   it("shows the configured member prices and keeps the purchase CTA visible", () => {
-    const markup = renderToStaticMarkup(<PlansScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
     expect(markup).toContain("$149.00");
     expect(markup).toContain("$12.42");
     // The static fallback has no account, so it states the first required step
@@ -177,7 +188,7 @@ describe("PlansScreen", () => {
   });
 
   it("shows the billing-cycle choice once a paid price is configured", () => {
-    const markup = renderToStaticMarkup(<PlansScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
     expect(markup).toContain("按年");
     expect(markup).toContain("按月");
     expect(markup).not.toContain("付费档位和价格尚未填入");

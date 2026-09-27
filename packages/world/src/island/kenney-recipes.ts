@@ -69,7 +69,7 @@ export interface IslandNaturalAssetSelection {
   readonly rocks: readonly IslandNaturalAssetRef[];
 }
 
-/** All unique unpacked packs found under `_donors/Kenney`. */
+/** All unique unpacked packs found under `_Donors/Kenney`. */
 interface KenneyPackRow {
   readonly id: KenneyPackId;
   readonly folder: string;

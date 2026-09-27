@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -15,12 +15,12 @@ import {
  * names that `kind: "choice"`, and a quiz payload has no other type. The
  * chip is that constant — not a per-question field we invented.
  */
-export const CHOICE_BLOCK_KIND_LABEL = translate("ui.review.choiceBlock.copy.判断");
-export const CHOICE_SUBMIT_LABEL = translate("ui.review.choiceBlock.copy.提交");
-export const CHOICE_SOLVED_LABEL = translate("ui.review.choiceBlock.copy.已答对");
-export const CHOICE_NEXT_LABEL = translate("ui.review.choiceBlock.copy.继续下一题");
-export const CHOICE_WRONG_VERDICT = translate("ui.review.choiceBlock.copy.答错");
-export const CHOICE_CORRECT_VERDICT = translate("ui.review.choiceBlock.copy.答对");
+export const CHOICE_BLOCK_KIND_LABEL = interfaceTranslator.t("ui.review.choiceBlock.copy.判断");
+export const CHOICE_SUBMIT_LABEL = interfaceTranslator.t("ui.review.choiceBlock.copy.提交");
+export const CHOICE_SOLVED_LABEL = interfaceTranslator.t("ui.review.choiceBlock.copy.已答对");
+export const CHOICE_NEXT_LABEL = interfaceTranslator.t("ui.review.choiceBlock.copy.继续下一题");
+export const CHOICE_WRONG_VERDICT = interfaceTranslator.t("ui.review.choiceBlock.copy.答错");
+export const CHOICE_CORRECT_VERDICT = interfaceTranslator.t("ui.review.choiceBlock.copy.答对");
 
 export interface ChoiceBlockOption {
   readonly id: string;
@@ -81,6 +81,7 @@ export function ChoiceBlock({
   /** Practice owns the single focal answer action; lesson exercises do not. */
   readonly liquidPrimary?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState(INITIAL_CHOICE_BLOCK_STATE);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -127,7 +128,7 @@ export function ChoiceBlock({
       <div
         className="choice-block__options"
         role="group"
-        aria-label={translate("ui.review.choiceBlock.copy.选项")}
+        aria-label={interfaceTranslator.t("ui.review.choiceBlock.copy.选项")}
       >
         {exercise.options.map((option) => {
           const wrong = state.wrongOptionIds.includes(option.id);
@@ -173,7 +174,7 @@ export function ChoiceBlock({
       </div>
       {feedback?.kind === "wrong" ? (
         <GameCallout
-          heading={translate("ui.review.choiceBlock.copy.还不对")}
+          heading={interfaceTranslator.t("ui.review.choiceBlock.copy.还不对")}
           tone="danger"
           role="status"
         >
@@ -183,10 +184,10 @@ export function ChoiceBlock({
       {correctFeedback ? (
         <>
           <GameBadge className="choice-block__correct-merge" tone="success">
-            {translate("ui.review.choiceBlock.copy.答对了")}
+            {interfaceTranslator.t("ui.review.choiceBlock.copy.答对了")}
           </GameBadge>
           <GameCallout
-            heading={translate("ui.review.choiceBlock.copy.答案解释")}
+            heading={interfaceTranslator.t("ui.review.choiceBlock.copy.答案解释")}
             tone="success"
             role="status"
           >

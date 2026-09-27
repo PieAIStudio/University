@@ -1,0 +1,21 @@
+{
+  "grading.quantity.unavailable": "暂时读不到",
+  "grading.quantity.zero": "不够一次了",
+  "grading.quantity.count": "{count, plural, one {{amount} 次} other {{amount} 次}}",
+  "grading.free.unavailable": "今天还剩多少次暂时读不到",
+  "grading.free.zero": "今天还不够一次了",
+  "grading.free.count": "{count, plural, one {今天还剩 {amount} 次} other {今天还剩 {amount} 次}}",
+  "grading.wallet.unavailable": "你的钱包余额暂时读不到",
+  "grading.wallet.zero": "你的钱包还不够一次了",
+  "grading.wallet.count": "{count, plural, one {你的钱包还够 {amount} 次} other {你的钱包还够 {amount} 次}}",
+  "grading.host.automatic": "当场判定",
+  "grading.host.ai": "AI 评估",
+  "billing.free.name": "免费",
+  "billing.free.line1": "全部课程免费学",
+  "billing.free.line2": "练习与复习卡",
+  "billing.free.line3": "绑定邮箱，每天体验 AI 批改",
+  "billing.member.name": "会员",
+  "billing.member.line1": "学习进度、复习卡同步",
+  "billing.member.line2": "手机、电脑、平板接着学",
+  "billing.member.line3": "AI 批改不受每日免费额度限制"
+}

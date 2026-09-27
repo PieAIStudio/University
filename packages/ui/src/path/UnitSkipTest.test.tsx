@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -77,16 +78,18 @@ function mount(
 
   act(() => {
     root.render(
-      <UnitSkipTest
-        studyId="browser-ai"
-        courseId="search-your-own-photos"
-        unit={UNIT}
-        content={{ lesson: (locator) => Promise.resolve(load(locator.lessonId)) }}
-        proven={options.proven ?? new Set()}
-        onProven={(lessonIds) => provenCalls.push(lessonIds)}
-        onOpenLesson={(locator) => opened.push(locator.lessonId)}
-        pick={() => 0}
-      />,
+      withInterfaceLocale(
+        <UnitSkipTest
+          studyId="browser-ai"
+          courseId="search-your-own-photos"
+          unit={UNIT}
+          content={{ lesson: (locator) => Promise.resolve(load(locator.lessonId)) }}
+          proven={options.proven ?? new Set()}
+          onProven={(lessonIds) => provenCalls.push(lessonIds)}
+          onOpenLesson={(locator) => opened.push(locator.lessonId)}
+          pick={() => 0}
+        />,
+      ),
     );
   });
 

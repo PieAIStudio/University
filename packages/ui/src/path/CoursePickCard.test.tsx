@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, createRef, type RefObject } from "react";
@@ -57,30 +58,32 @@ async function renderCard({
   const cardRef: RefObject<HTMLElement | null> = createRef();
   await act(async () => {
     root.render(
-      <div className="app-shell">
-        <button type="button" className="jsdom-rail">
-          学习
-        </button>
-        <canvas />
-        <nav className={overlay.labels}>
-          <button type="button" className={overlay.course}>
-            课名
+      withInterfaceLocale(
+        <div className="app-shell">
+          <button type="button" className="jsdom-rail">
+            学习
           </button>
-          <div className={overlay.study}>大课名</div>
-        </nav>
-        <CoursePickCard
-          title="认识地形"
-          studyTitle="图灵密约"
-          depth={0}
-          unmetPrerequisites={[]}
-          objectives={objectives}
-          stats={stats}
-          isBeingRewritten={isBeingRewritten}
-          onEnter={onEnter}
-          onDismiss={onDismiss}
-          cardRef={cardRef}
-        />
-      </div>,
+          <canvas />
+          <nav className={overlay.labels}>
+            <button type="button" className={overlay.course}>
+              课名
+            </button>
+            <div className={overlay.study}>大课名</div>
+          </nav>
+          <CoursePickCard
+            title="认识地形"
+            studyTitle="图灵密约"
+            depth={0}
+            unmetPrerequisites={[]}
+            objectives={objectives}
+            stats={stats}
+            isBeingRewritten={isBeingRewritten}
+            onEnter={onEnter}
+            onDismiss={onDismiss}
+            cardRef={cardRef}
+          />
+        </div>,
+      ),
     );
   });
   return { onDismiss, onEnter, cardRef };
@@ -187,18 +190,20 @@ describe("CoursePickCard", () => {
 describe("a course whose prerequisites are unmet", () => {
   const withUnmet = (unmet: readonly { readonly courseId: string; readonly title: string }[]) =>
     renderToStaticMarkup(
-      <CoursePickCard
-        title="用 AI 把一个真实开源项目跑起来"
-        studyTitle="学会用 AI 做应用"
-        depth={1}
-        unmetPrerequisites={unmet}
-        objectives={["跑起来一个真实项目"]}
-        stats={{ lessons: 8, exercises: 8, maxXp: 400 }}
-        isBeingRewritten={false}
-        onEnter={() => undefined}
-        onDismiss={() => undefined}
-        cardRef={{ current: null }}
-      />,
+      withInterfaceLocale(
+        <CoursePickCard
+          title="用 AI 把一个真实开源项目跑起来"
+          studyTitle="学会用 AI 做应用"
+          depth={1}
+          unmetPrerequisites={unmet}
+          objectives={["跑起来一个真实项目"]}
+          stats={{ lessons: 8, exercises: 8, maxXp: 400 }}
+          isBeingRewritten={false}
+          onEnter={() => undefined}
+          onDismiss={() => undefined}
+          cardRef={{ current: null }}
+        />,
+      ),
     );
 
   it("names what it assumes rather than counting it", () => {

@@ -2,13 +2,13 @@ export const messages = {
   "play.ai.agent.play.intro":
     "你来掌舵：看 Agent 要读写哪份文件，直接在文件旁改权限，再让它推进。草稿会真的写出来；范围过大，也会真的改坏这里的原资料。",
   "play.ai.agent.play.filesTitle": "这一步的文件与权限",
-  "play.ai.agent.play.usingTool": "本步使用：{{tool}}",
+  "play.ai.agent.play.usingTool": "本步使用：{tool}",
   "play.ai.agent.play.filesHint":
     "这里的开关会同步修改上方工具的实际范围，并保留到后续行动。拟改内容还没有执行。",
   "play.ai.agent.play.readTarget": "读取",
   "play.ai.agent.play.writeTarget": "改写",
   "play.ai.agent.play.readWriteTarget": "读取并改写",
-  "play.ai.agent.play.allowTarget": "允许「{{tool}}」触达「{{file}}」",
+  "play.ai.agent.play.allowTarget": "允许「{tool}」触达「{file}」",
   "play.ai.agent.play.targetAllowed": "当前工具可触达。",
   "play.ai.agent.play.targetRequiredBlocked": "缺少这个必要文件的权限，整步会停住。",
   "play.ai.agent.play.targetOptionalBlocked": "当前工具触达不了这个目标。",
@@ -25,7 +25,7 @@ export const messages = {
   "play.ai.agent.play.requiredPauseSimple":
     "已停在这里，没有执行。任务仍需要这一步的输入或产物；可以先修改文件范围，再继续。",
   "play.ai.agent.play.adjustHere": "就在这里修改文件范围",
-  "play.ai.agent.play.scopeChanged": "「{{tool}}」的实际权限已更新，上方授权和本步文件开关已同步。",
+  "play.ai.agent.play.scopeChanged": "「{tool}」的实际权限已更新，上方授权和本步文件开关已同步。",
   "play.ai.agent.play.run": "推进到需要我判断处",
   "play.ai.agent.play.stop": "停在这里",
   "play.ai.agent.play.runHelp":
@@ -36,15 +36,15 @@ export const messages = {
   "play.ai.agent.play.pause.document-action":
     "停在材料带来的额外指令前。这不是用户的新授权；请检查来源与目标，再亲自决定这一步。",
   "play.ai.agent.play.pause.protected-change":
-    "已停住，还没有改动 {{paths}}。当前权限会让这一步改写应保留的文件，你可以就在文件旁收回范围。",
+    "已停住，还没有改动 {paths}。当前权限会让这一步改写应保留的文件，你可以就在文件旁收回范围。",
   "play.ai.agent.play.pause.workspace-damaged":
-    "已停止推进：{{paths}} 已被改动。这里可以恢复检查点，再修范围重放。",
+    "已停止推进：{paths} 已被改动。这里可以恢复检查点，再修范围重放。",
   "play.ai.agent.play.pause.scope-denied":
-    "已停在「{{tool}}」：本步需要的文件尚未授权。检查文件旁的开关后再继续。",
+    "已停在「{tool}」：本步需要的文件尚未授权。检查文件旁的开关后再继续。",
   "play.ai.agent.play.pause.round-ended": "计划已走完。实际产物保留在工作区，可以开始验收。",
   "play.ai.agent.play.resultTitle": "刚才的实际结果",
-  "play.ai.agent.play.resultRead": "已读取 {{paths}}",
-  "play.ai.agent.play.resultChanged": "已改写 {{paths}}",
-  "play.ai.agent.play.resultBlocked": "范围挡住了 {{paths}}",
-  "play.ai.agent.play.stepExecuted": "已执行「{{title}}」，实际结果就在这里。",
+  "play.ai.agent.play.resultRead": "已读取 {paths}",
+  "play.ai.agent.play.resultChanged": "已改写 {paths}",
+  "play.ai.agent.play.resultBlocked": "范围挡住了 {paths}",
+  "play.ai.agent.play.stepExecuted": "已执行「{title}」，实际结果就在这里。",
 } as const;

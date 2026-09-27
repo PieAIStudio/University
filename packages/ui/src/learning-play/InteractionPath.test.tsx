@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -30,12 +31,14 @@ async function click(text: string) {
 async function render(scope = "account:lesson:1:zh-CN", onResult = vi.fn()) {
   await act(async () =>
     root.render(
-      <LearningActivity
-        activity={fixture as InteractionPathActivity}
-        occurrenceId={scope}
-        onResult={onResult}
-        reviewContent={<p>完整复习文字</p>}
-      />,
+      withInterfaceLocale(
+        <LearningActivity
+          activity={fixture as InteractionPathActivity}
+          occurrenceId={scope}
+          onResult={onResult}
+          reviewContent={<p>完整复习文字</p>}
+        />,
+      ),
     ),
   );
   return onResult;
@@ -153,7 +156,9 @@ describe("shared interaction path host", () => {
     step.task = "unsupported";
     step.material.reference = { label: "来源记录", text: "来源说明按钮可以用键盘触发。" };
     await act(async () =>
-      root.render(<LearningActivity activity={activity} occurrenceId="fixed-slot" />),
+      root.render(
+        withInterfaceLocale(<LearningActivity activity={activity} occurrenceId="fixed-slot" />),
+      ),
     );
     await click("能，按 Enter 或空格");
     await commit();
@@ -172,10 +177,12 @@ describe("shared interaction path host", () => {
     expect(material.nextElementSibling?.className).toContain("interaction-path__choices");
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={{ ...activity, id: "new-definition" }}
-          occurrenceId="fixed-slot"
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={{ ...activity, id: "new-definition" }}
+            occurrenceId="fixed-slot"
+          />,
+        ),
       ),
     );
     expect(container.textContent).toContain("第 1 / 4 轮");
@@ -193,23 +200,25 @@ describe("shared interaction path host", () => {
     const progress = vi.fn();
     await act(async () =>
       root.render(
-        <LearningActivity
-          activity={extended}
-          occurrenceId="transfer-visit"
-          onResult={report}
-          onNext={next}
-          onPathProgress={progress}
-          assets={[
-            {
-              id: "scene",
-              kind: "authorized-external",
-              mime: "image/jpeg",
-              url: "/content/assets/example.jpg",
-              alt: "可观察的场景",
-              attribution: "Original source credit",
-            },
-          ]}
-        />,
+        withInterfaceLocale(
+          <LearningActivity
+            activity={extended}
+            occurrenceId="transfer-visit"
+            onResult={report}
+            onNext={next}
+            onPathProgress={progress}
+            assets={[
+              {
+                id: "scene",
+                kind: "authorized-external",
+                mime: "image/jpeg",
+                url: "/content/assets/example.jpg",
+                alt: "可观察的场景",
+                attribution: "Original source credit",
+              },
+            ]}
+          />,
+        ),
       ),
     );
     expect(container.querySelector("img")?.getAttribute("alt")).toBe("可观察的场景");

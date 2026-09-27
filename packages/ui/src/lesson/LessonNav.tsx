@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { GameProgress } from "@pieai/swimmer-ui-kit";
 
@@ -275,6 +275,7 @@ export function LessonToolbar({
     readonly label: string;
   };
 }) {
+  const interfaceTranslator = useI18n();
   const { ref, current, total, ratio } = useLessonProgress(sections);
   useLessonToolbarScrollOffset(ref);
   const valued = total > 0;
@@ -283,13 +284,13 @@ export function LessonToolbar({
   const progress = (
     <GameProgress
       className="lesson-toolbar__progress"
-      label={progressOverride?.label ?? translate("ui.lesson.lessonNav.copy.课文进度")}
+      label={progressOverride?.label ?? interfaceTranslator.t("ui.lesson.lessonNav.copy.课文进度")}
       value={valueNow}
       max={valueMax}
       tone="accent"
       valueLabel={
         progressOverride?.label ??
-        (valued ? translate("product.reading.sections", { current, total }) : undefined)
+        (valued ? interfaceTranslator.t("product.reading.sections", { current, total }) : undefined)
       }
     />
   );
@@ -299,7 +300,7 @@ export function LessonToolbar({
       <button
         type="button"
         className="lesson-toolbar__close"
-        aria-label={translate("ui.lesson.lessonNav.copy.离开课文")}
+        aria-label={interfaceTranslator.t("ui.lesson.lessonNav.copy.离开课文")}
         onClick={onClose}
       >
         ✕

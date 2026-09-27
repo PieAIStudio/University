@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
@@ -47,6 +47,7 @@ export function SettlementHost({
   readonly onIncomplete: () => void;
   readonly onWorthwhileProgress?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const progress = useSyncExternalStore(subscribe, snapshot);
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const [lesson, setLesson] = useState<LessonView | null>(null);
@@ -100,7 +101,7 @@ export function SettlementHost({
   if (!lesson) {
     return (
       <p className="loading-copy" role="status" aria-live="polite" aria-busy="true">
-        {translate("app.lesson.settlement.copy.读完了")}
+        {interfaceTranslator.t("app.lesson.settlement.copy.读完了")}
       </p>
     );
   }

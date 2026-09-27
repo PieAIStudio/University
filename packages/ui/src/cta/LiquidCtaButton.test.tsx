@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -31,9 +32,11 @@ afterEach(async () => {
 async function renderButton(props: Partial<LiquidCtaButtonProps> = {}) {
   await act(async () => {
     root.render(
-      <LiquidCtaButton aria-label="开始学习" fullWidth {...props}>
-        开始学习 →
-      </LiquidCtaButton>,
+      withInterfaceLocale(
+        <LiquidCtaButton aria-label="开始学习" fullWidth {...props}>
+          开始学习 →
+        </LiquidCtaButton>,
+      ),
     );
   });
   const button = container.querySelector<HTMLButtonElement>("button");

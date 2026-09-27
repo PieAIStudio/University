@@ -12,7 +12,7 @@ import {
   useRole,
 } from "@floating-ui/react";
 import { useState } from "react";
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 
 import {
   FOREIGN_PRESETS,
@@ -25,13 +25,13 @@ import {
 
 const MARK_LABELS: Readonly<Record<WordMarkStyle, string>> = {
   get underline() {
-    return translate("reading.settings.underline");
+    return interfaceTranslator.t("reading.settings.underline");
   },
   get marker() {
-    return translate("reading.settings.marker");
+    return interfaceTranslator.t("reading.settings.marker");
   },
   get plain() {
-    return translate("reading.settings.plain");
+    return interfaceTranslator.t("reading.settings.plain");
   },
 };
 
@@ -55,13 +55,16 @@ function ForeignSettingsFields({
   readonly settings: ForeignSettings;
   readonly onChange: (next: ForeignSettings) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const active = presetOf(settings);
   const set = <K extends keyof ForeignSettings>(key: K, value: ForeignSettings[K]) =>
     onChange({ ...settings, [key]: value });
 
   return (
     <>
-      <p className="foreign-settings__group-label">{translate("reading.settings.intent")}</p>
+      <p className="foreign-settings__group-label">
+        {interfaceTranslator.t("reading.settings.intent")}
+      </p>
       <div className="foreign-settings__presets">
         {(["read", "pronounce", "remember"] as const).map((name) => (
           <button
@@ -78,11 +81,11 @@ function ForeignSettingsFields({
       </div>
 
       <p className="foreign-settings__group-label">
-        {translate("reading.settings.adjust")}
-        {active === "custom" ? translate("reading.settings.custom") : ""}
+        {interfaceTranslator.t("reading.settings.adjust")}
+        {active === "custom" ? interfaceTranslator.t("reading.settings.custom") : ""}
       </p>
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.original")}</span>
+        <span>{interfaceTranslator.t("reading.settings.original")}</span>
         <input
           type="checkbox"
           checked={settings.showOriginal}
@@ -90,13 +93,17 @@ function ForeignSettingsFields({
         />
       </label>
       {settings.showOriginal ? (
-        <p className="foreign-settings__note">{translate("reading.settings.originalShown")}</p>
+        <p className="foreign-settings__note">
+          {interfaceTranslator.t("reading.settings.originalShown")}
+        </p>
       ) : (
-        <p className="foreign-settings__note">{translate("reading.settings.originalHidden")}</p>
+        <p className="foreign-settings__note">
+          {interfaceTranslator.t("reading.settings.originalHidden")}
+        </p>
       )}
 
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.markStyle")}</span>
+        <span>{interfaceTranslator.t("reading.settings.markStyle")}</span>
         <select
           value={settings.markStyle}
           onChange={(event) => set("markStyle", event.target.value as WordMarkStyle)}
@@ -110,7 +117,7 @@ function ForeignSettingsFields({
       </label>
 
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.phonetic")}</span>
+        <span>{interfaceTranslator.t("reading.settings.phonetic")}</span>
         <input
           type="checkbox"
           checked={settings.showPhonetic}
@@ -118,7 +125,7 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.speak")}</span>
+        <span>{interfaceTranslator.t("reading.settings.speak")}</span>
         <input
           type="checkbox"
           checked={settings.showSpeak}
@@ -126,7 +133,7 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.examples")}</span>
+        <span>{interfaceTranslator.t("reading.settings.examples")}</span>
         <input
           type="checkbox"
           checked={settings.showUsage}
@@ -134,14 +141,16 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>{translate("reading.settings.stageButtons")}</span>
+        <span>{interfaceTranslator.t("reading.settings.stageButtons")}</span>
         <input
           type="checkbox"
           checked={settings.showStageButtons}
           onChange={(event) => set("showStageButtons", event.target.checked)}
         />
       </label>
-      <p className="foreign-settings__note">{translate("reading.settings.stageNote")}</p>
+      <p className="foreign-settings__note">
+        {interfaceTranslator.t("reading.settings.stageNote")}
+      </p>
     </>
   );
 }
@@ -156,6 +165,7 @@ export function ForeignSettingsPanel({
   /** Page layout: the form itself, no gear. The lesson rail keeps the popover. */
   readonly embedded?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -174,7 +184,7 @@ export function ForeignSettingsPanel({
     return (
       <div
         className="foreign-settings foreign-settings--page"
-        aria-label={translate("reading.settings.title")}
+        aria-label={interfaceTranslator.t("reading.settings.title")}
       >
         <ForeignSettingsFields settings={settings} onChange={onChange} />
       </div>
@@ -187,7 +197,7 @@ export function ForeignSettingsPanel({
         type="button"
         className="rail-panel__gear"
         ref={refs.setReference}
-        aria-label={translate("reading.settings.title")}
+        aria-label={interfaceTranslator.t("reading.settings.title")}
         aria-expanded={open}
         {...getReferenceProps()}
       >
@@ -210,7 +220,7 @@ export function ForeignSettingsPanel({
               ref={refs.setFloating}
               style={floatingStyles}
               className="foreign-settings"
-              aria-label={translate("reading.settings.title")}
+              aria-label={interfaceTranslator.t("reading.settings.title")}
               {...getFloatingProps()}
             >
               <ForeignSettingsFields settings={settings} onChange={onChange} />

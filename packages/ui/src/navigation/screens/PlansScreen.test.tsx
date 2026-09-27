@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -55,7 +56,7 @@ describe("PlansScreen purchase entry", () => {
       orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
     });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent === "先绑定邮箱",
     );
@@ -87,7 +88,7 @@ describe("PlansScreen purchase entry", () => {
       orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
     });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent === "升级会员",
     );
@@ -134,7 +135,7 @@ describe("PlansScreen purchase entry", () => {
       orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
     });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent === "升级会员",
     );
@@ -155,7 +156,7 @@ describe("PlansScreen purchase entry", () => {
 
 describe("PlansScreen pricing claims", () => {
   it("separates membership fees from explicitly chosen wallet-funded grading", async () => {
-    await act(async () => root.render(<PlansScreen />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen />)));
     expect(container.textContent).toContain("会员费不包含钱包批改费用");
     expect(container.textContent).toContain("只有你主动选择钱包批改才会扣除");
     expect(container.textContent).toContain("年付一次支付全年费用");
@@ -166,7 +167,7 @@ describe("PlansScreen pricing claims", () => {
       transport: null,
     });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     // A promise to stop billing needs billing to exist. Until the transport can
     // create an order, the CTA only records intent, and the sentence would be
@@ -197,7 +198,7 @@ describe("PlansScreen pricing claims", () => {
       },
     });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     const reassurance = container.querySelector<HTMLElement>("[data-plan-cancellation='true']");
     expect(container.querySelector("[data-subscription-management]")).not.toBeNull();
@@ -219,7 +220,7 @@ describe("PlansScreen pricing claims", () => {
     await identity.signInAnonymously();
     const payment = createPaymentPort({ identity, transport: null });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     const saving = container.querySelector(".plan-card__saving")?.textContent ?? "";
     // Twelve months at the configured monthly price against the configured
@@ -235,7 +236,7 @@ describe("PlansScreen pricing claims", () => {
     await identity.signInAnonymously();
     const payment = createPaymentPort({ identity, transport: null });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     const featured = container.querySelectorAll(".plan-card--featured");
     expect(featured).toHaveLength(1);
@@ -247,7 +248,7 @@ describe("PlansScreen pricing claims", () => {
     await identity.signInAnonymously();
     const payment = createPaymentPort({ identity, transport: null });
 
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     const lede = container.querySelector(".shell-screen__lede")?.textContent ?? "";
     expect(lede).not.toMatch(/[，。：] /);
@@ -260,7 +261,7 @@ describe("free plan price line", () => {
     // nobody needs persuading into the loudest thing on the pricing page.
     const identity = createMemoryIdentityPort();
     const payment = createPaymentPort({ identity, transport: null });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
 
     const cards = container.querySelectorAll(".plan-card");
     expect(cards.length).toBeGreaterThan(1);
@@ -281,7 +282,7 @@ describe("PlansScreen wallet line", () => {
       identity,
       transport: { readEntitlement: async () => ({ planId: "member" }), createOrder },
     });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     expect(container.querySelector("[data-current-membership]")?.textContent).toContain(
       "你已是会员",
     );
@@ -303,7 +304,7 @@ describe("PlansScreen wallet line", () => {
         }),
       },
     });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     expect(container.textContent).toContain("你的钱包还够 3 次");
     await act(async () => identity.signOut());
     expect(container.textContent).not.toContain("你的钱包还够 3 次");
@@ -312,7 +313,7 @@ describe("PlansScreen wallet line", () => {
 
   it("retains the non-sensitive monthly choice when the page is reopened", async () => {
     const payment = createPaymentPort({ identity: createMemoryIdentityPort(), transport: null });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     const monthly = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "按月",
     );
@@ -320,7 +321,7 @@ describe("PlansScreen wallet line", () => {
     await act(async () => monthly.click());
     await act(async () => root.unmount());
     root = createRoot(container);
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     expect(container.querySelector(".plan-card--featured")?.textContent).toContain("$19.00");
     expect(container.querySelector(".plan-card--featured")?.textContent).not.toContain("$149.00");
   });
@@ -330,7 +331,7 @@ describe("PlansScreen wallet line", () => {
       identity: createMemoryIdentityPort(),
       transport: null,
     });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     await act(async () => {
       await Promise.resolve();
     });
@@ -351,7 +352,7 @@ describe("PlansScreen wallet line", () => {
         }),
       },
     });
-    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     await vi.waitFor(() => {
       expect(container.textContent).toContain("你的钱包还够 3 次");
     });

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
@@ -40,6 +40,7 @@ export function PracticeSurface({
   readonly onOpenPlayLab?: () => void;
   readonly renderReward?: (question: ConceptPracticeQuestion) => ReactNode;
 }) {
+  const interfaceTranslator = useI18n();
   const questions = useMemo(() => {
     const built: ConceptPracticeQuestion[] = [];
     for (const entry of CONCEPT_ENTRIES) {
@@ -93,7 +94,7 @@ export function PracticeSurface({
     ((question: ConceptPracticeQuestion) => (
       <EntryPage
         breadcrumb={[
-          { label: translate("ui.practice.practiceSurface.copy.概念图解") },
+          { label: interfaceTranslator.t("ui.practice.practiceSurface.copy.概念图解") },
           { label: question.entry.head.zh },
         ]}
         head={
@@ -126,7 +127,7 @@ export function PracticeSurface({
                 className="practice-stream__leave"
                 onClick={onOpenWorld}
               >
-                {translate("ui.practice.practiceSurface.copy.关卡地图")}
+                {interfaceTranslator.t("ui.practice.practiceSurface.copy.关卡地图")}
               </GameButton>
             ) : null}
             <PracticeOverview {...overview} onOpenReview={onOpenReview} />
@@ -135,7 +136,7 @@ export function PracticeSurface({
         extraAction={
           onOpenPlayLab ? (
             <GameButton type="button" variant="ghost" static onClick={onOpenPlayLab}>
-              {translate("play.lab.entry")}
+              {interfaceTranslator.t("play.lab.entry")}
             </GameButton>
           ) : null
         }

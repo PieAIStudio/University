@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import { useCallback, useSyncExternalStore } from "react";
 import {
   answerStatsOf,
@@ -100,15 +100,15 @@ export function buildAnswerOverview(
 
 function rateLabel(stats: LessonAnswerStats): string {
   if (stats.firstAttemptCount === 0)
-    return translate("app.authoring.answerOverview.copy.暂无答题数据");
+    return interfaceTranslator.t("app.authoring.answerOverview.copy.暂无答题数据");
   if (stats.pendingFirstAttemptCount > 0)
-    return translate("app.authoring.answerOverview.copy.首答待判定");
+    return interfaceTranslator.t("app.authoring.answerOverview.copy.首答待判定");
   return `${Math.round((stats.firstPassRate ?? 0) * 100)}%`;
 }
 
 function pendingLabel(stats: LessonAnswerStats): string | null {
   return stats.pendingFirstAttemptCount > 0
-    ? translate(
+    ? interfaceTranslator.t(
         "app.authoring.answerOverview.copy.value0-道题的首答还在等待宿主判定-暂不计算通过率",
         { value0: stats.pendingFirstAttemptCount },
       )
@@ -122,6 +122,7 @@ export function AnswerOverview({
   readonly progress: ProgressPort;
   readonly studyView: StudyView | null;
 }) {
+  const interfaceTranslator = useI18n();
   const subscribe = useCallback((listener: () => void) => progress.subscribe(listener), [progress]);
   const getSnapshot = useCallback(() => progress.snapshot(), [progress]);
   const document = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
@@ -133,12 +134,14 @@ export function AnswerOverview({
         {styles}
         <section
           className="answer-overview"
-          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+          aria-label={interfaceTranslator.t("app.authoring.answerOverview.copy.作者自己的答题汇总")}
         >
-          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
-          <h2>{translate("app.authoring.answerOverview.copy.先选择一个项目")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.answerOverview.copy.作者答题")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.answerOverview.copy.先选择一个项目")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.answerOverview.copy.选中项目后-这里会从本机进度文档逐节列出答题事实",
             )}
           </p>
@@ -154,12 +157,16 @@ export function AnswerOverview({
         {styles}
         <section
           className="answer-overview"
-          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+          aria-label={interfaceTranslator.t("app.authoring.answerOverview.copy.作者自己的答题汇总")}
         >
-          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
-          <h2>{translate("app.authoring.answerOverview.copy.还没有可统计的课")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.answerOverview.copy.作者答题")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.answerOverview.copy.还没有可统计的课")}</h2>
           <p>
-            {translate("app.authoring.answerOverview.copy.课程结构读到后-答题总览会在这里出现")}
+            {interfaceTranslator.t(
+              "app.authoring.answerOverview.copy.课程结构读到后-答题总览会在这里出现",
+            )}
           </p>
         </section>
       </>
@@ -173,14 +180,16 @@ export function AnswerOverview({
         {styles}
         <section
           className="answer-overview"
-          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+          aria-label={interfaceTranslator.t("app.authoring.answerOverview.copy.作者自己的答题汇总")}
         >
-          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
-          <h2>{translate("app.authoring.answerOverview.copy.这个项目你还没答过题")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.answerOverview.copy.作者答题")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.answerOverview.copy.这个项目你还没答过题")}</h2>
           <p>
-            {translate("app.authoring.answerOverview.copy.这个浏览器的进度文档里")}
+            {interfaceTranslator.t("app.authoring.answerOverview.copy.这个浏览器的进度文档里")}
             {lessonTotal}{" "}
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.answerOverview.copy.节课都还没有首答记录-自己走一遍课-答几道题之后-卡住的那几节会排在这里最前面",
             )}
           </p>
@@ -194,14 +203,18 @@ export function AnswerOverview({
       {styles}
       <section
         className="answer-overview"
-        aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+        aria-label={interfaceTranslator.t("app.authoring.answerOverview.copy.作者自己的答题汇总")}
       >
         <header className="answer-overview__header">
           <div>
-            <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
-            <h2>{translate("app.authoring.answerOverview.copy.再看一眼-哪一节卡住了")}</h2>
+            <p className="eyebrow">
+              {interfaceTranslator.t("app.authoring.answerOverview.copy.作者答题")}
+            </p>
+            <h2>
+              {interfaceTranslator.t("app.authoring.answerOverview.copy.再看一眼-哪一节卡住了")}
+            </h2>
             <p>
-              {translate(
+              {interfaceTranslator.t(
                 "app.authoring.answerOverview.copy.只读当前浏览器的-ProgressDocument-它代表作者本人-不代表其他学习者-全体学习者的答题汇总还没接",
               )}
             </p>
@@ -209,10 +222,10 @@ export function AnswerOverview({
           <div
             className="answer-overview__source"
             role="group"
-            aria-label={translate("app.authoring.answerOverview.copy.答题数据来源")}
+            aria-label={interfaceTranslator.t("app.authoring.answerOverview.copy.答题数据来源")}
           >
-            <strong>{translate("app.authoring.answerOverview.copy.本机")}</strong>
-            <span>{translate("app.authoring.answerOverview.copy.作者自己的进度")}</span>
+            <strong>{interfaceTranslator.t("app.authoring.answerOverview.copy.本机")}</strong>
+            <span>{interfaceTranslator.t("app.authoring.answerOverview.copy.作者自己的进度")}</span>
           </div>
         </header>
 
@@ -225,11 +238,14 @@ export function AnswerOverview({
                   <h3>{course.title}</h3>
                   <span>
                     {course.lessons.length}/{course.lessonCount}{" "}
-                    {translate("app.authoring.answerOverview.copy.节答过")}
+                    {interfaceTranslator.t("app.authoring.answerOverview.copy.节答过")}
                     {course.unansweredCount > 0
-                      ? translate("app.authoring.answerOverview.copy.还有-value0-节没答过", {
-                          value0: course.unansweredCount,
-                        })
+                      ? interfaceTranslator.t(
+                          "app.authoring.answerOverview.copy.还有-value0-节没答过",
+                          {
+                            value0: course.unansweredCount,
+                          },
+                        )
                       : ""}
                   </span>
                 </header>
@@ -245,15 +261,15 @@ export function AnswerOverview({
                           <p className="eyebrow">{lesson.unitTitle}</p>
                           <h4>{lesson.title}</h4>
                           <span>
-                            {translate("app.authoring.answerOverview.copy.第")}{" "}
+                            {interfaceTranslator.t("app.authoring.answerOverview.copy.第")}{" "}
                             {lesson.contentRevision}{" "}
-                            {translate("app.authoring.answerOverview.copy.版")}
+                            {interfaceTranslator.t("app.authoring.answerOverview.copy.版")}
                           </span>
                         </div>
                         <div
                           className="answer-overview__metrics"
                           role="group"
-                          aria-label={translate(
+                          aria-label={interfaceTranslator.t(
                             "app.authoring.answerOverview.copy.value0答题指标",
                             { value0: lesson.title },
                           )}
@@ -261,19 +277,25 @@ export function AnswerOverview({
                           <div className="answer-overview__metric">
                             <strong>{rateLabel(lesson.stats)}</strong>
                             <span>
-                              {translate("app.authoring.answerOverview.copy.第一次通过率")}
+                              {interfaceTranslator.t(
+                                "app.authoring.answerOverview.copy.第一次通过率",
+                              )}
                             </span>
                           </div>
                           <div className="answer-overview__metric">
                             <strong>{lesson.stats.totalAttempts}</strong>
-                            <span>{translate("app.authoring.answerOverview.copy.次尝试")}</span>
+                            <span>
+                              {interfaceTranslator.t("app.authoring.answerOverview.copy.次尝试")}
+                            </span>
                           </div>
                           <div className="answer-overview__metric">
                             <strong>
                               {lesson.stats.firstAttemptCount}/{lesson.stats.exerciseCount}
                             </strong>
                             <span>
-                              {translate("app.authoring.answerOverview.copy.道题有首答记录")}
+                              {interfaceTranslator.t(
+                                "app.authoring.answerOverview.copy.道题有首答记录",
+                              )}
                             </span>
                           </div>
                         </div>

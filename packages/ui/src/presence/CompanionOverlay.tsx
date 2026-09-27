@@ -11,7 +11,7 @@
  * the world map is a real cost. Two group-mates do not justify two extra
  * renderers on the map that already has one.
  */
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useRef, type CSSProperties } from "react";
 import type { PresencePeer } from "@pieai/university-core";
 
@@ -27,11 +27,12 @@ export function CompanionMarkers({
   readonly surface: PresenceSurface;
   readonly attach: (userId: string, element: HTMLElement | null) => void;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <div
       className="companions"
       role="group"
-      aria-label={translate("ui.presence.companionOverlay.copy.一起学的同伴")}
+      aria-label={interfaceTranslator.t("ui.presence.companionOverlay.copy.一起学的同伴")}
       style={{ pointerEvents: "none" }}
     >
       {peers.map((peer) => {
@@ -39,9 +40,9 @@ export function CompanionMarkers({
         if (!anchor) return null;
         const where =
           surface === "course" && peer.relation === "group" && peer.location?.lessonId
-            ? translate("ui.presence.companionOverlay.copy.在这关")
+            ? interfaceTranslator.t("ui.presence.companionOverlay.copy.在这关")
             : peer.location?.courseId
-              ? translate("ui.presence.companionOverlay.copy.在这门课")
+              ? interfaceTranslator.t("ui.presence.companionOverlay.copy.在这门课")
               : null;
         return (
           <div

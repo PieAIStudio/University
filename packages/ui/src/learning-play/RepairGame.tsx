@@ -24,7 +24,7 @@ import {
   type RepairImplementation,
   type RepairTrace,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
 import {
   RepairProductView,
@@ -42,6 +42,7 @@ export function RepairGame({
   onAttempt,
   guided = false,
 }: ActivityControls<RepairActivity>) {
+  const interfaceTranslator = useI18n();
   const [workspace, setWorkspace] = useState(() => createRepairWorkspace(activity));
   const [evidence, setEvidence] = useState<RepairEvidence>();
   const [patch, setPatch] = useState<Exclude<RepairImplementation, "broken">>();
@@ -68,7 +69,7 @@ export function RepairGame({
   const product = frame?.right ?? workspace.product;
   const versionLabel = (implementation: RepairImplementation) =>
     implementation === "broken"
-      ? t("play.aiQuality.repair.original")
+      ? interfaceTranslator.t("play.aiQuality.repair.original")
       : activity.patches[implementation].label;
   const version = versionLabel(workspace.implementation);
   const divergence = comparison ? firstRepairDivergence(activity, comparison) : undefined;
@@ -98,30 +99,30 @@ export function RepairGame({
   const nextReplayEvent = comparison?.events[comparison.cursor];
   const guideTitle =
     panel === "patch"
-      ? t("play.qualityGuide.repair.choosePatch")
+      ? interfaceTranslator.t("play.qualityGuide.repair.choosePatch")
       : regressionReceipt && defectReceipt?.passed
-        ? t("play.qualityGuide.repair.finish")
+        ? interfaceTranslator.t("play.qualityGuide.repair.finish")
         : regressionActive
           ? (cue.instruction ??
-            t(`play.qualityGuide.repair.${cue.name}`, {
+            interfaceTranslator.t(`play.qualityGuide.repair.${cue.name}`, {
               submit: activity.submitLabel,
               choice: repairChoiceLabel(activity, cue.choice ?? ""),
             }))
           : defectReceipt?.passed
-            ? t("play.qualityGuide.repair.oldNext")
+            ? interfaceTranslator.t("play.qualityGuide.repair.oldNext")
             : defectReceipt && !defectReceipt.passed
-              ? t("play.aiQuality.repair.defectFailed")
+              ? interfaceTranslator.t("play.aiQuality.repair.defectFailed")
               : comparison?.mode === "replay"
-                ? t(
+                ? interfaceTranslator.t(
                     replayFinished
                       ? "play.qualityGuide.repair.checkReplay"
                       : "play.qualityGuide.repair.replay",
                   )
                 : captureReady
-                  ? t("play.qualityGuide.repair.capture")
+                  ? interfaceTranslator.t("play.qualityGuide.repair.capture")
                   : evidence
-                    ? t("play.qualityGuide.repair.restoreCue")
-                    : t(`play.qualityGuide.repair.${cue.name}`, {
+                    ? interfaceTranslator.t("play.qualityGuide.repair.restoreCue")
+                    : interfaceTranslator.t(`play.qualityGuide.repair.${cue.name}`, {
                         submit: activity.submitLabel,
                         choice: repairChoiceLabel(activity, cue.choice ?? ""),
                       });
@@ -179,12 +180,12 @@ export function RepairGame({
     if (locked) return;
     const result = captureRepairEvidence(activity, workspace);
     if (!result) {
-      setMessage(t("play.aiQuality.repair.noFailure"));
+      setMessage(interfaceTranslator.t("play.aiQuality.repair.noFailure"));
       return;
     }
     setEvidence(result);
     clearChecks();
-    setMessage(t("play.aiQuality.repair.captured"));
+    setMessage(interfaceTranslator.t("play.aiQuality.repair.captured"));
     if (guided) showPanel("patch");
   }
   function apply() {
@@ -193,7 +194,7 @@ export function RepairGame({
     setWorkspace(branchRepairWorkspace(activity, liveWorkspace(), patch));
     setComparison(createRepairComparison(activity, "broken", patch, evidence.events));
     clearChecks();
-    setMessage(t("play.aiQuality.repair.appliedTimeline"));
+    setMessage(interfaceTranslator.t("play.aiQuality.repair.appliedTimeline"));
     showProduct();
   }
   function loadReplay() {
@@ -203,7 +204,7 @@ export function RepairGame({
       createRepairComparison(activity, "broken", workspace.implementation, evidence.events),
     );
     setRegressionActive(false);
-    setMessage(t("play.aiQuality.repair.replayReady"));
+    setMessage(interfaceTranslator.t("play.aiQuality.repair.replayReady"));
     showProduct();
   }
   function verifyDefect() {
@@ -213,13 +214,13 @@ export function RepairGame({
       comparison.cursor !== comparison.events.length ||
       JSON.stringify(comparison.events) !== JSON.stringify(evidence.events)
     ) {
-      setMessage(t("play.aiQuality.repair.replayIncomplete"));
+      setMessage(interfaceTranslator.t("play.aiQuality.repair.replayIncomplete"));
       return;
     }
     const result = checkRepairDefect(activity, workspace.implementation, evidence);
     if (result.trace) setDefectReceipt({ passed: result.passed, trace: result.trace });
     setMessage(
-      t(
+      interfaceTranslator.t(
         result.passed ? "play.aiQuality.repair.defectPassed" : "play.aiQuality.repair.defectFailed",
       ),
     );
@@ -233,7 +234,7 @@ export function RepairGame({
     );
     setRegressionReceipt(undefined);
     setRegressionActive(true);
-    setMessage(t("play.aiQuality.repair.regressionActive"));
+    setMessage(interfaceTranslator.t("play.aiQuality.repair.regressionActive"));
     showProduct();
   }
   function verifyRegression() {
@@ -242,7 +243,7 @@ export function RepairGame({
     if (result === "passed") setRegressionReceipt(comparison.right);
     else setRegressionReceipt(undefined);
     setMessage(
-      t(
+      interfaceTranslator.t(
         result === "passed"
           ? "play.aiQuality.repair.regressionPassed"
           : result === "failed"
@@ -260,7 +261,7 @@ export function RepairGame({
         comparison.origins.slice(0, comparison.cursor).every((origin) => origin === "manual"),
     );
     setRegressionReceipt(undefined);
-    setMessage(t("play.aiQuality.repair.branchReady"));
+    setMessage(interfaceTranslator.t("play.aiQuality.repair.branchReady"));
   }
   function finish() {
     if (locked) return;
@@ -271,7 +272,9 @@ export function RepairGame({
       regressionReceipt?.implementation === workspace.implementation &&
       checkRepairRegression(activity, regressionReceipt) === "passed",
     );
-    const summary = t(success ? "play.aiQuality.repair.success" : "play.aiQuality.repair.notReady");
+    const summary = interfaceTranslator.t(
+      success ? "play.aiQuality.repair.success" : "play.aiQuality.repair.notReady",
+    );
     passed.current = success;
     setMessage(summary);
     const applied =
@@ -280,7 +283,7 @@ export function RepairGame({
         : activity.patches[workspace.implementation];
     const handoff =
       evidence && applied && defectReceipt && regressionReceipt
-        ? t("play.aiQuality.repair.handoff", {
+        ? interfaceTranslator.t("play.aiQuality.repair.handoff", {
             product: activity.product,
             defect: activity.defect,
             steps: evidence.events
@@ -326,7 +329,7 @@ export function RepairGame({
       {guided && (evidence || workspace.events.length > 0) ? (
         <nav
           className="quality-guide__panels"
-          aria-label={t("play.qualityGuide.repair.navigation")}
+          aria-label={interfaceTranslator.t("play.qualityGuide.repair.navigation")}
         >
           {(["product", "patch", "history"] as const)
             .filter((target) => target !== "patch" || evidence)
@@ -337,15 +340,17 @@ export function RepairGame({
                 aria-pressed={panel === target}
                 onClick={() => showPanel(target)}
               >
-                {t(`play.qualityGuide.repair.${target}Tab`)}
+                {interfaceTranslator.t(`play.qualityGuide.repair.${target}Tab`)}
               </GameButton>
             ))}
         </nav>
       ) : null}
       <section className="ai-quality__contract" hidden={guided}>
-        <strong>{t("play.aiQuality.repair.report")}</strong>
+        <strong>{interfaceTranslator.t("play.aiQuality.repair.report")}</strong>
         <p>{activity.defect}</p>
-        <p>{t("play.aiQuality.repair.expect", { expected: activity.expected })}</p>
+        <p>
+          {interfaceTranslator.t("play.aiQuality.repair.expect", { expected: activity.expected })}
+        </p>
       </section>
       <section className="ai-repair__live" hidden={guided && panel !== "product"}>
         <h4 ref={productHeading} tabIndex={-1}>
@@ -359,7 +364,7 @@ export function RepairGame({
         <div className="ai-repair__shared-inputs" hidden={guided && comparison?.mode === "replay"}>
           {!guided ? (
             <strong>
-              {t(
+              {interfaceTranslator.t(
                 comparison
                   ? "play.aiQuality.repair.oneActionBoth"
                   : "play.aiQuality.repair.yourAction",
@@ -395,7 +400,7 @@ export function RepairGame({
               data-suggested={guided && ["cancel", "reload"].includes(cue.action)}
               onClick={() => operate({ type: activity.model === "booking" ? "cancel" : "reload" })}
             >
-              {t(
+              {interfaceTranslator.t(
                 activity.model === "booking"
                   ? "play.aiQuality.repair.cancel"
                   : "play.aiQuality.repair.reload",
@@ -407,7 +412,7 @@ export function RepairGame({
           <>
             <div className="ai-repair__time-caption" role="status">
               <strong>
-                {t("play.aiQuality.repair.frame", {
+                {interfaceTranslator.t("play.aiQuality.repair.frame", {
                   step: comparison.cursor,
                   total: comparison.events.length,
                 })}
@@ -415,10 +420,10 @@ export function RepairGame({
               <span>
                 {frame.event
                   ? repairEventLabel(activity, frame.event)
-                  : t("play.aiQuality.repair.initialFrame")}
+                  : interfaceTranslator.t("play.aiQuality.repair.initialFrame")}
               </span>
               <span data-different={frame.different}>
-                {t(
+                {interfaceTranslator.t(
                   frame.different
                     ? "play.aiQuality.repair.framesDifferent"
                     : "play.aiQuality.repair.framesSame",
@@ -451,20 +456,20 @@ export function RepairGame({
                   }
                 >
                   {guided && nextReplayEvent
-                    ? t("play.qualityGuide.repair.replayNext", {
+                    ? interfaceTranslator.t("play.qualityGuide.repair.replayNext", {
                         action: repairEventLabel(activity, nextReplayEvent),
                       })
-                    : t("play.aiQuality.repair.next")}
+                    : interfaceTranslator.t("play.aiQuality.repair.next")}
                 </GameButton>
               ) : null}
               <details className="quality-guide__replay-tools" open={!guided}>
-                <summary>{t("play.qualityGuide.repair.tools")}</summary>
+                <summary>{interfaceTranslator.t("play.qualityGuide.repair.tools")}</summary>
                 <fieldset
                   className="ai-repair__cursor-field"
                   disabled={locked || comparison.events.length === 0}
                 >
                   <GameSlider
-                    label={t("play.aiQuality.repair.cursor")}
+                    label={interfaceTranslator.t("play.aiQuality.repair.cursor")}
                     min={0}
                     max={Math.max(1, comparison.events.length)}
                     value={comparison.cursor}
@@ -481,7 +486,7 @@ export function RepairGame({
                       setComparison(seekRepairComparison(comparison, comparison.cursor - 1))
                     }
                   >
-                    {t("play.aiQuality.repair.previous")}
+                    {interfaceTranslator.t("play.aiQuality.repair.previous")}
                   </GameButton>
                   {comparison.mode !== "replay" ? (
                     <GameButton
@@ -491,7 +496,7 @@ export function RepairGame({
                         setComparison(seekRepairComparison(comparison, comparison.cursor + 1))
                       }
                     >
-                      {t("play.aiQuality.repair.next")}
+                      {interfaceTranslator.t("play.aiQuality.repair.next")}
                     </GameButton>
                   ) : null}
                   <GameButton
@@ -502,18 +507,22 @@ export function RepairGame({
                         setComparison(seekRepairComparison(comparison, divergence));
                     }}
                   >
-                    {t("play.aiQuality.repair.jumpDifference")}
+                    {interfaceTranslator.t("play.aiQuality.repair.jumpDifference")}
                   </GameButton>
                 </div>
                 <GameButton variant="secondary" disabled={locked} onClick={forkHere}>
-                  {t("play.aiQuality.repair.forkHere")}
+                  {interfaceTranslator.t("play.aiQuality.repair.forkHere")}
                 </GameButton>
               </details>
               {!guided ? (
                 comparison.mode === "replay" ? (
-                  <p className="ai-quality__muted">{t("play.aiQuality.repair.replayControls")}</p>
+                  <p className="ai-quality__muted">
+                    {interfaceTranslator.t("play.aiQuality.repair.replayControls")}
+                  </p>
                 ) : (
-                  <p className="ai-quality__muted">{t("play.aiQuality.repair.sharedControls")}</p>
+                  <p className="ai-quality__muted">
+                    {interfaceTranslator.t("play.aiQuality.repair.sharedControls")}
+                  </p>
                 )
               ) : null}
             </div>
@@ -528,14 +537,18 @@ export function RepairGame({
           />
         )}
         {workspace.implementation === "removed" ? (
-          <p className="ai-quality__warning">{t("play.aiQuality.repair.removedNote")}</p>
+          <p className="ai-quality__warning">
+            {interfaceTranslator.t("play.aiQuality.repair.removedNote")}
+          </p>
         ) : null}
         {(comparison?.cursor ?? workspace.events.length) >= 40 ? (
-          <p className="ai-quality__warning">{t("play.aiQuality.repair.traceLimit")}</p>
+          <p className="ai-quality__warning">
+            {interfaceTranslator.t("play.aiQuality.repair.traceLimit")}
+          </p>
         ) : null}
         <details className="ai-repair__clues" hidden={guided && comparison?.mode === "replay"}>
           <summary>
-            {t(
+            {interfaceTranslator.t(
               regressionActive
                 ? "play.aiQuality.repair.regression"
                 : "play.aiQuality.repair.reproduce",
@@ -551,7 +564,7 @@ export function RepairGame({
         <div className="ai-quality__choices ai-repair__local-actions">
           {workspace.implementation === "broken" && !comparison && (!guided || captureReady) ? (
             <GameButton variant="primary" disabled={locked} onClick={capture}>
-              {t("play.aiQuality.repair.capture")}
+              {interfaceTranslator.t("play.aiQuality.repair.capture")}
             </GameButton>
           ) : null}
           {comparison?.mode === "replay" &&
@@ -562,33 +575,33 @@ export function RepairGame({
               disabled={locked || comparison.cursor !== comparison.events.length}
               onClick={verifyDefect}
             >
-              {t("play.aiQuality.repair.checkReplay")}
+              {interfaceTranslator.t("play.aiQuality.repair.checkReplay")}
             </GameButton>
           ) : null}
           {regressionActive && (!guided || !regressionReceipt) ? (
             <GameButton variant="primary" disabled={locked} onClick={verifyRegression}>
-              {t("play.aiQuality.repair.regressionCheck")}
+              {interfaceTranslator.t("play.aiQuality.repair.regressionCheck")}
             </GameButton>
           ) : null}
           {guided && evidence && !comparison ? (
             <GameButton variant="primary" disabled={locked} onClick={loadReplay}>
-              {t("play.aiQuality.repair.replay")}
+              {interfaceTranslator.t("play.aiQuality.repair.replay")}
             </GameButton>
           ) : null}
           {guided && defectReceipt?.passed && !regressionActive && !regressionReceipt ? (
             <GameButton variant="primary" disabled={locked} onClick={startRegression}>
-              {t("play.aiQuality.repair.regressionStart")}
+              {interfaceTranslator.t("play.aiQuality.repair.regressionStart")}
             </GameButton>
           ) : null}
           {guided &&
           (defectReceipt?.passed === false || (regressionActive && cue.action === "patch")) ? (
             <GameButton variant="primary" disabled={locked} onClick={() => showPanel("patch")}>
-              {t("play.qualityGuide.repair.tryAnother")}
+              {interfaceTranslator.t("play.qualityGuide.repair.tryAnother")}
             </GameButton>
           ) : null}
           {guided && defectReceipt?.passed && regressionReceipt ? (
             <GameButton variant="primary" disabled={locked} onClick={finish}>
-              {t("play.aiQuality.repair.finish")}
+              {interfaceTranslator.t("play.aiQuality.repair.finish")}
             </GameButton>
           ) : null}
           <GameButton
@@ -601,7 +614,7 @@ export function RepairGame({
               else setWorkspace((current) => resetRepairWorkspace(activity, current));
             }}
           >
-            {t("play.aiQuality.repair.reset")}
+            {interfaceTranslator.t("play.aiQuality.repair.reset")}
           </GameButton>
         </div>
         <p className="ai-quality__status" role="status">
@@ -609,17 +622,21 @@ export function RepairGame({
         </p>
         {guided && !comparison ? (
           <details className="quality-guide__failure-report">
-            <summary>{t("play.qualityGuide.repair.failureReport")}</summary>
+            <summary>{interfaceTranslator.t("play.qualityGuide.repair.failureReport")}</summary>
             <p>{activity.productBrief}</p>
             <p>{activity.defect}</p>
-            <p>{t("play.aiQuality.repair.expect", { expected: activity.expected })}</p>
+            <p>
+              {interfaceTranslator.t("play.aiQuality.repair.expect", {
+                expected: activity.expected,
+              })}
+            </p>
           </details>
         ) : null}
       </section>
       <div hidden={guided && panel !== "history"}>
         {guided ? (
           <h4 ref={historyHeading} tabIndex={-1}>
-            {t("play.qualityGuide.repair.historyTab")}
+            {interfaceTranslator.t("play.qualityGuide.repair.historyTab")}
           </h4>
         ) : null}
         <RepairTraceRecord activity={activity} trace={comparison ? comparison.right : workspace} />
@@ -628,15 +645,15 @@ export function RepairGame({
         <>
           <details className="ai-repair__evidence" hidden={guided && panel !== "history"}>
             <summary>
-              <strong>{t("play.aiQuality.repair.evidence")}</strong>
+              <strong>{interfaceTranslator.t("play.aiQuality.repair.evidence")}</strong>
             </summary>
             <div className="ai-repair__comparison">
               <div>
-                <span>{t("play.aiQuality.repair.actual")}</span>
+                <span>{interfaceTranslator.t("play.aiQuality.repair.actual")}</span>
                 <strong>{repairProductSummary(activity, evidence.actual.product)}</strong>
               </div>
               <div>
-                <span>{t("play.aiQuality.repair.expected")}</span>
+                <span>{interfaceTranslator.t("play.aiQuality.repair.expected")}</span>
                 <strong>{repairProductSummary(activity, evidence.expected.product)}</strong>
               </div>
             </div>
@@ -647,23 +664,27 @@ export function RepairGame({
             hidden={guided && panel !== "patch"}
           >
             <h4 ref={patchHeading} tabIndex={-1}>
-              {t("play.aiQuality.repair.patch")}
+              {interfaceTranslator.t("play.aiQuality.repair.patch")}
             </h4>
             {guided ? (
-              <PlayGuide title={t("play.qualityGuide.repair.choosePatch")} />
+              <PlayGuide title={interfaceTranslator.t("play.qualityGuide.repair.choosePatch")} />
             ) : (
-              <p className="ai-quality__muted">{t("play.aiQuality.repair.patchNote")}</p>
+              <p className="ai-quality__muted">
+                {interfaceTranslator.t("play.aiQuality.repair.patchNote")}
+              </p>
             )}
             {guided ? (
               <p className="quality-guide__sealed-summary">
-                {t("play.aiQuality.repair.actual")}：
+                {interfaceTranslator.t("play.aiQuality.repair.actual")}：
                 {repairProductSummary(activity, evidence.actual.product)} ·{" "}
-                {t("play.aiQuality.repair.expected")}：
+                {interfaceTranslator.t("play.aiQuality.repair.expected")}：
                 {repairProductSummary(activity, evidence.expected.product)}
               </p>
             ) : null}
             <p>
-              {t("play.qualityDifficulty.repair.preserve", { regression: activity.regression })}
+              {interfaceTranslator.t("play.qualityDifficulty.repair.preserve", {
+                regression: activity.regression,
+              })}
             </p>
             <div className="ai-repair__patch-offers">
               {selectedPatches.map((id) => (
@@ -684,30 +705,30 @@ export function RepairGame({
             </div>
             {patch ? (
               <div className="ai-repair__scope">
-                <strong>{t("play.aiQuality.repair.scopeLabel")}</strong>
+                <strong>{interfaceTranslator.t("play.aiQuality.repair.scopeLabel")}</strong>
                 <p>{activity.patches[patch].scope}</p>
                 <details open={guided}>
-                  <summary>{t("play.aiQuality.repair.changes")}</summary>
+                  <summary>{interfaceTranslator.t("play.aiQuality.repair.changes")}</summary>
                   <p>{activity.patches[patch].change}</p>
                 </details>
                 <GameButton variant="primary" disabled={locked} onClick={apply}>
-                  {t("play.aiQuality.repair.apply")}
+                  {interfaceTranslator.t("play.aiQuality.repair.apply")}
                 </GameButton>
               </div>
             ) : null}
           </section>
           <section className="ai-quality__stage" hidden={guided && panel !== "history"}>
-            <h4>{t("play.aiQuality.repair.verify")}</h4>
+            <h4>{interfaceTranslator.t("play.aiQuality.repair.verify")}</h4>
             <div className="ai-repair__verification">
               <div className="ai-repair__check" data-passed={defectReceipt?.passed ?? false}>
-                <strong>{t("play.aiQuality.repair.report")}</strong>
+                <strong>{interfaceTranslator.t("play.aiQuality.repair.report")}</strong>
                 <p>{activity.expected}</p>
                 <GameButton variant="secondary" disabled={locked} onClick={loadReplay}>
-                  {t("play.aiQuality.repair.replay")}
+                  {interfaceTranslator.t("play.aiQuality.repair.replay")}
                 </GameButton>
                 {defectReceipt ? (
                   <p>
-                    {t(
+                    {interfaceTranslator.t(
                       defectReceipt.passed
                         ? "play.aiQuality.repair.defectPassed"
                         : "play.aiQuality.repair.defectFailed",
@@ -716,28 +737,30 @@ export function RepairGame({
                 ) : null}
               </div>
               <div className="ai-repair__check" data-passed={Boolean(regressionReceipt)}>
-                <strong>{t("play.aiQuality.repair.regression")}</strong>
+                <strong>{interfaceTranslator.t("play.aiQuality.repair.regression")}</strong>
                 <p>{activity.regression}</p>
                 <GameButton variant="secondary" disabled={locked} onClick={startRegression}>
-                  {t("play.aiQuality.repair.regressionStart")}
+                  {interfaceTranslator.t("play.aiQuality.repair.regressionStart")}
                 </GameButton>
-                {regressionReceipt ? <p>{t("play.aiQuality.repair.regressionPassed")}</p> : null}
+                {regressionReceipt ? (
+                  <p>{interfaceTranslator.t("play.aiQuality.repair.regressionPassed")}</p>
+                ) : null}
               </div>
             </div>
             <GameButton variant="primary" disabled={locked} onClick={finish}>
-              {t("play.aiQuality.repair.finish")}
+              {interfaceTranslator.t("play.aiQuality.repair.finish")}
             </GameButton>
           </section>
         </>
       ) : null}
       {tapes.length > 0 ? (
         <section className="ai-repair__tapes" hidden={guided && panel !== "history"}>
-          <h4>{t("play.aiQuality.repair.tapes")}</h4>
+          <h4>{interfaceTranslator.t("play.aiQuality.repair.tapes")}</h4>
           <ol>
             {tapes.map((tape) => (
               <li key={tape.id}>
                 <strong>
-                  {t("play.aiQuality.repair.tape", {
+                  {interfaceTranslator.t("play.aiQuality.repair.tape", {
                     number: tape.id,
                     version: versionLabel(tape.comparison.candidate),
                     count: tape.comparison.events.length,
@@ -752,11 +775,11 @@ export function RepairGame({
                     setComparison(tape.comparison);
                     setWorkspace((current) => ({ ...current, ...tape.comparison.right }));
                     clearChecks();
-                    setMessage(t("play.aiQuality.repair.tapeRestored"));
+                    setMessage(interfaceTranslator.t("play.aiQuality.repair.tapeRestored"));
                     showProduct();
                   }}
                 >
-                  {t("play.aiQuality.repair.loadTape")}
+                  {interfaceTranslator.t("play.aiQuality.repair.loadTape")}
                 </GameButton>
               </li>
             ))}
@@ -764,16 +787,18 @@ export function RepairGame({
         </section>
       ) : null}
       <section className="ai-repair__timeline" hidden={guided && panel !== "history"}>
-        <h4>{t("play.aiQuality.repair.checkpoints")}</h4>
+        <h4>{interfaceTranslator.t("play.aiQuality.repair.checkpoints")}</h4>
         {workspace.checkpoints.length === 0 ? (
-          <p className="ai-quality__muted">{t("play.aiQuality.repair.checkpointsEmpty")}</p>
+          <p className="ai-quality__muted">
+            {interfaceTranslator.t("play.aiQuality.repair.checkpointsEmpty")}
+          </p>
         ) : (
           <ol>
             {workspace.checkpoints.map((checkpoint) => (
               <li key={checkpoint.id}>
                 <div>
                   <strong>
-                    {t("play.aiQuality.repair.checkpoint", {
+                    {interfaceTranslator.t("play.aiQuality.repair.checkpoint", {
                       number: checkpoint.id,
                       version: versionLabel(checkpoint.implementation),
                     })}
@@ -789,11 +814,11 @@ export function RepairGame({
                     setWorkspace(restoreRepairCheckpoint(liveWorkspace(), checkpoint.id));
                     setComparison(undefined);
                     clearChecks();
-                    setMessage(t("play.aiQuality.repair.restored"));
+                    setMessage(interfaceTranslator.t("play.aiQuality.repair.restored"));
                     showProduct();
                   }}
                 >
-                  {t("play.aiQuality.repair.restore")}
+                  {interfaceTranslator.t("play.aiQuality.repair.restore")}
                 </GameButton>
               </li>
             ))}

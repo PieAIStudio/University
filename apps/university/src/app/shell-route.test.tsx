@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -57,9 +58,11 @@ describe("shell vs bare routes", () => {
   it("does not render UniversityShell navigation while a lesson is open", async () => {
     await act(async () => {
       root.render(
-        <Frame view={LESSON}>
-          <article>课文</article>
-        </Frame>,
+        withInterfaceLocale(
+          <Frame view={LESSON}>
+            <article>课文</article>
+          </Frame>,
+        ),
       );
     });
     expect(document.querySelector("nav")).toBeNull();
@@ -70,9 +73,11 @@ describe("shell vs bare routes", () => {
   it("renders the shell on the learn route", async () => {
     await act(async () => {
       root.render(
-        <Frame view={{ kind: "world" }}>
-          <p>地图</p>
-        </Frame>,
+        withInterfaceLocale(
+          <Frame view={{ kind: "world" }}>
+            <p>地图</p>
+          </Frame>,
+        ),
       );
     });
     expect(document.querySelectorAll("nav")).toHaveLength(2);

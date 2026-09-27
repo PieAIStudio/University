@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -84,7 +85,7 @@ describe("theme resolution", () => {
 describe("theme settings", () => {
   it("writes an explicit theme through the existing progress preferences", async () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
-    await act(async () => root.render(<SettingsScreen progress={progress} />));
+    await act(async () => root.render(withInterfaceLocale(<SettingsScreen progress={progress} />)));
 
     const dark = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "深色",

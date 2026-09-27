@@ -1,3 +1,4 @@
+import { serviceI18n, serviceLocaleContext, serviceTranslator } from "./i18n.js";
 import { verifyAccessToken, type SwimmerAccessTokenProvider } from "@pieai/swimmer-backend-client";
 import { createEntitlementClient } from "@pieai/swimmer-backend-client/entitlements";
 import {
@@ -52,17 +53,21 @@ export type {
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
-const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
-const MEMBERSHIP_ACTION = { label: "查看会员方案", href: toPath({ kind: "plans" }) } as const;
+const FREE_QUOTA_EXHAUSTED_MESSAGE = () =>
+  serviceTranslator().t("grading.FREE_QUOTA_EXHAUSTED_MESSAGE.1");
+const MEMBERSHIP_ACTION = () =>
+  ({
+    label: serviceTranslator().t("grading.MEMBERSHIP_ACTION.1"),
+    href: toPath({ kind: "plans" }),
+  }) as const;
 const UNIVERSITY_PLAN_GRANT_READ_RPC = "university_read_plan_grant";
 
-const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
+const ANONYMOUS_FREE_GRADING_EXPLANATION = (): MeteredGradingExplanation => ({
   kind: "explanation",
-  title: "今天的免费 AI 批改要先绑定邮箱",
-  whatItDoes: "AI 会读懂你用中文写的答案，告诉你哪一步想岔了。",
-  whyUnavailable:
-    "它每次都要真的花钱，而现在这个身份只存在这台浏览器里——换个浏览器或者清一次数据就找不回来了。",
-  futureSupport: "在个人档案绑定邮箱就能用；这台设备上已经学的进度会跟着你走。",
+  title: serviceTranslator().t("grading.ANONYMOUS_FREE_GRADING_EXPLANATION.1"),
+  whatItDoes: serviceTranslator().t("grading.ANONYMOUS_FREE_GRADING_EXPLANATION.2"),
+  whyUnavailable: serviceTranslator().t("grading.ANONYMOUS_FREE_GRADING_EXPLANATION.3"),
+  futureSupport: serviceTranslator().t("grading.ANONYMOUS_FREE_GRADING_EXPLANATION.4"),
   /*
     The href comes from `toPath`, not from the string "/me".
 
@@ -71,8 +76,11 @@ const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
     server too: a route spelled out here would keep working after the route
     table changed, and would go stale without anything failing.
   */
-  action: { label: "去绑定邮箱", href: toPath({ kind: "me" }) },
-};
+  action: {
+    label: serviceTranslator().t("grading.ANONYMOUS_FREE_GRADING_EXPLANATION.5"),
+    href: toPath({ kind: "me" }),
+  },
+});
 
 const GradeRequestSchema = z
   .object({
@@ -242,24 +250,23 @@ function structuredGradingUnavailableOffer(): Extract<
   { readonly kind: "unavailable" }
 > {
   return unavailableOffer({
-    title: "结构化 AI 批改属于会员权益",
-    whyUnavailable: "当前方案没有结构化 AI 批改权益；确定性判题仍然免费，课文和关卡也不会受影响。",
-    futureSupport: "开通会员后，这里会按量读取钱包余额，并在提交前展示本次费用。",
-    action: MEMBERSHIP_ACTION,
+    title: serviceTranslator().t("grading.structuredGradingUnavailableOffer.1"),
+    whyUnavailable: serviceTranslator().t("grading.structuredGradingUnavailableOffer.2"),
+    futureSupport: serviceTranslator().t("grading.structuredGradingUnavailableOffer.3"),
+    action: MEMBERSHIP_ACTION(),
   });
 }
 
 function memberRequiredResponse(deps: GradeDependencies): Response {
   const explanation = unavailableOffer({
-    title: "钱包计量的 AI 批改属于会员权益",
-    whyUnavailable:
-      "免费方案的结构化 AI 批改只走今天的尝鲜额度，不能通过发送 funding: wallet 绕过每日额度直接扣钱包。",
-    futureSupport: "今天的免费额度用完后，可以查看会员方案继续按量批改。",
-    action: MEMBERSHIP_ACTION,
+    title: serviceTranslator().t("grading.memberRequiredResponse.1"),
+    whyUnavailable: serviceTranslator().t("grading.memberRequiredResponse.2"),
+    futureSupport: serviceTranslator().t("grading.memberRequiredResponse.3"),
+    action: MEMBERSHIP_ACTION(),
   }).explanation;
   return jsonResponse(
     {
-      error: "免费方案只能使用每日 AI 批改尝鲜额度；会员可以继续使用按量 AI 批改。",
+      error: serviceTranslator().t("grading.memberRequiredResponse.4"),
       code: "member_plan_required",
       explanation,
     },
@@ -371,7 +378,7 @@ export function createStructuredGrader(transport: ChatCompletionTransport): Stru
   };
 }
 
-export async function handleGradeRequest(
+async function handleGradeRequestInLocale(
   request: Request,
   deps: GradeDependencies,
 ): Promise<Response> {
@@ -380,7 +387,7 @@ export async function handleGradeRequest(
   }
   if (request.method !== "GET" && request.method !== "POST") {
     return jsonResponse(
-      { error: "只接受 GET 报价或 POST 批改请求。", code: "method_not_allowed" },
+      { error: serviceTranslator().t("grading.handleGradeRequest.1"), code: "method_not_allowed" },
       405,
       deps.allowedOrigin,
     );
@@ -413,7 +420,7 @@ export async function handleGradeRequest(
     }
     return jsonResponse(
       {
-        error: "当前方案没有结构化 AI 批改权益；确定性判题仍然免费。",
+        error: serviceTranslator().t("grading.handleGradeRequest.2"),
         code: "structured_grading_not_included",
         explanation: structuredGradingUnavailableOffer().explanation,
       },
@@ -452,7 +459,7 @@ export async function handleGradeRequest(
   const input = await parseRequest(request);
   if (!input) {
     return jsonResponse(
-      { error: "批改请求格式不正确。", code: "invalid_request" },
+      { error: serviceTranslator().t("grading.handleGradeRequest.3"), code: "invalid_request" },
       400,
       deps.allowedOrigin,
     );
@@ -545,16 +552,18 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
   if (freePlan) {
     return jsonResponse(
       unavailableOffer({
-        title: freeQuote ? "今天的免费 AI 批改用完了" : "免费 AI 批改次数暂时读不到",
+        title: freeQuote
+          ? serviceTranslator().t("grading.readGradingOffer.1")
+          : serviceTranslator().t("grading.readGradingOffer.2"),
         whyUnavailable: freeQuote
           ? freeQuotaMessage(freeQuote)
-          : "今天的免费 AI 批改次数暂时读不到，所以不会发起可能扣费的请求。",
+          : serviceTranslator().t("grading.readGradingOffer.3"),
         futureSupport: freeQuote
-          ? "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。"
-          : "额度服务恢复后，这里会重新读取今天的免费 AI 批改次数。",
+          ? serviceTranslator().t("grading.readGradingOffer.4")
+          : serviceTranslator().t("grading.readGradingOffer.5"),
         freeQuotaExhausted: freeQuote !== null,
         freeQuotaResetsAt: freeQuote?.resetsAt,
-        action: MEMBERSHIP_ACTION,
+        action: MEMBERSHIP_ACTION(),
       }),
       200,
       input.deps.allowedOrigin,
@@ -567,10 +576,9 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
   } catch {
     return jsonResponse(
       unavailableOffer({
-        title: "AI 批改钱包暂时读不到",
-        whyUnavailable:
-          "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
-        futureSupport: "连接钱包服务后，这里会先显示本次费用和你的可用余额。",
+        title: serviceTranslator().t("grading.readGradingOffer.6"),
+        whyUnavailable: serviceTranslator().t("grading.readGradingOffer.7"),
+        futureSupport: serviceTranslator().t("grading.readGradingOffer.8"),
       }),
       200,
       input.deps.allowedOrigin,
@@ -583,10 +591,9 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
   } catch {
     return jsonResponse(
       unavailableOffer({
-        title: "AI 批改钱包余额暂时读不到",
-        whyUnavailable:
-          "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
-        futureSupport: "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
+        title: serviceTranslator().t("grading.readGradingOffer.9"),
+        whyUnavailable: serviceTranslator().t("grading.readGradingOffer.10"),
+        futureSupport: serviceTranslator().t("grading.readGradingOffer.11"),
       }),
       200,
       input.deps.allowedOrigin,
@@ -604,10 +611,13 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
 
   return jsonResponse(
     unavailableOffer({
-      title: "这次 AI 批改的钱包余额不够",
+      title: serviceTranslator().t("grading.readGradingOffer.12"),
       availablePowerUnits: balance.availablePowerUnits,
-      whyUnavailable: `${walletGradingBalanceText(balance.availablePowerUnits)}；这次 AI 批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}；不充值也不影响你查看下面的免费提示。`,
-      futureSupport: "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
+      whyUnavailable: serviceTranslator().t("grading.readGradingOffer.13", {
+        value0: walletGradingBalanceText(balance.availablePowerUnits),
+        value1: gradingAttemptText(METERED_GRADING.reservationPowerUnits),
+      }),
+      futureSupport: serviceTranslator().t("grading.readGradingOffer.14"),
     }),
     200,
     input.deps.allowedOrigin,
@@ -629,7 +639,7 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
     wallet = input.deps.createWallet(input.accessToken);
   } catch {
     return jsonResponse(
-      { error: "AI 批改钱包暂时不可用，请稍后再试。", code: "wallet_unavailable" },
+      { error: serviceTranslator().t("grading.handleWalletGrading.1"), code: "wallet_unavailable" },
       503,
       input.deps.allowedOrigin,
     );
@@ -645,7 +655,7 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
     });
   } catch {
     return jsonResponse(
-      { error: "AI 批改钱包暂时不可用，请稍后再试。", code: "wallet_unavailable" },
+      { error: serviceTranslator().t("grading.handleWalletGrading.2"), code: "wallet_unavailable" },
       503,
       input.deps.allowedOrigin,
     );
@@ -655,12 +665,16 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
     return jsonResponse(
       {
         error:
-          `AI 批改余额不足：${walletGradingBalanceText(reservation.availablePowerUnits)}，` +
-          `这次需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。请先充值后再试。`,
+          serviceTranslator().t("grading.handleWalletGrading.3", {
+            value0: walletGradingBalanceText(reservation.availablePowerUnits),
+          }) +
+          serviceTranslator().t("grading.handleWalletGrading.4", {
+            value0: gradingAttemptText(METERED_GRADING.reservationPowerUnits),
+          }),
         code: "insufficient_balance",
         availablePowerUnits: reservation.availablePowerUnits,
         requiredPowerUnits: METERED_GRADING.reservationPowerUnits,
-        topUpHint: "请先在账户的充值页补充余额，再重新提交这道题。",
+        topUpHint: serviceTranslator().t("grading.handleWalletGrading.5"),
       },
       402,
       input.deps.allowedOrigin,
@@ -670,7 +684,7 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
   if (reservation.idempotent || reservation.status === "committed") {
     return jsonResponse(
       {
-        error: "这个 commandId 已经处理过，本次未再次扣费。",
+        error: serviceTranslator().t("grading.handleWalletGrading.6"),
         code: "idempotent_replay",
         balance: balanceOf(reservation),
       },
@@ -681,7 +695,10 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
 
   if (!reservation.allowed || reservation.status !== "reserved" || !reservation.reservationId) {
     return jsonResponse(
-      { error: "AI 批改没有建立有效的扣费记录，请稍后再试。", code: "invalid_reservation" },
+      {
+        error: serviceTranslator().t("grading.handleWalletGrading.7"),
+        code: "invalid_reservation",
+      },
       503,
       input.deps.allowedOrigin,
     );
@@ -739,7 +756,7 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
     const explanation = freeQuotaUnavailableExplanation();
     return jsonResponse(
       {
-        error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
+        error: serviceTranslator().t("grading.handleFreeGrading.1"),
         code: "free_quota_unavailable",
         explanation,
       },
@@ -761,7 +778,7 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
     const explanation = freeQuotaUnavailableExplanation();
     return jsonResponse(
       {
-        error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
+        error: serviceTranslator().t("grading.handleFreeGrading.2"),
         code: "free_quota_unavailable",
         explanation,
       },
@@ -772,12 +789,12 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
 
   if (reservation.insufficient || reservation.status === "insufficient") {
     const explanation = unavailableOffer({
-      title: "今天的免费 AI 批改用完了",
+      title: serviceTranslator().t("grading.handleFreeGrading.3"),
       whyUnavailable: freeQuotaMessage(reservation),
-      futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
+      futureSupport: serviceTranslator().t("grading.handleFreeGrading.4"),
       freeQuotaExhausted: true,
       freeQuotaResetsAt: reservation.resetsAt,
-      action: MEMBERSHIP_ACTION,
+      action: MEMBERSHIP_ACTION(),
     }).explanation;
     return jsonResponse(
       {
@@ -795,7 +812,7 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
   if (reservation.idempotent || reservation.status === "committed") {
     return jsonResponse(
       {
-        error: "这个 commandId 已经处理过，本次未再次消耗免费次数。",
+        error: serviceTranslator().t("grading.handleFreeGrading.5"),
         code: "idempotent_replay",
         freeQuota: {
           remainingPowerUnits: reservation.remainingPowerUnits,
@@ -810,7 +827,7 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
   if (!reservation.allowed || reservation.status !== "reserved" || !reservation.reservationId) {
     return jsonResponse(
       {
-        error: "免费 AI 批改没有建立有效的扣费记录，请稍后再试。",
+        error: serviceTranslator().t("grading.handleFreeGrading.6"),
         code: "invalid_free_reservation",
       },
       503,
@@ -863,11 +880,10 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
 
 function freeQuotaUnavailableExplanation(): MeteredGradingExplanation {
   return unavailableOffer({
-    title: "今天的免费 AI 批改次数暂时读不到",
-    whyUnavailable:
-      "免费额度服务暂时没有返回结果，所以不会发起可能扣费的请求；确定性判题仍然免费。",
-    futureSupport: "额度服务恢复后，这里会重新读取今天的免费 AI 批改次数。",
-    action: MEMBERSHIP_ACTION,
+    title: serviceTranslator().t("grading.freeQuotaUnavailableExplanation.1"),
+    whyUnavailable: serviceTranslator().t("grading.freeQuotaUnavailableExplanation.2"),
+    futureSupport: serviceTranslator().t("grading.freeQuotaUnavailableExplanation.3"),
+    action: MEMBERSHIP_ACTION(),
   }).explanation;
 }
 
@@ -1028,8 +1044,8 @@ async function refundAfterFailure(input: FailureInput): Promise<FailureResult> {
         {
           error:
             input.kind === "model"
-              ? "AI 批改没有完成，刚才使用的次数已退回，请重试。"
-              : "AI 批改的扣费没有完成，刚才使用的次数已退回，请稍后重试。",
+              ? serviceTranslator().t("grading.refundAfterFailure.1")
+              : serviceTranslator().t("grading.refundAfterFailure.2"),
           code: input.kind === "model" ? "model_failed" : "settlement_failed",
           refunded: true,
           ...(refunded.balance ? { balance: refunded.balance } : {}),
@@ -1044,7 +1060,7 @@ async function refundAfterFailure(input: FailureInput): Promise<FailureResult> {
     return {
       response: jsonResponse(
         {
-          error: "AI 批改失败，扣费也没有完成。请不要连续重试，先联系客服核对钱包。",
+          error: serviceTranslator().t("grading.refundAfterFailure.3"),
           code: "settlement_failed",
           refunded: false,
         },
@@ -1202,7 +1218,9 @@ function unavailableOffer(options: {
     explanation: {
       kind: "explanation",
       title: options.title,
-      whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次会使用 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。`,
+      whatItDoes: serviceTranslator().t("grading.unavailableOffer.1", {
+        value0: gradingAttemptText(METERED_GRADING.reservationPowerUnits),
+      }),
       whyUnavailable: options.whyUnavailable,
       futureSupport: options.futureSupport,
       ...(options.action ? { action: options.action } : {}),
@@ -1221,17 +1239,17 @@ function anonymousFreeGradingOffer(): MeteredGradingOffer {
     kind: "unavailable",
     costPowerUnits: METERED_GRADING.reservationPowerUnits,
     availablePowerUnits: null,
-    explanation: ANONYMOUS_FREE_GRADING_EXPLANATION,
+    explanation: ANONYMOUS_FREE_GRADING_EXPLANATION(),
   };
 }
 
 function freeQuotaMessage(quote: FreeGradingQuotaQuote): string {
-  if (quote.remainingPowerUnits === "0") return FREE_QUOTA_EXHAUSTED_MESSAGE;
+  if (quote.remainingPowerUnits === "0") return FREE_QUOTA_EXHAUSTED_MESSAGE();
   const attempts = gradingAttemptsFromPowerUnits(quote.remainingPowerUnits);
-  if (attempts === null) return FREE_QUOTA_EXHAUSTED_MESSAGE;
+  if (attempts === null) return FREE_QUOTA_EXHAUSTED_MESSAGE();
   return attempts === 0n
-    ? "今天剩余的免费 AI 批改次数还不够一次了，会员可以继续；免费额度明天恢复。"
-    : `今天还剩 ${attempts} 次免费 AI 批改，会员可以继续；免费额度明天恢复。`;
+    ? serviceTranslator().t("grading.freeQuotaMessage.1")
+    : serviceTranslator().t("grading.freeQuotaMessage.2", { value0: attempts });
 }
 
 function calendarDay(iso: string): string {
@@ -1262,7 +1280,7 @@ function bearerToken(request: Request): string | undefined {
 
 function unauthorized(origin: string | undefined): Response {
   return jsonResponse(
-    { error: "登录凭证无效或已过期，请重新登录后再试。", code: "unauthorized" },
+    { error: serviceTranslator().t("grading.unauthorized.1"), code: "unauthorized" },
     401,
     origin,
   );
@@ -1438,10 +1456,11 @@ function statusField<T extends string>(
 
 function corsHeaders(origin = "*"): Record<string, string> {
   return {
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept-Language",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Origin": origin || "*",
     "Content-Type": "application/json; charset=utf-8",
+    "Content-Language": serviceTranslator().locale,
   };
 }
 
@@ -1560,4 +1579,12 @@ export function createProductionGradeDependencies(
       return model.gradeWithUsage(input);
     },
   };
+}
+
+/** Bind a native Kit translator to this request across every awaited service step. */
+export function handleGradeRequest(request: Request, deps: GradeDependencies): Promise<Response> {
+  const requested = request.headers.get("Accept-Language")?.split(",")[0]?.split(";")[0]?.trim();
+  return serviceLocaleContext.run(serviceI18n.translator(requested), () =>
+    handleGradeRequestInLocale(request, deps),
+  );
 }

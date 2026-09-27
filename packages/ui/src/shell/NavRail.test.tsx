@@ -44,7 +44,7 @@ afterEach(async () => {
 
 async function renderRail(activeId = "home"): Promise<void> {
   await act(async () => {
-    root.render(<NavRail items={ITEMS} activeId={activeId} brand="Brand" />);
+    root.render(<NavRail label="Primary" items={ITEMS} activeId={activeId} brand="Brand" />);
   });
 }
 

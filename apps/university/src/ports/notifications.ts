@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type {
   ProgressPort,
   PushSubscriptionRecord,
@@ -187,7 +187,9 @@ export function createBrowserReviewReminderPort(
         const unsubscribed = await subscription.unsubscribe();
         if (!unsubscribed)
           throw new Error(
-            translate("app.ports.notifications.copy.浏览器没有确认已关闭这台设备的推送订阅"),
+            interfaceTranslator.t(
+              "app.ports.notifications.copy.浏览器没有确认已关闭这台设备的推送订阅",
+            ),
           );
       }
       if (endpoint) {
@@ -242,7 +244,7 @@ export function createBrowserReviewReminderPort(
   }
 
   function senderUnavailable(): ReviewReminderStatus {
-    return { kind: "error", message: translate("product.reminders.unavailable") };
+    return { kind: "error", message: interfaceTranslator.t("product.reminders.unavailable") };
   }
 
   function capabilityStatus():
@@ -304,7 +306,9 @@ function subscriptionRecordOf(
   const p256dh = json.keys?.p256dh ?? base64UrlOf(subscription.getKey("p256dh"));
   const auth = json.keys?.auth ?? base64UrlOf(subscription.getKey("auth"));
   if (!subscription.endpoint || !p256dh || !auth) {
-    throw new Error(translate("app.ports.notifications.copy.浏览器没有返回完整的推送订阅密钥"));
+    throw new Error(
+      interfaceTranslator.t("app.ports.notifications.copy.浏览器没有返回完整的推送订阅密钥"),
+    );
   }
   return {
     endpoint: subscription.endpoint,
@@ -350,5 +354,5 @@ function isStandalone(): boolean {
 
 function browserErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim()) return error.message;
-  return translate("app.ports.notifications.copy.浏览器没有完成提醒设置-请稍后重试");
+  return interfaceTranslator.t("app.ports.notifications.copy.浏览器没有完成提醒设置-请稍后重试");
 }

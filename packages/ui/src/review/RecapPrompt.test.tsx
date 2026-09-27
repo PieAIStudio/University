@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -49,12 +50,14 @@ describe("RecapPrompt", () => {
   it("renders the final text-first prompt and keeps voice input out", async () => {
     await act(async () => {
       root.render(
-        <RecapPrompt
-          locator={LOCATOR}
-          unitObjective="我能说出使用 App 和开发 App 的差别。"
-          contentRevision={2}
-          progress={progress}
-        />,
+        withInterfaceLocale(
+          <RecapPrompt
+            locator={LOCATOR}
+            unitObjective="我能说出使用 App 和开发 App 的差别。"
+            contentRevision={2}
+            progress={progress}
+          />,
+        ),
       );
     });
 
@@ -79,14 +82,16 @@ describe("RecapPrompt", () => {
     const onWorthwhileProgress = vi.fn();
     await act(async () => {
       root.render(
-        <RecapPrompt
-          locator={LOCATOR}
-          unitObjective="我能说出使用 App 和开发 App 的差别。"
-          contentRevision={2}
-          progress={progress}
-          onSaved={onSaved}
-          onWorthwhileProgress={onWorthwhileProgress}
-        />,
+        withInterfaceLocale(
+          <RecapPrompt
+            locator={LOCATOR}
+            unitObjective="我能说出使用 App 和开发 App 的差别。"
+            contentRevision={2}
+            progress={progress}
+            onSaved={onSaved}
+            onWorthwhileProgress={onWorthwhileProgress}
+          />,
+        ),
       );
     });
 

@@ -1,5 +1,5 @@
 import type { LearningSegment, MapLearningKind } from "@pieai/university-core";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { SPRITE_WINDOW } from "../labels/path-overlay.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 import { courseLearningSites, learningSiteLocked } from "./learning-sites.js";
@@ -42,7 +42,7 @@ export function learningOpportunityMarkers(
     position.y += STOP_CHIP_LIFT;
     const inWindow =
       segment.lastIndex >= live - SPRITE_WINDOW && segment.firstIndex <= live + SPRITE_WINDOW;
-    const label = `${translate(`mapNodes.${site.kind}`)} · ${translate("mapNodes.range", { first: segment.firstIndex + 1, last: segment.lastIndex + 1 })}`;
+    const label = `${interfaceTranslator.t(`mapNodes.${site.kind}`)} · ${interfaceTranslator.t("mapNodes.range", { first: segment.firstIndex + 1, last: segment.lastIndex + 1 })}`;
     return [
       {
         id: site.id,

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -38,7 +39,9 @@ import { SettingsScreen, SettingsSubnav } from "./SettingsScreen.js";
 
 describe("empty destinations", () => {
   it("keeps the league copy verbatim", () => {
-    const markup = renderToStaticMarkup(<LeagueEmpty onNavigate={() => undefined} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<LeagueEmpty onNavigate={() => undefined} />),
+    );
     expect(markup).toContain(LEAGUE_EMPTY_TITLE);
     expect(markup).toContain(LEAGUE_EMPTY_DESCRIPTION);
     expect(markup).toContain(LEAGUE_EMPTY_ACTION);
@@ -46,7 +49,9 @@ describe("empty destinations", () => {
   });
 
   it("keeps the quests copy verbatim", () => {
-    const markup = renderToStaticMarkup(<QuestsEmpty onNavigate={() => undefined} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<QuestsEmpty onNavigate={() => undefined} />),
+    );
     expect(markup).toContain(QUESTS_EMPTY_TITLE);
     expect(markup).toContain(QUESTS_EMPTY_DESCRIPTION);
     expect(markup).toContain(QUESTS_EMPTY_ACTION);
@@ -54,21 +59,23 @@ describe("empty destinations", () => {
 
   it("renders an empty-state action only when the shell supplies navigation", () => {
     const withNavigation = renderToStaticMarkup(
-      <NextStepEmpty
-        title="还没有内容"
-        description="先回到学习页。"
-        onNavigate={() => undefined}
-      />,
+      withInterfaceLocale(
+        <NextStepEmpty
+          title="还没有内容"
+          description="先回到学习页。"
+          onNavigate={() => undefined}
+        />,
+      ),
     );
     const withoutNavigation = renderToStaticMarkup(
-      <NextStepEmpty title="还没有内容" description="暂时没有可看的内容。" />,
+      withInterfaceLocale(<NextStepEmpty title="还没有内容" description="暂时没有可看的内容。" />),
     );
     expect(withNavigation).toContain("回到学习");
     expect(withoutNavigation).not.toContain("回到学习");
   });
 
   it("renders settings as a real page with theme, sound and language controls", () => {
-    const markup = renderToStaticMarkup(<SettingsScreen />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<SettingsScreen />));
     expect(markup).toContain("偏好设置");
     expect(markup).toContain("外观");
     expect(markup).toContain("浅色");
@@ -82,12 +89,14 @@ describe("empty destinations", () => {
     expect(markup).toContain("钱包和付费权益尚未接入");
     expect(markup).toContain("disabled");
     expect(markup).toContain("阅读辅助设置");
-    expect(renderToStaticMarkup(<SettingsSubnav />)).toContain("个人档案");
+    expect(renderToStaticMarkup(withInterfaceLocale(<SettingsSubnav />))).toContain("个人档案");
   });
 
   it("renders the two real numbers on the profile page", () => {
     const markup = renderToStaticMarkup(
-      <ProfileScreen passagesRead={4} lessonsCompleted={2} avatar={<span>头像</span>} />,
+      withInterfaceLocale(
+        <ProfileScreen passagesRead={4} lessonsCompleted={2} avatar={<span>头像</span>} />,
+      ),
     );
     expect(markup).toContain("头像");
     expect(markup).toContain("4");
@@ -100,12 +109,14 @@ describe("empty destinations", () => {
 
   it("turns a zero into an invitation that points at the next lesson", () => {
     const markup = renderToStaticMarkup(
-      <ProfileScreen
-        passagesRead={0}
-        lessonsCompleted={0}
-        nextHref="/turing-pact/foundations-before-zero"
-        avatar={<span>头像</span>}
-      />,
+      withInterfaceLocale(
+        <ProfileScreen
+          passagesRead={0}
+          lessonsCompleted={0}
+          nextHref="/turing-pact/foundations-before-zero"
+          avatar={<span>头像</span>}
+        />,
+      ),
     );
     expect(markup).toContain("头像");
     expect(markup).toContain("学一点，再用自己的话留下一张复习卡");
@@ -125,7 +136,9 @@ describe("empty destinations", () => {
 
   it("renders a passed-in account slot on the profile page", () => {
     const markup = renderToStaticMarkup(
-      <ProfileScreen passagesRead={0} lessonsCompleted={0} account={<p>登录入口</p>} />,
+      withInterfaceLocale(
+        <ProfileScreen passagesRead={0} lessonsCompleted={0} account={<p>登录入口</p>} />,
+      ),
     );
     expect(markup).toContain("登录入口");
   });
@@ -133,7 +146,9 @@ describe("empty destinations", () => {
   it("shows the shared level badge and a linear XP bar", () => {
     const totalXp = XP_READ_LESSON + XP_EXERCISE_FIRST_TRY;
     const markup = renderToStaticMarkup(
-      <ProfileScreen passagesRead={0} lessonsCompleted={0} totalXp={totalXp} />,
+      withInterfaceLocale(
+        <ProfileScreen passagesRead={0} lessonsCompleted={0} totalXp={totalXp} />,
+      ),
     );
     expect(markup).toContain(`Lv. ${levelOf(totalXp).level}`);
     expect(markup).toContain("XP");
@@ -151,7 +166,9 @@ const idleAuth: AuthPort = {
 
 describe("AccountPanel", () => {
   it("explains why login is unavailable when the backend is not configured", () => {
-    const markup = renderToStaticMarkup(<AccountPanel identity={createIdentityPort(null)} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<AccountPanel identity={createIdentityPort(null)} />),
+    );
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).not.toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
     expect(markup).toContain(ACCOUNT_UNCONFIGURED_ACTION);
@@ -170,7 +187,7 @@ describe("AccountPanel", () => {
 
   it("offers a kit form when signed out, not a modal", () => {
     const markup = renderToStaticMarkup(
-      <AccountPanel identity={createMemoryIdentityPort()} auth={idleAuth} />,
+      withInterfaceLocale(<AccountPanel identity={createMemoryIdentityPort()} auth={idleAuth} />),
     );
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNSIGNED_DESCRIPTION);
@@ -186,18 +203,20 @@ describe("AccountPanel", () => {
   it("has a real pending state", () => {
     const identity = createMemoryIdentityPort();
     identity.status = () => ({ kind: "pending" });
-    const markup = renderToStaticMarkup(<AccountPanel identity={identity} />);
+    const markup = renderToStaticMarkup(withInterfaceLocale(<AccountPanel identity={identity} />));
     expect(markup).toContain(ACCOUNT_PENDING_LABEL);
   });
 
   it("shows who is signed in and a way out", () => {
     const markup = renderToStaticMarkup(
-      <AccountPanel
-        identity={createMemoryIdentityPort({
-          id: "memory:ada@example.com",
-          email: "ada@example.com",
-        })}
-      />,
+      withInterfaceLocale(
+        <AccountPanel
+          identity={createMemoryIdentityPort({
+            id: "memory:ada@example.com",
+            email: "ada@example.com",
+          })}
+        />,
+      ),
     );
     expect(markup).toContain("account-panel__signed-in");
     expect(markup).toContain("ada@example.com");
@@ -212,7 +231,9 @@ describe("AccountPanel", () => {
       code: "sign-in-failed",
       message: "provider debug response must not reach the learner",
     });
-    const markup = renderToStaticMarkup(<AccountPanel identity={identity} auth={idleAuth} />);
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(<AccountPanel identity={identity} auth={idleAuth} />),
+    );
     expect(markup).toContain("登录没有完成，请核对输入或网络后重试。");
     expect(markup).not.toContain("provider debug response");
     expect(markup).toContain('type="password"');

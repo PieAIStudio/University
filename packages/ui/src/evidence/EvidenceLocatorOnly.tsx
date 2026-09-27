@@ -1,9 +1,10 @@
 import { formatLineRange } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 
 function lineLabelOf(start: number | null | undefined, end: number | null | undefined): string {
-  if (!start || start < 1) return translate("ui.evidence.evidenceLocatorOnly.copy.未提供行号");
+  if (!start || start < 1)
+    return interfaceTranslator.t("ui.evidence.evidenceLocatorOnly.copy.未提供行号");
   return `L${formatLineRange(start, end)}`;
 }
 
@@ -17,15 +18,16 @@ export function EvidenceLocatorOnly({
   readonly lineStart?: number | null;
   readonly lineEnd?: number | null;
 }) {
+  const interfaceTranslator = useI18n();
   const lineLabel = lineLabelOf(lineStart, lineEnd);
 
   return (
     <div className="evidence-locator-only" data-evidence-state="locator-only" role="status">
       <strong className="evidence-locator-only__title">
-        {translate("ui.evidence.evidenceLocatorOnly.copy.源码没有随这份课程发布")}
+        {interfaceTranslator.t("ui.evidence.evidenceLocatorOnly.copy.源码没有随这份课程发布")}
       </strong>
       <p className="evidence-locator-only__copy">
-        {translate(
+        {interfaceTranslator.t(
           "ui.evidence.evidenceLocatorOnly.copy.仍保留固定提交文件和行号-复制定位可跳到本地项目-打开完整文件可查看项目地图",
         )}
       </p>

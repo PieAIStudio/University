@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 import type { ProgressPort } from "@pieai/university-core";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 export function saveMessageKey(progress: ProgressPort) {
   const local = progress.localSaveState?.() ?? "unconfirmed";
@@ -25,6 +25,7 @@ export function LearningSaveStatus({
   /** A focused task stays silent on normal saves, not on failed persistence. */
   readonly quiet?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const value = useSyncExternalStore(
     progress.subscribe,
     () =>
@@ -59,11 +60,15 @@ export function LearningSaveStatus({
   return (
     <div className="learning-save-state" data-learning-save-state={message}>
       {failed ? (
-        <GameCallout tone="warning" heading={translate("product.save.heading")} role="alert">
-          <p>{translate("product.save.failedBrief")}</p>
+        <GameCallout
+          tone="warning"
+          heading={interfaceTranslator.t("product.save.heading")}
+          role="alert"
+        >
+          <p>{interfaceTranslator.t("product.save.failedBrief")}</p>
           {progress.retryLocalSave ? (
             <GameButton static variant="secondary" onClick={() => progress.retryLocalSave?.()}>
-              {translate("product.save.retry")}
+              {interfaceTranslator.t("product.save.retry")}
             </GameButton>
           ) : null}
         </GameCallout>
@@ -72,24 +77,24 @@ export function LearningSaveStatus({
           <summary>
             <span className="learning-save-state__dot" aria-hidden="true" />
             <span role="status">
-              {translate(shortKey[message as ReturnType<typeof saveMessageKey>])}
+              {interfaceTranslator.t(shortKey[message as ReturnType<typeof saveMessageKey>])}
             </span>
           </summary>
-          <p>{translate(message as ReturnType<typeof saveMessageKey>)}</p>
+          <p>{interfaceTranslator.t(message as ReturnType<typeof saveMessageKey>)}</p>
         </details>
       )}
       {hasGuest === "true" ? (
         <div>
           <GameButton static variant="secondary" disabled={busy} onClick={() => void importGuest()}>
-            {translate("product.save.import")}
+            {interfaceTranslator.t("product.save.import")}
           </GameButton>
           <details className="product-details">
-            <summary>{translate("product.save.importDetails")}</summary>
-            <p>{translate("product.save.importHint")}</p>
+            <summary>{interfaceTranslator.t("product.save.importDetails")}</summary>
+            <p>{interfaceTranslator.t("product.save.importHint")}</p>
           </details>
         </div>
       ) : null}
-      {error ? <p role="alert">{translate("product.save.importFailed")}</p> : null}
+      {error ? <p role="alert">{interfaceTranslator.t("product.save.importFailed")}</p> : null}
     </div>
   );
 }

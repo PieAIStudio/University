@@ -27,7 +27,7 @@ export const messages = {
   "play.difficulty.dispatch.practice": "在预算内完成混合请求，分清已有副本和实时数据。",
   "play.difficulty.dispatch.challenge":
     "同名资源换了版本，也有必须重新查询的请求。按真实缓存键守住预算。",
-  "play.difficulty.dispatch.revised": "{{name}} · 新版",
+  "play.difficulty.dispatch.revised": "{name} · 新版",
   "play.difficulty.dispatch.newVersion": "内容已经修订，缓存键也已改变。旧版副本不能当成这一版。",
   "play.difficulty.program.intro": "先走到前方的目标格，认识一段简短指令。",
   "play.difficulty.program.practice": "绕开障碍，经过全部检查点后到达终点。",

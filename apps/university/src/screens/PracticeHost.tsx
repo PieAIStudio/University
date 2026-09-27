@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import {
   EntryPage,
   PracticeSurface,
@@ -26,6 +26,7 @@ import { LEXICON } from "../lesson/language";
  * SPEC-0004 forbids a second detail page for a collection that already has one.
  */
 export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
+  const interfaceTranslator = useI18n();
   return (
     <PracticeSurface
       store={PRACTICE_STORE}
@@ -38,7 +39,10 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
       renderReward={(question) => (
         <EntryPage
           breadcrumb={[
-            { label: translate("app.screens.practiceHost.copy.概念图解"), href: "/concepts" },
+            {
+              label: interfaceTranslator.t("app.screens.practiceHost.copy.概念图解"),
+              href: "/concepts",
+            },
             { label: question.entry.head.zh },
           ]}
           head={

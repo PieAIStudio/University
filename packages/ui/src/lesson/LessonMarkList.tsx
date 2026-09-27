@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useState } from "react";
 
 import { Tip } from "../Tip.js";
@@ -27,6 +27,7 @@ export function LessonMarkList({
   readonly studyTitle: string;
   readonly lessonTitles: LessonTitleLookup;
 }) {
+  const interfaceTranslator = useI18n();
   const [copied, setCopied] = useState(false);
 
   const questions = marks.filter((mark) => mark.kind === "question" && mark.resolvedAt === null);
@@ -34,19 +35,30 @@ export function LessonMarkList({
   if (questions.length === 0 && highlights.length === 0) return null;
 
   return (
-    <section className="mark-list" aria-label={translate("ui.lesson.lessonMarkList.copy.我的标记")}>
+    <section
+      className="mark-list"
+      aria-label={interfaceTranslator.t("ui.lesson.lessonMarkList.copy.我的标记")}
+    >
       <div className="rail-panel__header">
-        <h3 className="rail-panel__label">{translate("ui.lesson.lessonMarkList.copy.我的标记")}</h3>
+        <h3 className="rail-panel__label">
+          {interfaceTranslator.t("ui.lesson.lessonMarkList.copy.我的标记")}
+        </h3>
         <Tip term="lesson-marks" className="rail-panel__help">
-          <span aria-label={translate("ui.lesson.lessonMarkList.copy.关于标记")}>?</span>
+          <span aria-label={interfaceTranslator.t("ui.lesson.lessonMarkList.copy.关于标记")}>
+            ?
+          </span>
         </Tip>
       </div>
       <p className="mark-list__summary">
         {questions.length > 0
-          ? translate("ui.lesson.lessonMarkList.copy.value0-处没看懂", { value0: questions.length })
-          : translate("ui.lesson.lessonMarkList.copy.没有待解决的疑问")}
+          ? interfaceTranslator.t("ui.lesson.lessonMarkList.copy.value0-处没看懂", {
+              value0: questions.length,
+            })
+          : interfaceTranslator.t("ui.lesson.lessonMarkList.copy.没有待解决的疑问")}
         {highlights.length > 0
-          ? translate("ui.lesson.lessonMarkList.copy.value0-处高亮", { value0: highlights.length })
+          ? interfaceTranslator.t("ui.lesson.lessonMarkList.copy.value0-处高亮", {
+              value0: highlights.length,
+            })
           : ""}
       </p>
       {questions.length > 0 ? (
@@ -61,10 +73,10 @@ export function LessonMarkList({
           }}
         >
           {copied
-            ? translate("ui.lesson.lessonMarkList.copy.已拷贝-value0-条-去问-AI", {
+            ? interfaceTranslator.t("ui.lesson.lessonMarkList.copy.已拷贝-value0-条-去问-AI", {
                 value0: questions.length,
               })
-            : translate("ui.lesson.lessonMarkList.copy.拷贝全部去问-AI-value0-条", {
+            : interfaceTranslator.t("ui.lesson.lessonMarkList.copy.拷贝全部去问-AI-value0-条", {
                 value0: questions.length,
               })}
         </button>

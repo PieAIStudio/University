@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useMemo, useState } from "react";
 import { playSound } from "../sound/index.js";
 import { GameBadge } from "@pieai/swimmer-ui-kit";
@@ -26,11 +26,23 @@ import {
 const STAGE_PRESENTATION: Readonly<
   Record<string, { readonly label: string; readonly tone: "warning" | "success" | "neutral" }>
 > = {
-  learning: { label: translate("ui.lesson.lessonWordList.copy.复习中"), tone: "warning" },
-  familiar: { label: translate("ui.lesson.lessonWordList.copy.本来就会"), tone: "success" },
-  stable: { label: translate("ui.lesson.lessonWordList.copy.跨日检索稳定"), tone: "success" },
-  paused: { label: translate("ui.lesson.lessonWordList.copy.暂不学"), tone: "neutral" },
-  candidate: { label: translate("ui.lesson.lessonWordList.copy.待判断"), tone: "neutral" },
+  learning: {
+    label: interfaceTranslator.t("ui.lesson.lessonWordList.copy.复习中"),
+    tone: "warning",
+  },
+  familiar: {
+    label: interfaceTranslator.t("ui.lesson.lessonWordList.copy.本来就会"),
+    tone: "success",
+  },
+  stable: {
+    label: interfaceTranslator.t("ui.lesson.lessonWordList.copy.跨日检索稳定"),
+    tone: "success",
+  },
+  paused: { label: interfaceTranslator.t("ui.lesson.lessonWordList.copy.暂不学"), tone: "neutral" },
+  candidate: {
+    label: interfaceTranslator.t("ui.lesson.lessonWordList.copy.待判断"),
+    tone: "neutral",
+  },
 };
 
 const REASON_RANK: Record<string, number> = { learning: 0, new: 1, familiar: 2 };
@@ -65,6 +77,7 @@ export function LessonWordList({
   readonly speechQuality?: SpeechQuality;
   readonly onSettingsChange: (next: ForeignSettings) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const voices = useEnglishVoices();
   const [voiceURI, setVoiceURI] = useState(readVoicePreference);
   const selectedQuality = speechQuality ?? readSpeechQualityPreference();
@@ -96,20 +109,24 @@ export function LessonWordList({
   return (
     <section
       className={`word-list${activeEntries.length === 0 ? " word-list--quiet" : ""}`}
-      aria-label={translate("ui.lesson.lessonWordList.copy.生词")}
+      aria-label={interfaceTranslator.t("ui.lesson.lessonWordList.copy.生词")}
     >
       <div className="rail-panel__header">
-        <h3 className="rail-panel__label">{translate("ui.lesson.lessonWordList.copy.生词")}</h3>
+        <h3 className="rail-panel__label">
+          {interfaceTranslator.t("ui.lesson.lessonWordList.copy.生词")}
+        </h3>
         <Tip term="lesson-vocabulary" className="rail-panel__help">
-          <span aria-label={translate("ui.lesson.lessonWordList.copy.关于生词")}>?</span>
+          <span aria-label={interfaceTranslator.t("ui.lesson.lessonWordList.copy.关于生词")}>
+            ?
+          </span>
         </Tip>
         <ForeignSettingsPanel settings={settings} onChange={onSettingsChange} />
       </div>
       {activeEntries.length > 0 ? (
         <p className="word-list__summary">
-          {activeEntries.length} {translate("ui.lesson.lessonWordList.copy.个要留意")}
+          {activeEntries.length} {interfaceTranslator.t("ui.lesson.lessonWordList.copy.个要留意")}
           {historyEntries.length > 0
-            ? translate("ui.lesson.lessonWordList.copy.value0-个已处理", {
+            ? interfaceTranslator.t("ui.lesson.lessonWordList.copy.value0-个已处理", {
                 value0: historyEntries.length,
               })
             : ""}
@@ -118,7 +135,7 @@ export function LessonWordList({
       {/* Picking a voice is only a question for someone who is listening. */}
       {settings.showSpeak && activeEntries.length > 0 && selection.voices.length > 1 ? (
         <label className="word-list__voice">
-          <span>{translate("ui.lesson.lessonWordList.copy.朗读声音")}</span>
+          <span>{interfaceTranslator.t("ui.lesson.lessonWordList.copy.朗读声音")}</span>
           {/*
             No ranking is right on every machine, and the person listening is
             the only one who can hear the result. The default is the best-ranked
@@ -163,8 +180,9 @@ export function LessonWordList({
       {historyEntries.length > 0 ? (
         <details className="word-list__history">
           <summary>
-            {translate("ui.lesson.lessonWordList.copy.已处理的词")} {historyEntries.length}
-            {translate("ui.lesson.lessonWordList.copy.可撤销")}
+            {interfaceTranslator.t("ui.lesson.lessonWordList.copy.已处理的词")}{" "}
+            {historyEntries.length}
+            {interfaceTranslator.t("ui.lesson.lessonWordList.copy.可撤销")}
           </summary>
           <ul className="word-list__items">
             {historyEntries.map((entry) => {
@@ -182,7 +200,7 @@ export function LessonWordList({
                         onStageWord(entry.senseId, "learning");
                       }}
                     >
-                      {translate("ui.lesson.lessonWordList.copy.重新加入复习")}
+                      {interfaceTranslator.t("ui.lesson.lessonWordList.copy.重新加入复习")}
                     </button>
                   ) : null}
                 </li>

@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-31
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-27
 domain: product
 tags:
   - i18n
@@ -25,23 +25,24 @@ related:
 
 主控（产品 / 架构）。初始决定于 2026-08-31。
 
-## 当前实现核对（2026-09-03）
+## 当前实现（2026-09-27）
 
-在当前 HEAD `9cb6f79` 运行 `node scripts/check-i18n.mjs`，输出为：
+Owner 决定所有子项目直接采用 `@pieai/swimmer-i18n-kit`。旧 `{{name}}`
+转换、项目自建注册表、手写复数和 React context 已删除。界面目录仍按功能留在
+`packages/ui/src/i18n/catalogs/`，直接使用 ICU；中文键继续有效。
 
-```json
-{
-  "sourceCatalogKeys": 1145,
-  "englishCatalogKeys": 0,
-  "unextractedChinese": 0,
-  "physicalCssDeclarations": 0
-}
-```
+- `packages/ui/src/i18n/core.ts` 只组合目录和共享核心，Node 可独立导入。
+- `browser.ts` 只管 University 的 URL、存储和当前选择；`react.ts` 绑定 Kit Provider。
+- `packages/core/src/i18n/` 拥有批改次数、方案显示及支付说明；业务数量计算仍属于 core。
+- `apps/university-ai/src/i18n.ts` 用 Node AsyncLocalStorage 隔离每个请求的 Kit translator；
+  浏览器通过 Accept-Language 传递偏好。AI 提示词与课程内容保留原有内容协议。
+- `pnpm i18n:check` 用共享 CLI 检查 ICU、完整性、变量、生成类型和界面硬编码；
+  `pnpm i18n:types` 更新类型。原 CSS 逻辑方向检查继续执行。
 
-因此本文第 9 节里的 **1,105** 是 Phase 1 收尾时的快照，不是当前 key 总数；
-当前目录仍是英文 scaffold，尚未成为可选 locale。第 9 节和第 1.5 期的范围
-判断仍然有效：`packages/core` 的界面文案尚待纳入，而 `concepts/data/` 的
-281 条概念散文仍属于课程内容，不能混进 UI catalog。
+中文/英文 UI 与核心批改/方案目录完整；支付解释和 AI 服务现有文案仅中文，
+其目录单独回退，不能把源中文复制到英文目录来声称翻译完整。新语言仍须经过完整性闸门。
+下面保留最初的产品边界和历史理由；旧数量是相应日期的快照，现行数量由检查输出给出。
+
 产品负责人的命题：**在线学习支持的语种越多，长尾越大**；小语种用户缺好应用，
 那是机会。他自己钉中英文，其余交给 AI，出问题靠小语种用户提意见再改。
 问了两条路线：**先搭框架占位后填** vs **即时翻译（像 Google 那样）**。
@@ -112,14 +113,14 @@ related:
 **对，但占位不许被看见。** 脚手架 = 机制 + 抽取 + 完整度闸门，
 真正完整的先只有中文（源）和英文。
 
-## 4. 决定：不引入 i18n 库
+## 4. 语言运行时归属（2026-09-27 更新）
 
-需要的能力是插值、复数、日期数字格式、RTL。
-其中复数/数字/日期，浏览器原生的 `Intl.PluralRules` / `Intl.NumberFormat` /
-`Intl.DateTimeFormat` 已经覆盖，而且覆盖得比任何库都准。
+现在由共享 SwimmerI18nKit 承担语言选择、回退、ICU、Intl 格式化与完整性。
+University 直接采用它的接口，保留自己的目录、路由、存储和业务计算。
 
-剩下的就是"一个 key 查一个字符串"。为这件事引入 i18next
-是在项目最核心的可读性规则上做减法。**一份目录 + `Intl.*` 就够，而且更好读。**
+历史：2026-08-31 曾决定使用本地目录和 Intl，不引入 i18next，因为当时仅需简单查表，
+希望减少依赖和阅读负担。多个产品后来需要同一套规则，Owner 因此改为共享 Kit，
+用成熟 ICU 实现替代本地插值；避免每个产品维护一份引擎的原始理由仍然成立。
 
 ## 5. 决定：RTL 从第一天做
 

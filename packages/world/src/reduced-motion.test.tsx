@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act, useLayoutEffect } from "react";
 import { createRoot } from "react-dom/client";
@@ -63,10 +64,12 @@ describe("browser-owned motion preference", () => {
     try {
       await act(() => {
         root.render(
-          <>
-            <Probe />
-            <Probe />
-          </>,
+          withInterfaceLocale(
+            <>
+              <Probe />
+              <Probe />
+            </>,
+          ),
         );
       });
       expect(container.textContent).toBe("stillstill");

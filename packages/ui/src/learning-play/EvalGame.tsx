@@ -17,7 +17,7 @@ import {
   type EvalScenario,
   type EvalTrialReceipt,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
 import { PlayGuide } from "./PlayGuide.js";
 import { evalStarterQuestion } from "./QualityGuidance.js";
@@ -32,14 +32,14 @@ const releaseMessageFor = (
   assessment: ReturnType<typeof assessEvalRelease>,
 ): string =>
   assessment.reason === "invalid-requirements"
-    ? t("play.qualityDifficulty.eval.invalid-requirements")
+    ? interfaceTranslator.t("play.qualityDifficulty.eval.invalid-requirements")
     : assessment.reason === "input-coverage"
-      ? t("play.qualityDifficulty.eval.input-coverage", {
+      ? interfaceTranslator.t("play.qualityDifficulty.eval.input-coverage", {
           missing: assessment.uncoveredInputs
             .map((input) => inputSummary(activity, input))
             .join(" / "),
         })
-      : t(`play.aiQuality.eval.${assessment.reason}`, {
+      : interfaceTranslator.t(`play.aiQuality.eval.${assessment.reason}`, {
           missing: assessment.uncovered.map((item) => activity.outcomes[item].label).join(" / "),
         });
 
@@ -52,6 +52,7 @@ function ReleaseRecords({
   readonly cases: readonly EvalCase[];
   readonly run: EvalRun;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <div className="ai-eval__records">
       {cases.map((testCase, index) => {
@@ -60,12 +61,16 @@ function ReleaseRecords({
         return (
           <details className="ai-eval__case-record" key={testCase.id} data-passed={passed}>
             <summary>
-              <span>{t("play.aiQuality.eval.case", { number: index + 1 })}</span>
+              <span>
+                {interfaceTranslator.t("play.aiQuality.eval.case", { number: index + 1 })}
+              </span>
               <strong>{activity.outcomes[testCase.expected].label}</strong>
               <span
                 className="ai-eval__trial-stamps"
                 role="img"
-                aria-label={t(passed ? "play.aiQuality.eval.pass" : "play.aiQuality.eval.fail")}
+                aria-label={interfaceTranslator.t(
+                  passed ? "play.aiQuality.eval.pass" : "play.aiQuality.eval.fail",
+                )}
               >
                 {records.map((record) => (
                   <span key={record.trial} data-passed={record.passed} aria-hidden="true">
@@ -78,14 +83,22 @@ function ReleaseRecords({
             <ol>
               {records.map((record) => (
                 <li key={record.trial}>
-                  <strong>{t("play.aiQuality.eval.trial", { number: record.trial })}</strong>
+                  <strong>
+                    {interfaceTranslator.t("play.aiQuality.eval.trial", { number: record.trial })}
+                  </strong>
                   <p>{activity.outcomes[record.actual].observation}</p>
                   <small>
-                    {t(record.passed ? "play.aiQuality.eval.pass" : "play.aiQuality.eval.fail")}
+                    {interfaceTranslator.t(
+                      record.passed ? "play.aiQuality.eval.pass" : "play.aiQuality.eval.fail",
+                    )}
                   </small>
-                  {record.guarded ? <p>{t("play.aiQuality.eval.guarded")}</p> : null}
+                  {record.guarded ? (
+                    <p>{interfaceTranslator.t("play.aiQuality.eval.guarded")}</p>
+                  ) : null}
                   {record.expected !== record.contract ? (
-                    <p className="ai-quality__warning">{t("play.aiQuality.eval.wrongCriterion")}</p>
+                    <p className="ai-quality__warning">
+                      {interfaceTranslator.t("play.aiQuality.eval.wrongCriterion")}
+                    </p>
                   ) : null}
                 </li>
               ))}
@@ -103,6 +116,7 @@ export function EvalGame({
   onAttempt,
   guided = false,
 }: ActivityControls<EvalActivity>) {
+  const interfaceTranslator = useI18n();
   const [input, setInput] = useState<EvalScenario>({ ...activity.initial });
   const [expected, setExpected] = useState<EvalExpectation | "">("");
   const [cases, setCases] = useState<readonly EvalCase[]>([]);
@@ -144,29 +158,31 @@ export function EvalGame({
   const nextInput = assessment.uncoveredInputs[0];
   const needsQuestion = Boolean(nextCategory || nextInput);
   const nextQuestionPrompt = nextCategory
-    ? t(`play.qualityGuide.eval.next.${nextCategory}`)
+    ? interfaceTranslator.t(`play.qualityGuide.eval.next.${nextCategory}`)
     : nextInput
-      ? t("play.qualityDifficulty.eval.crossNext", { input: inputSummary(activity, nextInput) })
-      : t("play.qualityGuide.eval.compose");
+      ? interfaceTranslator.t("play.qualityDifficulty.eval.crossNext", {
+          input: inputSummary(activity, nextInput),
+        })
+      : interfaceTranslator.t("play.qualityGuide.eval.compose");
   const introObserved =
     activeReceipts.some((item) => !item.observation.passed) ||
     activeReceipts.length >= activity.trials;
   const canAddQuestion = !guided || composing || activeCase?.id !== starterId || introObserved;
   const guideTitle = showStarter
-    ? t("play.qualityGuide.eval.start")
+    ? interfaceTranslator.t("play.qualityGuide.eval.start")
     : !activeCase
       ? nextQuestionPrompt
       : activeReceipts.length === 0
-        ? t("play.qualityGuide.eval.tryCandidate")
+        ? interfaceTranslator.t("play.qualityGuide.eval.tryCandidate")
         : activeReceipts.length < activity.trials && !introObserved
-          ? t("play.qualityGuide.eval.repeat")
+          ? interfaceTranslator.t("play.qualityGuide.eval.repeat")
           : needsQuestion
             ? changedResponse
-              ? t("play.qualityGuide.eval.discovered")
+              ? interfaceTranslator.t("play.qualityGuide.eval.discovered")
               : nextQuestionPrompt
             : assessment.reason === "blind-spot"
-              ? t("play.qualityDifficulty.eval.moreTrials")
-              : t("play.qualityDifficulty.eval.release");
+              ? interfaceTranslator.t("play.qualityDifficulty.eval.moreTrials")
+              : interfaceTranslator.t("play.qualityDifficulty.eval.release");
 
   useEffect(() => {
     const heading =
@@ -194,23 +210,28 @@ export function EvalGame({
         (item) => item.candidateId === candidateId && sameCase(item.testCase, testCase),
       ).length + 1;
     if (trial > activity.trials) {
-      setMessage(t("play.aiQuality.eval.sequenceDone"));
+      setMessage(interfaceTranslator.t("play.aiQuality.eval.sequenceDone"));
       return;
     }
     const result = runEvalTrial(activity, testCase, candidateId, trial);
     if (!result.valid) {
-      setMessage(t("play.aiQuality.eval.invalidRun"));
+      setMessage(interfaceTranslator.t("play.aiQuality.eval.invalidRun"));
       return;
     }
     setReceipts((previous) => [...previous, result.receipt]);
-    setMessage(t("play.aiQuality.eval.observed", { count: trial, total: activity.trials }));
+    setMessage(
+      interfaceTranslator.t("play.aiQuality.eval.observed", {
+        count: trial,
+        total: activity.trials,
+      }),
+    );
     focus("trial");
   }
   function freezeAndProbe(request = input, criterion = expected, starterRequest = false) {
     if (locked) return;
     const result = freezeEvalCase(cases, request, criterion as EvalExpectation);
     if (!result.valid) {
-      setMessage(t(`play.aiQuality.eval.${result.reason}`));
+      setMessage(interfaceTranslator.t(`play.aiQuality.eval.${result.reason}`));
       return;
     }
     setCases((previous) => [...previous, result.testCase]);
@@ -248,7 +269,7 @@ export function EvalGame({
     }
     setActiveCaseId("");
     setComposing(true);
-    setMessage(t("play.aiQuality.eval.caseChanged"));
+    setMessage(interfaceTranslator.t("play.aiQuality.eval.caseChanged"));
     setReleaseMessage("");
     focus("composer");
   }
@@ -256,7 +277,7 @@ export function EvalGame({
     if (locked) return;
     const result = runEvalCandidate(activity, cases, candidateId, policy);
     if (!result.valid) {
-      setReleaseMessage(t("play.aiQuality.eval.invalidRun"));
+      setReleaseMessage(interfaceTranslator.t("play.aiQuality.eval.invalidRun"));
       return;
     }
     setReleaseRuns((previous) => ({ ...previous, [candidateId]: result.run }));
@@ -268,42 +289,42 @@ export function EvalGame({
     if (locked) return;
     const result = assessEvalRelease(activity, cases, receipts, releaseRun);
     const summary = result.passed
-      ? t("play.aiQuality.eval.success")
+      ? interfaceTranslator.t("play.aiQuality.eval.success")
       : releaseMessageFor(activity, result);
     passed.current = result.passed;
     setReleaseMessage(summary);
     const handoff = [
-      t("play.aiQuality.eval.handoffTitle", { product: activity.product }),
+      interfaceTranslator.t("play.aiQuality.eval.handoffTitle", { product: activity.product }),
       ...cases.map((testCase, index) =>
-        t("play.aiQuality.eval.handoffCase", {
-          name: t("play.aiQuality.eval.case", { number: index + 1 }),
+        interfaceTranslator.t("play.aiQuality.eval.handoffCase", {
+          name: interfaceTranslator.t("play.aiQuality.eval.case", { number: index + 1 }),
           input: inputSummary(activity, testCase.input),
           expected: activity.outcomes[testCase.expected].label,
           actual: (releaseRun?.observations ?? [])
             .filter((item) => item.caseId === testCase.id)
             .map(
               (item) =>
-                `${t("play.aiQuality.eval.trial", { number: item.trial })}: ${activity.outcomes[item.actual].observation}`,
+                `${interfaceTranslator.t("play.aiQuality.eval.trial", { number: item.trial })}: ${activity.outcomes[item.actual].observation}`,
             )
             .join(" / "),
         }),
       ),
-      t("play.aiQuality.eval.handoffPolicy", {
+      interfaceTranslator.t("play.aiQuality.eval.handoffPolicy", {
         candidate: selected?.label ?? "",
         policy:
           INPUTS.filter((key) => policy[key])
             .map((key) => activity.inputs[key].guard)
-            .join("; ") || t("play.aiQuality.eval.noGuards"),
+            .join("; ") || interfaceTranslator.t("play.aiQuality.eval.noGuards"),
       }),
       ...receipts
         .filter((item) => !item.observation.passed)
         .slice(0, 8)
         .map((item) =>
-          t("play.aiQuality.eval.handoffFailure", {
+          interfaceTranslator.t("play.aiQuality.eval.handoffFailure", {
             candidate:
               activity.candidates.find((candidate) => candidate.id === item.candidateId)?.label ??
               "",
-            case: t("play.aiQuality.eval.case", {
+            case: interfaceTranslator.t("play.aiQuality.eval.case", {
               number: cases.findIndex((testCase) => testCase.id === item.testCase.id) + 1,
             }),
             trial: item.observation.trial,
@@ -311,7 +332,7 @@ export function EvalGame({
             actual: activity.outcomes[item.observation.actual].observation,
           }),
         ),
-      t("play.aiQuality.eval.handoffLimit"),
+      interfaceTranslator.t("play.aiQuality.eval.handoffLimit"),
     ].join("\n\n");
     onAttempt(
       result.passed,
@@ -326,18 +347,22 @@ export function EvalGame({
       <section className="ai-eval__experiment" data-starter={showStarter}>
         <div className="ai-quality__row" hidden={showStarter}>
           <h4 ref={composer} tabIndex={-1}>
-            {showStarter ? t("play.qualityGuide.eval.starter") : t("play.aiQuality.eval.challenge")}
+            {showStarter
+              ? interfaceTranslator.t("play.qualityGuide.eval.starter")
+              : interfaceTranslator.t("play.aiQuality.eval.challenge")}
           </h4>
           {activeCase && canAddQuestion && !guided ? (
             <GameButton variant="ghost" disabled={locked} onClick={newQuestion}>
-              {t(guided ? "play.qualityGuide.eval.ownQuestion" : "play.aiQuality.eval.newQuestion")}
+              {interfaceTranslator.t(
+                guided ? "play.qualityGuide.eval.ownQuestion" : "play.aiQuality.eval.newQuestion",
+              )}
             </GameButton>
           ) : null}
         </div>
         <div className="ai-eval__test-pair">
           <div className="ai-eval__request-ticket">
             <strong>
-              {t(
+              {interfaceTranslator.t(
                 showStarter
                   ? "play.qualityGuide.eval.starter"
                   : "play.aiQuality.eval.requestTicket",
@@ -347,7 +372,7 @@ export function EvalGame({
               <>
                 <p className="quality-guide__request">{inputSummary(activity, starter.input)}</p>
                 <div className="ai-eval__acceptance">
-                  <span>{t("play.aiQuality.eval.expect")}</span>
+                  <span>{interfaceTranslator.t("play.aiQuality.eval.expect")}</span>
                   <strong>{activity.outcomes[starter.expected].label}</strong>
                 </div>
                 <GameButton
@@ -355,10 +380,10 @@ export function EvalGame({
                   disabled={locked}
                   onClick={() => freezeAndProbe(starter.input, starter.expected, true)}
                 >
-                  {t("play.qualityGuide.eval.startAction")}
+                  {interfaceTranslator.t("play.qualityGuide.eval.startAction")}
                 </GameButton>
                 <p className="ai-quality__muted quality-guide__starter-note">
-                  {t("play.qualityGuide.eval.starterNote")}
+                  {interfaceTranslator.t("play.qualityGuide.eval.starterNote")}
                 </p>
               </>
             ) : activeCase ? (
@@ -377,7 +402,7 @@ export function EvalGame({
                   </ul>
                 )}
                 <div className="ai-eval__acceptance">
-                  <span>{t("play.aiQuality.eval.expect")}</span>
+                  <span>{interfaceTranslator.t("play.aiQuality.eval.expect")}</span>
                   <strong>{activity.outcomes[activeCase.expected].label}</strong>
                 </div>
                 <GameButton
@@ -385,7 +410,7 @@ export function EvalGame({
                   disabled={locked}
                   onClick={() => removeCase(activeCase, true)}
                 >
-                  {t("play.aiQuality.eval.edit")}
+                  {interfaceTranslator.t("play.aiQuality.eval.edit")}
                 </GameButton>
               </>
             ) : (
@@ -419,7 +444,7 @@ export function EvalGame({
                   ))}
                 </div>
                 <fieldset className="ai-quality__fieldset ai-eval__expectations" disabled={locked}>
-                  <legend>{t("play.aiQuality.eval.expect")}</legend>
+                  <legend>{interfaceTranslator.t("play.aiQuality.eval.expect")}</legend>
                   <div className="ai-quality__choices">
                     {EVAL_EXPECTATIONS.map((outcome) => (
                       <GameButton
@@ -440,7 +465,7 @@ export function EvalGame({
                   </div>
                 </fieldset>
                 <GameButton variant="primary" disabled={locked} onClick={() => freezeAndProbe()}>
-                  {t("play.aiQuality.eval.freezeAndProbe")}
+                  {interfaceTranslator.t("play.aiQuality.eval.freezeAndProbe")}
                 </GameButton>
                 <p className="ai-quality__status" role="status">
                   {message}
@@ -450,13 +475,15 @@ export function EvalGame({
           </div>
           <div className="ai-eval__response-ticket" hidden={showStarter}>
             <h5 ref={trialHeading} tabIndex={-1}>
-              {t("play.aiQuality.eval.responseTicket", { candidate: selected?.label ?? "" })}
+              {interfaceTranslator.t("play.aiQuality.eval.responseTicket", {
+                candidate: selected?.label ?? "",
+              })}
             </h5>
             {activeCase ? (
               <div className="ai-eval__response-context">
                 {!guided ? <p>{inputSummary(activity, activeCase.input)}</p> : null}
                 <strong>
-                  {t("play.aiQuality.eval.expected", {
+                  {interfaceTranslator.t("play.aiQuality.eval.expected", {
                     result: activity.outcomes[activeCase.expected].label,
                   })}
                 </strong>
@@ -464,7 +491,7 @@ export function EvalGame({
             ) : null}
             {activeReceipts.length === 0 ? (
               <p className="ai-quality__empty">
-                {t(
+                {interfaceTranslator.t(
                   activeCase
                     ? "play.aiQuality.eval.untried"
                     : "play.aiQuality.eval.responseWaiting",
@@ -476,10 +503,12 @@ export function EvalGame({
                   <li key={observation.trial} data-passed={observation.passed}>
                     <div className="ai-quality__row">
                       <strong>
-                        {t("play.aiQuality.eval.trial", { number: observation.trial })}
+                        {interfaceTranslator.t("play.aiQuality.eval.trial", {
+                          number: observation.trial,
+                        })}
                       </strong>
                       <span>
-                        {t(
+                        {interfaceTranslator.t(
                           observation.passed
                             ? "play.aiQuality.eval.pass"
                             : "play.aiQuality.eval.fail",
@@ -495,7 +524,7 @@ export function EvalGame({
                     <p>{activity.outcomes[observation.actual].observation}</p>
                     {observation.expected !== observation.contract ? (
                       <p className="ai-quality__warning">
-                        {t("play.aiQuality.eval.wrongCriterion")}
+                        {interfaceTranslator.t("play.aiQuality.eval.wrongCriterion")}
                       </p>
                     ) : null}
                   </li>
@@ -503,7 +532,9 @@ export function EvalGame({
               </ol>
             )}
             {changedResponse ? (
-              <p className="ai-eval__discovery">{t("play.aiQuality.eval.responseChanged")}</p>
+              <p className="ai-eval__discovery">
+                {interfaceTranslator.t("play.aiQuality.eval.responseChanged")}
+              </p>
             ) : null}
             {activeCase && activeReceipts.length < activity.trials ? (
               <GameButton
@@ -511,7 +542,7 @@ export function EvalGame({
                 disabled={locked || activeReceipts.length >= activity.trials}
                 onClick={() => probe(activeCase)}
               >
-                {t(
+                {interfaceTranslator.t(
                   activeReceipts.length === 0
                     ? "play.aiQuality.eval.probeCurrent"
                     : "play.aiQuality.eval.repeat",
@@ -520,7 +551,7 @@ export function EvalGame({
             ) : null}
             {activeReceipts.length === 1 && !guided ? (
               <p className="ai-quality__muted">
-                {t(
+                {interfaceTranslator.t(
                   activeReceipts[0]!.observation.passed
                     ? "play.aiQuality.eval.firstOnly"
                     : "play.aiQuality.eval.firstFailure",
@@ -528,7 +559,9 @@ export function EvalGame({
               </p>
             ) : null}
             {activeReceipts.length >= activity.trials ? (
-              <p className="ai-quality__muted">{t("play.aiQuality.eval.sequenceDone")}</p>
+              <p className="ai-quality__muted">
+                {interfaceTranslator.t("play.aiQuality.eval.sequenceDone")}
+              </p>
             ) : null}
             {guided && activeCase && introObserved ? (
               <GameButton
@@ -536,7 +569,7 @@ export function EvalGame({
                 disabled={locked}
                 onClick={needsQuestion ? newQuestion : () => focus("release")}
               >
-                {t(
+                {interfaceTranslator.t(
                   needsQuestion
                     ? "play.qualityGuide.eval.ownQuestion"
                     : "play.qualityGuide.eval.openRelease",
@@ -553,10 +586,10 @@ export function EvalGame({
         <div className="quality-guide__eval-options">
           <details className="ai-quality__contract quality-guide__requirements" open={!guided}>
             <summary>
-              {t("play.qualityDifficulty.eval.requirements", {
+              {interfaceTranslator.t("play.qualityDifficulty.eval.requirements", {
                 count: requiredCategories.length,
                 cross: activity.requiredInputs?.length
-                  ? t("play.qualityDifficulty.eval.crossCount", {
+                  ? interfaceTranslator.t("play.qualityDifficulty.eval.crossCount", {
                       count: activity.requiredInputs.length,
                     })
                   : "",
@@ -566,7 +599,7 @@ export function EvalGame({
               {requiredCategories.map((category) => (
                 <li key={category} data-complete={!assessment.uncovered.includes(category)}>
                   {activity.outcomes[category].label} ·{" "}
-                  {t(
+                  {interfaceTranslator.t(
                     assessment.uncovered.includes(category)
                       ? "play.qualityDifficulty.eval.requirementPending"
                       : "play.qualityDifficulty.eval.requirementDone",
@@ -576,7 +609,7 @@ export function EvalGame({
             </ul>
             {activity.requiredInputs?.length ? (
               <>
-                <strong>{t("play.qualityDifficulty.eval.crossHeading")}</strong>
+                <strong>{interfaceTranslator.t("play.qualityDifficulty.eval.crossHeading")}</strong>
                 <ul>
                   {activity.requiredInputs.map((input) => {
                     const missing = assessment.uncoveredInputs.some((item) =>
@@ -588,7 +621,7 @@ export function EvalGame({
                         data-complete={!missing}
                       >
                         {inputSummary(activity, input)} ·{" "}
-                        {t(
+                        {interfaceTranslator.t(
                           missing
                             ? "play.qualityDifficulty.eval.requirementPending"
                             : "play.qualityDifficulty.eval.requirementDone",
@@ -602,18 +635,24 @@ export function EvalGame({
           </details>
           <details className="ai-quality__contract ai-eval__contract" open={!guided}>
             <summary>
-              <strong>{guided ? t("play.qualityGuide.eval.contract") : activity.product}</strong>
+              <strong>
+                {guided
+                  ? interfaceTranslator.t("play.qualityGuide.eval.contract")
+                  : activity.product}
+              </strong>
             </summary>
             <p>{activity.contract}</p>
           </details>
           <details className="quality-guide__candidate-fold" open={!guided}>
             <summary>
-              {t("play.qualityGuide.eval.candidate", { candidate: selected?.label ?? "" })}
+              {interfaceTranslator.t("play.qualityGuide.eval.candidate", {
+                candidate: selected?.label ?? "",
+              })}
             </summary>
             <div
               className="ai-eval__candidate-switch"
               role="group"
-              aria-label={t("play.aiQuality.eval.chooseCandidate")}
+              aria-label={interfaceTranslator.t("play.aiQuality.eval.chooseCandidate")}
             >
               {activity.candidates.map((candidate) => (
                 <GameButton
@@ -639,7 +678,9 @@ export function EvalGame({
                 </GameButton>
               ))}
             </div>
-            <p className="ai-quality__muted">{t("play.aiQuality.eval.unknownNote")}</p>
+            <p className="ai-quality__muted">
+              {interfaceTranslator.t("play.aiQuality.eval.unknownNote")}
+            </p>
           </details>
         </div>
       </section>
@@ -647,20 +688,24 @@ export function EvalGame({
         <>
           <details className="quality-guide__collection-fold" open={!guided}>
             <summary>
-              {t("play.aiQuality.eval.collection", { count: cases.length })} ·{" "}
-              {t("play.qualityDifficulty.eval.coverage", {
+              {interfaceTranslator.t("play.aiQuality.eval.collection", { count: cases.length })} ·{" "}
+              {interfaceTranslator.t("play.qualityDifficulty.eval.coverage", {
                 count: requiredCategories.length - assessment.uncovered.length,
                 total: requiredCategories.length,
               })}
             </summary>
             <section className="ai-eval__collection">
               <div className="ai-quality__row">
-                <h4>{t("play.aiQuality.eval.collection", { count: cases.length })}</h4>
+                <h4>
+                  {interfaceTranslator.t("play.aiQuality.eval.collection", { count: cases.length })}
+                </h4>
                 <GameButton variant="secondary" disabled={locked} onClick={newQuestion}>
-                  {t("play.aiQuality.eval.newQuestion")}
+                  {interfaceTranslator.t("play.aiQuality.eval.newQuestion")}
                 </GameButton>
               </div>
-              <p className="ai-quality__muted">{t("play.aiQuality.eval.collectionNote")}</p>
+              <p className="ai-quality__muted">
+                {interfaceTranslator.t("play.aiQuality.eval.collectionNote")}
+              </p>
               <ol className="ai-eval__case-sheet">
                 {cases.map((testCase, index) => {
                   const records = receipts.filter((item) => sameCase(item.testCase, testCase));
@@ -673,7 +718,7 @@ export function EvalGame({
                         <strong>{activity.outcomes[testCase.expected].label}</strong>
                         <p>{inputSummary(activity, testCase.input)}</p>
                         <small>
-                          {t("play.aiQuality.eval.collectionEvidence", {
+                          {interfaceTranslator.t("play.aiQuality.eval.collectionEvidence", {
                             count: records.length,
                             failures: records.filter((item) => !item.observation.passed).length,
                           })}
@@ -695,14 +740,14 @@ export function EvalGame({
                             }
                           }}
                         >
-                          {t("play.aiQuality.eval.viewCase")}
+                          {interfaceTranslator.t("play.aiQuality.eval.viewCase")}
                         </GameButton>
                         <GameButton
                           variant="ghost"
                           disabled={locked}
                           onClick={() => removeCase(testCase, false)}
                         >
-                          {t("play.aiQuality.eval.remove")}
+                          {interfaceTranslator.t("play.aiQuality.eval.remove")}
                         </GameButton>
                       </div>
                     </li>
@@ -716,13 +761,19 @@ export function EvalGame({
             ref={releaseFold}
             open={!guided || !needsQuestion}
           >
-            <summary>{t("play.qualityGuide.eval.releaseClosed")}</summary>
+            <summary>{interfaceTranslator.t("play.qualityGuide.eval.releaseClosed")}</summary>
             <section className="ai-quality__stage ai-eval__release">
               <h4 ref={releaseHeading} tabIndex={-1}>
-                {t("play.aiQuality.eval.releaseTitle")}
+                {interfaceTranslator.t("play.aiQuality.eval.releaseTitle")}
               </h4>
-              <p>{t("play.aiQuality.eval.chosen", { name: selected?.label ?? "" })}</p>
-              <p className="ai-quality__muted">{t("play.qualityDifficulty.eval.releaseNote")}</p>
+              <p>
+                {interfaceTranslator.t("play.aiQuality.eval.chosen", {
+                  name: selected?.label ?? "",
+                })}
+              </p>
+              <p className="ai-quality__muted">
+                {interfaceTranslator.t("play.qualityDifficulty.eval.releaseNote")}
+              </p>
               <div className="ai-eval__guards">
                 {INPUTS.map((key) => (
                   <GameToggle
@@ -734,14 +785,14 @@ export function EvalGame({
                       if (!locked) {
                         setPolicy({ ...policy, [key]: !policy[key] });
                         setReleaseRuns({});
-                        setReleaseMessage(t("play.aiQuality.eval.stale-run"));
+                        setReleaseMessage(interfaceTranslator.t("play.aiQuality.eval.stale-run"));
                       }
                     }}
                   />
                 ))}
               </div>
               <GameButton variant="primary" onClick={rerunBoundary} disabled={locked}>
-                {t("play.aiQuality.eval.runBoundary")}
+                {interfaceTranslator.t("play.aiQuality.eval.runBoundary")}
               </GameButton>
               <p className="ai-quality__status" role="status">
                 {releaseMessage}
@@ -750,7 +801,7 @@ export function EvalGame({
                 <ReleaseRecords activity={activity} cases={cases} run={releaseRun} />
               ) : null}
               <GameButton variant="primary" onClick={finish} disabled={locked}>
-                {t("play.aiQuality.eval.finish")}
+                {interfaceTranslator.t("play.aiQuality.eval.finish")}
               </GameButton>
             </section>
           </details>

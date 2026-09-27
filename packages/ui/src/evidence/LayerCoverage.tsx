@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import type {
@@ -37,18 +37,18 @@ function percent(layer: SourceCoverageLayer): number {
 function noLayerCoverageExplanation(detail?: string): SourceAccessExplanation {
   return {
     kind: "explanation",
-    title: translate("ui.evidence.layerCoverage.copy.查看项目分层"),
-    whatItDoes: translate(
+    title: interfaceTranslator.t("ui.evidence.layerCoverage.copy.查看项目分层"),
+    whatItDoes: interfaceTranslator.t(
       "ui.evidence.layerCoverage.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件",
     ),
     whyUnavailable: detail
-      ? translate("ui.evidence.layerCoverage.copy.当前也读不到这份项目分析-value0", {
+      ? interfaceTranslator.t("ui.evidence.layerCoverage.copy.当前也读不到这份项目分析-value0", {
           value0: detail,
         })
-      : translate(
+      : interfaceTranslator.t(
           "ui.evidence.layerCoverage.copy.当前没有可用的-Understand-Anything-分析-所以现在没有可信的分层可以展示",
         ),
-    futureSupport: translate(
+    futureSupport: interfaceTranslator.t(
       "ui.evidence.layerCoverage.copy.以后会在桌面端提供已授权的分析快照-浏览器端和移动端会提供同一份分层说明",
     ),
   };
@@ -76,6 +76,7 @@ function StudyLayerCoverage({
   readonly studyId: string;
   readonly sourceAccess: SourceAccessPort;
 }) {
+  const interfaceTranslator = useI18n();
   const [map, setMap] = useState<SourceLayerCoverage | null>(null);
   const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
   const [explanationOpen, setExplanationOpen] = useState(false);
@@ -128,10 +129,10 @@ function StudyLayerCoverage({
     return (
       <section
         className="study-map"
-        aria-label={translate("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
+        aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
       >
         <p className="study-map__status">
-          {translate("ui.evidence.layerCoverage.copy.正在读取项目分层")}
+          {interfaceTranslator.t("ui.evidence.layerCoverage.copy.正在读取项目分层")}
         </p>
       </section>
     );
@@ -141,19 +142,21 @@ function StudyLayerCoverage({
     return (
       <section
         className="study-map"
-        aria-label={translate("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
+        aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
       >
         <div className="study-map__header">
-          <h3>{translate("ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖")}</h3>
+          <h3>{interfaceTranslator.t("ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖")}</h3>
           <Tip term="study-map" className="rail-panel__help">
-            <span aria-label={translate("ui.evidence.layerCoverage.copy.关于项目地图")}>?</span>
+            <span aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.关于项目地图")}>
+              ?
+            </span>
           </Tip>
         </div>
         <p className="study-map__status">
-          {translate("ui.evidence.layerCoverage.copy.当前没有可直接读取的项目分层")}
+          {interfaceTranslator.t("ui.evidence.layerCoverage.copy.当前没有可直接读取的项目分层")}
         </p>
         <GameButton variant="secondary" onClick={() => setExplanationOpen(true)}>
-          {translate("ui.evidence.layerCoverage.copy.查看项目分层")}
+          {interfaceTranslator.t("ui.evidence.layerCoverage.copy.查看项目分层")}
         </GameButton>
         {explanationOpen ? (
           <CapabilityExplanation
@@ -195,6 +198,7 @@ function LessonLayerCoverage({
   readonly evidence: readonly EvidenceView[];
   readonly sourceAccess: SourceAccessPort;
 }) {
+  const interfaceTranslator = useI18n();
   const citedPaths = citedSourcePaths(evidence);
   const [pending, setPending] = useState(true);
   const [unavailable, setUnavailable] = useState<SourceAccessExplanation | null>(null);
@@ -260,9 +264,13 @@ function LessonLayerCoverage({
   const sourcePaths = new Set(citedPaths);
   return (
     <div className="lesson-ua-layers" {...(unavailable ? { "data-unavailable": "" } : {})}>
-      <span>{translate("ui.evidence.layerCoverage.copy.这节课已经引用了这些文件")}</span>
+      <span>
+        {interfaceTranslator.t("ui.evidence.layerCoverage.copy.这节课已经引用了这些文件")}
+      </span>
       <Tip term="ua-place" className="rail-panel__help">
-        <span aria-label={translate("ui.evidence.layerCoverage.copy.关于项目位置")}>?</span>
+        <span aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.关于项目位置")}>
+          ?
+        </span>
       </Tip>
       <ul className="lesson-ua-layers__files">
         {citedPaths.map((filePath) => (
@@ -273,7 +281,7 @@ function LessonLayerCoverage({
       </ul>
       {unavailable ? (
         <p className="lesson-ua-layers__status">
-          {translate(
+          {interfaceTranslator.t(
             "ui.evidence.layerCoverage.copy.完整项目分层需要仓库分析-课文已经引用的文件可以直接看",
           )}
         </p>
@@ -286,8 +294,8 @@ function LessonLayerCoverage({
         disabled={pending}
       >
         {pending
-          ? translate("ui.evidence.layerCoverage.copy.正在读取项目分层")
-          : translate("ui.evidence.layerCoverage.copy.查看项目分层")}
+          ? interfaceTranslator.t("ui.evidence.layerCoverage.copy.正在读取项目分层")
+          : interfaceTranslator.t("ui.evidence.layerCoverage.copy.查看项目分层")}
       </GameButton>
       {unavailable && explanationOpen ? (
         <CapabilityExplanation
@@ -298,8 +306,8 @@ function LessonLayerCoverage({
       {map ? (
         <GameModal
           open
-          title={translate("ui.evidence.layerCoverage.copy.查看项目分层")}
-          closeLabel={translate("ui.evidence.layerCoverage.copy.关闭项目分层")}
+          title={interfaceTranslator.t("ui.evidence.layerCoverage.copy.查看项目分层")}
+          closeLabel={interfaceTranslator.t("ui.evidence.layerCoverage.copy.关闭项目分层")}
           closeOnBackdrop
           onClose={() => setMap(null)}
         >
@@ -326,6 +334,7 @@ function CoverageMap({
   readonly lessonPaths?: ReadonlySet<string>;
   readonly onToggle: (id: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const totalFiles = map.layers.reduce((sum, layer) => sum + layer.fileCount, 0);
   const totalCited = map.layers.reduce((sum, layer) => sum + layer.citedFileCount, 0);
   const thin = map.layers.filter(
@@ -335,16 +344,18 @@ function CoverageMap({
   return (
     <section
       className="study-map"
-      aria-label={translate("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
+      aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.项目文件覆盖分析")}
     >
       <div className="study-map__header">
-        <h3>{translate("ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖")}</h3>
+        <h3>{interfaceTranslator.t("ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖")}</h3>
         <Tip term="study-map" className="rail-panel__help">
-          <span aria-label={translate("ui.evidence.layerCoverage.copy.关于项目地图")}>?</span>
+          <span aria-label={interfaceTranslator.t("ui.evidence.layerCoverage.copy.关于项目地图")}>
+            ?
+          </span>
         </Tip>
         <p className="study-map__reach">
-          {translate("ui.evidence.layerCoverage.copy.已讲到")} {totalCited} / {totalFiles}{" "}
-          {translate("ui.evidence.layerCoverage.copy.个项目文件")}
+          {interfaceTranslator.t("ui.evidence.layerCoverage.copy.已讲到")} {totalCited} /{" "}
+          {totalFiles} {interfaceTranslator.t("ui.evidence.layerCoverage.copy.个项目文件")}
         </p>
       </div>
 
@@ -368,13 +379,13 @@ function CoverageMap({
                 <span className="study-map__layer-name">{layer.name}</span>
                 <span className="study-map__layer-count">
                   {layer.citedFileCount} / {layer.fileCount}{" "}
-                  {translate("ui.evidence.layerCoverage.copy.个文件")}
+                  {interfaceTranslator.t("ui.evidence.layerCoverage.copy.个文件")}
                 </span>
               </button>
               <div
                 className="study-map__bar"
                 role="img"
-                aria-label={translate(
+                aria-label={interfaceTranslator.t(
                   "ui.evidence.layerCoverage.copy.value0-value1-个文件里有-value2-个被课程引用",
                   { value0: layer.name, value1: layer.fileCount, value2: layer.citedFileCount },
                 )}
@@ -409,14 +420,16 @@ function CoverageMap({
 
       {map.uncharted.length > 0 ? (
         <p className="study-map__note">
-          {translate("ui.evidence.layerCoverage.copy.有")} {map.uncharted.length}{" "}
-          {translate("ui.evidence.layerCoverage.copy.个被课程引用的文件尚未出现在项目分析里")}
+          {interfaceTranslator.t("ui.evidence.layerCoverage.copy.有")} {map.uncharted.length}{" "}
+          {interfaceTranslator.t(
+            "ui.evidence.layerCoverage.copy.个被课程引用的文件尚未出现在项目分析里",
+          )}
         </p>
       ) : null}
       {thin.length > 0 ? (
         <p className="study-map__note">
           <strong>{thin.map((layer) => layer.name).join("、")}</strong>{" "}
-          {translate(
+          {interfaceTranslator.t(
             "ui.evidence.layerCoverage.copy.几乎没有课程引用-可能是有意跳过-生成产物-测试代码通常不必逐个讲-也可能是大纲根本没想到-这一栏分不出这两者-",
           )}
         </p>

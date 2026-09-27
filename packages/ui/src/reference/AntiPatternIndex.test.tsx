@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -28,7 +29,9 @@ afterEach(async () => {
 
 async function renderIndex(props: Partial<Parameters<typeof AntiPatternIndex>[0]> = {}) {
   await act(async () => {
-    root.render(<AntiPatternIndex entries={ANTI_PATTERN_ENTRIES} {...props} />);
+    root.render(
+      withInterfaceLocale(<AntiPatternIndex entries={ANTI_PATTERN_ENTRIES} {...props} />),
+    );
   });
 }
 

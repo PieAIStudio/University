@@ -1,9 +1,10 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { primmFixture } from "../../../core/src/learning-play/fixtures/primm.js";
-import { I18nProvider } from "../i18n/index.js";
+import { InterfaceLanguageProvider } from "../i18n/index.js";
 import { PrimmLesson } from "./PrimmLesson.js";
 import { restorePrimmSession, initialPrimmSession } from "./primm-session.js";
 import type { PrimmLessonProps, PrimmOutput, RunPrimm } from "./primm-types.js";
@@ -65,17 +66,19 @@ async function render(extra: Partial<PrimmLessonProps> = {}) {
   const complete = vi.fn(async () => {});
   await act(async () =>
     root.render(
-      <I18nProvider locale="zh-CN">
-        <PrimmLesson
-          activity={primmFixture}
-          lessonRef={{ studyId: "s", courseId: "c", unitId: "u", lessonId: "l" }}
-          contentRevision={2}
-          runPrimm={run}
-          evaluatePrimm={grade}
-          onPrimmComplete={complete}
-          {...extra}
-        />
-      </I18nProvider>,
+      withInterfaceLocale(
+        <InterfaceLanguageProvider locale="zh-CN">
+          <PrimmLesson
+            activity={primmFixture}
+            lessonRef={{ studyId: "s", courseId: "c", unitId: "u", lessonId: "l" }}
+            contentRevision={2}
+            runPrimm={run}
+            evaluatePrimm={grade}
+            onPrimmComplete={complete}
+            {...extra}
+          />
+        </InterfaceLanguageProvider>,
+      ),
     ),
   );
   return { run, grade, complete };

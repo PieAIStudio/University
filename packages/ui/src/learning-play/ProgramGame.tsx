@@ -11,7 +11,7 @@ import {
   type ProgramResult,
 } from "@pieai/university-core";
 
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
@@ -124,37 +124,40 @@ function resultMessage(activity: ProgramActivity, result: ProgramResult): string
   const command = (result.problem?.commandIndex ?? 0) + 1;
   switch (result.outcome) {
     case "success":
-      return translate("play.program.success", {
+      return interfaceTranslator.t("play.program.success", {
         checkpoints: activity.checkpoints.length,
         commands: result.commandCount,
         steps: result.executedSteps,
       });
     case "empty":
-      return translate("play.program.empty");
+      return interfaceTranslator.t("play.program.empty");
     case "invalid-activity":
-      return translate("play.program.invalidActivity");
+      return interfaceTranslator.t("play.program.invalidActivity");
     case "invalid-command":
-      return translate("play.program.invalidCommand", { command, maximum: activity.maxRepeat });
+      return interfaceTranslator.t("play.program.invalidCommand", {
+        command,
+        maximum: activity.maxRepeat,
+      });
     case "command-budget":
-      return translate("play.program.overBudget", {
+      return interfaceTranslator.t("play.program.overBudget", {
         count: result.commandCount,
         maximum: activity.maxCommands,
       });
     case "wall":
-      return translate("play.program.hitWall", {
+      return interfaceTranslator.t("play.program.hitWall", {
         command,
         repeat: result.problem?.repetition ?? 1,
         cell: result.problem?.attemptedCell ? cellName(result.problem.attemptedCell) : "",
         position,
       });
     case "bounds":
-      return translate("play.program.outOfBounds", {
+      return interfaceTranslator.t("play.program.outOfBounds", {
         command,
         repeat: result.problem?.repetition ?? 1,
         position,
       });
     case "missing-checkpoints":
-      return translate("play.program.missingCheckpoints", {
+      return interfaceTranslator.t("play.program.missingCheckpoints", {
         visited: final?.visitedCheckpoints.length ?? 0,
         total: activity.checkpoints.length,
         missing: activity.checkpoints
@@ -164,27 +167,41 @@ function resultMessage(activity: ProgramActivity, result: ProgramResult): string
         goal: cellName(activity.goalCell),
       });
     case "not-at-goal":
-      return translate("play.program.notAtGoal", { position, goal: cellName(activity.goalCell) });
+      return interfaceTranslator.t("play.program.notAtGoal", {
+        position,
+        goal: cellName(activity.goalCell),
+      });
   }
 }
 
 function traceText(frame: ProgramFrame, index: number): string {
   return (
-    translate(frame.collision ? "play.program.traceBlocked" : "play.program.traceStep", {
-      step: index + 1,
-      command: frame.commandIndex + 1,
-      repeat: frame.repetition,
-      operation: translate(COMMAND_LABELS[frame.op]),
-      cell: cellName(frame.position),
-      direction: translate(DIRECTION_LABELS[frame.direction]),
-    }) + translate("play.program.traceCheckpoint", { count: frame.visitedCheckpoints.length })
+    interfaceTranslator.t(
+      frame.collision ? "play.program.traceBlocked" : "play.program.traceStep",
+      {
+        step: index + 1,
+        command: frame.commandIndex + 1,
+        repeat: frame.repetition,
+        operation: interfaceTranslator.t(COMMAND_LABELS[frame.op]),
+        cell: cellName(frame.position),
+        direction: interfaceTranslator.t(DIRECTION_LABELS[frame.direction]),
+      },
+    ) +
+    interfaceTranslator.t("play.program.traceCheckpoint", {
+      count: frame.visitedCheckpoints.length,
+    })
   );
 }
 
 /** The session key also clears animation timers when the scenario changes. */
 export function ProgramGame(props: ActivityControls<ProgramActivity>) {
+  const interfaceTranslator = useI18n();
   if (!isValidProgramActivity(props.activity)) {
-    return <GameCallout tone="danger">{translate("play.program.invalidActivity")}</GameCallout>;
+    return (
+      <GameCallout tone="danger">
+        {interfaceTranslator.t("play.program.invalidActivity")}
+      </GameCallout>
+    );
   }
   return <ProgramSession key={props.activity.id} {...props} />;
 }
@@ -195,6 +212,7 @@ function ProgramSession({
   onAttempt,
   guided = false,
 }: ActivityControls<ProgramActivity>) {
+  const interfaceTranslator = useI18n();
   const id = useId();
   const [commands, setCommands] = useState<readonly EditableCommand[]>([]);
   const [execution, setExecution] = useState<ProgramResult | null>(null);
@@ -376,21 +394,22 @@ function ProgramSession({
     outcome ??
     (running
       ? currentFrame
-        ? translate("play.program.currentCommand", {
+        ? interfaceTranslator.t("play.program.currentCommand", {
             command: currentFrame.commandIndex + 1,
-            operation: translate(COMMAND_LABELS[currentFrame.op]),
+            operation: interfaceTranslator.t(COMMAND_LABELS[currentFrame.op]),
             repeat: currentFrame.repetition,
           })
-        : translate("play.program.starting")
-      : translate(`play.program.${notice}`));
-  const mapDescription = translate("play.program.mapDescription", {
+        : interfaceTranslator.t("play.program.starting")
+      : interfaceTranslator.t(`play.program.${notice}`));
+  const mapDescription = interfaceTranslator.t("play.program.mapDescription", {
     width: activity.width,
     height: activity.height,
     start: cellName(activity.start),
-    direction: translate(DIRECTION_LABELS[activity.start.direction]),
+    direction: interfaceTranslator.t(DIRECTION_LABELS[activity.start.direction]),
     goal: cellName(activity.goalCell),
-    checkpoints: activity.checkpoints.map(cellName).join(" · ") || translate("play.program.none"),
-    walls: activity.walls.map(cellName).join(" · ") || translate("play.program.none"),
+    checkpoints:
+      activity.checkpoints.map(cellName).join(" · ") || interfaceTranslator.t("play.program.none"),
+    walls: activity.walls.map(cellName).join(" · ") || interfaceTranslator.t("play.program.none"),
   });
 
   return (
@@ -401,14 +420,14 @@ function ProgramSession({
     >
       {guided && !running && !disabled ? (
         <PlayGuide
-          title={translate(
+          title={interfaceTranslator.t(
             commands.length === 0
               ? "play.usability.program.first"
               : execution
                 ? "play.usability.program.edit"
                 : "play.usability.program.ready",
           )}
-          action={translate(
+          action={interfaceTranslator.t(
             commands.length === 0
               ? "play.usability.program.add"
               : execution
@@ -424,10 +443,10 @@ function ProgramSession({
       <section className="play-program__map-section" aria-labelledby={`${id}-map-title`}>
         <div className="play-program__section-heading">
           <h3 id={`${id}-map-title`} ref={mapHeading} tabIndex={-1}>
-            {translate("play.program.boardTitle")}
+            {interfaceTranslator.t("play.program.boardTitle")}
           </h3>
           <span className="play-program__checkpoints">
-            {translate("play.program.checkpointCount", {
+            {interfaceTranslator.t("play.program.checkpointCount", {
               visited: pose.visitedCheckpoints.length,
               total: activity.checkpoints.length,
             })}
@@ -485,13 +504,13 @@ function ProgramSession({
                 >
                   {isStart && (
                     <span className="play-program__cell-label play-program__cell-label--start">
-                      {translate("play.program.start")}
+                      {interfaceTranslator.t("play.program.start")}
                     </span>
                   )}
                   {isGoal && (
                     <span className="play-program__goal">
                       <ProgramIcon name="flag" />
-                      <span>{translate("play.program.goal")}</span>
+                      <span>{interfaceTranslator.t("play.program.goal")}</span>
                     </span>
                   )}
                   {checkpoint >= 0 && (
@@ -533,9 +552,9 @@ function ProgramSession({
           </div>
         </div>
         <p className="play-program__pose">
-          {translate(shownFrames ? "play.program.pose" : "play.program.startPose", {
+          {interfaceTranslator.t(shownFrames ? "play.program.pose" : "play.program.startPose", {
             cell: cellName(pose.position),
-            direction: translate(DIRECTION_LABELS[pose.direction]),
+            direction: interfaceTranslator.t(DIRECTION_LABELS[pose.direction]),
           })}
         </p>
         {(running || (!disabled && execution && !execution.passed)) && (
@@ -555,7 +574,7 @@ function ProgramSession({
                     playSound("ui.press");
                   }}
                 >
-                  {translate("play.program.stop")}
+                  {interfaceTranslator.t("play.program.stop")}
                 </GameButton>
                 <GameButton
                   variant="ghost"
@@ -565,7 +584,7 @@ function ProgramSession({
                     playSound("ui.press");
                   }}
                 >
-                  {translate("play.program.finishNow")}
+                  {interfaceTranslator.t("play.program.finishNow")}
                 </GameButton>
               </>
             ) : (
@@ -578,8 +597,8 @@ function ProgramSession({
                 }}
               >
                 {execution?.problem?.commandIndex === undefined
-                  ? translate("play.program.backToEditor")
-                  : translate("play.program.editCommand", {
+                  ? interfaceTranslator.t("play.program.backToEditor")
+                  : interfaceTranslator.t("play.program.editCommand", {
                       command: execution.problem.commandIndex + 1,
                     })}
               </GameButton>
@@ -598,7 +617,7 @@ function ProgramSession({
         >
           {execution && (
             <span className="play-program__step-counter">
-              {translate("play.program.stepCount", {
+              {interfaceTranslator.t("play.program.stepCount", {
                 step: shownFrames,
                 total: execution.frames.length,
               })}
@@ -609,31 +628,31 @@ function ProgramSession({
         <div className="play-program__legend" aria-hidden="true">
           <span>
             <ProgramIcon name="start" />
-            {translate("play.program.start")}
+            {interfaceTranslator.t("play.program.start")}
           </span>
           <span>
             <ProgramIcon name="flag" />
-            {translate("play.program.goal")}
+            {interfaceTranslator.t("play.program.goal")}
           </span>
           <span>
             <span className="play-program__legend-checkpoint">1</span>
-            {translate("play.program.checkpoint")}
+            {interfaceTranslator.t("play.program.checkpoint")}
           </span>
           <span>
             <span className="play-program__legend-wall" />
-            {translate("play.program.wall")}
+            {interfaceTranslator.t("play.program.wall")}
           </span>
         </div>
-        <p className="play-program__note">{translate("play.program.boardNote")}</p>
+        <p className="play-program__note">{interfaceTranslator.t("play.program.boardNote")}</p>
       </section>
 
       <section className="play-program__editor" aria-labelledby={`${id}-program-title`}>
         <div className="play-program__section-heading">
           <h3 id={`${id}-program-title`} ref={editorHeading} tabIndex={-1}>
-            {translate("play.program.programTitle")}
+            {interfaceTranslator.t("play.program.programTitle")}
           </h3>
           <span className="play-program__budget">
-            {translate("play.program.budget", {
+            {interfaceTranslator.t("play.program.budget", {
               count: commands.length,
               maximum: activity.maxCommands,
             })}
@@ -645,7 +664,7 @@ function ProgramSession({
             disabled={locked || commands.length === 0}
             onClick={() => edit([])}
           >
-            {translate("play.program.clear")}
+            {interfaceTranslator.t("play.program.clear")}
           </GameButton>
         </div>
         <div className="play-program__palette">
@@ -655,18 +674,18 @@ function ProgramSession({
               variant="secondary"
               sound={false}
               disabled={locked || commands.length >= activity.maxCommands}
-              aria-label={translate("play.program.addCommand", {
-                command: translate(COMMAND_LABELS[op]),
+              aria-label={interfaceTranslator.t("play.program.addCommand", {
+                command: interfaceTranslator.t(COMMAND_LABELS[op]),
               })}
               onClick={() => add(op)}
             >
               <ProgramIcon name={op} />
-              <span>{translate(COMMAND_LABELS[op])}</span>
+              <span>{interfaceTranslator.t(COMMAND_LABELS[op])}</span>
             </GameButton>
           ))}
         </div>
         <p className="play-program__note">
-          {translate(
+          {interfaceTranslator.t(
             commands.length === activity.maxCommands
               ? "play.program.budgetFull"
               : "play.program.budgetNote",
@@ -676,8 +695,8 @@ function ProgramSession({
         {commands.length === 0 ? (
           <div className="play-program__empty">
             <ProgramIcon name="forward" />
-            <strong>{translate("play.program.emptyTitle")}</strong>
-            <p>{translate("play.program.emptyBody")}</p>
+            <strong>{interfaceTranslator.t("play.program.emptyTitle")}</strong>
+            <p>{interfaceTranslator.t("play.program.emptyBody")}</p>
           </div>
         ) : (
           <ol className="play-program__commands">
@@ -693,10 +712,10 @@ function ProgramSession({
                 </span>
                 <span className="play-program__command-name">
                   <ProgramIcon name={command.op} />
-                  {translate(COMMAND_LABELS[command.op])}
+                  {interfaceTranslator.t(COMMAND_LABELS[command.op])}
                 </span>
                 <label className="play-program__repeat">
-                  <span>{translate("play.program.repeat")}</span>
+                  <span>{interfaceTranslator.t("play.program.repeat")}</span>
                   <GameInput
                     ref={(element) => {
                       if (element) commandInputs.current.set(command.id, element);
@@ -709,7 +728,9 @@ function ProgramSession({
                     inputMode="numeric"
                     disabled={locked}
                     value={command.repeat}
-                    aria-label={translate("play.program.repeatLabel", { command: index + 1 })}
+                    aria-label={interfaceTranslator.t("play.program.repeatLabel", {
+                      command: index + 1,
+                    })}
                     onChange={(event) => {
                       const repeat = Number(event.target.value);
                       if (
@@ -725,14 +746,16 @@ function ProgramSession({
                         );
                     }}
                   />
-                  <span>{translate("play.program.times")}</span>
+                  <span>{interfaceTranslator.t("play.program.times")}</span>
                 </label>
                 <div className="play-program__command-actions">
                   <GameButton
                     variant="ghost"
                     sound={false}
                     disabled={locked || index === 0}
-                    aria-label={translate("play.program.moveUp", { command: index + 1 })}
+                    aria-label={interfaceTranslator.t("play.program.moveUp", {
+                      command: index + 1,
+                    })}
                     onClick={() => move(index, -1)}
                   >
                     <ProgramIcon name="up" />
@@ -741,7 +764,9 @@ function ProgramSession({
                     variant="ghost"
                     sound={false}
                     disabled={locked || index === commands.length - 1}
-                    aria-label={translate("play.program.moveDown", { command: index + 1 })}
+                    aria-label={interfaceTranslator.t("play.program.moveDown", {
+                      command: index + 1,
+                    })}
                     onClick={() => move(index, 1)}
                   >
                     <ProgramIcon name="down" />
@@ -750,7 +775,9 @@ function ProgramSession({
                     variant="ghost"
                     sound={false}
                     disabled={locked}
-                    aria-label={translate("play.program.remove", { command: index + 1 })}
+                    aria-label={interfaceTranslator.t("play.program.remove", {
+                      command: index + 1,
+                    })}
                     onClick={() => remove(index)}
                   >
                     <ProgramIcon name="remove" />
@@ -768,7 +795,7 @@ function ProgramSession({
             onClick={runProgram}
           >
             <ProgramIcon name="play" />
-            {translate(
+            {interfaceTranslator.t(
               running
                 ? "play.program.running"
                 : execution
@@ -781,7 +808,9 @@ function ProgramSession({
 
       {visible.length > 0 && (
         <details className="play-program__trace">
-          <summary>{translate("play.program.traceTitle", { count: visible.length })}</summary>
+          <summary>
+            {interfaceTranslator.t("play.program.traceTitle", { count: visible.length })}
+          </summary>
           <ol>
             {visible.map((frame, index) => (
               <li key={index} data-collision={Boolean(frame.collision) || undefined}>

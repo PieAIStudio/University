@@ -9,7 +9,7 @@ export const messages = {
   "product.welcome.choose": "换个学习方向",
   "product.welcome.firstStep": "从这个问题开始",
   "product.welcome.loading": "正在找到可以开始的课程…",
-  "product.welcome.scope": "{{exercises}} 道小练习",
+  "product.welcome.scope": "{exercises} 道小练习",
   "product.welcome.dismiss": "关闭欢迎，先看地图",
   "product.welcome.start": "开始学习",
   "product.welcome.browse": "直接选课",

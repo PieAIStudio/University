@@ -925,7 +925,7 @@ export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
     assetSet: "grid-biome-library",
     status: "prototype/local donor; PGS donor registered",
     sourceRoot: PROVENANCE_SOURCE_ROOT,
-    sourceRootHint: "../../../_donors/Kenney or KENNEY_DONOR_ROOT",
+    sourceRootHint: "../../../_Donors/Kenney or KENNEY_DONOR_ROOT",
     outputRoot: "public/kenney/grid",
     runtimeBasePath: RUNTIME_BASE_PATH,
     selection: {

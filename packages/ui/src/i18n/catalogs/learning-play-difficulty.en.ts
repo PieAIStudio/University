@@ -37,7 +37,7 @@ export const messages = {
     "Complete mixed requests within budget; distinguish cached copies from live data.",
   "play.difficulty.dispatch.challenge":
     "Some named resources have new versions; some requests need fresh data. Respect actual cache keys.",
-  "play.difficulty.dispatch.revised": "{{name}} · revised",
+  "play.difficulty.dispatch.revised": "{name} · revised",
   "play.difficulty.dispatch.newVersion":
     "The content and its cache key changed. An old copy cannot serve this version.",
   "play.difficulty.program.intro": "Reach the nearby goal with a short set of instructions.",

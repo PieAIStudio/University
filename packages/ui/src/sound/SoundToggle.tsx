@@ -5,7 +5,7 @@
  * way to stop it is a product people mute at the operating system, which loses
  * every other sound on their machine as well.
  */
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 import type { ProgressPort } from "@pieai/university-core";
 
@@ -18,6 +18,7 @@ export function SoundToggle({
   readonly className?: string;
   readonly progress?: ProgressPort;
 }) {
+  const interfaceTranslator = useI18n();
   const [on, setOn] = useState(
     () => progress?.accountData().preferences.soundEnabled ?? isSoundEnabled(),
   );
@@ -36,13 +37,13 @@ export function SoundToggle({
       aria-pressed={on}
       title={
         on
-          ? translate("ui.sound.soundToggle.copy.关掉声音")
-          : translate("ui.sound.soundToggle.copy.打开声音")
+          ? interfaceTranslator.t("ui.sound.soundToggle.copy.关掉声音")
+          : interfaceTranslator.t("ui.sound.soundToggle.copy.打开声音")
       }
       aria-label={
         on
-          ? translate("ui.sound.soundToggle.copy.关掉声音")
-          : translate("ui.sound.soundToggle.copy.打开声音")
+          ? interfaceTranslator.t("ui.sound.soundToggle.copy.关掉声音")
+          : interfaceTranslator.t("ui.sound.soundToggle.copy.打开声音")
       }
       onClick={() => {
         const next = !on;

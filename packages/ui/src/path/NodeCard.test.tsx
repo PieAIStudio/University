@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -65,16 +66,18 @@ async function renderCard(
   const onStartUnit = props.onStartUnit ?? vi.fn();
   await act(async () => {
     root.render(
-      <NodeCard
-        open
-        lesson={props.lesson ?? LESSON}
-        unit={UNIT}
-        onClose={onClose}
-        onStart={onStart}
-        onStartUnit={onStartUnit}
-        returnFocusTo={trigger}
-        {...props}
-      />,
+      withInterfaceLocale(
+        <NodeCard
+          open
+          lesson={props.lesson ?? LESSON}
+          unit={UNIT}
+          onClose={onClose}
+          onStart={onStart}
+          onStartUnit={onStartUnit}
+          returnFocusTo={trigger}
+          {...props}
+        />,
+      ),
     );
   });
   return { onClose, onStart, onStartUnit };
@@ -164,15 +167,17 @@ describe("NodeCard", () => {
 
     await act(async () => {
       root.render(
-        <NodeCard
-          open={false}
-          lesson={LESSON}
-          unit={UNIT}
-          onClose={onClose}
-          onStart={vi.fn()}
-          onStartUnit={vi.fn()}
-          returnFocusTo={trigger}
-        />,
+        withInterfaceLocale(
+          <NodeCard
+            open={false}
+            lesson={LESSON}
+            unit={UNIT}
+            onClose={onClose}
+            onStart={vi.fn()}
+            onStartUnit={vi.fn()}
+            returnFocusTo={trigger}
+          />,
+        ),
       );
     });
     expect(document.querySelector('[role="dialog"]')).toBeNull();

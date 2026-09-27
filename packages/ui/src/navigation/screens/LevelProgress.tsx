@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { useI18n } from "../../i18n/index.js";
 import { GameBadge, GameProgress } from "@pieai/swimmer-ui-kit";
 import { levelOf } from "@pieai/university-core";
 
@@ -16,22 +16,25 @@ export function LevelProgress({
   readonly totalXp: number;
   readonly rail?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const level = levelOf(totalXp);
 
   return (
     <section
       className={`learner-level${rail ? " learner-level--rail" : ""}`}
-      aria-label={translate("ui.navigation.screens.levelProgress.copy.等级进度")}
+      aria-label={interfaceTranslator.t("ui.navigation.screens.levelProgress.copy.等级进度")}
     >
       <div className="learner-level__head">
-        <GameBadge>Lv. {level.level}</GameBadge>
+        <GameBadge>
+          {interfaceTranslator.t("product.level.short")} {level.level}
+        </GameBadge>
       </div>
       <GameProgress
-        label="XP"
+        label={interfaceTranslator.t("product.level.xp")}
         value={level.xpIntoLevel}
         max={level.xpForNextLevel}
         tone="accent"
-        valueLabel={`${level.xpIntoLevel} / ${level.xpForNextLevel} XP`}
+        valueLabel={`${level.xpIntoLevel} / ${level.xpForNextLevel} ${interfaceTranslator.t("product.level.xp")}`}
       />
     </section>
   );

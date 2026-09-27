@@ -1,7 +1,7 @@
 import { toPath, WORLD } from "@pieai/university-core";
 import { LocationBreadcrumbs } from "../navigation/LocationBreadcrumbs.js";
 
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { LessonRef } from "../view/lesson-view.js";
 
 export interface LessonBreadcrumbsProps {
@@ -38,6 +38,7 @@ export function LessonBreadcrumbs({
   lessonTitle,
   onNavigateToCourse,
 }: LessonBreadcrumbsProps) {
+  const interfaceTranslator = useI18n();
   const courseHref = coursePathOf(locator);
   return (
     <LocationBreadcrumbs
@@ -55,9 +56,12 @@ export function LessonBreadcrumbs({
           title: unitTitle,
           href: courseHref,
           onNavigate: onNavigateToCourse,
-          accessibleLabel: translate("ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0", {
-            value0: unitTitle,
-          }),
+          accessibleLabel: interfaceTranslator.t(
+            "ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0",
+            {
+              value0: unitTitle,
+            },
+          ),
         },
         { id: `lesson:${locator.lessonId}`, title: lessonTitle },
       ]}

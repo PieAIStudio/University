@@ -5,7 +5,7 @@
  * mode exists. Behaviour is the contract: changing a path or a field here is
  * changing what 4317 has always answered, and that is a product change.
  */
-import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   isSafeId,
   localizeLearnerContent,
@@ -52,7 +52,9 @@ function guard(locator: LessonRef): void {
   );
   if (unsafe !== undefined)
     throw new Error(
-      translate("app.ports.local.content.copy.这节课的地址不对-value0", { value0: unsafe }),
+      interfaceTranslator.t("app.ports.local.content.copy.这节课的地址不对-value0", {
+        value0: unsafe,
+      }),
     );
 }
 
@@ -71,7 +73,7 @@ export function createLocalContentPort(options: {
     async studies() {
       // `/api/bootstrap` names the shelf without reading a single lesson.
       const boot = await localBootstrap();
-      return localizeLearnerContent(boot.studies, activeLocale()).map((study) => ({
+      return localizeLearnerContent(boot.studies, interfaceTranslator.locale).map((study) => ({
         id: study.id,
         title: study.title,
       }));
@@ -84,7 +86,7 @@ export function createLocalContentPort(options: {
         boot.studies.map(async (summary) => {
           const view = localizeLearnerContent(
             await readLocalJson<StudyView>(`/api/studies/${encodeURIComponent(summary.id)}`),
-            activeLocale(),
+            interfaceTranslator.locale,
           );
           importLegacyProgress(view, options.progress);
           const courses = await Promise.all(
@@ -142,7 +144,7 @@ export function createLocalContentPort(options: {
             requestOptions?.signal ? { signal: requestOptions.signal } : {},
           ),
         ),
-        activeLocale(),
+        interfaceTranslator.locale,
       );
       exerciseIdsByLesson.set(
         lessonRefKey(locator),
@@ -174,11 +176,13 @@ export function createLocalContentPort(options: {
       guard(locator);
       if (!isSafeId(exerciseId))
         throw new Error(
-          translate("app.ports.local.content.copy.这道题的地址不对-value0", { value0: exerciseId }),
+          interfaceTranslator.t("app.ports.local.content.copy.这道题的地址不对-value0", {
+            value0: exerciseId,
+          }),
         );
       return localizeLearnerContent(
         await readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId))),
-        activeLocale(),
+        interfaceTranslator.locale,
       );
     },
 
@@ -193,14 +197,16 @@ export function createLocalContentPort(options: {
       }
       return localizeLearnerContent(
         await readJson<CardBody>(await fetch(cardContentPath(card))),
-        activeLocale(),
+        interfaceTranslator.locale,
       );
     },
 
     async notes(studyId: string) {
       if (!isSafeId(studyId))
         throw new Error(
-          translate("app.ports.local.content.copy.这个项目的地址不对-value0", { value0: studyId }),
+          interfaceTranslator.t("app.ports.local.content.copy.这个项目的地址不对-value0", {
+            value0: studyId,
+          }),
         );
       const view = await readJson<StudyView>(
         await fetch(`/api/studies/${encodeURIComponent(studyId)}`),

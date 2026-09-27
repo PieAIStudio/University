@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameBadge, GameCallout, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import {
   questComplete,
@@ -16,7 +16,7 @@ import {
  * same document the learning screens write, which is why it can never say
  * "0/1" next to a lesson the learner just finished. See `progress/goals.ts`.
  */
-export const QUESTS_TITLE = translate("ui.navigation.screens.questsScreen.copy.今天");
+export const QUESTS_TITLE = interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.今天");
 
 function QuestRow({
   quest,
@@ -27,6 +27,7 @@ function QuestRow({
   learnHref: string;
   reviewHref: string;
 }) {
+  const interfaceTranslator = useI18n();
   const done = questComplete(quest);
   return (
     <li
@@ -36,9 +37,9 @@ function QuestRow({
         <span className="quest__title">{quest.title}</span>
         <GameBadge tone={quest.informational ? "neutral" : done ? "success" : "neutral"}>
           {quest.informational
-            ? translate("ui.navigation.screens.questsScreen.copy.不计分")
+            ? interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.不计分")
             : done
-              ? translate("ui.navigation.screens.questsScreen.copy.完成")
+              ? interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.完成")
               : `${quest.done}/${quest.goal}`}
         </GameBadge>
       </div>
@@ -57,7 +58,7 @@ function QuestRow({
           data-quest-action={quest.id}
           href={quest.id === "review" ? reviewHref : learnHref}
         >
-          {translate(
+          {interfaceTranslator.t(
             quest.id === "review"
               ? "product.quest.review"
               : quest.id === "streak"
@@ -81,6 +82,7 @@ export function QuestsScreen({
   readonly learnHref?: string;
   readonly reviewHref?: string;
 }) {
+  const interfaceTranslator = useI18n();
   const quests = questsForToday(progress, now);
   // Scored, not all: a review quest with nothing due is satisfied before the
   // learner has done anything, and counting it hands out a free third of the
@@ -92,12 +94,12 @@ export function QuestsScreen({
     <section className="shell-screen">
       <header className="shell-screen__head">
         <h1>{QUESTS_TITLE}</h1>
-        <p className="shell-screen__lede">{translate("product.quest.intro")}</p>
+        <p className="shell-screen__lede">{interfaceTranslator.t("product.quest.intro")}</p>
       </header>
 
       <GamePanel tone="strong">
         <GameProgress
-          label={translate("ui.navigation.screens.questsScreen.copy.今天的进度")}
+          label={interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.今天的进度")}
           value={finished}
           max={scored.length}
           tone={finished === scored.length ? "success" : "accent"}
@@ -111,7 +113,7 @@ export function QuestsScreen({
         ))}
       </ul>
       <details className="product-details">
-        <summary>{translate("product.quest.details")}</summary>
+        <summary>{interfaceTranslator.t("product.quest.details")}</summary>
         {quests.map((quest) => (
           <p key={quest.id}>
             <strong>{quest.title}</strong> · {quest.detail}
@@ -122,9 +124,11 @@ export function QuestsScreen({
       {finished === scored.length ? (
         <GameCallout
           tone="success"
-          heading={translate("ui.navigation.screens.questsScreen.copy.今天到这儿就够了")}
+          heading={interfaceTranslator.t(
+            "ui.navigation.screens.questsScreen.copy.今天到这儿就够了",
+          )}
         >
-          {translate("product.quest.doneBrief")}
+          {interfaceTranslator.t("product.quest.doneBrief")}
         </GameCallout>
       ) : null}
     </section>

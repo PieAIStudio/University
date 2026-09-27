@@ -26,7 +26,7 @@
  * that is not in it. A rule that is counted survives a refactor; this comment
  * claimed there was exactly one until somebody counted.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import {
   Suspense,
   useCallback,
@@ -147,6 +147,7 @@ type FeedbackContextSeed = Pick<
 >;
 
 export function App() {
+  const interfaceTranslator = useI18n();
   const progress = useSyncExternalStore(subscribe, snapshot);
   const identityStatus = useSyncExternalStore(
     identityPort.subscribe,
@@ -235,8 +236,8 @@ export function App() {
   const guardOf = (role: MonsterRole | null) =>
     role
       ? {
-          name: translate(`map.monster.${role}.name`),
-          fear: translate(`map.monster.${role}.fear`),
+          name: interfaceTranslator.t(`map.monster.${role}.name`),
+          fear: interfaceTranslator.t(`map.monster.${role}.fear`),
         }
       : undefined;
   const lockedEntry = (locked: boolean): MapEntryLock | undefined => {
@@ -953,14 +954,14 @@ export function App() {
             ) : null}
             {view.kind === "course" && pathOverlay?.kind === "stop" ? (
               <MapEntryAction
-                eyebrow={`${translate(`mapNodes.${pathOverlay.nodeKind}`)} · ${translate(
+                eyebrow={`${interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}`)} · ${interfaceTranslator.t(
                   "mapNodes.range",
                   {
                     first: pathOverlay.segment.firstIndex + 1,
                     last: pathOverlay.segment.lastIndex + 1,
                   },
                 )}`}
-                title={translate(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
+                title={interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
                 actionRef={pickCardRef}
                 locked={lockedEntry(pathOverlay.locked)}
                 guard={guardOf(
@@ -973,7 +974,7 @@ export function App() {
             ) : null}
             {view.kind === "course" && pathOverlay?.kind === "node" && pathUnit && pathLesson ? (
               <MapEntryAction
-                eyebrow={translate("map.stop.lesson", {
+                eyebrow={interfaceTranslator.t("map.stop.lesson", {
                   number: lessons.findIndex((item) => item.lessonId === pathLesson.id) + 1,
                 })}
                 title={pathLesson.title}
@@ -1012,7 +1013,8 @@ export function App() {
               ready={sceneReady}
               opening={
                 <span>
-                  {translate("map.chooseHint")} {translate("map.shortcutHint")}
+                  {interfaceTranslator.t("map.chooseHint")}{" "}
+                  {interfaceTranslator.t("map.shortcutHint")}
                 </span>
               }
               openingVisible={!mapEntryLearned}
@@ -1090,7 +1092,7 @@ export function App() {
             kind: "study",
             description: selectedStudy.description,
             facts: [
-              translate("map.counts", {
+              interfaceTranslator.t("map.counts", {
                 courses: selectedStudy.courseCount,
                 lessons: selectedStudy.lessonCount,
               }),
@@ -1104,7 +1106,7 @@ export function App() {
               description: selectedDomain.description,
               sections: [
                 {
-                  title: translate("map.study"),
+                  title: interfaceTranslator.t("map.study"),
                   lines: planetStudies
                     .filter((study) => (study.domain?.id ?? "unclassified") === selectedDomain.id)
                     .map((study) => study.title),
@@ -1112,7 +1114,7 @@ export function App() {
               ],
               facts: planetStudies.some((study) => study.domain?.id === selectedDomain.id)
                 ? [
-                    translate("map.counts", {
+                    interfaceTranslator.t("map.counts", {
                       courses: planetStudies
                         .filter((study) => study.domain?.id === selectedDomain.id)
                         .reduce((sum, study) => sum + study.courseCount, 0),
@@ -1121,13 +1123,13 @@ export function App() {
                         .reduce((sum, study) => sum + study.lessonCount, 0),
                     }),
                   ]
-                : [translate("ui.world.domain.unpublished")],
+                : [interfaceTranslator.t("ui.world.domain.unpublished")],
             }
           : {
               id: "planet:none",
-              title: translate("ui.world.navigation.planets"),
+              title: interfaceTranslator.t("ui.world.navigation.planets"),
               kind: "none",
-              description: translate("map.chooseHint"),
+              description: interfaceTranslator.t("map.chooseHint"),
             }
       : view.kind === "course" && course
         ? pathOverlay?.kind === "node" && pathLesson && pathUnit
@@ -1141,11 +1143,12 @@ export function App() {
             )
           : {
               id: `study:${focusedStudyId ?? "none"}`,
-              title: currentStudy?.title ?? translate("ui.world.navigation.archipelago"),
+              title:
+                currentStudy?.title ?? interfaceTranslator.t("ui.world.navigation.archipelago"),
               kind: "study",
               description:
                 (currentStudy && "description" in currentStudy ? currentStudy.description : null) ||
-                translate("map.chooseHint"),
+                interfaceTranslator.t("map.chooseHint"),
             };
 
   const destinations: MapDestination[] =
@@ -1195,12 +1198,12 @@ export function App() {
       ? [
           {
             id: "overview",
-            title: translate("map.overview"),
+            title: interfaceTranslator.t("map.overview"),
             run: () => mapCommands.current?.overview(),
           },
           {
             id: "learning-view",
-            title: translate("map.resetView"),
+            title: interfaceTranslator.t("map.resetView"),
             run: () => mapCommands.current?.learningView(),
           },
         ]
@@ -1209,7 +1212,7 @@ export function App() {
       ? [
           {
             id: "back",
-            title: translate("map.back"),
+            title: interfaceTranslator.t("map.back"),
             run: () => setView({ kind: view.kind === "course" ? "world" : "planet" }),
           },
         ]
@@ -1218,7 +1221,7 @@ export function App() {
       ? [
           {
             id: "clear",
-            title: translate("map.clear"),
+            title: interfaceTranslator.t("map.clear"),
             run: () => {
               dismissPick();
               clearPlanetPick();
@@ -1318,13 +1321,13 @@ export function App() {
             <RecoveryState
               reason="content"
               onRetry={retryShelf}
-              retryLabel={translate("ui.recovery.recoveryState.copy.重试课程资料")}
+              retryLabel={interfaceTranslator.t("ui.recovery.recoveryState.copy.重试课程资料")}
               onContinue={() => setView({ kind: "catalog" })}
-              continueLabel={translate("ui.recovery.recoveryState.copy.先看课程列表")}
+              continueLabel={interfaceTranslator.t("ui.recovery.recoveryState.copy.先看课程列表")}
             />
           ) : (
             <>
-              <h1>{translate("app.app.app.copy.书架上还没有课")}</h1>
+              <h1>{interfaceTranslator.t("app.app.app.copy.书架上还没有课")}</h1>
               <p>{EMPTY_SHELF_HINT}</p>
             </>
           )}
@@ -1442,7 +1445,7 @@ export function App() {
               ? [
                   {
                     id: "map-shortcuts",
-                    label: translate("map.shortcuts"),
+                    label: interfaceTranslator.t("map.shortcuts"),
                     href: "#map-shortcuts",
                     icon: <span aria-hidden="true">⌘</span>,
                     onActivate: shortcuts.show,
@@ -1473,16 +1476,18 @@ export function App() {
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={
             mapMode
-              ? translate("map.information")
+              ? interfaceTranslator.t("map.information")
               : view.kind === "settings"
-                ? translate("app.app.app.copy.设置")
-                : translate("app.app.app.copy.今天")
+                ? interfaceTranslator.t("app.app.app.copy.设置")
+                : interfaceTranslator.t("app.app.app.copy.今天")
           }
           showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
           {view.kind === "world" ? (
-            <h1 className="app__screen-title">{translate("product.navigation.mapHeading")}</h1>
+            <h1 className="app__screen-title">
+              {interfaceTranslator.t("product.navigation.mapHeading")}
+            </h1>
           ) : null}
           {main}
         </UniversityShell>

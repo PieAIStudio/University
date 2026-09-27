@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { lazy } from "react";
 
 /**
@@ -11,9 +11,10 @@ import { lazy } from "react";
  * which reads as a glitch.
  */
 export function RouteFallback({ copy }: { readonly copy?: string } = {}) {
+  const interfaceTranslator = useI18n();
   return (
     <p className="loading-copy" role="status" aria-live="polite" aria-busy="true">
-      {copy ?? translate("app.screens.lazy.copy.正在打开")}
+      {copy ?? interfaceTranslator.t("app.screens.lazy.copy.正在打开")}
     </p>
   );
 }

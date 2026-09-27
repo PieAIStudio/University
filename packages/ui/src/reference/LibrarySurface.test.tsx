@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -16,20 +17,22 @@ const STORE = {
 
 const surface = (activeTab: (typeof REFERENCE_TABS)[number]) =>
   renderToStaticMarkup(
-    <LibrarySurface
-      activeTab={activeTab}
-      concepts={[]}
-      terms={[]}
-      antiPatterns={[]}
-      favourites={STORE}
-      notes={[]}
-      notesBasePathOf={() => "/nowhere"}
-      onBack={() => undefined}
-      onTabChange={() => undefined}
-      onOpenConcept={() => undefined}
-      onOpenTerm={() => undefined}
-      onOpenAntiPattern={() => undefined}
-    />,
+    withInterfaceLocale(
+      <LibrarySurface
+        activeTab={activeTab}
+        concepts={[]}
+        terms={[]}
+        antiPatterns={[]}
+        favourites={STORE}
+        notes={[]}
+        notesBasePathOf={() => "/nowhere"}
+        onBack={() => undefined}
+        onTabChange={() => undefined}
+        onOpenConcept={() => undefined}
+        onOpenTerm={() => undefined}
+        onOpenAntiPattern={() => undefined}
+      />,
+    ),
   );
 
 describe("the library's tabs", () => {

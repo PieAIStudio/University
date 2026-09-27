@@ -1,4 +1,4 @@
-import { formatNumber, translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
 import { AvatarPreviewControls } from "@pieai/university-world/avatar.js";
 import {
@@ -36,6 +36,7 @@ export function AvatarLab({
   readonly onRecipeChange?: (recipe: AvatarRecipe) => void;
   readonly onOpen: (view: View) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const [recipe, setRecipe] = useState<AvatarRecipe>(() => avatarRecipe ?? randomRecipe());
   const [seedText, setSeedText] = useState(() => String(recipe.seed));
   const [gaze, setGaze] = useState(true);
@@ -119,7 +120,7 @@ export function AvatarLab({
     <div className="avatar-lab">
       <section
         className="avatar-lab__stage"
-        aria-label={translate("app.avatarlab.avatarLab.copy.头像舞台")}
+        aria-label={interfaceTranslator.t("app.avatarlab.avatarLab.copy.头像舞台")}
       >
         <Canvas
           dpr={[1, 2]}
@@ -144,46 +145,55 @@ export function AvatarLab({
         </Canvas>
         <p className="avatar-lab__readout">
           {stats
-            ? translate("app.avatarlab.avatarLab.copy.value0-件-value1-顶点-value2ms-种子-value3", {
-                value0: stats.meshes,
-                value1: formatNumber(stats.verts),
-                value2: stats.buildMs,
-                value3: recipe.seed,
-              })
-            : translate("app.avatarlab.avatarLab.copy.种子-value0", { value0: recipe.seed })}
+            ? interfaceTranslator.t(
+                "app.avatarlab.avatarLab.copy.value0-件-value1-顶点-value2ms-种子-value3",
+                {
+                  value0: stats.meshes,
+                  value1: interfaceTranslator.number(stats.verts),
+                  value2: stats.buildMs,
+                  value3: recipe.seed,
+                },
+              )
+            : interfaceTranslator.t("app.avatarlab.avatarLab.copy.种子-value0", {
+                value0: recipe.seed,
+              })}
         </p>
       </section>
 
       <aside className="avatar-lab__dock">
         <WorldStyleControl />
-        <GamePanel title={translate("app.avatarlab.avatarLab.copy.头像工坊")}>
+        <GamePanel title={interfaceTranslator.t("app.avatarlab.avatarLab.copy.头像工坊")}>
           <p className="avatar-lab__lede">
-            {translate("app.avatarlab.avatarLab.copy.换物种-换色盘-或重掷一张脸-拖动画布绕着看")}
+            {interfaceTranslator.t(
+              "app.avatarlab.avatarLab.copy.换物种-换色盘-或重掷一张脸-拖动画布绕着看",
+            )}
           </p>
           <div className="avatar-lab__actions">
             <GameButton type="button" variant="ghost" onClick={() => onOpen(WORLD)}>
-              {translate("app.avatarlab.avatarLab.copy.回到地图")}
+              {interfaceTranslator.t("app.avatarlab.avatarLab.copy.回到地图")}
             </GameButton>
             <GameButton type="button" variant="primary" onClick={rollNew}>
-              {translate("app.avatarlab.avatarLab.copy.随机一张")}
+              {interfaceTranslator.t("app.avatarlab.avatarLab.copy.随机一张")}
             </GameButton>
           </div>
           <GameToggle
             checked={gaze}
             label={
               gaze
-                ? translate("app.avatarlab.avatarLab.copy.注视开")
-                : translate("app.avatarlab.avatarLab.copy.注视关")
+                ? interfaceTranslator.t("app.avatarlab.avatarLab.copy.注视开")
+                : interfaceTranslator.t("app.avatarlab.avatarLab.copy.注视关")
             }
             onClick={() => setGaze((on) => !on)}
           />
         </GamePanel>
 
-        <GamePanel title={translate("app.avatarlab.avatarLab.copy.种子")}>
+        <GamePanel title={interfaceTranslator.t("app.avatarlab.avatarLab.copy.种子")}>
           <div className="avatar-lab__stack">
             <GameField
-              label={translate("app.avatarlab.avatarLab.copy.配方")}
-              hint={translate("app.avatarlab.avatarLab.copy.数字原样用-其它文字会哈希成种子")}
+              label={interfaceTranslator.t("app.avatarlab.avatarLab.copy.配方")}
+              hint={interfaceTranslator.t(
+                "app.avatarlab.avatarLab.copy.数字原样用-其它文字会哈希成种子",
+              )}
             >
               <GameInput
                 value={seedText}
@@ -196,16 +206,16 @@ export function AvatarLab({
               />
             </GameField>
             <GameButton type="button" variant="secondary" onClick={applySeed}>
-              {translate("app.avatarlab.avatarLab.copy.应用种子")}
+              {interfaceTranslator.t("app.avatarlab.avatarLab.copy.应用种子")}
             </GameButton>
           </div>
         </GamePanel>
 
-        <GamePanel title={translate("app.avatarlab.avatarLab.copy.物种")}>
+        <GamePanel title={interfaceTranslator.t("app.avatarlab.avatarLab.copy.物种")}>
           <div
             className="avatar-lab__chips"
             role="group"
-            aria-label={translate("app.avatarlab.avatarLab.copy.物种")}
+            aria-label={interfaceTranslator.t("app.avatarlab.avatarLab.copy.物种")}
           >
             {SPECIES.map((species) => (
               <GameButton
@@ -220,20 +230,20 @@ export function AvatarLab({
           </div>
         </GamePanel>
 
-        <GamePanel title={translate("app.avatarlab.avatarLab.copy.色盘")}>
+        <GamePanel title={interfaceTranslator.t("app.avatarlab.avatarLab.copy.色盘")}>
           <GameMaterialSwatches
-            label={translate("app.avatarlab.avatarLab.copy.色盘")}
+            label={interfaceTranslator.t("app.avatarlab.avatarLab.copy.色盘")}
             activeMaterialId={recipe.palette ?? undefined}
             materials={swatches}
             onMaterialChange={setPalette}
           />
         </GamePanel>
 
-        <GamePanel title={translate("app.avatarlab.avatarLab.copy.重掷部位")}>
+        <GamePanel title={interfaceTranslator.t("app.avatarlab.avatarLab.copy.重掷部位")}>
           <div
             className="avatar-lab__chips"
             role="group"
-            aria-label={translate("app.avatarlab.avatarLab.copy.重掷部位")}
+            aria-label={interfaceTranslator.t("app.avatarlab.avatarLab.copy.重掷部位")}
           >
             {REROLLABLE_PARTS.map((part) => (
               <GameButton
@@ -249,8 +259,8 @@ export function AvatarLab({
         </GamePanel>
 
         <p className="avatar-lab__meta">
-          {PALETTES.length} {translate("app.avatarlab.avatarLab.copy.套色盘")} {SPECIES.length}{" "}
-          {translate("app.avatarlab.avatarLab.copy.个物种")}
+          {PALETTES.length} {interfaceTranslator.t("app.avatarlab.avatarLab.copy.套色盘")}{" "}
+          {SPECIES.length} {interfaceTranslator.t("app.avatarlab.avatarLab.copy.个物种")}
         </p>
       </aside>
     </div>

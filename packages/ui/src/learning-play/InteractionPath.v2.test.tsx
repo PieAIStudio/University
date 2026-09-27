@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -8,7 +9,7 @@ import {
   type ExperimentStep,
 } from "@pieai/university-core";
 import fixture from "../../../core/fixtures/interaction-path-v2.json";
-import { I18nProvider } from "../i18n/index.js";
+import { InterfaceLanguageProvider } from "../i18n/index.js";
 import { LearningActivity } from "./LearningActivity.js";
 
 let container: HTMLDivElement;
@@ -44,13 +45,15 @@ async function render(
   const next = vi.fn();
   await act(async () =>
     root.render(
-      <LearningActivity
-        activity={activity}
-        occurrenceId={scope}
-        onResult={report}
-        onNext={next}
-        reviewContent={<p>完整复习文字</p>}
-      />,
+      withInterfaceLocale(
+        <LearningActivity
+          activity={activity}
+          occurrenceId={scope}
+          onResult={report}
+          onNext={next}
+          reviewContent={<p>完整复习文字</p>}
+        />,
+      ),
     ),
   );
   return { report, next };
@@ -259,21 +262,23 @@ describe("material-first shared path", () => {
     activity.assetId = "original-image";
     await act(async () =>
       root.render(
-        <I18nProvider locale="en">
-          <LearningActivity
-            activity={activity}
-            assets={[
-              {
-                id: "original-image",
-                kind: "authorized-external",
-                mime: "image/jpeg",
-                url: "/content/original.jpg",
-                alt: "Original booking screen",
-                attribution: "Original image credit",
-              },
-            ]}
-          />
-        </I18nProvider>,
+        withInterfaceLocale(
+          <InterfaceLanguageProvider locale="en">
+            <LearningActivity
+              activity={activity}
+              assets={[
+                {
+                  id: "original-image",
+                  kind: "authorized-external",
+                  mime: "image/jpeg",
+                  url: "/content/original.jpg",
+                  alt: "Original booking screen",
+                  attribution: "Original image credit",
+                },
+              ]}
+            />
+          </InterfaceLanguageProvider>,
+        ),
       ),
     );
     expect(container.querySelector(".path-materials__context")?.textContent).toContain(

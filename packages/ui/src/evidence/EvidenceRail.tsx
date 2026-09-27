@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useRef, useState } from "react";
 
 import { Tip } from "../Tip.js";
@@ -12,7 +12,7 @@ export function EvidenceRail({
   basePath,
   evidence,
   panelIdPrefix,
-  ariaLabel = translate("ui.evidence.evidenceRail.copy.证据"),
+  ariaLabel,
   onOpenSource,
 }: {
   readonly basePath: string;
@@ -23,6 +23,8 @@ export function EvidenceRail({
   readonly title?: string;
   readonly onOpenSource?: (index: number, trigger: HTMLElement) => void;
 }) {
+  const interfaceTranslator = useI18n();
+  ariaLabel ??= interfaceTranslator.t("ui.evidence.evidenceRail.copy.证据");
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
   const [tokenLines, setTokenLines] = useState<readonly (readonly EvidenceToken[])[]>([]);
@@ -61,7 +63,7 @@ export function EvidenceRail({
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.evidence.evidenceRail.copy.无法读取这条源码证据"),
+          : interfaceTranslator.t("ui.evidence.evidenceRail.copy.无法读取这条源码证据"),
       );
     } finally {
       if (requestSequence.current === sequence) setLoading(false);
@@ -71,9 +73,13 @@ export function EvidenceRail({
   return (
     <aside className="evidence-rail" aria-label={ariaLabel}>
       <div className="rail-panel__header">
-        <h3 className="rail-panel__label">{translate("ui.evidence.evidenceRail.copy.证据")}</h3>
+        <h3 className="rail-panel__label">
+          {interfaceTranslator.t("ui.evidence.evidenceRail.copy.证据")}
+        </h3>
         <Tip term="evidence" className="rail-panel__help">
-          <span aria-label={translate("ui.evidence.evidenceRail.copy.关于证据")}>?</span>
+          <span aria-label={interfaceTranslator.t("ui.evidence.evidenceRail.copy.关于证据")}>
+            ?
+          </span>
         </Tip>
       </div>
       <ol className="evidence-list">
@@ -118,13 +124,13 @@ export function EvidenceRail({
                 <span>
                   {reference.lineStart
                     ? `L${reference.lineStart}${reference.lineEnd ? `–${reference.lineEnd}` : ""}`
-                    : translate("ui.evidence.evidenceRail.copy.完整文件")}
+                    : interfaceTranslator.t("ui.evidence.evidenceRail.copy.完整文件")}
                 </span>
                 <small>{reference.sourceCommit.slice(0, 8)}</small>
                 <strong aria-hidden="true">
                   {expanded
-                    ? translate("ui.evidence.evidenceRail.copy.收起")
-                    : translate("ui.evidence.evidenceRail.copy.查看")}
+                    ? interfaceTranslator.t("ui.evidence.evidenceRail.copy.收起")
+                    : interfaceTranslator.t("ui.evidence.evidenceRail.copy.查看")}
                 </strong>
               </button>
               {reference.note ? <p className="evidence-item__note">{reference.note}</p> : null}
@@ -132,7 +138,11 @@ export function EvidenceRail({
               {expanded ? (
                 <div className="evidence-snippet" id={panelId} aria-live="polite">
                   {loading ? (
-                    <p>{translate("ui.evidence.evidenceRail.copy.正在从固定提交读取源码")}</p>
+                    <p>
+                      {interfaceTranslator.t(
+                        "ui.evidence.evidenceRail.copy.正在从固定提交读取源码",
+                      )}
+                    </p>
                   ) : null}
                   {error ? (
                     <p className="inline-error" role="alert">
@@ -158,7 +168,7 @@ export function EvidenceRail({
                           data-evidence-trigger-id={`rail-${index}`}
                           onClick={(event) => onOpenSource(index, event.currentTarget)}
                         >
-                          {translate(
+                          {interfaceTranslator.t(
                             "ui.evidence.evidenceRail.copy.在源码查看器中打开完整固定提交",
                           )}
                         </button>

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
@@ -40,7 +41,7 @@ describe("the planet's pointer path", () => {
       return null;
     }
     try {
-      await act(async () => root.render(createElement(Probe)));
+      await act(async () => root.render(withInterfaceLocale(createElement(Probe))));
       expect(markers).toHaveLength(1);
       expect(markers[0]?.kind).toBe("course");
       expect(markers[0]?.id).toBe(node.courseId);
@@ -84,7 +85,9 @@ describe("the planet's pointer path", () => {
       for (const navigationFocus of ["turing-pact", "buzz"]) {
         await act(async () => {
           root.render(
-            createElement(Probe, { ...common, navigationFocus, view: { kind: "planet" } }),
+            withInterfaceLocale(
+              createElement(Probe, { ...common, navigationFocus, view: { kind: "planet" } }),
+            ),
           );
         });
         expect(model?.world).toBeNull();
@@ -94,7 +97,9 @@ describe("the planet's pointer path", () => {
       expect(place).not.toHaveBeenCalled();
       await act(async () => {
         root.render(
-          createElement(Probe, { ...common, navigationFocus: "buzz", view: { kind: "world" } }),
+          withInterfaceLocale(
+            createElement(Probe, { ...common, navigationFocus: "buzz", view: { kind: "world" } }),
+          ),
         );
       });
       expect(place).toHaveBeenCalledExactlyOnceWith(common.nodes, common.courseProgress, "buzz");
@@ -149,7 +154,7 @@ describe("a course whose prerequisites are not met", () => {
       return null;
     }
     try {
-      await act(async () => root.render(createElement(Probe)));
+      await act(async () => root.render(withInterfaceLocale(createElement(Probe))));
       const open = markers.find((marker) => marker.id === "first");
       const idle = markers.find((marker) => marker.id === "second");
       expect(open?.locked).toBe(false);

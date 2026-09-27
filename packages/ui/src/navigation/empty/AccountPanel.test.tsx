@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -11,7 +12,7 @@ import {
   type AuthSession,
 } from "@pieaistudio/swimmer-auth-kit";
 import { createIdentityPort, type IdentityAuth } from "@pieai/university-core";
-import { setActiveLocale } from "../../i18n/index.js";
+import { setInterfaceLocale } from "../../i18n/index.js";
 
 import {
   ACCOUNT_UNCONFIGURED_ACTION,
@@ -105,7 +106,7 @@ function sharedAccount(initial: AuthSession): SharedAccount {
 
 describe("AccountPanel anonymous binding", () => {
   it("keeps the guest form through pending, displays failure, and retries only once", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const first = deferred<AuthResult>();
     const guest = {
       user: { id: "synthetic-guest", email: null, is_anonymous: true },
@@ -122,7 +123,9 @@ describe("AccountPanel anonymous binding", () => {
     });
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     await act(async () => {
       setInputValue('input[type="email"]', "learner@example.test");
@@ -159,12 +162,14 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("keeps the registration confirmation on the same form after the pending request", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const registration = deferred<AuthResult>();
     const account = sharedAccount(null);
     account.execute = vi.fn(async () => registration.promise);
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     const register = [...container.querySelectorAll("button")].find((button) =>
       button.textContent?.includes("Register"),
@@ -193,7 +198,7 @@ describe("AccountPanel anonymous binding", () => {
   it("turns an unconfigured login click into an explicit explanation", async () => {
     const identity = createIdentityPort(null);
 
-    await act(async () => root.render(<AccountPanel identity={identity} />));
+    await act(async () => root.render(withInterfaceLocale(<AccountPanel identity={identity} />)));
     const action = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
       button.textContent?.includes(ACCOUNT_UNCONFIGURED_ACTION),
     );
@@ -213,7 +218,9 @@ describe("AccountPanel anonymous binding", () => {
     });
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     const register = [...container.querySelectorAll("button")].find(
       (button) => button.textContent?.includes("注册") || button.textContent?.includes("Register"),
@@ -238,12 +245,14 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("sends an email code without asking for a password", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const account = sharedAccount(null);
     const execute = vi.fn<AuthPort["execute"]>(async () => ({ status: "email-requested" }));
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     const emailCode = [...container.querySelectorAll("button")].find((button) =>
       button.textContent?.includes("Email code"),
@@ -269,7 +278,7 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("clears a one-time code after verification and does not persist it", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const member = {
       user: { id: "synthetic-member", email: "learner@example.test", is_anonymous: false },
     } as const;
@@ -283,7 +292,9 @@ describe("AccountPanel anonymous binding", () => {
     });
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     const emailCode = [...container.querySelectorAll("button")].find((button) =>
       button.textContent?.includes("Email code"),
@@ -311,7 +322,7 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("keeps onResult continuation when SIGNED_IN arrives before execute resolves", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const member = {
       user: { id: "synthetic-member", email: "learner@example.test", is_anonymous: false },
     } as const;
@@ -326,11 +337,13 @@ describe("AccountPanel anonymous binding", () => {
     const identity = createIdentityPort(account);
     await act(async () =>
       root.render(
-        <AccountPanel
-          identity={identity}
-          auth={account}
-          onResult={async () => continued.promise}
-        />,
+        withInterfaceLocale(
+          <AccountPanel
+            identity={identity}
+            auth={account}
+            onResult={async () => continued.promise}
+          />,
+        ),
       ),
     );
     openAccountForm();
@@ -367,7 +380,9 @@ describe("AccountPanel anonymous binding", () => {
       });
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     const button = () =>
       container.querySelector<HTMLButtonElement>(".account-panel__signed-in button")!;
     await act(async () => button().click());
@@ -381,7 +396,7 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("localizes a typed account failure without leaking raw provider text", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const account = sharedAccount(null);
     const identity = createIdentityPort(account);
     const errorStatus = {
@@ -390,7 +405,9 @@ describe("AccountPanel anonymous binding", () => {
       message: "internal-debug-body",
     } as const;
     identity.status = () => errorStatus;
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     expect(container.textContent).toContain("Sign-in did not finish");
     expect(container.textContent).not.toContain("internal-debug-body");
     expect(container.querySelector("input[type=password]")).not.toBeNull();
@@ -399,14 +416,16 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("releases the held form after an email request so a later sign-in is visible", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const member = {
       user: { id: "synthetic-member", email: "learner@example.test", is_anonymous: false },
     } as const;
     const account = sharedAccount(null);
     account.execute = vi.fn(async () => ({ status: "email-requested" as const }));
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     openAccountForm();
     const emailCode = [...container.querySelectorAll("button")].find((button) =>
       button.textContent?.includes("Email code"),
@@ -429,7 +448,7 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("does not reclassify successful auth when the product onResult fails", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const member = {
       user: { id: "synthetic-member", email: "learner@example.test", is_anonymous: false },
     } as const;
@@ -441,13 +460,15 @@ describe("AccountPanel anonymous binding", () => {
     const identity = createIdentityPort(account);
     await act(async () =>
       root.render(
-        <AccountPanel
-          identity={identity}
-          auth={account}
-          onResult={async () => {
-            throw new Error("navigation-failed");
-          }}
-        />,
+        withInterfaceLocale(
+          <AccountPanel
+            identity={identity}
+            auth={account}
+            onResult={async () => {
+              throw new Error("navigation-failed");
+            }}
+          />,
+        ),
       ),
     );
     openAccountForm();
@@ -469,7 +490,7 @@ describe("AccountPanel anonymous binding", () => {
   });
 
   it("asks for the current password on a signed-in change, not a recovery write", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const member = {
       user: { id: "synthetic-member", email: "learner@example.test", is_anonymous: false },
     } as const;
@@ -477,7 +498,9 @@ describe("AccountPanel anonymous binding", () => {
     const execute = vi.fn<AuthPort["execute"]>(async () => ({ status: "updated" as const }));
     account.execute = execute;
     const identity = createIdentityPort(account);
-    await act(async () => root.render(<AccountPanel identity={identity} auth={account} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<AccountPanel identity={identity} auth={account} />)),
+    );
     expect(container.querySelector('input[autocomplete="current-password"]')).not.toBeNull();
     const fields = container.querySelectorAll<HTMLInputElement>('input[type="password"]');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;

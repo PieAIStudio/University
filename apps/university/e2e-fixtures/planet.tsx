@@ -8,7 +8,7 @@ import {
   type PlanetStudy,
   type PlanetStudyDomain,
 } from "@pieai/university-world/planet.js";
-import { I18nProvider } from "@pieai/university-ui/i18n.js";
+import { InterfaceLanguageProvider } from "@pieai/university-ui/i18n.js";
 import "./planet.css";
 
 const query = new URLSearchParams(location.search);
@@ -91,7 +91,7 @@ function Fixture() {
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing domain fixture root");
 createRoot(root).render(
-  <I18nProvider>
+  <InterfaceLanguageProvider>
     <Fixture />
-  </I18nProvider>,
+  </InterfaceLanguageProvider>,
 );

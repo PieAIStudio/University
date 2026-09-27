@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { antiPatternHeadToMarkdown, getAntiPatternEntry } from "@pieai/university-core";
 import { EntryPage } from "@pieai/university-ui";
 
@@ -13,15 +13,16 @@ import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
  * drift on the day someone adds a section type to one of them.
  */
 export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
+  const interfaceTranslator = useI18n();
   const entry = getAntiPatternEntry(id);
   if (!entry) {
     return (
       <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "anti-pattern" })}>
-          {translate("app.screens.antiPatternEntryHost.copy.防-AI-味儿")}
+          {interfaceTranslator.t("app.screens.antiPatternEntryHost.copy.防-AI-味儿")}
         </button>
         <p className="reference-panel__note">
-          {translate("app.screens.antiPatternEntryHost.copy.没有这一条")}
+          {interfaceTranslator.t("app.screens.antiPatternEntryHost.copy.没有这一条")}
         </p>
       </div>
     );
@@ -31,7 +32,9 @@ export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view
       <EntryPage
         breadcrumb={[
           {
-            label: translate("app.screens.antiPatternEntryHost.copy.防-AI-味儿-1ury31h"),
+            label: interfaceTranslator.t(
+              "app.screens.antiPatternEntryHost.copy.防-AI-味儿-1ury31h",
+            ),
             href: "/flavour",
           },
           { label: entry.head.name },

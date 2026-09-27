@@ -10,7 +10,7 @@ import {
   type ContextPackResult,
   type ContextVisit,
 } from "@pieai/university-core";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
 import type { ActivityControls } from "./controls.js";
 import { ContextCounter } from "./ContextCounter.js";
@@ -27,6 +27,7 @@ export function ContextGame({
   guided = false,
   onAttempt,
 }: ActivityControls<ContextActivity>) {
+  const interfaceTranslator = useI18n();
   const [documentId, setDocumentId] = useState(activity.documents[0]?.id ?? "");
   const [selection, setSelection] = useState<readonly string[]>(activity.initialParagraphIds ?? []);
   const [result, setResult] = useState<ContextPackResult | null>(() =>
@@ -89,7 +90,7 @@ export function ContextGame({
   function handoff(outcome: ContextPackResult): string {
     const materials = packed.map(({ document, paragraph, index }) =>
       [
-        translate("play.ai.context.sourceLine", {
+        interfaceTranslator.t("play.ai.context.sourceLine", {
           document: document.title,
           paragraph: index + 1,
           date: document.date,
@@ -99,14 +100,15 @@ export function ContextGame({
       ].join("\n"),
     );
     return [
-      `${translate("play.ai.context.handoff")} — ${activity.title}`,
+      `${interfaceTranslator.t("play.ai.context.handoff")} — ${activity.title}`,
       activity.goal,
       activity.authorityNote,
-      translate("play.ai.context.handoffMaterials"),
+      interfaceTranslator.t("play.ai.context.handoffMaterials"),
       ...materials,
-      translate("play.ai.context.handoffResult"),
+      interfaceTranslator.t("play.ai.context.handoffResult"),
       ...outcome.rows.map(
-        (row) => `${row.label}: ${row.value ?? translate(`play.ai.context.status.${row.status}`)}`,
+        (row) =>
+          `${row.label}: ${row.value ?? interfaceTranslator.t(`play.ai.context.status.${row.status}`)}`,
       ),
     ].join("\n\n");
   }
@@ -128,12 +130,12 @@ export function ContextGame({
       return;
     }
     const message = outcome.passed
-      ? translate("play.ai.context.success", { count: outcome.rows.length })
+      ? interfaceTranslator.t("play.ai.context.success", { count: outcome.rows.length })
       : outcome.overCapacity
-        ? translate("play.ai.context.capacityBlocked", {
+        ? interfaceTranslator.t("play.ai.context.capacityBlocked", {
             extra: Math.max(0, outcome.units - activity.capacity),
           })
-        : translate("play.ai.context.fail", {
+        : interfaceTranslator.t("play.ai.context.fail", {
             labels: outcome.rows
               .filter((row) => row.status !== "ready")
               .map((row) => row.label)
@@ -189,14 +191,14 @@ export function ContextGame({
         handoff: handoff(current),
       },
       passed
-        ? translate("play.ai.context.difficulty.serviceSuccess", {
+        ? interfaceTranslator.t("play.ai.context.difficulty.serviceSuccess", {
             count: activity.visitors?.length ?? 0,
           })
         : resultStale
-          ? translate("play.ai.context.counterStale")
+          ? interfaceTranslator.t("play.ai.context.counterStale")
           : !current.passed
-            ? translate("play.ai.context.repairCounterFirst")
-            : translate("play.ai.context.visitRemaining", { names: names ?? "" }),
+            ? interfaceTranslator.t("play.ai.context.repairCounterFirst")
+            : interfaceTranslator.t("play.ai.context.visitRemaining", { names: names ?? "" }),
     );
   }
 
@@ -229,18 +231,20 @@ export function ContextGame({
           if (guideCounter) setMaterialsOpen(event.currentTarget.open);
         }}
       >
-        <summary>{translate("play.ai.context.guide.materials")}</summary>
+        <summary>{interfaceTranslator.t("play.ai.context.guide.materials")}</summary>
         <div className="play-context-materials__body">
           {guideCounter ? (
             <p className="play-context-materials__hint">
-              {translate("play.ai.context.guide.editHint")}
+              {interfaceTranslator.t("play.ai.context.guide.editHint")}
             </p>
           ) : null}
           {!guideCounter ? (
-            <p className="play-ai-workflow__intro">{translate("play.ai.context.help")}</p>
+            <p className="play-ai-workflow__intro">
+              {interfaceTranslator.t("play.ai.context.help")}
+            </p>
           ) : null}
           <details className="play-ai-workflow__brief">
-            <summary>{translate("play.ai.context.authority")}</summary>
+            <summary>{interfaceTranslator.t("play.ai.context.authority")}</summary>
             <p>{activity.authorityNote}</p>
           </details>
           <div className="play-ai-context__desk">
@@ -252,15 +256,15 @@ export function ContextGame({
               }}
             >
               <summary>
-                {translate("play.ai.context.guide.pickDocument", {
+                {interfaceTranslator.t("play.ai.context.guide.pickDocument", {
                   count: activity.documents.length,
                 })}
               </summary>
               <nav
                 className="play-ai-context__library"
-                aria-label={translate("play.ai.context.library")}
+                aria-label={interfaceTranslator.t("play.ai.context.library")}
               >
-                <h4>{translate("play.ai.context.library")}</h4>
+                <h4>{interfaceTranslator.t("play.ai.context.library")}</h4>
                 {activity.documents.map((document, index) => {
                   const count = document.paragraphs.filter((paragraph) =>
                     selection.includes(paragraph.id),
@@ -319,7 +323,7 @@ export function ContextGame({
                       )
                     }
                   >
-                    {translate(
+                    {interfaceTranslator.t(
                       selectedDocument.paragraphs.every((paragraph) =>
                         selection.includes(paragraph.id),
                       )
@@ -335,14 +339,18 @@ export function ContextGame({
                     data-packed={selection.includes(paragraph.id)}
                   >
                     <div className="play-ai-context__paragraph-meta">
-                      <span>{translate("play.ai.context.paragraph", { count: index + 1 })}</span>
-                      <span>{translate("play.ai.context.units", { count: paragraph.units })}</span>
+                      <span>
+                        {interfaceTranslator.t("play.ai.context.paragraph", { count: index + 1 })}
+                      </span>
+                      <span>
+                        {interfaceTranslator.t("play.ai.context.units", { count: paragraph.units })}
+                      </span>
                     </div>
                     <p>{paragraph.text}</p>
                     <GameToggle
                       checked={selection.includes(paragraph.id)}
                       disabled={disabled}
-                      label={translate("play.ai.context.excerpt", { count: index + 1 })}
+                      label={interfaceTranslator.t("play.ai.context.excerpt", { count: index + 1 })}
                       onClick={() =>
                         edit(toggleContextParagraph(activity, selection, paragraph.id))
                       }
@@ -360,10 +368,10 @@ export function ContextGame({
             >
               <p role="status">
                 {current.overCapacity
-                  ? translate("play.ai.context.guide.overCapacity", {
+                  ? interfaceTranslator.t("play.ai.context.guide.overCapacity", {
                       extra: current.units - activity.capacity,
                     })
-                  : translate("play.ai.context.guide.currentPack", {
+                  : interfaceTranslator.t("play.ai.context.guide.currentPack", {
                       used: current.units,
                       total: activity.capacity,
                     })}
@@ -379,7 +387,7 @@ export function ContextGame({
                         counterTop.current?.scrollIntoView({ block: "start", behavior: "instant" })
                 }
               >
-                {translate(
+                {interfaceTranslator.t(
                   resultStale ? "play.ai.context.buildCounter" : "play.ai.context.guide.return",
                 )}
               </GameButton>
@@ -387,16 +395,16 @@ export function ContextGame({
           ) : null}
           <details className="play-context-packed" open={!guideCounter}>
             <summary>
-              {translate("play.ai.context.guide.pack", {
+              {interfaceTranslator.t("play.ai.context.guide.pack", {
                 used: current.units,
                 total: activity.capacity,
               })}
             </summary>
             <section className="play-ai-context__box" data-over-capacity={current.overCapacity}>
               <header>
-                <h4>{translate("play.ai.context.pack")}</h4>
+                <h4>{interfaceTranslator.t("play.ai.context.pack")}</h4>
                 <strong>
-                  {translate("play.ai.context.capacity", {
+                  {interfaceTranslator.t("play.ai.context.capacity", {
                     used: current.units,
                     total: activity.capacity,
                   })}
@@ -407,20 +415,22 @@ export function ContextGame({
                   <span key={index} data-filled={index < current.units} />
                 ))}
               </div>
-              <p className="play-ai-workflow__note">{translate("play.ai.context.capacityNote")}</p>
+              <p className="play-ai-workflow__note">
+                {interfaceTranslator.t("play.ai.context.capacityNote")}
+              </p>
               {packed.length ? (
                 <ul className="play-ai-context__packed-list">
                   {packed.map(({ document, paragraph, index }) => (
                     <li key={paragraph.id}>
                       <span>
                         {document.title} ·{" "}
-                        {translate("play.ai.context.paragraph", { count: index + 1 })}
+                        {interfaceTranslator.t("play.ai.context.paragraph", { count: index + 1 })}
                       </span>
                       <GameButton
                         variant="ghost"
                         sound={false}
                         disabled={disabled}
-                        aria-label={`${translate("play.ai.context.removeParagraph")} · ${document.title} · ${index + 1}`}
+                        aria-label={`${interfaceTranslator.t("play.ai.context.removeParagraph")} · ${document.title} · ${index + 1}`}
                         onClick={() =>
                           edit(toggleContextParagraph(activity, selection, paragraph.id))
                         }
@@ -431,7 +441,7 @@ export function ContextGame({
                   ))}
                 </ul>
               ) : (
-                <p>{translate("play.ai.context.packingEmpty")}</p>
+                <p>{interfaceTranslator.t("play.ai.context.packingEmpty")}</p>
               )}
               {!guideCounter ? (
                 <GameButton
@@ -441,7 +451,7 @@ export function ContextGame({
                   aria-controls={resultId}
                   onClick={generate}
                 >
-                  {translate("play.ai.context.run")}
+                  {interfaceTranslator.t("play.ai.context.run")}
                 </GameButton>
               ) : null}
             </section>
@@ -449,14 +459,14 @@ export function ContextGame({
         </div>
       </details>
       <details className="play-context-result" open={!guideCounter}>
-        <summary>{translate("play.ai.context.guide.fullResult")}</summary>
+        <summary>{interfaceTranslator.t("play.ai.context.guide.fullResult")}</summary>
         <section className="play-ai-context__result" id={resultId}>
           <h4 ref={resultHeading} tabIndex={-1}>
-            {translate("play.ai.context.work")}
+            {interfaceTranslator.t("play.ai.context.work")}
           </h4>
           {resultStale ? (
             <div className="play-ai-workflow__warning" role="status">
-              <p>{translate("play.ai.context.stale")}</p>
+              <p>{interfaceTranslator.t("play.ai.context.stale")}</p>
               {!guideCounter ? (
                 <GameButton
                   variant="secondary"
@@ -464,19 +474,21 @@ export function ContextGame({
                   disabled={disabled}
                   onClick={generate}
                 >
-                  {translate("play.ai.context.rerun")}
+                  {interfaceTranslator.t("play.ai.context.rerun")}
                 </GameButton>
               ) : null}
             </div>
           ) : null}
           {!result ? (
-            <p className="play-ai-workflow__note">{translate("play.ai.context.workEmpty")}</p>
+            <p className="play-ai-workflow__note">
+              {interfaceTranslator.t("play.ai.context.workEmpty")}
+            </p>
           ) : (
             <>
               <h5>{activity.workTitle}</h5>
               {result.overCapacity ? (
                 <p className="play-ai-workflow__warning">
-                  {translate("play.ai.context.capacityBlocked", {
+                  {interfaceTranslator.t("play.ai.context.capacityBlocked", {
                     extra: Math.max(0, result.units - activity.capacity),
                   })}
                 </p>
@@ -489,18 +501,18 @@ export function ContextGame({
                         {index + 1}
                       </span>
                       <h5>{row.label}</h5>
-                      <span>{translate(`play.ai.context.status.${row.status}`)}</span>
+                      <span>{interfaceTranslator.t(`play.ai.context.status.${row.status}`)}</span>
                     </header>
                     <p className="play-ai-context__work-value">
                       {row.value ??
-                        translate(
+                        interfaceTranslator.t(
                           `play.ai.context.reason.${row.status === "ready" ? "missing" : row.status}`,
                           { label: row.label },
                         )}
                     </p>
                     {row.evidence.length ? (
                       <details>
-                        <summary>{translate("play.ai.context.sources")}</summary>
+                        <summary>{interfaceTranslator.t("play.ai.context.sources")}</summary>
                         <ul>
                           {row.evidence.map((item) => {
                             const document = activity.documents.find(
@@ -514,7 +526,7 @@ export function ContextGame({
                               <li key={item.paragraphId}>
                                 <p>{item.text}</p>
                                 <small>
-                                  {translate("play.ai.context.sourceLine", {
+                                  {interfaceTranslator.t("play.ai.context.sourceLine", {
                                     document: document.title,
                                     paragraph,
                                     date: document.date,
@@ -534,13 +546,13 @@ export function ContextGame({
         </section>
       </details>
       <details className="play-ai-workflow__history">
-        <summary>{translate("play.ai.context.history")}</summary>
+        <summary>{interfaceTranslator.t("play.ai.context.history")}</summary>
         {history.length ? (
           <ol>
             {history.map((trial) => (
               <li key={trial.number}>
                 <span>
-                  {translate("play.ai.context.historyItem", {
+                  {interfaceTranslator.t("play.ai.context.historyItem", {
                     count: trial.number,
                     units: trial.result.units,
                     ready: trial.result.rows.filter((row) => row.status === "ready").length,
@@ -555,13 +567,13 @@ export function ContextGame({
                     setResult(trial.result);
                   }}
                 >
-                  {translate("play.ai.context.restore")}
+                  {interfaceTranslator.t("play.ai.context.restore")}
                 </GameButton>
               </li>
             ))}
           </ol>
         ) : (
-          <p>{translate("play.ai.context.historyEmpty")}</p>
+          <p>{interfaceTranslator.t("play.ai.context.historyEmpty")}</p>
         )}
       </details>
     </div>

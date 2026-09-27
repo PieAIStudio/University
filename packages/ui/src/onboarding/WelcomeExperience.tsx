@@ -1,5 +1,5 @@
 import { GameAssetIcon, GameButton, GameModal } from "@pieai/swimmer-ui-kit";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 export interface WelcomeChoice {
   readonly id: string;
@@ -31,43 +31,47 @@ export function WelcomeExperience({
   readonly onSignIn: () => void;
   readonly onDismiss?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <GameModal
       open
       title="University"
       className="welcome-experience"
-      closeLabel={translate("product.welcome.dismiss")}
+      closeLabel={interfaceTranslator.t("product.welcome.dismiss")}
       closeOnBackdrop={false}
       onClose={onDismiss ?? onBrowse}
     >
       <div className="welcome-experience__body" data-welcome="true">
         <div className="welcome-experience__intro">
           <h2>
-            {translate("product.welcome.heading")}
+            {interfaceTranslator.t("product.welcome.heading")}
             <br />
-            {translate("product.welcome.headingNext")}
+            {interfaceTranslator.t("product.welcome.headingNext")}
           </h2>
         </div>
-        <ol className="welcome-experience__path" aria-label={translate("product.welcome.method")}>
+        <ol
+          className="welcome-experience__path"
+          aria-label={interfaceTranslator.t("product.welcome.method")}
+        >
           <li>
             <GameAssetIcon icon="scroll" size="md" />
-            {translate("product.welcome.understand")}
+            {interfaceTranslator.t("product.welcome.understand")}
           </li>
           <li>
             <GameAssetIcon icon="compass" size="md" />
-            {translate("product.welcome.try")}
+            {interfaceTranslator.t("product.welcome.try")}
           </li>
           <li>
             <GameAssetIcon icon="card" size="md" />
-            {translate("product.welcome.remember")}
+            {interfaceTranslator.t("product.welcome.remember")}
           </li>
         </ol>
         <div className="welcome-experience__next" aria-live="polite" aria-atomic="true">
-          <p>{translate("product.welcome.firstStep")}</p>
-          <h3>{lesson?.title ?? translate("product.welcome.loading")}</h3>
+          <p>{interfaceTranslator.t("product.welcome.firstStep")}</p>
+          <h3>{lesson?.title ?? interfaceTranslator.t("product.welcome.loading")}</h3>
           {lesson ? (
             <p className="welcome-experience__scope">
-              {translate("product.welcome.scope", { exercises: lesson.exerciseCount })}
+              {interfaceTranslator.t("product.welcome.scope", { exercises: lesson.exerciseCount })}
             </p>
           ) : null}
         </div>
@@ -79,15 +83,15 @@ export function WelcomeExperience({
             disabled={!lesson}
             onClick={onStart}
           >
-            {translate("product.welcome.start")}
+            {interfaceTranslator.t("product.welcome.start")}
           </GameButton>
           <GameButton variant="ghost" static data-welcome-browse onClick={onBrowse}>
-            {translate("product.welcome.browse")}
+            {interfaceTranslator.t("product.welcome.browse")}
           </GameButton>
         </div>
         {choices.length > 1 ? (
           <details className="welcome-experience__choices">
-            <summary>{translate("product.welcome.choose")}</summary>
+            <summary>{interfaceTranslator.t("product.welcome.choose")}</summary>
             <div className="welcome-experience__options">
               {choices.map((choice) => (
                 <GameButton
@@ -105,9 +109,9 @@ export function WelcomeExperience({
           </details>
         ) : null}
         <footer className="welcome-experience__footer">
-          <p>{translate("product.welcome.reassurance")}</p>
+          <p>{interfaceTranslator.t("product.welcome.reassurance")}</p>
           <GameButton variant="ghost" static data-welcome-signin onClick={onSignIn}>
-            {translate("product.welcome.signIn")}
+            {interfaceTranslator.t("product.welcome.signIn")}
           </GameButton>
         </footer>
       </div>

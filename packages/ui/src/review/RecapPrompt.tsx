@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useState, useSyncExternalStore } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 import type { LessonRef, ProgressPort } from "@pieai/university-core";
@@ -27,6 +27,7 @@ export function RecapPrompt({
   readonly onSaved?: () => Promise<void>;
   readonly onWorthwhileProgress?: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const document = useSyncExternalStore(progress.subscribe, progress.snapshot);
   const [answer, setAnswer] = useState("");
   const [pending, setPending] = useState(false);
@@ -49,20 +50,22 @@ export function RecapPrompt({
         answer,
       });
       if (!progress.recapCard(locator))
-        throw new Error(translate("ui.review.recapPrompt.copy.复习卡没有写入云端缓存"));
+        throw new Error(interfaceTranslator.t("ui.review.recapPrompt.copy.复习卡没有写入云端缓存"));
       onWorthwhileProgress?.();
       try {
         await onSaved?.();
       } catch {
         setError(
-          translate("ui.review.recapPrompt.copy.复习卡已保存-但界面没有刷新-请重新加载页面"),
+          interfaceTranslator.t(
+            "ui.review.recapPrompt.copy.复习卡已保存-但界面没有刷新-请重新加载页面",
+          ),
         );
       }
     } catch (reason) {
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.review.recapPrompt.copy.复习卡没有保存"),
+          : interfaceTranslator.t("ui.review.recapPrompt.copy.复习卡没有保存"),
       );
     } finally {
       setPending(false);
@@ -73,33 +76,42 @@ export function RecapPrompt({
     <GamePanel className="recap-prompt" tone="strong">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">{translate("ui.review.recapPrompt.copy.课后复习")}</p>
-          <h2 id="recap-prompt-title">{translate("ui.review.recapPrompt.copy.讲一遍")}</h2>
+          <p className="eyebrow">{interfaceTranslator.t("ui.review.recapPrompt.copy.课后复习")}</p>
+          <h2 id="recap-prompt-title">
+            {interfaceTranslator.t("ui.review.recapPrompt.copy.讲一遍")}
+          </h2>
         </div>
       </div>
       <p className="recap-prompt__instruction">
-        {translate("ui.review.recapPrompt.copy.请用自己的话-讲给一个完全不知道这件事的人听")}
+        {interfaceTranslator.t(
+          "ui.review.recapPrompt.copy.请用自己的话-讲给一个完全不知道这件事的人听",
+        )}
       </p>
       <section
         className="recap-prompt__objective"
-        aria-label={translate("ui.review.recapPrompt.copy.本单元能力句")}
+        aria-label={interfaceTranslator.t("ui.review.recapPrompt.copy.本单元能力句")}
       >
-        <p className="eyebrow">{translate("ui.review.recapPrompt.copy.本单元能力句")}</p>
+        <p className="eyebrow">
+          {interfaceTranslator.t("ui.review.recapPrompt.copy.本单元能力句")}
+        </p>
         <p>{unitObjective}</p>
       </section>
       {saved ? (
-        <GameCallout heading={translate("ui.review.recapPrompt.copy.复习卡已保存")} tone="success">
-          {translate("ui.review.recapPrompt.copy.到期时它会回来-请再讲一遍")}
+        <GameCallout
+          heading={interfaceTranslator.t("ui.review.recapPrompt.copy.复习卡已保存")}
+          tone="success"
+        >
+          {interfaceTranslator.t("ui.review.recapPrompt.copy.到期时它会回来-请再讲一遍")}
         </GameCallout>
       ) : (
         <>
           <label className="answer-field">
-            <span>{translate("ui.review.recapPrompt.copy.你的复述")}</span>
+            <span>{interfaceTranslator.t("ui.review.recapPrompt.copy.你的复述")}</span>
             <textarea
-              aria-label={translate("ui.review.recapPrompt.copy.你的复述")}
+              aria-label={interfaceTranslator.t("ui.review.recapPrompt.copy.你的复述")}
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
-              placeholder={translate("ui.review.recapPrompt.copy.在这里写你的复述")}
+              placeholder={interfaceTranslator.t("ui.review.recapPrompt.copy.在这里写你的复述")}
               disabled={pending}
               rows={5}
             />
@@ -110,8 +122,8 @@ export function RecapPrompt({
             disabled={!answer.trim() || pending}
           >
             {pending
-              ? translate("ui.review.recapPrompt.copy.正在保存")
-              : translate("ui.review.recapPrompt.copy.保存为复习卡")}
+              ? interfaceTranslator.t("ui.review.recapPrompt.copy.正在保存")
+              : interfaceTranslator.t("ui.review.recapPrompt.copy.保存为复习卡")}
           </GameButton>
         </>
       )}

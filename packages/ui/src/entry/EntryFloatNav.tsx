@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 /**
  * C23. Previous / next floating navigation on an entry page.
  *
@@ -32,12 +32,17 @@ function NeighbourControl({
   readonly neighbour: EntryNeighbour;
   readonly direction: "previous" | "next";
 }) {
+  const interfaceTranslator = useI18n();
   const kind = direction === "previous" ? "prev" : "next";
   const arrow = direction === "previous" ? "‹" : "›";
   const ariaLabel =
     direction === "previous"
-      ? translate("ui.entry.entryFloatNav.copy.上一个-value0", { value0: neighbour.label })
-      : translate("ui.entry.entryFloatNav.copy.下一个-value0", { value0: neighbour.label });
+      ? interfaceTranslator.t("ui.entry.entryFloatNav.copy.上一个-value0", {
+          value0: neighbour.label,
+        })
+      : interfaceTranslator.t("ui.entry.entryFloatNav.copy.下一个-value0", {
+          value0: neighbour.label,
+        });
   const className = `entry-page__float-nav entry-page__float-nav--${kind}`;
 
   const content = (
@@ -92,6 +97,7 @@ function NeighbourControl({
 }
 
 export function EntryFloatNav({ neighbours }: { readonly neighbours: EntryNeighbourPair }) {
+  const interfaceTranslator = useI18n();
   const previous = isReachable(neighbours.previous) ? neighbours.previous : null;
   const next = isReachable(neighbours.next) ? neighbours.next : null;
   if (!previous && !next) return null;
@@ -99,7 +105,7 @@ export function EntryFloatNav({ neighbours }: { readonly neighbours: EntryNeighb
   return (
     <nav
       className="entry-page__float-navs"
-      aria-label={translate("ui.entry.entryFloatNav.copy.相邻条目")}
+      aria-label={interfaceTranslator.t("ui.entry.entryFloatNav.copy.相邻条目")}
     >
       {previous ? <NeighbourControl neighbour={previous} direction="previous" /> : null}
       {next ? <NeighbourControl neighbour={next} direction="next" /> : null}

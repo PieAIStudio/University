@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { lessonKey } from "@pieai/university-core";
@@ -107,7 +108,7 @@ describe("the four screens that read the progress document", () => {
     });
     history.replaceState(null, "", "/review");
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     expect(container.textContent).toContain("错题本");
     expect(container.textContent).toContain("1");
@@ -115,7 +116,7 @@ describe("the four screens that read the progress document", () => {
 
   it("renders QuestsScreen at /quests, not the unopened placeholder", async () => {
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
     expect(text).toContain("学一节新课");
@@ -126,7 +127,7 @@ describe("the four screens that read the progress document", () => {
   it("marks a lesson finished today as done, from the document not a hardcoded empty one", async () => {
     progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     expect(container.textContent).toContain("完成");
     expect(container.textContent).not.toContain("0 / 2");
@@ -135,7 +136,7 @@ describe("the four screens that read the progress document", () => {
   it("renders LeagueScreen at /league, not the unopened placeholder", async () => {
     history.replaceState(null, "", "/league");
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
     expect(text).toContain("石阶");
@@ -151,7 +152,7 @@ describe("the four screens that read the progress document", () => {
   it("renders the badge wall on /me, not the door that said badges live elsewhere", async () => {
     history.replaceState(null, "", "/me");
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
     expect(text).toContain("连续 7 天来学");
@@ -162,7 +163,7 @@ describe("the four screens that read the progress document", () => {
     progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
     history.replaceState(null, "", "/me");
     await act(async () => {
-      root.render(<App />);
+      root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
     expect(text).toContain("学完");

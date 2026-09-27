@@ -169,12 +169,14 @@ function NavFlyout({ item, activeId }: { readonly item: ShellNavItem; readonly a
 }
 
 export function NavRail({
+  label,
   items,
   activeId,
   brand,
   collapse,
   identity,
 }: {
+  readonly label: string;
   readonly items: readonly ShellNavItem[];
   readonly activeId: string;
   readonly brand?: ReactNode;
@@ -197,7 +199,7 @@ export function NavRail({
   readonly identity?: ReactNode;
 }) {
   return (
-    <nav className="nav-rail" id="app-shell-rail" aria-label="Primary">
+    <nav className="nav-rail" id="app-shell-rail" aria-label={label}>
       {brand != null || collapse != null ? (
         <div className="nav-rail__brand">
           {brand}

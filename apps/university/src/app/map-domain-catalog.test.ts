@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, createElement, StrictMode } from "react";
@@ -175,7 +176,9 @@ describe("map domain catalogue", () => {
     };
     const stage = () => container.querySelector("[data-test-planet-stage]")!;
     try {
-      await act(async () => root.render(createElement(StrictMode, null, createElement(App))));
+      await act(async () =>
+        root.render(withInterfaceLocale(createElement(StrictMode, null, createElement(App)))),
+      );
       expect(stage().getAttribute("data-catalog")).toBe(
         "programming,ai-foundations,ai-games,ai-media",
       );

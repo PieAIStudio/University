@@ -3,7 +3,7 @@
  * Keep classification out of the renderer and never infer it from course titles.
  * Unknown studies remain visible until their domain has been deliberately assigned.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type { PlanetStudy, PlanetStudyDomain } from "@pieai/university-world/planet.js";
 
 export type MapDomain = PlanetStudyDomain;
@@ -14,26 +14,26 @@ export function mapDomainCatalog(): readonly MapDomain[] {
     {
       id: "programming",
       surfaceStyle: "meadow",
-      title: translate("ui.world.domain.programming"),
-      description: translate("ui.world.domain.programming.description"),
+      title: interfaceTranslator.t("ui.world.domain.programming"),
+      description: interfaceTranslator.t("ui.world.domain.programming.description"),
     },
     {
       id: "ai-foundations",
       surfaceStyle: "dawn",
-      title: translate("ui.world.domain.aiFoundations"),
-      description: translate("ui.world.domain.aiFoundations.description"),
+      title: interfaceTranslator.t("ui.world.domain.aiFoundations"),
+      description: interfaceTranslator.t("ui.world.domain.aiFoundations.description"),
     },
     {
       id: "ai-games",
       surfaceStyle: "lagoon",
-      title: translate("ui.world.domain.aiGames"),
-      description: translate("ui.world.domain.aiGames.description"),
+      title: interfaceTranslator.t("ui.world.domain.aiGames"),
+      description: interfaceTranslator.t("ui.world.domain.aiGames.description"),
     },
     {
       id: "ai-media",
       surfaceStyle: "iris",
-      title: translate("ui.world.domain.aiMedia"),
-      description: translate("ui.world.domain.aiMedia.description"),
+      title: interfaceTranslator.t("ui.world.domain.aiMedia"),
+      description: interfaceTranslator.t("ui.world.domain.aiMedia.description"),
     },
   ];
 }
@@ -52,7 +52,7 @@ export function mapDomainForStudy(studyId: string): MapDomain {
   return (
     mapDomainCatalog().find((domain) => domain.id === id) ?? {
       id: "unclassified",
-      title: translate("ui.world.domain.unclassified"),
+      title: interfaceTranslator.t("ui.world.domain.unclassified"),
     }
   );
 }

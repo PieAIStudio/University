@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { useSyncExternalStore, type ReactNode } from "react";
 
 /**
@@ -39,17 +39,17 @@ export function mapControlsHint(pointer: MapPointer): ReactNode {
     pointer === "touch"
       ? hintItem(
           "zoom",
-          translate("ui.world.mapControlsHint.copy.双指缩放"),
+          interfaceTranslator.t("ui.world.mapControlsHint.copy.双指缩放"),
           "hint__item--zoom-touch",
         )
       : hintItem(
           "zoom",
-          translate("ui.world.mapControlsHint.copy.滚轮缩放"),
+          interfaceTranslator.t("ui.world.mapControlsHint.copy.滚轮缩放"),
           "hint__item--zoom-mouse",
         );
   return (
     <span className="hint__row">
-      {hintItem("pan", translate("ui.world.mapControlsHint.copy.拖动平移"))}
+      {hintItem("pan", interfaceTranslator.t("ui.world.mapControlsHint.copy.拖动平移"))}
       {hintSep()}
       {zoom}
     </span>
@@ -59,7 +59,7 @@ export function mapControlsHint(pointer: MapPointer): ReactNode {
 export function mapEntryHint(): ReactNode {
   return (
     <span className="hint__row">
-      {hintItem("enter", translate("ui.world.mapControlsHint.copy.点岛进入"))}
+      {hintItem("enter", interfaceTranslator.t("ui.world.mapControlsHint.copy.点岛进入"))}
     </span>
   );
 }

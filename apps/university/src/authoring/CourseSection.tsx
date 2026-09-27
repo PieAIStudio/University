@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useState } from "react";
 
 import { GameBadge, GameButton, GameProgress } from "@pieai/swimmer-ui-kit";
@@ -24,6 +24,7 @@ export function CourseSection({
   /** False when a parent already named the one next lesson. */
   readonly showEntry?: boolean;
 }) {
+  const interfaceTranslator = useI18n();
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
   );
@@ -87,7 +88,7 @@ export function CourseSection({
         </div>
         {finished ? (
           <GameBadge tone="success">
-            {translate("app.authoring.courseSection.copy.已学完")}
+            {interfaceTranslator.t("app.authoring.courseSection.copy.已学完")}
           </GameBadge>
         ) : null}
       </header>
@@ -109,9 +110,9 @@ export function CourseSection({
           className="course-progress"
           value={completed}
           max={Math.max(lessons.length, 1)}
-          label={translate("app.authoring.courseSection.copy.课程完成度")}
+          label={interfaceTranslator.t("app.authoring.courseSection.copy.课程完成度")}
           tone={finished ? "success" : "accent"}
-          valueLabel={translate("app.authoring.courseSection.copy.value0-value1-节", {
+          valueLabel={interfaceTranslator.t("app.authoring.courseSection.copy.value0-value1-节", {
             value0: completed,
             value1: lessons.length,
           })}
@@ -131,10 +132,10 @@ export function CourseSection({
             }
           >
             {finished
-              ? translate("app.authoring.courseSection.copy.从头再看一遍")
+              ? interfaceTranslator.t("app.authoring.courseSection.copy.从头再看一遍")
               : completed === 0
-                ? translate("app.authoring.courseSection.copy.开始第-1-节")
-                : translate("app.authoring.courseSection.copy.继续第-value0-节", {
+                ? interfaceTranslator.t("app.authoring.courseSection.copy.开始第-1-节")
+                : interfaceTranslator.t("app.authoring.courseSection.copy.继续第-value0-节", {
                     value0: completed + 1,
                   })}
           </GameButton>
@@ -151,8 +152,9 @@ export function CourseSection({
       <details className="course-objectives">
         <summary>
           <span>
-            {translate("app.authoring.courseSection.copy.学完能做到的")} {course.objectives.length}{" "}
-            {translate("app.authoring.courseSection.copy.件事")}
+            {interfaceTranslator.t("app.authoring.courseSection.copy.学完能做到的")}{" "}
+            {course.objectives.length}{" "}
+            {interfaceTranslator.t("app.authoring.courseSection.copy.件事")}
           </span>
         </summary>
         <ul>
@@ -168,8 +170,8 @@ export function CourseSection({
       >
         <summary>
           <span>
-            {course.units.length} {translate("app.authoring.courseSection.copy.个单元")}{" "}
-            {lessons.length} {translate("app.authoring.courseSection.copy.节课")}
+            {course.units.length} {interfaceTranslator.t("app.authoring.courseSection.copy.个单元")}{" "}
+            {lessons.length} {interfaceTranslator.t("app.authoring.courseSection.copy.节课")}
           </span>
         </summary>
         <div className="unit-list">
@@ -198,8 +200,9 @@ export function CourseSection({
                         <strong>{lesson.title}</strong>
                         <small>
                           {lesson.exerciseCount}{" "}
-                          {translate("app.authoring.courseSection.copy.道练习")} {lesson.cardCount}{" "}
-                          {translate("app.authoring.courseSection.copy.张卡片")}
+                          {interfaceTranslator.t("app.authoring.courseSection.copy.道练习")}{" "}
+                          {lesson.cardCount}{" "}
+                          {interfaceTranslator.t("app.authoring.courseSection.copy.张卡片")}
                         </small>
                       </span>
                       <GameBadge

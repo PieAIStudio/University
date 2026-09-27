@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { readFileSync } from "node:fs";
@@ -7,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { setActiveLocale } from "@pieai/university-ui/i18n.js";
+import { setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 
 import { PlanetPage, type PlanetStudy } from "./PlanetPage.js";
 
@@ -119,7 +120,7 @@ function dispatchPointerSequence(target: EventTarget) {
 
 describe("PlanetPage contract", () => {
   it("localizes the complete English course picker, including accessible names and entry action", async () => {
-    setActiveLocale("en");
+    setInterfaceLocale("en");
     const domain = { id: "ai-foundations", title: "AI Foundations" };
     const study: PlanetStudy = {
       id: "ai-literacy",
@@ -138,15 +139,17 @@ describe("PlanetPage contract", () => {
     const enter = vi.fn();
     await act(async () =>
       root.render(
-        <PlanetPage
-          studies={[study]}
-          domainCatalog={[domain]}
-          selectedId={study.id}
-          selectedDomainId={domain.id}
-          onSelect={vi.fn()}
-          onEnter={enter}
-          onClose={vi.fn()}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={[study]}
+            domainCatalog={[domain]}
+            selectedId={study.id}
+            selectedDomainId={domain.id}
+            onSelect={vi.fn()}
+            onEnter={enter}
+            onClose={vi.fn()}
+          />,
+        ),
       ),
     );
     expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/u);
@@ -171,9 +174,11 @@ describe("PlanetPage contract", () => {
       onEnter: vi.fn(),
       onClose: vi.fn(),
     };
-    await act(async () => root.render(<PlanetPage {...props} />));
+    await act(async () => root.render(withInterfaceLocale(<PlanetPage {...props} />)));
     expect(container.querySelector("[data-study-description]")?.textContent).toBe(description);
-    await act(async () => root.render(<PlanetPage {...props} studies={[STUDIES[0]!]} />));
+    await act(async () =>
+      root.render(withInterfaceLocale(<PlanetPage {...props} studies={[STUDIES[0]!]} />)),
+    );
     expect(container.querySelector("[data-study-description]")).toBeNull();
   });
 
@@ -217,16 +222,18 @@ describe("PlanetPage", () => {
     for (const empty of domainCatalog.slice(1)) {
       await act(async () =>
         root.render(
-          <PlanetPage
-            studies={studies}
-            domainCatalog={domainCatalog}
-            selectedId="turing-pact"
-            selectedDomainId={empty.id}
-            onSelectDomain={selectedDomain}
-            onSelect={selected}
-            onEnter={entered}
-            onClose={() => undefined}
-          />,
+          withInterfaceLocale(
+            <PlanetPage
+              studies={studies}
+              domainCatalog={domainCatalog}
+              selectedId="turing-pact"
+              selectedDomainId={empty.id}
+              onSelectDomain={selectedDomain}
+              onSelect={selected}
+              onEnter={entered}
+              onClose={() => undefined}
+            />,
+          ),
         ),
       );
       expect(container.querySelectorAll("[data-study-id]")).toHaveLength(0);
@@ -247,16 +254,18 @@ describe("PlanetPage", () => {
     }
     await act(async () =>
       root.render(
-        <PlanetPage
-          studies={studies}
-          domainCatalog={domainCatalog}
-          selectedId="turing-pact"
-          selectedDomainId="programming"
-          onSelectDomain={selectedDomain}
-          onSelect={selected}
-          onEnter={entered}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={studies}
+            domainCatalog={domainCatalog}
+            selectedId="turing-pact"
+            selectedDomainId="programming"
+            onSelectDomain={selectedDomain}
+            onSelect={selected}
+            onEnter={entered}
+            onClose={() => undefined}
+          />,
+        ),
       ),
     );
     expect(container.querySelector(".planet-page__enter")?.textContent).toContain("TuringPact");
@@ -281,16 +290,18 @@ describe("PlanetPage", () => {
     const selectedDomains: string[] = [];
     await act(async () =>
       root.render(
-        <PlanetPage
-          studies={studies}
-          domainCatalog={domainCatalog}
-          selectedId="buzz"
-          selectedDomainId="empty"
-          onSelect={() => undefined}
-          onSelectDomain={(id) => selectedDomains.push(id)}
-          onEnter={() => undefined}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={studies}
+            domainCatalog={domainCatalog}
+            selectedId="buzz"
+            selectedDomainId="empty"
+            onSelect={() => undefined}
+            onSelectDomain={(id) => selectedDomains.push(id)}
+            onEnter={() => undefined}
+            onClose={() => undefined}
+          />,
+        ),
       ),
     );
     expect(container.querySelectorAll("[data-study-id]")).toHaveLength(0);
@@ -301,15 +312,17 @@ describe("PlanetPage", () => {
     expect(selectedDomains).toEqual(["a"]);
     await act(async () =>
       root.render(
-        <PlanetPage
-          studies={studies}
-          domainCatalog={domainCatalog}
-          selectedId="buzz"
-          selectedDomainId="a"
-          onSelect={() => undefined}
-          onEnter={() => undefined}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={studies}
+            domainCatalog={domainCatalog}
+            selectedId="buzz"
+            selectedDomainId="a"
+            onSelect={() => undefined}
+            onEnter={() => undefined}
+            onClose={() => undefined}
+          />,
+        ),
       ),
     );
     expect(container.querySelectorAll("[data-study-id]")).toHaveLength(2);
@@ -320,15 +333,17 @@ describe("PlanetPage", () => {
     const selected: string[] = [];
     await act(async () => {
       root.render(
-        <PlanetPage
-          studies={STUDIES}
-          selectedId="turing-pact"
-          onSelect={(id) => {
-            selected.push(id);
-          }}
-          onEnter={() => undefined}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={STUDIES}
+            selectedId="turing-pact"
+            onSelect={(id) => {
+              selected.push(id);
+            }}
+            onEnter={() => undefined}
+            onClose={() => undefined}
+          />,
+        ),
       );
     });
 
@@ -358,17 +373,19 @@ describe("PlanetPage", () => {
     const closed: number[] = [];
     await act(async () => {
       root.render(
-        <PlanetPage
-          studies={STUDIES}
-          selectedId="buzz"
-          onSelect={() => undefined}
-          onEnter={(id) => {
-            entered.push(id);
-          }}
-          onClose={() => {
-            closed.push(1);
-          }}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={STUDIES}
+            selectedId="buzz"
+            onSelect={() => undefined}
+            onEnter={(id) => {
+              entered.push(id);
+            }}
+            onClose={() => {
+              closed.push(1);
+            }}
+          />,
+        ),
       );
     });
 
@@ -393,13 +410,15 @@ describe("PlanetPage", () => {
   it("exposes each study as a button so a real Enter key (Playwright) selects it", async () => {
     await act(async () => {
       root.render(
-        <PlanetPage
-          studies={STUDIES}
-          selectedId="turing-pact"
-          onSelect={() => undefined}
-          onEnter={() => undefined}
-          onClose={() => undefined}
-        />,
+        withInterfaceLocale(
+          <PlanetPage
+            studies={STUDIES}
+            selectedId="turing-pact"
+            onSelect={() => undefined}
+            onEnter={() => undefined}
+            onClose={() => undefined}
+          />,
+        ),
       );
     });
     const rows = [...container.querySelectorAll("[data-study-id]")];

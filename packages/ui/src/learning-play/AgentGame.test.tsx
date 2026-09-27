@@ -1,9 +1,10 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AgentAction, AgentActivity } from "@pieai/university-core";
-import { activeLocale, setActiveLocale } from "../i18n/index.js";
+import { setInterfaceLocale, interfaceTranslator } from "../i18n/index.js";
 import { AgentGame } from "./AgentGame.js";
 import type { ActivityControls } from "./controls.js";
 
@@ -90,12 +91,14 @@ async function renderGame(currentActivity = activity, guided = false) {
   const onAttempt = vi.fn<ActivityControls<AgentActivity>["onAttempt"]>();
   await act(async () =>
     root!.render(
-      <AgentGame
-        activity={currentActivity}
-        disabled={false}
-        guided={guided}
-        onAttempt={onAttempt}
-      />,
+      withInterfaceLocale(
+        <AgentGame
+          activity={currentActivity}
+          disabled={false}
+          guided={guided}
+          onAttempt={onAttempt}
+        />,
+      ),
     ),
   );
   return onAttempt;
@@ -112,8 +115,8 @@ beforeEach(() => {
   vi.stubGlobal("matchMedia", () => ({ matches: true }));
   hidden = false;
   vi.spyOn(document, "hidden", "get").mockImplementation(() => hidden);
-  previousLocale = activeLocale();
-  setActiveLocale("zh-CN");
+  previousLocale = interfaceTranslator.locale;
+  setInterfaceLocale("zh-CN");
   scrollDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
   // jsdom does not lay out viewports. Real viewport behavior belongs to the browser suite.
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
@@ -181,7 +184,9 @@ describe("Agent guidance uses the real permissions and workspace", () => {
 
     await act(async () =>
       root!.render(
-        <AgentGame activity={withRead} disabled={false} guided={false} onAttempt={onAttempt} />,
+        withInterfaceLocale(
+          <AgentGame activity={withRead} disabled={false} guided={false} onAttempt={onAttempt} />,
+        ),
       ),
     );
     await click("验收沙盒里的工作");
@@ -254,7 +259,7 @@ afterEach(async () => {
   } else {
     Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
   }
-  setActiveLocale(previousLocale);
+  setInterfaceLocale(previousLocale);
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();

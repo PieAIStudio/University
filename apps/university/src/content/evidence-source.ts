@@ -6,7 +6,7 @@
  * instead, the same split the screenshots already use, so that prefix does
  * not fit. The honest change is the same prop accepting a resolver.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type { EvidenceSnippetView } from "@pieai/university-ui";
 import type { LocatorOnlyEvidence } from "@pieai/university-core";
 
@@ -24,7 +24,7 @@ export function evidenceSourceOf(
     const response = await fetch(url);
     if (!response.ok)
       throw new Error(
-        translate("app.content.evidencesource.copy.无法读取固定源码-value0", {
+        interfaceTranslator.t("app.content.evidencesource.copy.无法读取固定源码-value0", {
           value0: response.status,
         }),
       );

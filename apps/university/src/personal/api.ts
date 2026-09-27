@@ -1,5 +1,5 @@
 import { readJson } from "@pieai/university-ui/api/client.js";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import type { LessonRef } from "@pieai/university-core";
 export {
   PERSONAL_STUDY_ID,
@@ -66,10 +66,10 @@ export function personalAccountScope(): string {
 
 export function personalPreviewUrl(): string {
   const value = import.meta.env.DEV && import.meta.env.VITE_MAP_NODES_PERSONAL_URL;
-  if (!value) throw new Error(translate("mapNodes.personal.unavailable"));
+  if (!value) throw new Error(interfaceTranslator.t("mapNodes.personal.unavailable"));
   const url = new URL(value);
   if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || !url.port)
-    throw new Error(translate("mapNodes.personal.unavailable"));
+    throw new Error(interfaceTranslator.t("mapNodes.personal.unavailable"));
   return url.toString().replace(/\/$/, "");
 }
 
@@ -95,7 +95,7 @@ export async function readPersonalJson<T>(
   } catch (error) {
     throw new PersonalHttpError(
       response.status,
-      error instanceof Error ? error.message : translate("mapNodes.personal.failed"),
+      error instanceof Error ? error.message : interfaceTranslator.t("mapNodes.personal.failed"),
     );
   }
 }

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { GameBadge, GameButton } from "@pieai/swimmer-ui-kit";
 
 export interface PracticeOverviewCategory {
@@ -16,7 +16,7 @@ export interface PracticeOverviewProps {
   readonly onOpenReview?: () => void;
 }
 
-const PRACTICE_OVERVIEW_TITLE = translate("product.practice.heading");
+const PRACTICE_OVERVIEW_TITLE = interfaceTranslator.t("product.practice.heading");
 
 function scheduleSummary({
   dueTodayCount,
@@ -24,15 +24,15 @@ function scheduleSummary({
   questionCount,
 }: Pick<PracticeOverviewProps, "dueTodayCount" | "dueTomorrowCount" | "questionCount">): string {
   if (questionCount === 0) {
-    return translate("product.practice.emptyBrief");
+    return interfaceTranslator.t("product.practice.emptyBrief");
   }
   if (dueTodayCount > 0) {
-    return translate("product.practice.dueBrief", { value0: dueTodayCount });
+    return interfaceTranslator.t("product.practice.dueBrief", { value0: dueTodayCount });
   }
   if (dueTomorrowCount > 0) {
-    return translate("product.practice.tomorrowBrief", { value0: dueTomorrowCount });
+    return interfaceTranslator.t("product.practice.tomorrowBrief", { value0: dueTomorrowCount });
   }
-  return translate("product.practice.readyBrief");
+  return interfaceTranslator.t("product.practice.readyBrief");
 }
 
 export function PracticeOverview({
@@ -43,10 +43,13 @@ export function PracticeOverview({
   questionCount,
   recentCount,
 }: PracticeOverviewProps) {
+  const interfaceTranslator = useI18n();
   const dueLabel =
     dueTodayCount > 0
-      ? translate("ui.practice.practiceOverview.copy.value0-张到期", { value0: dueTodayCount })
-      : translate("ui.practice.practiceOverview.copy.今天无到期");
+      ? interfaceTranslator.t("ui.practice.practiceOverview.copy.value0-张到期", {
+          value0: dueTodayCount,
+        })
+      : interfaceTranslator.t("ui.practice.practiceOverview.copy.今天无到期");
   const dueTone = dueTodayCount > 0 ? "warning" : "neutral";
 
   return (
@@ -63,45 +66,47 @@ export function PracticeOverview({
       </p>
 
       <details className="product-details" data-practice-details>
-        <summary>{translate("product.practice.details")}</summary>
+        <summary>{interfaceTranslator.t("product.practice.details")}</summary>
         <dl className="practice-overview__facts">
           <div>
-            <dt>{translate("ui.practice.practiceOverview.copy.今天复习")}</dt>
+            <dt>{interfaceTranslator.t("ui.practice.practiceOverview.copy.今天复习")}</dt>
             <dd>
               {dueTodayCount > 0
-                ? translate("ui.practice.practiceOverview.copy.value0-张", {
+                ? interfaceTranslator.t("ui.practice.practiceOverview.copy.value0-张", {
                     value0: dueTodayCount,
                   })
-                : translate("ui.practice.practiceOverview.copy.没有")}
+                : interfaceTranslator.t("ui.practice.practiceOverview.copy.没有")}
             </dd>
           </div>
           <div>
-            <dt>{translate("ui.practice.practiceOverview.copy.明天复习")}</dt>
+            <dt>{interfaceTranslator.t("ui.practice.practiceOverview.copy.明天复习")}</dt>
             <dd>
               {dueTomorrowCount > 0
-                ? translate("ui.practice.practiceOverview.copy.value0-张", {
+                ? interfaceTranslator.t("ui.practice.practiceOverview.copy.value0-张", {
                     value0: dueTomorrowCount,
                   })
-                : translate("ui.practice.practiceOverview.copy.没有")}
+                : interfaceTranslator.t("ui.practice.practiceOverview.copy.没有")}
             </dd>
           </div>
           <div>
-            <dt>{translate("ui.practice.practiceOverview.copy.最近练过")}</dt>
+            <dt>{interfaceTranslator.t("ui.practice.practiceOverview.copy.最近练过")}</dt>
             <dd>
-              {recentCount} {translate("ui.practice.practiceOverview.copy.个概念")}
+              {recentCount} {interfaceTranslator.t("ui.practice.practiceOverview.copy.个概念")}
             </dd>
           </div>
         </dl>
 
         <div className="practice-overview__scope">
           <div className="practice-overview__scope-head">
-            <span>{translate("ui.practice.practiceOverview.copy.题流来自概念图鉴")}</span>
+            <span>
+              {interfaceTranslator.t("ui.practice.practiceOverview.copy.题流来自概念图鉴")}
+            </span>
             <strong>
-              {questionCount} {translate("ui.practice.practiceOverview.copy.个概念题")}
+              {questionCount} {interfaceTranslator.t("ui.practice.practiceOverview.copy.个概念题")}
             </strong>
           </div>
           <p
-            aria-label={translate("ui.practice.practiceOverview.copy.概念题分类")}
+            aria-label={interfaceTranslator.t("ui.practice.practiceOverview.copy.概念题分类")}
             className="practice-overview__categories"
           >
             {categories.map((category) => (
@@ -114,14 +119,14 @@ export function PracticeOverview({
         </div>
 
         <p className="practice-overview__availability">
-          {translate("product.practice.memoryNote")}
+          {interfaceTranslator.t("product.practice.memoryNote")}
         </p>
       </details>
 
       {dueTodayCount > 0 && onOpenReview ? (
         <div className="practice-overview__actions">
           <GameButton variant="secondary" type="button" onClick={onOpenReview}>
-            {translate("ui.practice.practiceOverview.copy.先去复习")}
+            {interfaceTranslator.t("ui.practice.practiceOverview.copy.先去复习")}
           </GameButton>
         </div>
       ) : null}

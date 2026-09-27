@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import { conceptHeadToMarkdown, conceptNeighbours, getConceptEntry } from "@pieai/university-core";
 import { EntryPage } from "@pieai/university-ui";
 
@@ -17,15 +17,16 @@ import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
  * unmounted component is a component nobody has checked.
  */
 export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: View) => void }) {
+  const interfaceTranslator = useI18n();
   const entry = getConceptEntry(id);
   if (!entry) {
     return (
       <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "concepts" })}>
-          {translate("app.screens.conceptEntryHost.copy.概念图解")}
+          {interfaceTranslator.t("app.screens.conceptEntryHost.copy.概念图解")}
         </button>
         <p className="reference-panel__note">
-          {translate("app.screens.conceptEntryHost.copy.没有这一条")}
+          {interfaceTranslator.t("app.screens.conceptEntryHost.copy.没有这一条")}
         </p>
       </div>
     );
@@ -36,7 +37,7 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
       <EntryPage
         breadcrumb={[
           {
-            label: translate("app.screens.conceptEntryHost.copy.概念图解-o4yiqz"),
+            label: interfaceTranslator.t("app.screens.conceptEntryHost.copy.概念图解-o4yiqz"),
             href: "/concepts",
           },
           { label: entry.head.group },

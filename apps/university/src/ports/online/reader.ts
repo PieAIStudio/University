@@ -7,7 +7,7 @@
  * profiles; it is not the cross-device source of truth. New marks are written
  * to the shared ProgressDocument first.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   type EvidenceSnippet,
@@ -139,7 +139,7 @@ export function createOnlineReaderPort(options: { readonly progress: ProgressPor
       const response = await fetch(url);
       if (!response.ok)
         throw new Error(
-          translate("app.ports.online.reader.copy.无法读取固定源码-value0", {
+          interfaceTranslator.t("app.ports.online.reader.copy.无法读取固定源码-value0", {
             value0: response.status,
           }),
         );

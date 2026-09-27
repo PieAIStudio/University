@@ -1,3 +1,4 @@
+import { coreI18n } from "../i18n/core.js";
 /**
  * Where an answer is judged.
  *
@@ -51,40 +52,34 @@ export function gradingAttemptsFromPowerUnits(powerUnits: string): bigint | null
 /** What one cost or balance buys, as a bare quantity: 「3 次」. */
 export function gradingAttemptText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  if (locale.split("-")[0] === "en") {
-    if (attempts === null) return "Currently unavailable";
-    return attempts === 0n
-      ? "Not enough for one grading"
-      : `${attempts} ${attempts === 1n ? "grading" : "gradings"}`;
-  }
-  if (attempts === null) return "暂时读不到";
-  return attempts === 0n ? "不够一次了" : `${attempts} 次`;
+  const { t } = coreI18n.translator(locale);
+  if (attempts === null) return t("grading.quantity.unavailable");
+  if (attempts === 0n) return t("grading.quantity.zero");
+  // Keep the exact BigInt quantity as text; active English/Chinese plural rules
+  // only need to distinguish one from other, including beyond safe integers.
+  return t("grading.quantity.count", { count: Number(attempts), amount: String(attempts) });
 }
 
 /** Today's remaining free AI gradings. */
 export function freeGradingRemainingText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  if (locale.split("-")[0] === "en") {
-    if (attempts === null) return "Today's remaining allowance is unavailable";
-    return attempts === 0n
-      ? "No complete free grading remains today"
-      : `${attempts} free ${attempts === 1n ? "grading remains" : "gradings remain"} today`;
-  }
-  if (attempts === null) return "今天还剩多少次暂时读不到";
-  return attempts === 0n ? "今天还不够一次了" : `今天还剩 ${attempts} 次`;
+  const { t } = coreI18n.translator(locale);
+  if (attempts === null) return t("grading.free.unavailable");
+  if (attempts === 0n) return t("grading.free.zero");
+  // Keep the exact BigInt quantity as text; active English/Chinese plural rules
+  // only need to distinguish one from other, including beyond safe integers.
+  return t("grading.free.count", { count: Number(attempts), amount: String(attempts) });
 }
 
 /** The wallet balance, counted in gradings rather than in accounting units. */
 export function walletGradingBalanceText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
-  if (locale.split("-")[0] === "en") {
-    if (attempts === null) return "Your wallet balance is currently unavailable";
-    return attempts === 0n
-      ? "Your wallet does not cover one grading"
-      : `Your wallet covers ${attempts} ${attempts === 1n ? "grading" : "gradings"}`;
-  }
-  if (attempts === null) return "你的钱包余额暂时读不到";
-  return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
+  const { t } = coreI18n.translator(locale);
+  if (attempts === null) return t("grading.wallet.unavailable");
+  if (attempts === 0n) return t("grading.wallet.zero");
+  // Keep the exact BigInt quantity as text; active English/Chinese plural rules
+  // only need to distinguish one from other, including beyond safe integers.
+  return t("grading.wallet.count", { count: Number(attempts), amount: String(attempts) });
 }
 
 /** The three facts a grader can honestly establish about one submitted answer. */
@@ -130,9 +125,9 @@ export const DETERMINISTIC_GRADER_HOST = "tier-1";
 
 /** What to call whatever produced this verdict, in the learner's words. */
 export function graderLabel(host: string | null, locale = "zh-CN"): string {
-  if (locale.split("-")[0] === "en")
-    return host === DETERMINISTIC_GRADER_HOST ? "Automatic check" : "AI evaluation";
-  return host === DETERMINISTIC_GRADER_HOST ? "当场判定" : "AI 评估";
+  return coreI18n
+    .translator(locale)
+    .t(host === DETERMINISTIC_GRADER_HOST ? "grading.host.automatic" : "grading.host.ai");
 }
 
 /**

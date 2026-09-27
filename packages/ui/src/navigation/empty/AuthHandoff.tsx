@@ -6,7 +6,7 @@ import {
   type AuthPort,
 } from "@pieaistudio/swimmer-auth-kit";
 import { AuthForm, UpdatePasswordForm, type AuthLocale } from "@pieaistudio/swimmer-auth-kit/react";
-import { translate } from "../../i18n/index.js";
+import { useI18n } from "../../i18n/index.js";
 import { authKitLocale } from "./AccountPanel.js";
 
 const IDLE: AccountState = { session: null, checking: false, error: null, event: null };
@@ -79,6 +79,7 @@ export function AuthCallbackScreen({
   readonly locale: string;
   readonly onContinue: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const kitLocale: AuthLocale = authKitLocale(locale);
   const snapshot = useAccountSession(auth);
   const ready = !snapshot.checking && isRegistered(snapshot);
@@ -91,9 +92,9 @@ export function AuthCallbackScreen({
   if (!auth) {
     return (
       <section className="account-panel">
-        <h1>{translate("product.account.authCallbackTitle")}</h1>
-        <p>{translate("product.account.authCallbackInvalid")}</p>
-        <p>{translate("product.account.retryReason")}</p>
+        <h1>{interfaceTranslator.t("product.account.authCallbackTitle")}</h1>
+        <p>{interfaceTranslator.t("product.account.authCallbackInvalid")}</p>
+        <p>{interfaceTranslator.t("product.account.retryReason")}</p>
       </section>
     );
   }
@@ -101,8 +102,8 @@ export function AuthCallbackScreen({
   if (snapshot.checking && !ready) {
     return (
       <section className="account-panel" aria-busy="true">
-        <h1>{translate("product.account.authCallbackTitle")}</h1>
-        <GameLoadingState label={translate("product.account.authCallbackTitle")} />
+        <h1>{interfaceTranslator.t("product.account.authCallbackTitle")}</h1>
+        <GameLoadingState label={interfaceTranslator.t("product.account.authCallbackTitle")} />
       </section>
     );
   }
@@ -110,7 +111,7 @@ export function AuthCallbackScreen({
   if (ready) {
     return (
       <section className="account-panel">
-        <h1>{translate("product.account.authCallbackTitle")}</h1>
+        <h1>{interfaceTranslator.t("product.account.authCallbackTitle")}</h1>
         <GameButton
           variant="primary"
           surface="liquid"
@@ -119,7 +120,7 @@ export function AuthCallbackScreen({
           type="button"
           onClick={onContinue}
         >
-          {translate("product.account.continueLearning")}
+          {interfaceTranslator.t("product.account.continueLearning")}
         </GameButton>
       </section>
     );
@@ -127,12 +128,12 @@ export function AuthCallbackScreen({
 
   return (
     <section className="account-panel">
-      <h1>{translate("product.account.authCallbackTitle")}</h1>
-      <p>{translate("product.account.authCallbackInvalid")}</p>
+      <h1>{interfaceTranslator.t("product.account.authCallbackTitle")}</h1>
+      <p>{interfaceTranslator.t("product.account.authCallbackInvalid")}</p>
       {auth ? (
         <AuthForm port={auth} locale={kitLocale} allowEmailCode allowRegistration />
       ) : (
-        <p>{translate("product.account.retryReason")}</p>
+        <p>{interfaceTranslator.t("product.account.retryReason")}</p>
       )}
     </section>
   );
@@ -147,6 +148,7 @@ export function AuthResetScreen({
   readonly locale: string;
   readonly onUpdated: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   const kitLocale: AuthLocale = authKitLocale(locale);
   const snapshot = useAccountSession(auth);
   const ready = !snapshot.checking && isRegistered(snapshot);
@@ -159,9 +161,9 @@ export function AuthResetScreen({
   if (!auth) {
     return (
       <section className="account-panel">
-        <h1>{translate("product.account.authResetTitle")}</h1>
-        <p>{translate("product.account.authResetInvalid")}</p>
-        <p>{translate("product.account.retryReason")}</p>
+        <h1>{interfaceTranslator.t("product.account.authResetTitle")}</h1>
+        <p>{interfaceTranslator.t("product.account.authResetInvalid")}</p>
+        <p>{interfaceTranslator.t("product.account.retryReason")}</p>
       </section>
     );
   }
@@ -169,8 +171,8 @@ export function AuthResetScreen({
   if (snapshot.checking && !ready) {
     return (
       <section className="account-panel" aria-busy="true">
-        <h1>{translate("product.account.authResetTitle")}</h1>
-        <GameLoadingState label={translate("product.account.authResetTitle")} />
+        <h1>{interfaceTranslator.t("product.account.authResetTitle")}</h1>
+        <GameLoadingState label={interfaceTranslator.t("product.account.authResetTitle")} />
       </section>
     );
   }
@@ -178,7 +180,7 @@ export function AuthResetScreen({
   if (ready) {
     return (
       <section className="account-panel">
-        <h1>{translate("product.account.authResetTitle")}</h1>
+        <h1>{interfaceTranslator.t("product.account.authResetTitle")}</h1>
         <UpdatePasswordForm
           port={auth}
           locale={kitLocale}
@@ -193,8 +195,8 @@ export function AuthResetScreen({
 
   return (
     <section className="account-panel">
-      <h1>{translate("product.account.authResetTitle")}</h1>
-      <p>{translate("product.account.authResetInvalid")}</p>
+      <h1>{interfaceTranslator.t("product.account.authResetTitle")}</h1>
+      <p>{interfaceTranslator.t("product.account.authResetInvalid")}</p>
       <AuthForm
         port={auth}
         locale={kitLocale}

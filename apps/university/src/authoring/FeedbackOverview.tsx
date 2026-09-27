@@ -1,4 +1,4 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState } from "react";
 import {
   lessonRefKey,
@@ -120,7 +120,7 @@ function feedbackMessages(records: readonly FeedbackRecord[]) {
     <ul className="feedback-overview__messages">
       {records.map((record) => (
         <li key={record.id}>
-          {record.message || translate("app.authoring.feedbackOverview.copy.没写内容")}
+          {record.message || interfaceTranslator.t("app.authoring.feedbackOverview.copy.没写内容")}
         </li>
       ))}
     </ul>
@@ -134,6 +134,7 @@ export function FeedbackOverview({
   readonly source: FeedbackReviewSource;
   readonly studyView: StudyView | null;
 }) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<
     | { readonly kind: "idle" }
     | { readonly kind: "loading" }
@@ -170,12 +171,14 @@ export function FeedbackOverview({
         {styles}
         <section
           className="feedback-overview"
-          aria-label={translate("app.authoring.feedbackOverview.copy.学习者意见")}
+          aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
         >
-          <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.学习者意见")}</p>
-          <h2>{translate("app.authoring.feedbackOverview.copy.先选择一个项目")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.feedbackOverview.copy.先选择一个项目")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.feedbackOverview.copy.选中项目后-这里会按课程和内容版本把意见排出来",
             )}
           </p>
@@ -190,12 +193,14 @@ export function FeedbackOverview({
         {styles}
         <section
           className="feedback-overview"
-          aria-label={translate("app.authoring.feedbackOverview.copy.学习者意见")}
+          aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
         >
-          <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.学习者意见")}</p>
-          <h2>{translate("app.authoring.feedbackOverview.copy.正在读取意见")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.feedbackOverview.copy.正在读取意见")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.feedbackOverview.copy.只读-SwimmerBackend-的意见-还没有读到时不会先填一个数字",
             )}
           </p>
@@ -210,12 +215,14 @@ export function FeedbackOverview({
         {styles}
         <section
           className="feedback-overview feedback-overview--unavailable"
-          aria-label={translate("app.authoring.feedbackOverview.copy.学习者意见")}
+          aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
         >
-          <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.学习者意见")}</p>
-          <h2>{translate("app.authoring.feedbackOverview.copy.反馈数据还没接好")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.feedbackOverview.copy.反馈数据还没接好")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.feedbackOverview.copy.SwimmerBackend-的反馈表或权限还没有就绪-这里不会拿假的意见数填上",
             )}
           </p>
@@ -231,12 +238,14 @@ export function FeedbackOverview({
         {styles}
         <section
           className="feedback-overview"
-          aria-label={translate("app.authoring.feedbackOverview.copy.学习者意见")}
+          aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
         >
-          <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.学习者意见")}</p>
-          <h2>{translate("app.authoring.feedbackOverview.copy.还没有收到反馈")}</h2>
+          <p className="eyebrow">
+            {interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
+          </p>
+          <h2>{interfaceTranslator.t("app.authoring.feedbackOverview.copy.还没有收到反馈")}</h2>
           <p>
-            {translate(
+            {interfaceTranslator.t(
               "app.authoring.feedbackOverview.copy.意见会按课程和内容版本确定性分组-有真实记录后-原话会出现在这里",
             )}
           </p>
@@ -250,14 +259,18 @@ export function FeedbackOverview({
       {styles}
       <section
         className="feedback-overview"
-        aria-label={translate("app.authoring.feedbackOverview.copy.学习者意见")}
+        aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
       >
         <header className="feedback-overview__header">
           <div>
-            <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.学习者意见")}</p>
-            <h2>{translate("app.authoring.feedbackOverview.copy.先看大家写下了什么")}</h2>
+            <p className="eyebrow">
+              {interfaceTranslator.t("app.authoring.feedbackOverview.copy.学习者意见")}
+            </p>
+            <h2>
+              {interfaceTranslator.t("app.authoring.feedbackOverview.copy.先看大家写下了什么")}
+            </h2>
             <p>
-              {translate(
+              {interfaceTranslator.t(
                 "app.authoring.feedbackOverview.copy.意见按课程和内容版本分组-它是线索-不是自动改课的指令",
               )}
             </p>
@@ -266,22 +279,25 @@ export function FeedbackOverview({
             <strong>
               {model.courses.reduce((total, course) => total + course.feedbackCount, 0)}
             </strong>
-            <span>{translate("app.authoring.feedbackOverview.copy.条已定位意见")}</span>
+            <span>{interfaceTranslator.t("app.authoring.feedbackOverview.copy.条已定位意见")}</span>
           </div>
         </header>
 
         <div
           className="feedback-overview__summary"
-          aria-label={translate("app.authoring.feedbackOverview.copy.按课程汇总")}
+          aria-label={interfaceTranslator.t("app.authoring.feedbackOverview.copy.按课程汇总")}
         >
           {model.courses.map((course) => (
             <article className="feedback-overview__course-card" key={course.courseId}>
-              <p className="eyebrow">{translate("app.authoring.feedbackOverview.copy.课程")}</p>
+              <p className="eyebrow">
+                {interfaceTranslator.t("app.authoring.feedbackOverview.copy.课程")}
+              </p>
               <h3>{course.title}</h3>
               <p>
-                {course.feedbackCount} {translate("app.authoring.feedbackOverview.copy.条意见")}{" "}
+                {course.feedbackCount}{" "}
+                {interfaceTranslator.t("app.authoring.feedbackOverview.copy.条意见")}{" "}
                 {course.revisions.length}{" "}
-                {translate("app.authoring.feedbackOverview.copy.个内容版本")}
+                {interfaceTranslator.t("app.authoring.feedbackOverview.copy.个内容版本")}
               </p>
             </article>
           ))}
@@ -298,12 +314,13 @@ export function FeedbackOverview({
                 <summary>
                   <span>
                     《{course.title}
-                    {translate("app.authoring.feedbackOverview.copy.第")} {revision.contentRevision}{" "}
-                    {translate("app.authoring.feedbackOverview.copy.版")}
+                    {interfaceTranslator.t("app.authoring.feedbackOverview.copy.第")}{" "}
+                    {revision.contentRevision}{" "}
+                    {interfaceTranslator.t("app.authoring.feedbackOverview.copy.版")}
                   </span>
                   <span>
                     {revision.feedbackCount}{" "}
-                    {translate("app.authoring.feedbackOverview.copy.条意见-o0kvm0")}
+                    {interfaceTranslator.t("app.authoring.feedbackOverview.copy.条意见-o0kvm0")}
                   </span>
                 </summary>
                 <div className="feedback-overview__revision-body">
@@ -316,7 +333,9 @@ export function FeedbackOverview({
                         <p className="eyebrow">{lesson.title}</p>
                         <h3>
                           {lesson.feedback.length}{" "}
-                          {translate("app.authoring.feedbackOverview.copy.条意见-o0kvm0")}
+                          {interfaceTranslator.t(
+                            "app.authoring.feedbackOverview.copy.条意见-o0kvm0",
+                          )}
                         </h3>
                         {feedbackMessages(lesson.feedback)}
                       </div>
@@ -329,16 +348,18 @@ export function FeedbackOverview({
           {model.unlocated.length > 0 ? (
             <details className="feedback-overview__revision" open>
               <summary>
-                <span>{translate("app.authoring.feedbackOverview.copy.未定位到具体课程")}</span>
+                <span>
+                  {interfaceTranslator.t("app.authoring.feedbackOverview.copy.未定位到具体课程")}
+                </span>
                 <span>
                   {model.unlocated.length}{" "}
-                  {translate("app.authoring.feedbackOverview.copy.条意见-o0kvm0")}
+                  {interfaceTranslator.t("app.authoring.feedbackOverview.copy.条意见-o0kvm0")}
                 </span>
               </summary>
               <div className="feedback-overview__revision-body">
                 {feedbackMessages(model.unlocated)}
                 <p className="feedback-overview__unlocated-note">
-                  {translate(
+                  {interfaceTranslator.t(
                     "app.authoring.feedbackOverview.copy.这组没有课程版本-所以不虚构课程对照",
                   )}
                 </p>

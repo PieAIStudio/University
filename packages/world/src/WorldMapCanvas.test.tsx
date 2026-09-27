@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act, createRef, type ReactNode } from "react";
@@ -50,7 +51,9 @@ describe("WorldMapCanvas rewrite marker", () => {
     try {
       await act(async () =>
         root.render(
-          <WorldMapCanvas {...props} courseViewKey="course" controlsHint="拖动平移 · 双指缩放" />,
+          withInterfaceLocale(
+            <WorldMapCanvas {...props} courseViewKey="course" controlsHint="拖动平移 · 双指缩放" />,
+          ),
         ),
       );
       const stage = host.querySelector("[data-stage]");
@@ -79,17 +82,19 @@ describe("WorldMapCanvas rewrite marker", () => {
       ).toBe(true);
       await act(async () =>
         root.render(
-          <WorldMapCanvas
-            {...props}
-            courseViewKey="course"
-            controlsHint={null}
-            controlsHintVisible={false}
-          />,
+          withInterfaceLocale(
+            <WorldMapCanvas
+              {...props}
+              courseViewKey="course"
+              controlsHint={null}
+              controlsHintVisible={false}
+            />,
+          ),
         ),
       );
       expect(host.querySelector(".map-framing-tools button")).toBe(button);
       expect(host.querySelector("[data-stage]")).toBe(stage);
-      await act(async () => root.render(<WorldMapCanvas {...props} />));
+      await act(async () => root.render(withInterfaceLocale(<WorldMapCanvas {...props} />)));
       expect(host.querySelector("[data-stage]")).toBe(stage);
       expect(host.querySelectorAll("[data-stage]")).toHaveLength(1);
       expect(host.querySelector(".stagewrap")?.hasAttribute("data-map-view")).toBe(false);
@@ -119,28 +124,30 @@ describe("WorldMapCanvas rewrite marker", () => {
       const title = "很长的课程名称：状态和改写提示不应被课程名称一起裁掉";
       const host = document.createElement("div");
       host.innerHTML = renderToStaticMarkup(
-        <WorldMapCanvas
-          world={null}
-          cameraFrom={[0, 0, 1]}
-          lookAt={[0, 0, 0]}
-          learnerAt={null}
-          avatarRecipe={null}
-          avatarSignedIn={false}
-          skyStudyId={null}
-          markers={[
-            {
-              id: "long-course",
-              position: new THREE.Vector3(),
-              text: title,
-              sub: "改写中",
-              kind: "course",
-              courseState: state,
-              activate: () => undefined,
-            },
-          ]}
-          onPick={() => undefined}
-          onHover={() => undefined}
-        />,
+        withInterfaceLocale(
+          <WorldMapCanvas
+            world={null}
+            cameraFrom={[0, 0, 1]}
+            lookAt={[0, 0, 0]}
+            learnerAt={null}
+            avatarRecipe={null}
+            avatarSignedIn={false}
+            skyStudyId={null}
+            markers={[
+              {
+                id: "long-course",
+                position: new THREE.Vector3(),
+                text: title,
+                sub: "改写中",
+                kind: "course",
+                courseState: state,
+                activate: () => undefined,
+              },
+            ]}
+            onPick={() => undefined}
+            onHover={() => undefined}
+          />,
+        ),
       );
       const button = host.querySelector("button.label--course")!;
       const name = button.querySelector(".label__course-title");
@@ -164,25 +171,27 @@ describe("WorldMapCanvas rewrite marker", () => {
   it("keeps course progress visible and described without changing its accessible course name", () => {
     const states = ["live", "done", "open", "idle"] as const;
     const markup = renderToStaticMarkup(
-      <WorldMapCanvas
-        world={null}
-        cameraFrom={[0, 0, 1]}
-        lookAt={[0, 0, 0]}
-        learnerAt={null}
-        avatarRecipe={null}
-        avatarSignedIn={false}
-        skyStudyId={null}
-        markers={states.map((state) => ({
-          id: state,
-          position: new THREE.Vector3(),
-          text: `Course ${state}`,
-          kind: "course" as const,
-          courseState: state,
-          activate: () => undefined,
-        }))}
-        onPick={() => undefined}
-        onHover={() => undefined}
-      />,
+      withInterfaceLocale(
+        <WorldMapCanvas
+          world={null}
+          cameraFrom={[0, 0, 1]}
+          lookAt={[0, 0, 0]}
+          learnerAt={null}
+          avatarRecipe={null}
+          avatarSignedIn={false}
+          skyStudyId={null}
+          markers={states.map((state) => ({
+            id: state,
+            position: new THREE.Vector3(),
+            text: `Course ${state}`,
+            kind: "course" as const,
+            courseState: state,
+            activate: () => undefined,
+          }))}
+          onPick={() => undefined}
+          onHover={() => undefined}
+        />,
+      ),
     );
     const host = document.createElement("div");
     host.innerHTML = markup;
@@ -205,27 +214,29 @@ describe("WorldMapCanvas rewrite marker", () => {
     try {
       await act(async () =>
         root.render(
-          <WorldMapCanvas
-            world={null}
-            cameraFrom={[0, 0, 1]}
-            lookAt={[0, 0, 0]}
-            learnerAt={null}
-            avatarRecipe={null}
-            avatarSignedIn={false}
-            skyStudyId={null}
-            markers={[
-              {
-                id: "course",
-                position: new THREE.Vector3(),
-                text: "Course",
-                kind: "course",
-                activate,
-              },
-            ]}
-            onPick={() => undefined}
-            onHover={() => undefined}
-            onInteract={onInteract}
-          />,
+          withInterfaceLocale(
+            <WorldMapCanvas
+              world={null}
+              cameraFrom={[0, 0, 1]}
+              lookAt={[0, 0, 0]}
+              learnerAt={null}
+              avatarRecipe={null}
+              avatarSignedIn={false}
+              skyStudyId={null}
+              markers={[
+                {
+                  id: "course",
+                  position: new THREE.Vector3(),
+                  text: "Course",
+                  kind: "course",
+                  activate,
+                },
+              ]}
+              onPick={() => undefined}
+              onHover={() => undefined}
+              onInteract={onInteract}
+            />,
+          ),
         ),
       );
       const button = host.querySelector("button")!;
@@ -263,27 +274,29 @@ describe("WorldMapCanvas rewrite marker", () => {
   });
   it("keeps the status in a readable, structural DOM label", () => {
     const markup = renderToStaticMarkup(
-      <WorldMapCanvas
-        world={null}
-        cameraFrom={[0, 0, 1]}
-        lookAt={[0, 0, 0]}
-        learnerAt={null}
-        avatarRecipe={null}
-        avatarSignedIn={false}
-        skyStudyId={null}
-        markers={[
-          {
-            id: "course",
-            position: new THREE.Vector3(0, 0, 0),
-            text: "课程名",
-            sub: "learner-visible-status",
-            kind: "course",
-            activate: () => undefined,
-          },
-        ]}
-        onPick={() => undefined}
-        onHover={() => undefined}
-      />,
+      withInterfaceLocale(
+        <WorldMapCanvas
+          world={null}
+          cameraFrom={[0, 0, 1]}
+          lookAt={[0, 0, 0]}
+          learnerAt={null}
+          avatarRecipe={null}
+          avatarSignedIn={false}
+          skyStudyId={null}
+          markers={[
+            {
+              id: "course",
+              position: new THREE.Vector3(0, 0, 0),
+              text: "课程名",
+              sub: "learner-visible-status",
+              kind: "course",
+              activate: () => undefined,
+            },
+          ]}
+          onPick={() => undefined}
+          onHover={() => undefined}
+        />,
+      ),
     );
     const host = document.createElement("div");
     host.innerHTML = markup;

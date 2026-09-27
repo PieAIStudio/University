@@ -1,4 +1,4 @@
-import { activeLocale, translate } from "../../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import {
   GameAssetIcon,
   GameButton,
@@ -26,16 +26,16 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js";
 
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
-export const PLANS_TITLE = translate("ui.navigation.screens.plansScreen.copy.会员");
+export const PLANS_TITLE = interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.会员");
 
 /*
   One string rather than prose broken across source lines: JSX collapses those
   line breaks into spaces, and a space after a full-width comma reads as a typo
   on the one page where a typo costs money.
 */
-const PLANS_LEDE = translate("product.billing.lede");
+const PLANS_LEDE = interfaceTranslator.t("product.billing.lede");
 
-const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
+const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort(() => interfaceTranslator.locale);
 const NO_SUBSCRIPTION = () => () => undefined;
 const UNSCOPED_ACCOUNT = () => "unconfigured";
 const CYCLE_KEY = "university.purchase-cycle.v1";
@@ -48,15 +48,12 @@ function readYearlyChoice(): boolean {
 }
 
 const BILLING_CYCLE_OPTIONS = [
-  { id: "yearly", label: translate("ui.navigation.screens.plansScreen.copy.按年") },
-  { id: "monthly", label: translate("ui.navigation.screens.plansScreen.copy.按月") },
+  { id: "yearly", label: interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.按年") },
+  { id: "monthly", label: interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.按月") },
 ] as const;
 
 function formatCurrency(cents: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(cents / 100);
+  return interfaceTranslator.currency(cents / 100, currency);
 }
 
 function configuredPrice(pricing: PlanPricing, yearly: boolean): string | null {
@@ -107,7 +104,7 @@ function priceLabel(pricing: PlanPricing, yearly: boolean) {
   if (price === null) {
     return (
       <span className="plan-card__amount">
-        {translate("ui.navigation.screens.plansScreen.copy.价格暂时无法显示")}
+        {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.价格暂时无法显示")}
       </span>
     );
   }
@@ -118,13 +115,14 @@ function priceLabel(pricing: PlanPricing, yearly: boolean) {
       <span className="plan-card__amount">{price}</span>
       <span className="plan-card__period">
         {yearly
-          ? translate("ui.navigation.screens.plansScreen.copy.年")
-          : translate("ui.navigation.screens.plansScreen.copy.月")}
+          ? interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.年")
+          : interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.月")}
       </span>
       {yearlyMonthlyPrice ? (
         <span className="plan-card__period">
-          {translate("ui.navigation.screens.plansScreen.copy.折合")} {yearlyMonthlyPrice}{" "}
-          {translate("ui.navigation.screens.plansScreen.copy.月-1bqki4t")}
+          {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.折合")}{" "}
+          {yearlyMonthlyPrice}{" "}
+          {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.月-1bqki4t")}
         </span>
       ) : null}
     </>
@@ -133,12 +131,12 @@ function priceLabel(pricing: PlanPricing, yearly: boolean) {
 
 function planButtonLabel(pricing: PlanPricing, availability: PaymentAvailability): string {
   if (pricing.kind === "pending")
-    return translate("ui.navigation.screens.plansScreen.copy.了解购买状态");
+    return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.了解购买状态");
   if (availability === "anonymous")
-    return translate("ui.navigation.screens.plansScreen.copy.先绑定邮箱");
+    return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.先绑定邮箱");
   if (availability === "account-required")
-    return translate("ui.navigation.screens.plansScreen.copy.先登录");
-  return translate("product.billing.upgrade");
+    return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.先登录");
+  return interfaceTranslator.t("product.billing.upgrade");
 }
 
 function PlanCard({
@@ -156,10 +154,11 @@ function PlanCard({
   readonly currentPlanId: string | null;
   readonly onPurchase: (offerId: string) => void;
 }) {
+  const interfaceTranslator = useI18n();
   const purchasable = plan.pricing.kind !== "free";
   const saving = yearly ? configuredYearlySaving(plan.pricing) : null;
   const current = plan.id === currentPlanId;
-  const copy = planCopyForLocale(plan, activeLocale());
+  const copy = planCopyForLocale(plan, interfaceTranslator.locale);
 
   return (
     <li className={purchasable ? "plan-card plan-card--featured" : "plan-card"}>
@@ -176,7 +175,7 @@ function PlanCard({
 
         {saving ? (
           <p className="plan-card__saving">
-            {translate("product.billing.saving", { percent: saving.percent })}
+            {interfaceTranslator.t("product.billing.saving", { percent: saving.percent })}
           </p>
         ) : null}
 
@@ -188,16 +187,16 @@ function PlanCard({
         {purchasable ? (
           <p className="plan-card__terms">
             {yearly
-              ? translate("product.billing.yearlyShort")
-              : translate("product.billing.monthlyShort")}
+              ? interfaceTranslator.t("product.billing.yearlyShort")
+              : interfaceTranslator.t("product.billing.monthlyShort")}
             <br />
-            {translate("product.billing.walletShort")}
+            {interfaceTranslator.t("product.billing.walletShort")}
           </p>
         ) : null}
 
         {purchasable && current ? (
           <p className="plan-card__note" data-current-membership>
-            {translate("product.billing.currentMember")}
+            {interfaceTranslator.t("product.billing.currentMember")}
           </p>
         ) : purchasable ? (
           <>
@@ -220,7 +219,9 @@ function PlanCard({
             */}
             {purchaseAvailability === "available" ? (
               <p className="plan-card__cancellation" data-plan-cancellation="true">
-                {translate("ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费")}
+                {interfaceTranslator.t(
+                  "ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费",
+                )}
               </p>
             ) : null}
             <GameButton
@@ -234,15 +235,15 @@ function PlanCard({
               disabled={busyOfferId === plan.id}
             >
               {busyOfferId === plan.id
-                ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
+                ? interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.正在检查")
                 : planButtonLabel(plan.pricing, purchaseAvailability)}
             </GameButton>
           </>
         ) : (
           <p className="plan-card__note">
             {currentPlanId === "member"
-              ? translate("product.billing.freeIncluded")
-              : translate("ui.navigation.screens.plansScreen.copy.你现在就在用")}
+              ? interfaceTranslator.t("product.billing.freeIncluded")
+              : interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.你现在就在用")}
           </p>
         )}
       </GamePanel>
@@ -253,19 +254,19 @@ function PlanCard({
 function statusLabel(status: PaymentOrder["status"]): string {
   switch (status) {
     case "pending":
-      return translate("ui.navigation.screens.plansScreen.copy.等待支付");
+      return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.等待支付");
     case "paid":
-      return translate("ui.navigation.screens.plansScreen.copy.已支付-正在刷新权益");
+      return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.已支付-正在刷新权益");
     case "failed":
-      return translate("ui.navigation.screens.plansScreen.copy.支付失败");
+      return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.支付失败");
     case "cancelled":
-      return translate("ui.navigation.screens.plansScreen.copy.已取消");
+      return interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.已取消");
   }
 }
 
 function planNameOf(entitlement: EntitlementReadModel): string {
   const plan = PLANS.find((candidate) => candidate.id === entitlement.planId);
-  return plan ? planCopyForLocale(plan, activeLocale()).name : entitlement.planId;
+  return plan ? planCopyForLocale(plan, interfaceTranslator.locale).name : entitlement.planId;
 }
 
 /** Only print a number the port actually returned. A missing wallet is absent, not "登录后读取". */
@@ -276,16 +277,19 @@ function PaymentSummary({
   readonly balance: PaymentResult<WalletBalance> | null;
   readonly entitlement: PaymentResult<EntitlementReadModel> | null;
 }) {
+  const interfaceTranslator = useI18n();
   const plan =
     entitlement?.kind === "value" ? (
       <p>
-        {translate("ui.navigation.screens.plansScreen.copy.当前方案")}
+        {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.当前方案")}
         {planNameOf(entitlement.value)}
       </p>
     ) : null;
   const wallet =
     balance?.kind === "value" ? (
-      <p>{walletGradingBalanceText(balance.value.availablePowerUnits, activeLocale())}</p>
+      <p>
+        {walletGradingBalanceText(balance.value.availablePowerUnits, interfaceTranslator.locale)}
+      </p>
     ) : null;
   if (!plan && !wallet) return null;
   return (
@@ -305,33 +309,34 @@ function PaymentOrderNotice({
   readonly refreshing: boolean;
   readonly onRefresh: () => void;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <GameCallout
       tone={order.status === "paid" ? "success" : "info"}
-      heading={translate("ui.navigation.screens.plansScreen.copy.订单状态")}
+      heading={interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.订单状态")}
     >
       <p className="payment-order__line">
-        {statusLabel(order.status)} {translate("ui.navigation.screens.plansScreen.copy.订单号")}{" "}
-        {order.orderId}
+        {statusLabel(order.status)}{" "}
+        {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.订单号")} {order.orderId}
       </p>
       {order.quote ? (
         <div className="payment-order__quote">
           <p>
-            {translate("product.billing.quote")} ·{" "}
+            {interfaceTranslator.t("product.billing.quote")} ·{" "}
             {order.quote.billingCycle === "yearly"
-              ? translate("ui.navigation.screens.plansScreen.copy.按年")
-              : translate("ui.navigation.screens.plansScreen.copy.按月")}
+              ? interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.按年")
+              : interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.按月")}
           </p>
           <p>
-            {translate("product.billing.subtotal")}：
+            {interfaceTranslator.t("product.billing.subtotal")}：
             {formatCurrency(order.quote.subtotalCents, order.quote.currency)}
           </p>
           <p>
-            {translate("product.billing.tax")}：
+            {interfaceTranslator.t("product.billing.tax")}：
             {formatCurrency(order.quote.taxCents, order.quote.currency)}
           </p>
           <p>
-            {translate("product.billing.total")}：
+            {interfaceTranslator.t("product.billing.total")}：
             {formatCurrency(order.quote.totalCents, order.quote.currency)}
           </p>
         </div>
@@ -339,15 +344,15 @@ function PaymentOrderNotice({
       {order.checkoutUrl && order.status === "pending" ? (
         <p className="payment-order__line">
           <a href={order.checkoutUrl} target="_blank" rel="noreferrer">
-            {translate("ui.navigation.screens.plansScreen.copy.继续付款")}
+            {interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.继续付款")}
           </a>
         </p>
       ) : null}
       {order.status === "pending" || order.status === "paid" ? (
         <GameButton variant="secondary" type="button" onClick={onRefresh} disabled={refreshing}>
           {refreshing
-            ? translate("ui.navigation.screens.plansScreen.copy.正在查询")
-            : translate("ui.navigation.screens.plansScreen.copy.刷新订单状态")}
+            ? interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.正在查询")
+            : interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.刷新订单状态")}
         </GameButton>
       ) : null}
     </GameCallout>
@@ -365,6 +370,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
 }
 
 function PlansSession({ payment }: { readonly payment: PaymentPort }) {
+  const interfaceTranslator = useI18n();
   const [yearly, setYearly] = useState(readYearlyChoice);
   const [recovering, setRecovering] = useState(
     Boolean(payment.resumePurchase && payment.accountKey?.().startsWith("signed_in:")),
@@ -393,7 +399,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
         }
       })
       .catch(() => {
-        if (active) setError(translate("product.billing.readFailed"));
+        if (active) setError(interfaceTranslator.t("product.billing.readFailed"));
       })
       .finally(() => {
         if (active) setRecovering(false);
@@ -405,7 +411,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
         setEntitlement(nextEntitlement);
       },
       () => {
-        if (active) setError(translate("product.billing.readFailed"));
+        if (active) setError(interfaceTranslator.t("product.billing.readFailed"));
       },
     );
     return () => {
@@ -425,7 +431,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
   async function startPurchase(offerId: string): Promise<void> {
     if (purchaseBusy.current || recovering) return;
     if (order?.status === "pending") {
-      setError(translate("product.billing.pending"));
+      setError(interfaceTranslator.t("product.billing.pending"));
       return;
     }
     purchaseBusy.current = true;
@@ -438,7 +444,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       });
       if (result.kind === "explanation") {
         if (payment.purchaseAvailability() === "unavailable") {
-          setError(translate("product.billing.purchaseFailed"));
+          setError(interfaceTranslator.t("product.billing.purchaseFailed"));
           return;
         }
         setExplanation(result);
@@ -450,7 +456,9 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试"),
+          : interfaceTranslator.t(
+              "ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试",
+            ),
       );
     } finally {
       purchaseBusy.current = false;
@@ -466,7 +474,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       if (result.kind === "explanation") setExplanation(result);
       else setPortalUrl(result.value.url);
     } catch {
-      setError(translate("product.billing.readFailed"));
+      setError(interfaceTranslator.t("product.billing.readFailed"));
     }
   }
 
@@ -486,7 +494,9 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.navigation.screens.plansScreen.copy.订单状态暂时读不到-请稍后再试"),
+          : interfaceTranslator.t(
+              "ui.navigation.screens.plansScreen.copy.订单状态暂时读不到-请稍后再试",
+            ),
       );
     } finally {
       setRefreshingOrder(false);
@@ -503,7 +513,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       {hasConfiguredCycle ? (
         <div className="plan-toggle">
           <GameSegmentedControl
-            label={translate("ui.navigation.screens.plansScreen.copy.计费周期")}
+            label={interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.计费周期")}
             activeId={yearly ? "yearly" : "monthly"}
             options={BILLING_CYCLE_OPTIONS}
             onSelect={(id) => {
@@ -541,10 +551,10 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
         ))}
       </ul>
       <details className="product-details" data-billing-details>
-        <summary>{translate("product.billing.details")}</summary>
-        <p>{translate("product.billing.yearlyTotal")}</p>
-        <p>{translate("product.billing.walletSeparate")}</p>
-        <p>{translate("product.billing.renewalDetails")}</p>
+        <summary>{interfaceTranslator.t("product.billing.details")}</summary>
+        <p>{interfaceTranslator.t("product.billing.yearlyTotal")}</p>
+        <p>{interfaceTranslator.t("product.billing.walletSeparate")}</p>
+        <p>{interfaceTranslator.t("product.billing.renewalDetails")}</p>
       </details>
       <PaymentSummary balance={balance} entitlement={entitlement} />
       {(payment.accountKey?.().startsWith("signed_in:") || purchaseAvailability === "available") &&
@@ -555,16 +565,16 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
           data-subscription-management
           onClick={() => void manageSubscription()}
         >
-          {translate("product.billing.manage")}
+          {interfaceTranslator.t("product.billing.manage")}
         </GameButton>
       ) : null}
       {portalUrl ? (
         <p>
           <a href={portalUrl} target="_blank" rel="noreferrer">
-            {translate("product.billing.portal")}
+            {interfaceTranslator.t("product.billing.portal")}
           </a>
           <br />
-          {translate("product.billing.portalHint")}
+          {interfaceTranslator.t("product.billing.portalHint")}
         </p>
       ) : null}
 

@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -59,24 +60,26 @@ async function renderSettle(props: Partial<Parameters<typeof Settlement>[0]> = {
   const onMap = props.onMap ?? vi.fn();
   await act(async () => {
     root.render(
-      <Settlement
-        lessonTitle="会使用 App 和会开发 App，差在哪儿？"
-        courseTitle="《在开始之前：App、代码、和你》"
-        dropped={[{ card: CARD, dueAt: Date.now() + 86_400_000 }]}
-        builtBefore={0}
-        builtAfter={1}
-        doneBefore={0}
-        doneAfter={1}
-        lessons={41}
-        streakDays={1}
-        unlocked={[]}
-        nextLesson={NEXT_LESSON}
-        nextUnit={NEXT_UNIT}
-        onNext={vi.fn()}
-        onMap={onMap}
-        onStartUnit={vi.fn()}
-        {...props}
-      />,
+      withInterfaceLocale(
+        <Settlement
+          lessonTitle="会使用 App 和会开发 App，差在哪儿？"
+          courseTitle="《在开始之前：App、代码、和你》"
+          dropped={[{ card: CARD, dueAt: Date.now() + 86_400_000 }]}
+          builtBefore={0}
+          builtAfter={1}
+          doneBefore={0}
+          doneAfter={1}
+          lessons={41}
+          streakDays={1}
+          unlocked={[]}
+          nextLesson={NEXT_LESSON}
+          nextUnit={NEXT_UNIT}
+          onNext={vi.fn()}
+          onMap={onMap}
+          onStartUnit={vi.fn()}
+          {...props}
+        />,
+      ),
     );
   });
 }

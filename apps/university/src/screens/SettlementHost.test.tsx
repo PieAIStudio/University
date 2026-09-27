@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -145,14 +146,16 @@ describe("SettlementHost", () => {
     const onIncomplete = vi.fn();
     await act(async () => {
       root.render(
-        <SettlementHost
-          course={COURSE}
-          grewFrom={null}
-          locator={locator("turing-pact-open")}
-          onMap={vi.fn()}
-          onNext={vi.fn()}
-          onIncomplete={onIncomplete}
-        />,
+        withInterfaceLocale(
+          <SettlementHost
+            course={COURSE}
+            grewFrom={null}
+            locator={locator("turing-pact-open")}
+            onMap={vi.fn()}
+            onNext={vi.fn()}
+            onIncomplete={onIncomplete}
+          />,
+        ),
       );
     });
     expect(container.textContent).not.toContain("读完了");
@@ -165,14 +168,16 @@ describe("SettlementHost", () => {
     const onIncomplete = vi.fn();
     await act(async () => {
       root.render(
-        <SettlementHost
-          course={COURSE}
-          grewFrom={null}
-          locator={locator(studyId)}
-          onMap={vi.fn()}
-          onNext={vi.fn()}
-          onIncomplete={onIncomplete}
-        />,
+        withInterfaceLocale(
+          <SettlementHost
+            course={COURSE}
+            grewFrom={null}
+            locator={locator(studyId)}
+            onMap={vi.fn()}
+            onNext={vi.fn()}
+            onIncomplete={onIncomplete}
+          />,
+        ),
       );
     });
 
@@ -186,14 +191,16 @@ describe("SettlementHost", () => {
     const onIncomplete = vi.fn();
     await act(async () => {
       root.render(
-        <SettlementHost
-          course={COURSE}
-          grewFrom={null}
-          locator={locator(studyId)}
-          onMap={vi.fn()}
-          onNext={vi.fn()}
-          onIncomplete={onIncomplete}
-        />,
+        withInterfaceLocale(
+          <SettlementHost
+            course={COURSE}
+            grewFrom={null}
+            locator={locator(studyId)}
+            onMap={vi.fn()}
+            onNext={vi.fn()}
+            onIncomplete={onIncomplete}
+          />,
+        ),
       );
     });
 
@@ -208,14 +215,16 @@ describe("SettlementHost", () => {
     const onIncomplete = vi.fn();
     await act(async () => {
       root.render(
-        <SettlementHost
-          course={COURSE}
-          grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
-          locator={locator(studyId)}
-          onMap={vi.fn()}
-          onNext={vi.fn()}
-          onIncomplete={onIncomplete}
-        />,
+        withInterfaceLocale(
+          <SettlementHost
+            course={COURSE}
+            grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
+            locator={locator(studyId)}
+            onMap={vi.fn()}
+            onNext={vi.fn()}
+            onIncomplete={onIncomplete}
+          />,
+        ),
       );
     });
     expect(onIncomplete).not.toHaveBeenCalled();
@@ -239,14 +248,16 @@ describe("SettlementHost", () => {
     try {
       await act(async () => {
         root.render(
-          <SettlementHost
-            course={COURSE}
-            grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
-            locator={locator(studyId)}
-            onMap={vi.fn()}
-            onNext={vi.fn()}
-            onIncomplete={vi.fn()}
-          />,
+          withInterfaceLocale(
+            <SettlementHost
+              course={COURSE}
+              grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
+              locator={locator(studyId)}
+              onMap={vi.fn()}
+              onNext={vi.fn()}
+              onIncomplete={vi.fn()}
+            />,
+          ),
         );
       });
       expect(container.textContent).toContain("读完了");

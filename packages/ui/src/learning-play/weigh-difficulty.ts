@@ -1,6 +1,6 @@
 import type { ActivityDifficulty, ActivityFamily, WeighActivity } from "@pieai/university-core";
 
-import { translate as t } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import { getWeighOptions, getWeighSituations } from "./weigh-examples.js";
 
 /**
@@ -20,7 +20,8 @@ import { getWeighOptions, getWeighSituations } from "./weigh-examples.js";
  * family adds its fourth bucket with the item that lands in it.
  */
 export function getWeighFamily(activity: WeighActivity): ActivityFamily {
-  const goal = (level: ActivityDifficulty) => t(`play.difficulty.weigh.${level}`);
+  const goal = (level: ActivityDifficulty) =>
+    interfaceTranslator.t(`play.difficulty.weigh.${level}`);
   const tag = (task: WeighActivity, difficulty: ActivityDifficulty): WeighActivity => ({
     ...task,
     id: `${activity.id}:${difficulty}:v1`,

@@ -35,7 +35,7 @@ export const messages = {
   "play.sort.files.renameButtonWhy": "You are changing text the page already holds, so index.html.",
   "play.sort.files.renameButtonNot":
     "What the button does when clicked has not changed, and that is what main.js owns.",
-  "play.sort.files.darkerButton": "Make a button's colour darker",
+  "play.sort.files.darkerButton": "Make a button''s colour darker",
   "play.sort.files.darkerButtonDetail": "Button and wording stay; only the colour changes.",
   "play.sort.files.darkerButtonWhy":
     "The thing is still there; only how it looks changed, so style.css.",
@@ -69,8 +69,7 @@ export const messages = {
 
   "play.extra.hunt.rule": "The specification",
   "play.extra.hunt.program": "The running program",
-  "play.extra.hunt.inputRange":
-    "Test values from {{min}} to {{max}} {{unit}}, including both ends.",
+  "play.extra.hunt.inputRange": "Test values from {min} to {max} {unit}, including both ends.",
   "play.extra.hunt.run": "Run this input",
   "play.extra.hunt.expected": "The specification promises",
   "play.extra.hunt.actual": "The program produces",
@@ -80,12 +79,12 @@ export const messages = {
   "play.extra.hunt.equal": "Results agree",
   "play.extra.hunt.different": "A disagreement",
   "play.extra.hunt.found":
-    "For input {{input}}, the specification promises {{expected}}, but the program produces {{actual}}. This counterexample reproduces the problem.",
+    "For input {input}, the specification promises {expected}, but the program produces {actual}. This counterexample reproduces the problem.",
   "play.extra.hunt.same":
-    "Both results are {{output}} for this input. It does not disprove the program yet. Try another part of the range.",
+    "Both results are {output} for this input. It does not disprove the program yet. Try another part of the range.",
   "play.extra.hunt.empty": "Enter a number before running the test.",
   "play.extra.hunt.notFinite": "Enter a finite number.",
-  "play.extra.hunt.outOfRange": "The input must be between {{min}} and {{max}} {{unit}}.",
+  "play.extra.hunt.outOfRange": "The input must be between {min} and {max} {unit}.",
   "play.extra.hunt.invalidActivity": "This experiment has an invalid numeric range and cannot run.",
   "play.extra.hunt.explored": "Inputs you have explored",
   "play.extra.hunt.exploredEmpty": "Tests leave a point here",
@@ -94,25 +93,25 @@ export const messages = {
   "play.extra.hunt.selectInput": "Pick a test value on the number line",
   "play.extra.hunt.precisionNote":
     "Drag to choose a whole number, or enter a precise decimal in the box.",
-  "play.extra.hunt.testCount": "{{count}} test points recorded",
+  "play.extra.hunt.testCount": "{count} test points recorded",
   "play.extra.hunt.ready": "Ready? Run a test and compare both results.",
-  "play.extra.hunt.testedInput": "Input tested: {{input}}",
+  "play.extra.hunt.testedInput": "Input tested: {input}",
   "play.extra.hunt.previousInput":
-    "The new input has not run yet. These are still the results for {{input}}.",
+    "The new input has not run yet. These are still the results for {input}.",
   "play.extra.hunt.openImplementation": "Look inside",
   "play.extra.hunt.implementationNote":
     "You can inspect the implementation here, or close it and keep finding counterexamples through experiments.",
   "play.extra.hunt.history": "Test history",
-  "play.extra.hunt.testNumber": "Test {{number}}",
-  "play.extra.hunt.testSummary": "Input {{input}}; expected {{expected}}; actual {{actual}}.",
+  "play.extra.hunt.testNumber": "Test {number}",
+  "play.extra.hunt.testSummary": "Input {input}; expected {expected}; actual {actual}.",
   "play.extra.dispatch.served": "Served",
   "play.extra.dispatch.cost": "Cost used",
   "play.extra.dispatch.progress": "Request progress",
   "play.extra.dispatch.costProgress": "Budget used",
-  "play.extra.dispatch.costValue": "{{cost}} / {{budget}}",
-  "play.extra.dispatch.requestNumber": "Request {{number}} / {{total}}",
+  "play.extra.dispatch.costValue": "{cost} / {budget}",
+  "play.extra.dispatch.requestNumber": "Request {number} / {total}",
   "play.extra.dispatch.sendTo": "Send this request to",
-  "play.extra.dispatch.laneCost": "Cost {{cost}}",
+  "play.extra.dispatch.laneCost": "Cost {cost}",
   "play.extra.dispatch.warm": "An identical resource is already cached. You can reuse it now.",
   "play.extra.dispatch.cold":
     "This resource is not cached yet. A correct first delivery will leave a copy.",
@@ -127,16 +126,16 @@ export const messages = {
   "play.extra.dispatch.cacheMiss":
     "There is no matching cached copy yet. Use a lane that can produce this resource first.",
   "play.extra.dispatch.noCache":
-    "This request needs a fresh result, so the cache cannot serve it. {{why}}",
-  "play.extra.dispatch.wrongLane": "“{{lane}}” cannot serve this request. {{why}}",
+    "This request needs a fresh result, so the cache cannot serve it. {why}",
+  "play.extra.dispatch.wrongLane": "“{lane}” cannot serve this request. {why}",
   "play.extra.dispatch.invalidLane": "This lane has an invalid configuration. Try another lane.",
-  "play.extra.dispatch.delivered": "Served by “{{lane}}” at a cost of +{{cost}}.",
+  "play.extra.dispatch.delivered": "Served by “{lane}” at a cost of +{cost}.",
   "play.extra.dispatch.createdCache": "A matching cached copy is now available for later requests.",
   "play.extra.dispatch.usedCache": "Reused an existing result at no additional cost.",
   "play.extra.dispatch.success":
-    "All {{count}} requests were served correctly. Cost: {{spent}}; budget: {{budget}}. You reused an existing result {{hits}} times.",
+    "All {count} requests were served correctly. Cost: {spent}; budget: {budget}. You reused an existing result {hits} times.",
   "play.extra.dispatch.overBudget":
-    "Cost {{spent}} exceeds the budget of {{budget}}. Restart this round and route repeat requests to copies that are already cached.",
+    "Cost {spent} exceeds the budget of {budget}. Restart this round and route repeat requests to copies that are already cached.",
   "play.extra.dispatch.completeTitle": "Every request delivered",
   "play.extra.dispatch.overBudgetTitle": "The budget is exceeded",
   "play.extra.dispatch.history": "Delivery history",
@@ -144,7 +143,7 @@ export const messages = {
   "play.extra.dispatch.upNext": "Coming next",
   "play.extra.dispatch.timed": "Timed challenge",
   "play.extra.dispatch.untimed": "No time limit in practice mode",
-  "play.extra.dispatch.timeLeft": "{{seconds}} seconds left",
+  "play.extra.dispatch.timeLeft": "{seconds} seconds left",
   "play.extra.dispatch.pause": "Pause",
   "play.extra.dispatch.resume": "Resume timer",
   "play.extra.dispatch.paused":
@@ -156,7 +155,7 @@ export const messages = {
     "The timer starts only when enabled. Pause whenever you like; leaving this page pauses it automatically.",
   "play.extra.sample.shipping.title": "Does this shipping system keep its promise?",
   "play.extra.sample.shipping.brief":
-    "The shop lets a small program decide who gets free shipping. Try different order totals and check whether it follows the shop's rule.",
+    "The shop lets a small program decide who gets free shipping. Try different order totals and check whether it follows the shop''s rule.",
   "play.extra.sample.shipping.goal":
     "Find a valid order total that makes the promised and actual results disagree.",
   "play.extra.sample.shipping.takeaway":
@@ -170,7 +169,7 @@ export const messages = {
   "play.extra.sample.shipping.program": "freeShipping = orderTotal > 100",
   "play.extra.sample.shipping.output": "Free shipping?",
   "play.extra.sample.shipping.source": "MDN · Greater than or equal",
-  "play.extra.sample.volume.title": "The player's volume gatekeeper",
+  "play.extra.sample.volume.title": "The player''s volume gatekeeper",
   "play.extra.sample.volume.brief":
     "The player promises to keep its output in a safe range. Give it different requested volumes and look for a case it missed.",
   "play.extra.sample.volume.goal":
@@ -186,7 +185,7 @@ export const messages = {
   "play.extra.sample.volume.program": "volume = Math.min(100, requestedVolume)",
   "play.extra.sample.volume.output": "Output volume",
   "play.extra.sample.volume.source": "MDN · Math.max and lower bounds",
-  "play.extra.sample.web.title": "A small website's dispatch desk",
+  "play.extra.sample.web.title": "A small website''s dispatch desk",
   "play.extra.sample.web.brief":
     "Posters, styles, prices, and stock requests keep arriving. Identical files can be reused; live data must be fetched again.",
   "play.extra.sample.web.goal": "Serve all 7 requests correctly with a total cost of at most 8.",
@@ -216,7 +215,7 @@ export const messages = {
   "play.extra.sample.web.stock": "The current stock count",
   "play.extra.sample.web.stockDetail": "Stock may just have changed. Fetch the latest value.",
   "play.extra.sample.web.source": "MDN · HTTP caching",
-  "play.extra.sample.video.title": "A short film's reuse desk",
+  "play.extra.sample.video.title": "A short film''s reuse desk",
   "play.extra.sample.video.brief":
     "Several shots need identical assets. Reuse prepared results, but query export progress afresh.",
   "play.extra.sample.video.goal":

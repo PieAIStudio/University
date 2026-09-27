@@ -1,5 +1,5 @@
 import { GameBadge } from "@pieai/swimmer-ui-kit";
-import { translate as t } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 import "./map-navigation.css";
 
@@ -14,10 +14,11 @@ export interface MapInformationData {
 
 /** The title is rendered by the shared frame. This body never owns an entry action. */
 export function MapInformation({ data }: { readonly data: MapInformationData }) {
+  const interfaceTranslator = useI18n();
   return (
     <div className="map-information" data-map-information={data.id}>
       <p className="map-information__kind">
-        {t(data.kind === "none" ? "map.noSelection" : `map.${data.kind}`)}
+        {interfaceTranslator.t(data.kind === "none" ? "map.noSelection" : `map.${data.kind}`)}
       </p>
       {data.description ? <p>{data.description}</p> : null}
       {data.facts?.length ? (
@@ -60,14 +61,20 @@ export function courseInformation(
     title: course.title,
     kind: "course",
     description: course.description,
-    facts: [t("map.completedCount", { done, total })],
+    facts: [interfaceTranslator.t("map.completedCount", { done, total })],
     sections: [
-      { title: t("map.objectives"), lines: course.objectives },
-      { title: t("map.audience"), lines: course.audience ? [course.audience] : [] },
+      { title: interfaceTranslator.t("map.objectives"), lines: course.objectives },
       {
-        title: t("map.prerequisites"),
+        title: interfaceTranslator.t("map.audience"),
+        lines: course.audience ? [course.audience] : [],
+      },
+      {
+        title: interfaceTranslator.t("map.prerequisites"),
         lines: assumptions.length
-          ? [...assumptions.map((item) => item.title), t("map.prerequisiteNote")]
+          ? [
+              ...assumptions.map((item) => item.title),
+              interfaceTranslator.t("map.prerequisiteNote"),
+            ]
           : [],
       },
     ],
@@ -84,12 +91,15 @@ export function lessonInformation(
     kind: "lesson",
     description: unit.objective,
     facts: [
-      t("map.exerciseCount", { count: lesson.exerciseCount }),
-      t("map.cardCount", { count: lesson.cardCount }),
+      interfaceTranslator.t("map.exerciseCount", { count: lesson.exerciseCount }),
+      interfaceTranslator.t("map.cardCount", { count: lesson.cardCount }),
     ],
     sections: [
-      { title: t("map.unit"), lines: [unit.title] },
-      { title: t("map.information"), lines: [t("map.sources")] },
+      { title: interfaceTranslator.t("map.unit"), lines: [unit.title] },
+      {
+        title: interfaceTranslator.t("map.information"),
+        lines: [interfaceTranslator.t("map.sources")],
+      },
     ],
   };
 }

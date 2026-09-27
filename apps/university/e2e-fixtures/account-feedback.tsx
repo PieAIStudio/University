@@ -9,7 +9,7 @@ import type {
   AuthSession,
   AuthUser,
 } from "@pieai/university-backend/browser.js";
-import { I18nProvider, setActiveLocale } from "@pieai/university-ui/i18n.js";
+import { InterfaceLanguageProvider, setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 import {
   AccountPanel,
   AuthCallbackScreen,
@@ -32,7 +32,7 @@ function deferred<T>() {
 const query = new URLSearchParams(location.search);
 const locale = query.get("lang") === "zh-CN" ? "zh-CN" : "en";
 const scenario = query.get("scenario") ?? "login";
-setActiveLocale(locale);
+setInterfaceLocale(locale);
 document.documentElement.lang = locale;
 
 const guest: AuthUser = { id: "synthetic-guest", email: null, is_anonymous: true };
@@ -190,7 +190,7 @@ const screen =
   );
 
 createRoot(document.getElementById("root")!).render(
-  <I18nProvider>
+  <InterfaceLanguageProvider>
     <main className="account-feedback-fixture" data-returned-to="">
       <p>
         {locale === "en"
@@ -199,5 +199,5 @@ createRoot(document.getElementById("root")!).render(
       </p>
       {screen}
     </main>
-  </I18nProvider>,
+  </InterfaceLanguageProvider>,
 );

@@ -1,5 +1,5 @@
 import type { IdentityFailureCode } from "@pieai/university-core";
-import { translate } from "../../i18n/index.js";
+import { interfaceTranslator } from "../../i18n/index.js";
 
 const codes = new Set<IdentityFailureCode>([
   "sign-in-failed",
@@ -22,6 +22,6 @@ export function accountFailureMessage(error: unknown, fallback?: IdentityFailure
       ? (code as IdentityFailureCode)
       : fallback;
   return selected
-    ? translate(`account.failure.${selected}`)
-    : translate("account.failure.unavailable");
+    ? interfaceTranslator.t(`account.failure.${selected}`)
+    : interfaceTranslator.t("account.failure.unavailable");
 }

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type {
@@ -42,6 +42,7 @@ export function LessonSourceVersion({
   /** Both shells render the entry; the port returns an action or an explanation. */
   readonly sourceAccess: SourceAccessPort;
 }) {
+  const interfaceTranslator = useI18n();
   const [checkout, setCheckout] = useState<LessonSourceVersionCheckout | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export function LessonSourceVersion({
       setError(
         reason instanceof Error
           ? reason.message
-          : translate("ui.lesson.lessonSourceVersion.copy.打不开正在学习的-App"),
+          : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.打不开正在学习的-App"),
       );
     } finally {
       setPending(false);
@@ -115,23 +116,29 @@ export function LessonSourceVersion({
             className="lesson-version__label"
             {...(dated
               ? {
-                  title: translate("ui.lesson.lessonSourceVersion.copy.完整提交号-value0", {
-                    value0: sourceCommit,
-                  }),
+                  title: interfaceTranslator.t(
+                    "ui.lesson.lessonSourceVersion.copy.完整提交号-value0",
+                    {
+                      value0: sourceCommit,
+                    },
+                  ),
                 }
               : {})}
           >
             {dated
-              ? translate("ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本", {
-                  value0: dated,
-                })
-              : translate("ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0", {
+              ? interfaceTranslator.t(
+                  "ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本",
+                  {
+                    value0: dated,
+                  },
+                )
+              : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0", {
                   value0: sourceCommit.slice(0, 8),
                 })}
           </span>
           {unavailable ? (
             <p className="lesson-version__status">
-              {translate(
+              {interfaceTranslator.t(
                 "ui.lesson.lessonSourceVersion.copy.浏览器端读的是课程包-不能在这里启动这个-App",
               )}
             </p>
@@ -144,16 +151,16 @@ export function LessonSourceVersion({
             disabled={pending}
           >
             {pending
-              ? translate("ui.lesson.lessonSourceVersion.copy.正在打开")
-              : translate("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
+              ? interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.正在打开")
+              : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
           </button>
         </>
       ) : (
         <div className="lesson-version__ready">
           <p className="lesson-version__label">
             {checkout.created
-              ? translate("ui.lesson.lessonSourceVersion.copy.已取出到")
-              : translate("ui.lesson.lessonSourceVersion.copy.这个版本已经在")}
+              ? interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.已取出到")
+              : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.这个版本已经在")}
             <code>{checkout.path}</code>
           </p>
           {checkout.run.length > 0 ? (
@@ -173,26 +180,28 @@ export function LessonSourceVersion({
                       .then(() => setCopied(true))
                       .catch(() =>
                         setError(
-                          translate("ui.lesson.lessonSourceVersion.copy.复制失败-剪贴板不可用"),
+                          interfaceTranslator.t(
+                            "ui.lesson.lessonSourceVersion.copy.复制失败-剪贴板不可用",
+                          ),
                         ),
                       );
                   }}
                 >
                   {copied
-                    ? translate("ui.lesson.lessonSourceVersion.copy.已复制")
-                    : translate("ui.lesson.lessonSourceVersion.copy.复制命令")}
+                    ? interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.已复制")
+                    : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.复制命令")}
                 </button>
                 <GameButton variant="ghost" onClick={() => void call("close")} disabled={pending}>
                   {pending
-                    ? translate("ui.lesson.lessonSourceVersion.copy.正在删除")
-                    : translate("ui.lesson.lessonSourceVersion.copy.用完了-删掉")}
+                    ? interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.正在删除")
+                    : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.用完了-删掉")}
                 </GameButton>
               </div>
             </>
           ) : (
             <div className="lesson-version__actions">
               <GameButton variant="ghost" onClick={() => void call("close")} disabled={pending}>
-                {translate("ui.lesson.lessonSourceVersion.copy.用完了-删掉")}
+                {interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.用完了-删掉")}
               </GameButton>
             </div>
           )}
@@ -217,11 +226,11 @@ function formatDate(iso: string): string {
   const month = at.getMonth() + 1;
   const day = at.getDate();
   return at.getFullYear() === now.getFullYear()
-    ? translate("ui.lesson.lessonSourceVersion.copy.value0月value1日", {
+    ? interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.value0月value1日", {
         value0: month,
         value1: day,
       })
-    : translate("ui.lesson.lessonSourceVersion.copy.value0年value1月value2日", {
+    : interfaceTranslator.t("ui.lesson.lessonSourceVersion.copy.value0年value1月value2日", {
         value0: at.getFullYear(),
         value1: month,
         value2: day,

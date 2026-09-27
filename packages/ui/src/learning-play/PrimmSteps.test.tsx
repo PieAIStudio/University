@@ -1,9 +1,10 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { primmStepsFixture } from "../../../core/src/learning-play/fixtures/primm-steps.js";
-import { I18nProvider } from "../i18n/index.js";
+import { InterfaceLanguageProvider } from "../i18n/index.js";
 import { PrimmLesson } from "./PrimmLesson.js";
 import { initialStepsSession, restoreStepsSession } from "./primm-steps-session.js";
 import type { PrimmLessonProps, RunPrimm } from "./primm-types.js";
@@ -75,34 +76,36 @@ async function render(extra: Partial<PrimmLessonProps> = {}) {
   const progress = vi.fn();
   await act(async () =>
     root.render(
-      <I18nProvider locale="zh-CN">
-        <PrimmLesson
-          activity={lesson}
-          assets={[
-            {
-              id: "everyday-coffee",
-              kind: "authorized-external",
-              mime: "image/png",
-              url: "/coffee.png",
-              alt: "咖啡",
-            },
-            {
-              id: "everyday-cat",
-              kind: "authorized-external",
-              mime: "image/png",
-              url: "/cat.png",
-              alt: "猫",
-            },
-          ]}
-          lessonRef={{ studyId: "s", courseId: "c", unitId: "u", lessonId: "l" }}
-          contentRevision={2}
-          runPrimm={run}
-          evaluatePrimm={grade}
-          onPrimmComplete={complete}
-          onPathProgress={progress}
-          {...extra}
-        />
-      </I18nProvider>,
+      withInterfaceLocale(
+        <InterfaceLanguageProvider locale="zh-CN">
+          <PrimmLesson
+            activity={lesson}
+            assets={[
+              {
+                id: "everyday-coffee",
+                kind: "authorized-external",
+                mime: "image/png",
+                url: "/coffee.png",
+                alt: "咖啡",
+              },
+              {
+                id: "everyday-cat",
+                kind: "authorized-external",
+                mime: "image/png",
+                url: "/cat.png",
+                alt: "猫",
+              },
+            ]}
+            lessonRef={{ studyId: "s", courseId: "c", unitId: "u", lessonId: "l" }}
+            contentRevision={2}
+            runPrimm={run}
+            evaluatePrimm={grade}
+            onPrimmComplete={complete}
+            onPathProgress={progress}
+            {...extra}
+          />
+        </InterfaceLanguageProvider>,
+      ),
     ),
   );
   return { run, grade, complete, progress };

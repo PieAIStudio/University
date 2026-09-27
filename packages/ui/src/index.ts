@@ -24,33 +24,17 @@
  */
 
 export {
-  activeLocale,
-  applyDocumentLocale,
-  availableLocales,
-  createTranslator,
-  formatDate,
-  formatNumber,
-  formatPlural,
+  interfaceI18n,
+  INTERFACE_LOCALES,
+  interfaceTranslator,
+  setInterfaceLocale,
   readLocalePreference,
   writeLocalePreference,
-  I18nProvider,
-  isLocaleComplete,
-  localeCompleteness,
-  LOCALE_REGISTRY,
-  resolveLocale,
-  setActiveLocale,
-  SOURCE_LOCALE,
-  translate,
+  InterfaceProvider,
+  InterfaceLanguageProvider,
   useI18n,
 } from "./i18n/index.js";
-export type {
-  LocaleCompleteness,
-  LocaleDefinition,
-  LocaleDirection,
-  LocaleRegistry,
-  PluralCategory,
-  Translator,
-} from "./i18n/index.js";
+export type { InterfaceTranslator } from "./i18n/index.js";
 
 // Shared surface — the lesson itself. Both shells.
 export { LessonReader } from "./lesson/LessonReader.js";

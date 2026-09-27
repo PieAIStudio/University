@@ -7,7 +7,7 @@ import {
   type WeighActivity,
   type WeighState,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
@@ -38,6 +38,7 @@ export function WeighGame({
   onAttempt,
   guided = false,
 }: ActivityControls<WeighActivity>) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<WeighState>(createWeighState);
   const [settled, setSettled] = useState<readonly Settled[]>([]);
   const [missed, setMissed] = useState<string | null>(null);
@@ -85,7 +86,7 @@ export function WeighGame({
       {current ? (
         <section className="play-weigh__current">
           <p className="play-weigh__progress">
-            {t("play.weigh.progress", {
+            {interfaceTranslator.t("play.weigh.progress", {
               value0: activity.situations.indexOf(current) + 1,
               value1: activity.situations.length,
             })}
@@ -94,7 +95,9 @@ export function WeighGame({
             <strong>{current.label}</strong>
             <small>{current.detail}</small>
           </div>
-          {guided ? <p className="play-weigh__guide">{t("play.weigh.guideDecide")}</p> : null}
+          {guided ? (
+            <p className="play-weigh__guide">{interfaceTranslator.t("play.weigh.guideDecide")}</p>
+          ) : null}
           <div className="play-weigh__choices">
             {activity.options.map((option) => (
               <button
@@ -111,7 +114,7 @@ export function WeighGame({
           </div>
           {missed === current.id ? (
             <p className="play-weigh__miss" role="status">
-              {t("play.weigh.notHere")}
+              {interfaceTranslator.t("play.weigh.notHere")}
             </p>
           ) : null}
         </section>
@@ -138,7 +141,7 @@ export function WeighGame({
                   .filter((option) => option.id !== situation?.bestOptionId)
                   .map((option) => (
                     <small key={option.id} className="play-weigh__cost">
-                      {t("play.weigh.costOfOther", {
+                      {interfaceTranslator.t("play.weigh.costOfOther", {
                         value0: option.label,
                         value1: row.costOfOther[option.id] ?? "",
                       })}
@@ -157,7 +160,7 @@ export function WeighGame({
             from the board rather than authored, so it cannot claim a pattern
             the reader's own answers did not produce.
           */}
-          <p className="play-weigh__flip">{t("play.weigh.flipHeading")}</p>
+          <p className="play-weigh__flip">{interfaceTranslator.t("play.weigh.flipHeading")}</p>
           <ul>
             {weighOutcomes(activity).map((row) => (
               <li key={row.optionId}>
@@ -175,7 +178,9 @@ export function WeighGame({
         </section>
       ) : null}
       {state.misses > 0 && !done ? (
-        <p className="play-weigh__misses">{t("play.weigh.misses", { value0: state.misses })}</p>
+        <p className="play-weigh__misses">
+          {interfaceTranslator.t("play.weigh.misses", { value0: state.misses })}
+        </p>
       ) : null}
     </div>
   );

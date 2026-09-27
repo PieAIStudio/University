@@ -77,8 +77,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0(@react-three/fiber@9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(react@19.2.8)(three@0.185.1)
       '@pieai/swimmer-nerve-kit':
-        specifier: 0.4.0
-        version: 0.4.0(@pieai/swimmer-ui-kit@2.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
+        specifier: 0.5.0
+        version: 0.5.0(@pieai/swimmer-ui-kit@2.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-render-kit':
         specifier: 0.5.0
         version: 0.5.0(three@0.185.1)
@@ -173,6 +173,9 @@ importers:
       '@pieai/swimmer-backend-client':
         specifier: 0.6.0
         version: 0.6.0(@supabase/supabase-js@2.110.3)
+      '@pieai/swimmer-i18n-kit':
+        specifier: 0.1.1
+        version: 0.1.1(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -232,6 +235,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@pieai/swimmer-i18n-kit':
+        specifier: 0.1.1
+        version: 0.1.1(react@19.2.8)
       ts-fsrs:
         specifier: 5.4.1
         version: 5.4.1
@@ -258,8 +264,8 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-i18n-kit':
-        specifier: 0.1.0
-        version: 0.1.0(react@19.2.8)
+        specifier: 0.1.1
+        version: 0.1.1(react@19.2.8)
       '@pieai/swimmer-ui-kit':
         specifier: 2.10.0
         version: 2.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -349,6 +355,9 @@ importers:
       '@react-three/fiber':
         specifier: 9.6.1
         version: 9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
+      '@types/node':
+        specifier: 24.13.2
+        version: 24.13.2
       '@types/react':
         specifier: 19.2.18
         version: 19.2.18
@@ -795,6 +804,11 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
+  '@pieai/doc-gov@0.14.1':
+    resolution: {integrity: sha512-w+LmjfXybVm4eRaB98xv2HYLnMVPTkR/QEms7UiPFViMIJXllDw1OdKBBrGFk71rsLs1WGzc5Ebd/dZenLXKDw==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
   '@pieai/doc-gov@0.14.2':
     resolution: {integrity: sha512-jK/EgL9jNV2SsYmld2cZ6h36p3crO9CbiidZD+B8G7iMDrhBs/0o7JzqrGmQUJadPvhyfeLyIJOar152lWHRRQ==}
     engines: {node: '>=24 <25'}
@@ -850,8 +864,8 @@ packages:
     peerDependencies:
       '@supabase/supabase-js': ^2.0.0
 
-  '@pieai/swimmer-i18n-kit@0.1.0':
-    resolution: {integrity: sha512-aOZc/q7SFvJx6asuOX1zLPBGFyVUr09pZYINKtnHYOu0bmA8p18mG7F3ppKUMSBI0jNQaiWIuA2U81i7n2x9zg==}
+  '@pieai/swimmer-i18n-kit@0.1.1':
+    resolution: {integrity: sha512-5NPZDnIawHQI8kqGdb8WnbeUSY7iA0lGkcpiufnsm9U+s1Ri0g+//aRD6m7kLDhtfxjLlFjgAGFOYz0v6fXbhQ==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -860,8 +874,8 @@ packages:
       react:
         optional: true
 
-  '@pieai/swimmer-nerve-kit@0.4.0':
-    resolution: {integrity: sha512-0MCl4/gO9X5XZGyxSGi0Eg7mAYuXkK9AgTqQ5y4nccyujwnUNSWV5gSANSlqTO6id+VZrXwZFRDJYxDTE6tP4A==}
+  '@pieai/swimmer-nerve-kit@0.5.0':
+    resolution: {integrity: sha512-gPfxJpixS5Muo4j2nXk8hNbS3VZM0ytOT3MhIn1mEpv5+xYgg6REb8Wr0JTaeUbMGplcfun9SxnbOyI4+p13Sw==}
     engines: {node: '>=24 <25'}
     peerDependencies:
       '@earendil-works/pi-agent-core': 0.85.1
@@ -3312,6 +3326,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@pieai/doc-gov@0.14.1':
+    dependencies:
+      mdast-util-from-markdown: 2.0.3
+      yaml: 2.9.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@pieai/doc-gov@0.14.2':
     dependencies:
       mdast-util-from-markdown: 2.0.3
@@ -3321,7 +3342,7 @@ snapshots:
 
   '@pieai/pro-gov@0.14.0':
     dependencies:
-      '@pieai/doc-gov': 0.14.0
+      '@pieai/doc-gov': 0.14.1
     transitivePeerDependencies:
       - supports-color
 
@@ -3349,7 +3370,7 @@ snapshots:
     dependencies:
       '@supabase/supabase-js': 2.110.3
 
-  '@pieai/swimmer-i18n-kit@0.1.0(react@19.2.8)':
+  '@pieai/swimmer-i18n-kit@0.1.1(react@19.2.8)':
     dependencies:
       '@formatjs/icu-messageformat-parser': 3.5.20
       '@typescript/typescript6': 6.0.2
@@ -3357,12 +3378,13 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@pieai/swimmer-nerve-kit@0.4.0(@pieai/swimmer-ui-kit@2.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
+  '@pieai/swimmer-nerve-kit@0.5.0(@pieai/swimmer-ui-kit@2.10.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@ag-ui/client': 1.0.0
       '@ag-ui/core': 1.0.0(zod@4.4.3)
       '@ag-ui/encoder': 1.0.0(zod@4.4.3)
       '@codemirror/state': 6.7.1
+      '@pieai/swimmer-i18n-kit': 0.1.1(react@19.2.8)
       minisearch: 7.2.0
       rxjs: 7.8.1
       zod: 4.4.3

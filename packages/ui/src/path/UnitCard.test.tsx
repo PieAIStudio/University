@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -75,7 +76,9 @@ afterEach(async () => {
 async function renderCard(onClose = vi.fn(), onStart = vi.fn()) {
   await act(async () => {
     root.render(
-      <UnitCard open unit={UNIT} onClose={onClose} onStart={onStart} returnFocusTo={trigger} />,
+      withInterfaceLocale(
+        <UnitCard open unit={UNIT} onClose={onClose} onStart={onStart} returnFocusTo={trigger} />,
+      ),
     );
   });
   return { onClose, onStart };
@@ -153,13 +156,15 @@ describe("UnitCard", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     await act(async () => {
       root.render(
-        <UnitCard
-          open={false}
-          unit={UNIT}
-          onClose={onClose}
-          onStart={vi.fn()}
-          returnFocusTo={trigger}
-        />,
+        withInterfaceLocale(
+          <UnitCard
+            open={false}
+            unit={UNIT}
+            onClose={onClose}
+            onStart={vi.fn()}
+            returnFocusTo={trigger}
+          />,
+        ),
       );
     });
     expect(document.activeElement).toBe(trigger);

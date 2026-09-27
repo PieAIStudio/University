@@ -138,7 +138,7 @@ export const messages = {
   "gallery.history": "早期实验",
   "gallery.empty": "没有找到匹配项目。换个词或切换分类。",
   "gallery.choose": "选择一个项目开始试玩。",
-  "gallery.results": "找到 {{count}} 项",
+  "gallery.results": "找到 {count} 项",
   "gallery.exit": "退出试玩",
   "gallery.retry": "重新开始",
   "gallery.pause": "暂停",

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import {
@@ -22,6 +22,7 @@ import {
  * word card cannot disagree about Albert vs Samantha.
  */
 export function PronunciationButton({ word }: { readonly word: string }) {
+  const interfaceTranslator = useI18n();
   const voices = useEnglishVoices();
   const voice = selectSpeechVoice(
     voices,
@@ -36,12 +37,15 @@ export function PronunciationButton({ word }: { readonly word: string }) {
         type="button"
         variant="ghost"
         static
-        aria-label={translate("ui.entry.pronunciationButton.copy.听-value0-的英文发音", {
-          value0: word,
-        })}
+        aria-label={interfaceTranslator.t(
+          "ui.entry.pronunciationButton.copy.听-value0-的英文发音",
+          {
+            value0: word,
+          },
+        )}
         onClick={() => speakWord(word, voice)}
       >
-        {translate("ui.entry.pronunciationButton.copy.听发音")}
+        {interfaceTranslator.t("ui.entry.pronunciationButton.copy.听发音")}
       </GameButton>
     </span>
   );

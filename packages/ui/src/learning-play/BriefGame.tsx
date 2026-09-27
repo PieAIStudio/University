@@ -17,7 +17,7 @@ import {
   type BriefPreview,
   type BriefAcceptance,
 } from "@pieai/university-core";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
 import { PlayGuide } from "./PlayGuide.js";
 import { PlayIcon } from "./PlayIcon.js";
@@ -29,6 +29,7 @@ export function BriefGame({
   onAttempt,
   guided = false,
 }: ActivityControls<BriefActivity>) {
+  const interfaceTranslator = useI18n();
   const [phase, setPhase] = useState<"observe" | "agree" | "test">("observe");
   const [questionIndex, setQuestionIndex] = useState(() =>
     Math.max(
@@ -180,27 +181,29 @@ export function BriefGame({
       .filter(Boolean)
       .join(" / ");
     const message = result.missing.length
-      ? t("play.ai.brief.missing", { items: names(result.missing) })
+      ? interfaceTranslator.t("play.ai.brief.missing", { items: names(result.missing) })
       : result.mismatches.length
-        ? t("play.ai.brief.mismatch", { items: names(result.mismatches) })
+        ? interfaceTranslator.t("play.ai.brief.mismatch", { items: names(result.mismatches) })
         : !result.passed
-          ? t("play.ai.brief.untested", { items: unchecked })
-          : t("play.ai.brief.done");
+          ? interfaceTranslator.t("play.ai.brief.untested", { items: unchecked })
+          : interfaceTranslator.t("play.ai.brief.done");
     const clauses = activity.questions.flatMap((question) =>
       question.options
         .filter((option) => option.value === choices[question.axis])
         .map((option) => option.clause),
     );
     const handoff = [
-      t("play.ai.brief.handoffTask", { name: activity.productName }),
+      interfaceTranslator.t("play.ai.brief.handoffTask", { name: activity.productName }),
       activity.productDescription,
       "",
-      t("play.ai.brief.handoffRules"),
+      interfaceTranslator.t("play.ai.brief.handoffRules"),
       ...clauses.map((line) => `- ${line}`),
-      ...(revised ? ["", t("play.ai.brief.changeRecorded"), activity.followUp!.request] : []),
+      ...(revised
+        ? ["", interfaceTranslator.t("play.ai.brief.changeRecorded"), activity.followUp!.request]
+        : []),
       ...accepted.flatMap((round) => [
         "",
-        t("play.ai.brief.firstContract"),
+        interfaceTranslator.t("play.ai.brief.firstContract"),
         ...activity.questions.flatMap((question) =>
           question.options
             .filter((option) => option.value === round.choices[question.axis])
@@ -208,8 +211,8 @@ export function BriefGame({
         ),
       ]),
       "",
-      t("play.ai.brief.handoffChecks"),
-      t("play.ai.brief.handoffUnknown"),
+      interfaceTranslator.t("play.ai.brief.handoffChecks"),
+      interfaceTranslator.t("play.ai.brief.handoffUnknown"),
     ].join("\n");
     const rounds = [...accepted, checkpoint];
     const final = evaluateBriefRounds(activity, rounds);
@@ -239,25 +242,28 @@ export function BriefGame({
         <PlayGuide
           title={
             phase === "observe"
-              ? t(
+              ? interfaceTranslator.t(
                   experiments.length
                     ? "play.usability.brief.difference"
                     : "play.usability.brief.start",
                 )
               : phase === "agree"
-                ? t(revised ? "play.usability.brief.change" : "play.usability.brief.question", {
-                    current: activity.initialChoices ? 1 : questionIndex + 1,
-                    total: activity.initialChoices
-                      ? activity.questions.filter(
-                          (question) => activity.initialChoices?.[question.axis] === undefined,
-                        ).length
-                      : activity.questions.length,
-                  })
-                : t("play.usability.brief.test")
+                ? interfaceTranslator.t(
+                    revised ? "play.usability.brief.change" : "play.usability.brief.question",
+                    {
+                      current: activity.initialChoices ? 1 : questionIndex + 1,
+                      total: activity.initialChoices
+                        ? activity.questions.filter(
+                            (question) => activity.initialChoices?.[question.axis] === undefined,
+                          ).length
+                        : activity.questions.length,
+                    },
+                  )
+                : interfaceTranslator.t("play.usability.brief.test")
           }
           action={
             phase === "observe"
-              ? t(
+              ? interfaceTranslator.t(
                   experiments.length > 0
                     ? "play.usability.brief.ask"
                     : "play.ai.brief.compareSubmit",
@@ -278,9 +284,9 @@ export function BriefGame({
         >
           {phase === "observe"
             ? experiments.length
-              ? t("play.usability.brief.first")
+              ? interfaceTranslator.t("play.usability.brief.first")
               : activity.request
-            : t(
+            : interfaceTranslator.t(
                 phase === "agree"
                   ? revised
                     ? "play.usability.brief.changed"
@@ -296,16 +302,18 @@ export function BriefGame({
         hidden={guided && phase !== "agree"}
         data-revised={revised}
       >
-        <span>{t(revised ? "play.ai.brief.newRequest" : "play.ai.brief.request")}</span>
-        {revised ? <strong>{t("play.ai.brief.firstAccepted")}</strong> : null}
+        <span>
+          {interfaceTranslator.t(revised ? "play.ai.brief.newRequest" : "play.ai.brief.request")}
+        </span>
+        {revised ? <strong>{interfaceTranslator.t("play.ai.brief.firstAccepted")}</strong> : null}
         <p>{revised ? activity.followUp!.request : activity.request}</p>
-        {revised ? <small>{t("play.ai.brief.keepOtherRules")}</small> : null}
+        {revised ? <small>{interfaceTranslator.t("play.ai.brief.keepOtherRules")}</small> : null}
       </blockquote>
       <div className="ai-brief__preview-title" hidden={guided && phase === "agree"}>
         <h3 ref={previewHeading} tabIndex={-1} hidden={guided && phase === "observe"}>
-          {t("play.ai.brief.interpretations")}
+          {interfaceTranslator.t("play.ai.brief.interpretations")}
         </h3>
-        <p hidden={guided}>{t("play.ai.brief.previewNote")}</p>
+        <p hidden={guided}>{interfaceTranslator.t("play.ai.brief.previewNote")}</p>
         <div
           className="play-action-row ai-brief__compare-controls"
           hidden={guided && phase === "observe"}
@@ -315,7 +323,7 @@ export function BriefGame({
             disabled={disabled}
             onClick={() => compare(activity.actions[0]!.id)}
           >
-            {t("play.ai.brief.compareSubmit")}
+            {interfaceTranslator.t("play.ai.brief.compareSubmit")}
           </GameButton>
           <GameButton
             variant="secondary"
@@ -323,12 +331,12 @@ export function BriefGame({
             disabled={disabled}
             onClick={() => compare(activity.actions[1]?.id ?? activity.actions[0]!.id)}
           >
-            {t("play.ai.brief.compareRoster")}
+            {interfaceTranslator.t("play.ai.brief.compareRoster")}
           </GameButton>
         </div>
         {experiments.at(-1)?.configuration === experimentConfiguration ? (
           <div className="ai-brief__comparison" role="status">
-            <strong>{t("play.ai.brief.sameAction")}</strong>
+            <strong>{interfaceTranslator.t("play.ai.brief.sameAction")}</strong>
             {experiments.at(-1)!.results.map((value, index) => (
               <p key={index}>
                 <b>{index === 0 ? "A" : "B"}</b>
@@ -351,10 +359,10 @@ export function BriefGame({
             <section
               className="ai-brief__prototype"
               key={variant}
-              aria-label={t("play.ai.brief.previewLabel", { name })}
+              aria-label={interfaceTranslator.t("play.ai.brief.previewLabel", { name })}
             >
               <div className="ai-brief__prototype-top">
-                <strong>{t("play.ai.brief.interpretation", { name })}</strong>
+                <strong>{interfaceTranslator.t("play.ai.brief.interpretation", { name })}</strong>
                 <PlayIcon name={converged ? "check" : "ai-brief"} />
               </div>
               <div className="ai-brief__product">
@@ -370,9 +378,12 @@ export function BriefGame({
                 {activity.gate ? (
                   <div className="ai-brief__identity">
                     <span>
-                      {t(state.unlocked ? "play.ai.brief.identified" : "play.ai.brief.anonymous", {
-                        name: activity.visitorName,
-                      })}
+                      {interfaceTranslator.t(
+                        state.unlocked ? "play.ai.brief.identified" : "play.ai.brief.anonymous",
+                        {
+                          name: activity.visitorName,
+                        },
+                      )}
                     </span>
                     {/*
                       One control, next to who the visitor currently is —
@@ -418,7 +429,7 @@ export function BriefGame({
                       >
                         <p>
                           {result === undefined
-                            ? t("play.ai.brief.status.none")
+                            ? interfaceTranslator.t("play.ai.brief.status.none")
                             : briefOutcomeText(action, result, state)}
                         </p>
                       </div>
@@ -438,7 +449,7 @@ export function BriefGame({
                       )
                     }
                   >
-                    {t("play.ai.brief.reset")}
+                    {interfaceTranslator.t("play.ai.brief.reset")}
                   </GameButton>
                 ) : null}
               </div>
@@ -449,17 +460,17 @@ export function BriefGame({
       {guided && phase === "test" ? (
         <div className="play-action-row ai-brief__test-actions">
           <GameButton disabled={disabled} onClick={verify}>
-            {t("play.ai.brief.verify")}
+            {interfaceTranslator.t("play.ai.brief.verify")}
           </GameButton>
           <GameButton variant="ghost" disabled={disabled} onClick={() => setPhase("agree")}>
-            {t("play.usability.brief.review")}
+            {interfaceTranslator.t("play.usability.brief.review")}
           </GameButton>
         </div>
       ) : null}
       {activity.initialChoices ? (
         <details className="play-model-note ai-brief__given">
-          <summary>{t("play.difficulty.brief.given")}</summary>
-          <p>{t("play.difficulty.brief.givenNote")}</p>
+          <summary>{interfaceTranslator.t("play.difficulty.brief.given")}</summary>
+          <p>{interfaceTranslator.t("play.difficulty.brief.givenNote")}</p>
           <ul>
             {activity.questions.flatMap((question) =>
               question.options
@@ -472,12 +483,15 @@ export function BriefGame({
       <section
         ref={contractTop}
         className="ai-brief__contract"
-        aria-label={t("play.ai.brief.contract")}
+        aria-label={interfaceTranslator.t("play.ai.brief.contract")}
         hidden={guided && phase !== "agree"}
       >
-        <h3>{t("play.ai.brief.contract")}</h3>
+        <h3>{interfaceTranslator.t("play.ai.brief.contract")}</h3>
         {guided ? (
-          <nav className="ai-brief__question-tabs" aria-label={t("play.usability.brief.review")}>
+          <nav
+            className="ai-brief__question-tabs"
+            aria-label={interfaceTranslator.t("play.usability.brief.review")}
+          >
             {activity.questions.map((question, index) => (
               <GameButton
                 key={question.axis}
@@ -493,8 +507,8 @@ export function BriefGame({
         ) : null}
         <p className="ai-brief__convergence" role="status">
           {remaining
-            ? t("play.ai.brief.openAssumptions", { count: remaining })
-            : t("play.ai.brief.converged")}
+            ? interfaceTranslator.t("play.ai.brief.openAssumptions", { count: remaining })
+            : interfaceTranslator.t("play.ai.brief.converged")}
         </p>
         <div className="ai-brief__questions">
           {activity.questions.map((question, index) => (
@@ -511,11 +525,13 @@ export function BriefGame({
                     setAsked((previous) => [...new Set([...previous, question.axis])]);
                 }}
               >
-                <summary>{t("play.ai.brief.ask", { question: question.question })}</summary>
+                <summary>
+                  {interfaceTranslator.t("play.ai.brief.ask", { question: question.question })}
+                </summary>
                 <p>
                   {revised &&
                   activity.target[question.axis] !== currentActivity.target[question.axis]
-                    ? `${t("play.ai.brief.updatedAnswer")} ${question.options.find((option) => option.value === currentActivity.target[question.axis])!.clause}`
+                    ? `${interfaceTranslator.t("play.ai.brief.updatedAnswer")} ${question.options.find((option) => option.value === currentActivity.target[question.axis])!.clause}`
                     : question.answer}
                 </p>
               </details>
@@ -541,10 +557,12 @@ export function BriefGame({
                   className="ai-brief__clear"
                   onClick={() => choose(question.axis)}
                 >
-                  {t("play.ai.brief.clear")}
+                  {interfaceTranslator.t("play.ai.brief.clear")}
                 </GameButton>
               ) : (
-                <span className="ai-brief__empty-clause">{t("play.ai.brief.unwritten")}</span>
+                <span className="ai-brief__empty-clause">
+                  {interfaceTranslator.t("play.ai.brief.unwritten")}
+                </span>
               )}
             </fieldset>
           ))}
@@ -567,25 +585,27 @@ export function BriefGame({
               }
             }}
           >
-            {t(remaining === 0 ? "play.usability.brief.try" : "play.usability.brief.next")}
+            {interfaceTranslator.t(
+              remaining === 0 ? "play.usability.brief.try" : "play.usability.brief.next",
+            )}
           </GameButton>
         ) : null}
         <div className="play-action-row" hidden={guided}>
           <GameButton type="button" sound={false} variant="secondary" onClick={showPreview}>
-            {t("play.ai.brief.returnPreview")}
+            {interfaceTranslator.t("play.ai.brief.returnPreview")}
           </GameButton>
           <GameButton type="button" sound={false} disabled={disabled} onClick={verify}>
-            {t("play.ai.brief.verify")}
+            {interfaceTranslator.t("play.ai.brief.verify")}
           </GameButton>
         </div>
       </section>
       <details className="play-model-note">
-        <summary>{t("play.ai.brief.receipt")}</summary>
+        <summary>{interfaceTranslator.t("play.ai.brief.receipt")}</summary>
         {observations.length ? (
           <ol>
             {observations.map((observation, index) => (
               <li key={index}>
-                {t("play.ai.brief.observed", {
+                {interfaceTranslator.t("play.ai.brief.observed", {
                   variant: observation.variant === 0 ? "A" : "B",
                   result: outcomeText(observation.action, observation.result),
                 })}
@@ -593,7 +613,7 @@ export function BriefGame({
             ))}
           </ol>
         ) : (
-          <p>{t("play.ai.brief.noReceipt")}</p>
+          <p>{interfaceTranslator.t("play.ai.brief.noReceipt")}</p>
         )}
       </details>
     </div>

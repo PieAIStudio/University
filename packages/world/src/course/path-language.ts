@@ -9,7 +9,7 @@
  * exercise and card counts), never from Math.random.
  */
 import { spineOf } from "@pieai/university-core";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 
 import { hash } from "../island/random.js";
 
@@ -49,19 +49,19 @@ export const PATH_KIND_ICON: Record<PathNodeKind, string> = {
 
 export const PATH_KIND_LABEL: Record<PathNodeKind, string> = {
   get lesson() {
-    return translate("world.path.lesson");
+    return interfaceTranslator.t("world.path.lesson");
   },
   get practice() {
-    return translate("world.path.practice");
+    return interfaceTranslator.t("world.path.practice");
   },
   get quiz() {
-    return translate("world.path.quiz");
+    return interfaceTranslator.t("world.path.quiz");
   },
   get chest() {
-    return translate("world.path.chest");
+    return interfaceTranslator.t("world.path.chest");
   },
   get review() {
-    return translate("world.path.review");
+    return interfaceTranslator.t("world.path.review");
   },
 };
 

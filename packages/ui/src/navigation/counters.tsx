@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import type { ReactNode } from "react";
 
 import { toPath } from "@pieai/university-core";
@@ -67,7 +67,7 @@ export function universityCounters(args: {
       id: "island",
       icon: <IslandIcon />,
       value: args.projectName,
-      label: translate("ui.navigation.counters.copy.当前系列"),
+      label: interfaceTranslator.t("ui.navigation.counters.copy.当前系列"),
       control: args.projectControl,
     },
   ];
@@ -76,7 +76,7 @@ export function universityCounters(args: {
       id: "streak",
       icon: <StreakIcon />,
       value: String(args.streakDays),
-      label: translate("ui.navigation.counters.copy.连击"),
+      label: interfaceTranslator.t("ui.navigation.counters.copy.连击"),
       href: toPath({ kind: "quests" }),
       muted: args.streakDays === 0,
     });
@@ -85,7 +85,7 @@ export function universityCounters(args: {
     counters.push({
       id: "avatar",
       icon: args.avatar,
-      label: translate("ui.navigation.counters.copy.你"),
+      label: interfaceTranslator.t("ui.navigation.counters.copy.你"),
     });
   }
   return counters;

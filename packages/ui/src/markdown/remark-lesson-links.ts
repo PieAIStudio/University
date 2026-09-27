@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import type { PhrasingContent, Root, RootContent, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
@@ -291,7 +291,7 @@ export function remarkLessonLinks(options: { readonly ranges: readonly LessonLin
         const text =
           hit.label ??
           hit.target?.title ??
-          translate("ui.markdown.remarklessonlinks.copy.这一课还不存在");
+          interfaceTranslator.t("ui.markdown.remarklessonlinks.copy.这一课还不存在");
         replacement.push({
           type: "lessonLink",
           value: text,

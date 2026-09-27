@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 
 /** Where a locked stop sends the learner instead of in (V5 §12 decision C′). */
 export interface MapEntryLock {
@@ -39,11 +39,14 @@ export function MapEntryAction({
    */
   readonly guard?: { readonly name: string; readonly fear: string };
 }) {
+  const interfaceTranslator = useI18n();
   const heading = (
     <>
       {eyebrow ? <p className="map-entry-action__eyebrow">{eyebrow}</p> : null}
       {eyebrow ? <p className="map-entry-action__title">{title}</p> : null}
-      {guard ? <p className="map-entry-action__guard">{translate("map.guard", guard)}</p> : null}
+      {guard ? (
+        <p className="map-entry-action__guard">{interfaceTranslator.t("map.guard", guard)}</p>
+      ) : null}
     </>
   );
   if (locked)
@@ -52,18 +55,18 @@ export function MapEntryAction({
         ref={actionRef}
         className="map-entry-action map-entry-action--card map-entry-action--locked"
         data-map-entry="locked"
-        aria-label={translate("map.locked.label", { title })}
+        aria-label={interfaceTranslator.t("map.locked.label", { title })}
       >
         {heading}
         <p className="map-entry-action__why">
-          {translate("map.locked.why", { current: locked.current })}
+          {interfaceTranslator.t("map.locked.why", { current: locked.current })}
         </p>
         <GameButton type="button" variant="primary" onClick={locked.onGoToCurrent}>
-          {translate("map.locked.goCurrent")}
+          {interfaceTranslator.t("map.locked.goCurrent")}
         </GameButton>
         {locked.onTest ? (
           <GameButton type="button" variant="secondary" onClick={locked.onTest}>
-            {translate("map.locked.test")}
+            {interfaceTranslator.t("map.locked.test")}
           </GameButton>
         ) : null}
       </section>
@@ -73,7 +76,7 @@ export function MapEntryAction({
       ref={actionRef}
       className={eyebrow ? "map-entry-action map-entry-action--card" : "map-entry-action"}
       data-map-entry="true"
-      aria-label={translate("map.currentSelection")}
+      aria-label={interfaceTranslator.t("map.currentSelection")}
     >
       {heading}
       <GameButton
@@ -81,10 +84,10 @@ export function MapEntryAction({
         variant="primary"
         surface="liquid"
         liquidFinish="glossy"
-        aria-label={translate("map.enterNamed", { title })}
+        aria-label={interfaceTranslator.t("map.enterNamed", { title })}
         onClick={onEnter}
       >
-        {translate("map.enter")}
+        {interfaceTranslator.t("map.enter")}
       </GameButton>
     </section>
   );

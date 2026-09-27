@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 import { act, createRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -14,7 +15,11 @@ it("renders one brand entry action without taking over the map or changing focus
   sibling.focus();
   try {
     act(() =>
-      root.render(<MapEntryAction title="Actual lesson" onEnter={enter} actionRef={ref} />),
+      root.render(
+        withInterfaceLocale(
+          <MapEntryAction title="Actual lesson" onEnter={enter} actionRef={ref} />,
+        ),
+      ),
     );
     expect(host.querySelectorAll("button")).toHaveLength(1);
     expect(host.querySelector('[role="dialog"],[aria-modal="true"],.path-card__scrim')).toBeNull();

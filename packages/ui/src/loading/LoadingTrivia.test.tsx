@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -79,7 +80,7 @@ describe("pickLoadingConcept", () => {
 describe("LoadingTrivia", () => {
   it("prints the concept in the DOM, not as a skeleton", async () => {
     await act(async () => {
-      root.render(<LoadingTrivia concept={SAMPLE} />);
+      root.render(withInterfaceLocale(<LoadingTrivia concept={SAMPLE} />));
     });
     const status = container.querySelector("[role=status]");
     expect(status).not.toBeNull();
@@ -92,7 +93,7 @@ describe("LoadingTrivia", () => {
 
   it("stays quiet about a missing catalogue rather than filling one in", async () => {
     await act(async () => {
-      root.render(<LoadingTrivia concept={null} />);
+      root.render(withInterfaceLocale(<LoadingTrivia concept={null} />));
     });
     expect(container.textContent).toContain("地图正在打开");
     expect(container.textContent).not.toContain("前端");
@@ -100,7 +101,7 @@ describe("LoadingTrivia", () => {
 
   it("on a first visit, says what this is instead of a random concept", async () => {
     await act(async () => {
-      root.render(<LoadingTrivia visit="first" />);
+      root.render(withInterfaceLocale(<LoadingTrivia visit="first" />));
     });
     expect(container.textContent).toContain("地图马上铺开");
     expect(container.textContent).toContain("点一座岛，开始学");
@@ -113,7 +114,7 @@ describe("LoadingTrivia", () => {
 
   it("on a returning visit, shows a catalogue concept", async () => {
     await act(async () => {
-      root.render(<LoadingTrivia visit="returning" concept={SAMPLE} />);
+      root.render(withInterfaceLocale(<LoadingTrivia visit="returning" concept={SAMPLE} />));
     });
     expect(container.textContent).toContain("地图铺开时，看一条概念");
     expect(container.textContent).toContain("前端");
@@ -122,7 +123,7 @@ describe("LoadingTrivia", () => {
 
   it("treats an unreadable store as a first visit", async () => {
     await act(async () => {
-      root.render(<LoadingTrivia storage={null} />);
+      root.render(withInterfaceLocale(<LoadingTrivia storage={null} />));
     });
     expect(container.textContent).toContain("点一座岛，开始学");
     expect(container.textContent).not.toContain("前端");
@@ -133,25 +134,25 @@ describe("LoadingTrivia", () => {
 describe("useMapCover", () => {
   it("covers on the first busy tick and unmounts the moment it is not", async () => {
     await act(async () => {
-      root.render(<CoverProbe busy />);
+      root.render(withInterfaceLocale(<CoverProbe busy />));
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("yes");
 
     await act(async () => {
-      root.render(<CoverProbe busy={false} />);
+      root.render(withInterfaceLocale(<CoverProbe busy={false} />));
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("no");
   });
 
   it("does not flash on a later busy shorter than the reopen delay", async () => {
     await act(async () => {
-      root.render(<CoverProbe busy />);
+      root.render(withInterfaceLocale(<CoverProbe busy />));
     });
     await act(async () => {
-      root.render(<CoverProbe busy={false} />);
+      root.render(withInterfaceLocale(<CoverProbe busy={false} />));
     });
     await act(async () => {
-      root.render(<CoverProbe busy />);
+      root.render(withInterfaceLocale(<CoverProbe busy />));
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("no");
 
@@ -168,7 +169,7 @@ describe("useMapCover", () => {
 
   it("gives up rather than staying up forever", async () => {
     await act(async () => {
-      root.render(<CoverProbe busy />);
+      root.render(withInterfaceLocale(<CoverProbe busy />));
     });
     await act(async () => {
       vi.advanceTimersByTime(MAP_COVER_GIVE_UP_MS);
@@ -178,7 +179,7 @@ describe("useMapCover", () => {
 
   it("reports a timeout separately so the caller can explain the next action", async () => {
     await act(async () => {
-      root.render(<RecoveryCoverProbe busy />);
+      root.render(withInterfaceLocale(<RecoveryCoverProbe busy />));
     });
     await act(async () => {
       vi.advanceTimersByTime(MAP_COVER_GIVE_UP_MS);
@@ -190,13 +191,13 @@ describe("useMapCover", () => {
 
   it("restarts the cover immediately for a new scene attempt", async () => {
     await act(async () => {
-      root.render(<RecoveryCoverProbe busy />);
+      root.render(withInterfaceLocale(<RecoveryCoverProbe busy />));
     });
     await act(async () => {
-      root.render(<RecoveryCoverProbe busy={false} />);
+      root.render(withInterfaceLocale(<RecoveryCoverProbe busy={false} />));
     });
     await act(async () => {
-      root.render(<RecoveryCoverProbe busy attempt={1} />);
+      root.render(withInterfaceLocale(<RecoveryCoverProbe busy attempt={1} />));
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("yes");
   });

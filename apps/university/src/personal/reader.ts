@@ -1,6 +1,6 @@
 import type { ProgressPort, ReaderPort } from "@pieai/university-core";
 import { lessonKeyOf, progressSourceOf } from "@pieai/university-core";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   readPersonalJson,
   PERSONAL_STUDY_ID,
@@ -21,7 +21,7 @@ export function createPersonalReaderPort(base: ReaderPort, progress: ProgressPor
           exerciseIds: ["personal-need-exercise"],
         }).exercisesPassed
       )
-        throw new Error(translate("mapNodes.personal.makeFirst"));
+        throw new Error(interfaceTranslator.t("mapNodes.personal.makeFirst"));
       const record = await readPersonalJson<PersonalRecord>("/complete", account, {
         method: "POST",
         body: JSON.stringify({
@@ -34,7 +34,7 @@ export function createPersonalReaderPort(base: ReaderPort, progress: ProgressPor
       progress.confirmLessonRead(lessonKeyOf(locator), input.contentRevision);
       progress.dropCards(locator.studyId, locator.courseId, locator.lessonId, record.cardIds);
       if (progress.localSaveState?.() === "failed")
-        throw new Error(translate("mapNodes.personal.saveFailed"));
+        throw new Error(interfaceTranslator.t("mapNodes.personal.saveFailed"));
     },
     async loadEvidenceSnippet(locator, index) {
       if (locator.studyId !== PERSONAL_STUDY_ID) return base.loadEvidenceSnippet(locator, index);

@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useState } from "react";
 import {
   STYLE_SAMPLE_PAGE,
@@ -22,6 +22,7 @@ function skinLabel(skin: StyleSkinId): string {
   constant, so a learner can see which changes belong to the visual skin.
 */
 export function StyleSample({ alt, caption, skin, contrastSkin }: StyleSampleProps) {
+  const interfaceTranslator = useI18n();
   const [activeSkin, setActiveSkin] = useState<StyleSkinId>(skin);
 
   return (
@@ -51,7 +52,7 @@ export function StyleSample({ alt, caption, skin, contrastSkin }: StyleSamplePro
           <span className="stylesample__brand">{STYLE_SAMPLE_PAGE.brand}</span>
           <nav
             className="stylesample__links"
-            aria-label={translate("ui.entry.styleSample.copy.示意导航")}
+            aria-label={interfaceTranslator.t("ui.entry.styleSample.copy.示意导航")}
           >
             {STYLE_SAMPLE_PAGE.navLinks.map((link) => (
               <span className="stylesample__link" key={link}>

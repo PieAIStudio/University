@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
 
 function trustedThemeColor(color: string | undefined): string | undefined {
@@ -14,15 +14,19 @@ export function EvidenceCode({
   readonly lines: readonly (readonly EvidenceToken[])[];
   readonly findText?: string;
 }) {
+  const interfaceTranslator = useI18n();
   return (
     <pre
       className="evidence-code"
       tabIndex={0}
-      aria-label={translate("ui.evidence.evidenceCode.copy.value0-第-value1-到-value2-行", {
-        value0: snippet.sourcePath,
-        value1: snippet.startLine,
-        value2: snippet.endLine,
-      })}
+      aria-label={interfaceTranslator.t(
+        "ui.evidence.evidenceCode.copy.value0-第-value1-到-value2-行",
+        {
+          value0: snippet.sourcePath,
+          value1: snippet.startLine,
+          value2: snippet.endLine,
+        },
+      )}
     >
       <code>
         {lines.map((tokens, index) => {

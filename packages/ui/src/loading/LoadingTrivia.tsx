@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ConceptHead } from "@pieai/university-core";
@@ -40,6 +40,7 @@ export function LoadingTrivia({
   readonly visit?: LoadingVisit;
   readonly storage?: LoadingStorage | null;
 } = {}) {
+  const interfaceTranslator = useI18n();
   const [resolvedVisit] = useState(() => visit ?? readLoadingVisit(storage));
   const showIntro = resolvedVisit === "first" && concept === undefined;
   const [head] = useState(() =>
@@ -57,18 +58,20 @@ export function LoadingTrivia({
         {showIntro ? (
           <>
             <p className="loading-trivia__kicker">
-              {translate("ui.loading.loadingTrivia.copy.地图马上铺开")}
+              {interfaceTranslator.t("ui.loading.loadingTrivia.copy.地图马上铺开")}
             </p>
-            <GamePanel title={translate("ui.loading.loadingTrivia.copy.点一座岛-开始学")}>
+            <GamePanel
+              title={interfaceTranslator.t("ui.loading.loadingTrivia.copy.点一座岛-开始学")}
+            >
               <p className="loading-trivia__tagline">
-                {translate("ui.loading.loadingTrivia.copy.每座岛是一门课-读完再练")}
+                {interfaceTranslator.t("ui.loading.loadingTrivia.copy.每座岛是一门课-读完再练")}
               </p>
             </GamePanel>
           </>
         ) : (
           <>
             <p className="loading-trivia__kicker">
-              {translate("ui.loading.loadingTrivia.copy.地图铺开时-看一条概念")}
+              {interfaceTranslator.t("ui.loading.loadingTrivia.copy.地图铺开时-看一条概念")}
             </p>
             {head ? (
               <GamePanel title={head.zh}>
@@ -76,9 +79,11 @@ export function LoadingTrivia({
                 {head.en ? <p className="loading-trivia__en">{head.en}</p> : null}
               </GamePanel>
             ) : (
-              <GamePanel title={translate("ui.loading.loadingTrivia.copy.地图正在打开")}>
+              <GamePanel
+                title={interfaceTranslator.t("ui.loading.loadingTrivia.copy.地图正在打开")}
+              >
                 <p className="loading-trivia__tagline">
-                  {translate("ui.loading.loadingTrivia.copy.岛屿马上就到")}
+                  {interfaceTranslator.t("ui.loading.loadingTrivia.copy.岛屿马上就到")}
                 </p>
               </GamePanel>
             )}

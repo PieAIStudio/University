@@ -2,7 +2,7 @@
 import { createRoot } from "react-dom/client";
 import { createMemoryIdentityPort } from "@pieai/university-core";
 import { AccountClosurePanel } from "@pieai/university-ui/navigation/empty.js";
-import { I18nProvider, setActiveLocale } from "@pieai/university-ui/i18n.js";
+import { InterfaceLanguageProvider, setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 import type { AuthPort } from "@pieai/university-backend/browser.js";
 import {
   ACCOUNT_CLOSURE_CONFIRMATION,
@@ -14,7 +14,7 @@ import "@pieai/university-ui/navigation/university-shell.css";
 import "./account-feedback.css";
 
 const locale = new URLSearchParams(location.search).get("lang") === "zh-CN" ? "zh-CN" : "en";
-setActiveLocale(locale);
+setInterfaceLocale(locale);
 document.documentElement.lang = locale;
 const user = {
   id: "764fc275-4116-4b6a-a98b-b942234f4167",
@@ -75,7 +75,7 @@ Object.assign(window, {
   },
 });
 createRoot(document.getElementById("root")!).render(
-  <I18nProvider locale={locale}>
+  <InterfaceLanguageProvider locale={locale}>
     <main className="account-preview">
       <p>Synthetic account request only. No external service, real account or deletion.</p>
       <AccountClosurePanel
@@ -85,5 +85,5 @@ createRoot(document.getElementById("root")!).render(
         requestClosure={port.request}
       />
     </main>
-  </I18nProvider>,
+  </InterfaceLanguageProvider>,
 );

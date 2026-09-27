@@ -1,6 +1,6 @@
 import { activityDisplayStrings, primmFixture } from "@pieai/university-core";
-import { createTranslator } from "../i18n/index.js";
-import type { MessageKey } from "../i18n/types.js";
+import { interfaceI18n } from "../i18n/index.js";
+import type { PlainMessageKey } from "../i18n/types.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
 import type { PrimmClassicActivity } from "./primm-types.js";
 
@@ -37,12 +37,12 @@ void everyGameHasAnExample;
   becomes the body, the English catalog becomes the dictionary — so the lab
   shows exactly what a lesson would, and the copy still lives in the catalogs.
 */
-const SOURCE = createTranslator("zh-CN");
-const ENGLISH = createTranslator("en");
+const SOURCE = interfaceI18n.translator("zh-CN");
+const ENGLISH = interfaceI18n.translator("en");
 
 function collector() {
   const en: Record<string, string> = {};
-  const copy = (key: MessageKey) => {
+  const copy = (key: PlainMessageKey) => {
     const text = SOURCE.t(key);
     en[text] = ENGLISH.t(key);
     return text;
@@ -69,7 +69,7 @@ const CONTRAST = {
  * a course, so the lab does not break when a course is rewritten or retired.
  */
 function signupScreenshot(locale: string): string {
-  const pictureCopy = (key: MessageKey) => createTranslator(locale).t(key);
+  const pictureCopy = (key: PlainMessageKey) => interfaceI18n.translator(locale).t(key);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" font-family="system-ui, 'PingFang SC', sans-serif">
 <rect width="640" height="400" fill="#eef1f4"/>
 <rect x="40" y="24" width="560" height="352" rx="14" fill="#ffffff" stroke="#d3d9e0"/>
@@ -85,7 +85,7 @@ function signupScreenshot(locale: string): string {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-function shell(copy: (key: MessageKey) => string, same: (text: string) => string, game: Game) {
+function shell(copy: (key: PlainMessageKey) => string, same: (text: string) => string, game: Game) {
   return {
     ...primmFixture,
     sources: [
@@ -128,7 +128,7 @@ const SCREENSHOT_ID = "signup-screenshot";
 
 /** The picture is the one part that cannot be a dictionary entry: its text is drawn. */
 export function primmGameAssets(locale: string): readonly LessonAssetView[] {
-  const pictureCopy = (key: MessageKey) => createTranslator(locale).t(key);
+  const pictureCopy = (key: PlainMessageKey) => interfaceI18n.translator(locale).t(key);
   return [
     {
       id: SCREENSHOT_ID,

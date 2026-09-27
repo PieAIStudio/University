@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -26,7 +27,7 @@ describe("RecoveryState", () => {
     "explains %s in the DOM and offers a retry",
     async (reason) => {
       await act(async () => {
-        root.render(<RecoveryState reason={reason} onRetry={vi.fn()} />);
+        root.render(withInterfaceLocale(<RecoveryState reason={reason} onRetry={vi.fn()} />));
       });
 
       const state = container.querySelector(`[data-recovery-state="${reason}"]`);
@@ -41,12 +42,14 @@ describe("RecoveryState", () => {
     const continue_ = vi.fn();
     await act(async () => {
       root.render(
-        <RecoveryState
-          reason="scene-timeout"
-          onRetry={retry}
-          onContinue={continue_}
-          continueLabel="先看课文"
-        />,
+        withInterfaceLocale(
+          <RecoveryState
+            reason="scene-timeout"
+            onRetry={retry}
+            onContinue={continue_}
+            continueLabel="先看课文"
+          />,
+        ),
       );
     });
 
@@ -60,7 +63,9 @@ describe("RecoveryState", () => {
 
   it("marks map recovery as an overlay without hiding it from hit testing", async () => {
     await act(async () => {
-      root.render(<RecoveryState reason="context-lost" onRetry={vi.fn()} overlay />);
+      root.render(
+        withInterfaceLocale(<RecoveryState reason="context-lost" onRetry={vi.fn()} overlay />),
+      );
     });
 
     const state = container.querySelector("[data-recovery-state]");

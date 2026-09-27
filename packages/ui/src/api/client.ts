@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { interfaceTranslator } from "../i18n/index.js";
 import type { LessonRef, ReviewCardLocator } from "../view/lesson-view.js";
 
 /**
@@ -14,7 +14,8 @@ export async function readJson<T>(response: Response): Promise<T> {
   const body = (await response.json()) as T & { readonly error?: string };
   if (!response.ok)
     throw new Error(
-      body.error ?? translate("ui.api.client.copy.请求失败-value0", { value0: response.status }),
+      body.error ??
+        interfaceTranslator.t("ui.api.client.copy.请求失败-value0", { value0: response.status }),
     );
   return body;
 }
@@ -61,7 +62,7 @@ export function reviewCardIdentity(card: ReviewCardLocator): string {
  * and the page looks broken until they think to reload it. Pulling a fresh
  * bootstrap puts a valid token back in place, so the repair is one more click.
  */
-export const STALE_TOKEN_NOTICE = translate(
+export const STALE_TOKEN_NOTICE = interfaceTranslator.t(
   "ui.api.client.copy.本地服务重启过-安全令牌换新了-再点一次就能提交",
 );
 

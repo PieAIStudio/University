@@ -143,19 +143,20 @@
     "./learning-play/contrast.css": "./src/learning-play/contrast.css",
     "./learning-play/weigh.css": "./src/learning-play/weigh.css",
     "./learning-play/PrimmLesson.js": "./src/learning-play/PrimmLesson.tsx",
-    "./learning-play/primm.css": "./src/learning-play/primm.css"
+    "./learning-play/primm.css": "./src/learning-play/primm.css",
+    "./i18n/core.js": "./src/i18n/core.ts"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",
     "lint": "oxlint --deny-warnings src vitest.config.ts",
-    "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src",
-    "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src",
+    "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src --ignore-path .oxfmtignore",
+    "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src --ignore-path .oxfmtignore",
     "test": "vitest run --passWithNoTests",
     "build": "tsc -b --pretty false"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
-    "@pieai/swimmer-i18n-kit": "0.1.0",
+    "@pieai/swimmer-i18n-kit": "0.1.1",
     "@pieai/swimmer-ui-kit": "2.10.0",
     "@pieai/university-core": "workspace:*",
     "@pieaistudio/swimmer-auth-kit": "0.1.9",

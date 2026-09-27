@@ -1,4 +1,4 @@
-import { activeLocale } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   localizeLearnerContent,
@@ -30,7 +30,7 @@ export function createPersonalContentPort(base: ContentPort, progress: ProgressP
         personalAccountScope(),
         { signal: options?.signal },
       );
-      const view = localizeLearnerContent(body, activeLocale());
+      const view = localizeLearnerContent(body, interfaceTranslator.locale);
       const completion = progressSourceOf(progress).completionOf(locator, {
         contentRevision: view.lesson.contentRevision,
         exerciseIds: view.lesson.exercises.map((exercise) => exercise.id),
@@ -77,7 +77,7 @@ export function createPersonalContentPort(base: ContentPort, progress: ProgressP
         `/card/${personalContentId(card.courseId)}?cardId=${encodeURIComponent(card.cardId)}`,
         personalAccountScope(),
       );
-      return localizeLearnerContent(body, activeLocale());
+      return localizeLearnerContent(body, interfaceTranslator.locale);
     },
     async exercise(locator, exerciseId) {
       if (locator.studyId !== PERSONAL_STUDY_ID) return base.exercise(locator, exerciseId);
@@ -85,7 +85,7 @@ export function createPersonalContentPort(base: ContentPort, progress: ProgressP
         `/exercise/${personalContentId(locator.courseId)}?exerciseId=${encodeURIComponent(exerciseId)}`,
         personalAccountScope(),
       );
-      return localizeLearnerContent(body, activeLocale());
+      return localizeLearnerContent(body, interfaceTranslator.locale);
     },
   };
 }

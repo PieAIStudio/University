@@ -27,12 +27,12 @@ export const messages = {
   "play.verb.ai-repair": "Revise with evidence",
   "play.ai.brief.request": "The first request",
   "play.ai.brief.interpretations": "One sentence, two possible products",
-  "play.ai.brief.interpretation": "Interpretation {{name}}",
+  "play.ai.brief.interpretation": "Interpretation {name}",
   "play.ai.brief.previewNote":
     "Try them first. Unspecified details leave room for different assumptions.",
-  "play.ai.brief.visitor": "Visitor: {{name}}",
-  "play.ai.brief.member": "Signed in: {{name}}",
-  "play.ai.brief.previewLabel": "Try interpretation {{name}}",
+  "play.ai.brief.visitor": "Visitor: {name}",
+  "play.ai.brief.member": "Signed in: {name}",
+  "play.ai.brief.previewLabel": "Try interpretation {name}",
   "play.ai.brief.roster": "View the attendee list",
   "play.ai.brief.login": "Continue as a signed-in member",
   "play.ai.brief.reset": "Try as a visitor again",
@@ -44,29 +44,28 @@ export const messages = {
     "Only organizers can view the list. This visitor cannot see other attendees.",
   "play.ai.brief.result.public":
     "Attendees: Alex, Sam. Only display names are shown, with no contact details.",
-  "play.ai.brief.ownEntry":
-    "New attendee: {{name}}. Your display name now appears on the list too.",
+  "play.ai.brief.ownEntry": "New attendee: {name}. Your display name now appears on the list too.",
   "play.ai.brief.status.none": "The form is ready. Try how it responds.",
   "play.ai.brief.contract": "Your brief for AI",
-  "play.ai.brief.ask": "Ask: {{question}}",
+  "play.ai.brief.ask": "Ask: {question}",
   "play.ai.brief.unwritten": "Not specified yet",
   "play.ai.brief.clear": "Remove this constraint for now",
   "play.ai.brief.converged":
     "The key boundaries are explicit. Both products now follow the same contract.",
-  "play.ai.brief.openAssumptions": "{{count}} details are still left for AI to guess.",
+  "play.ai.brief.openAssumptions": "{count} details are still left for AI to guess.",
   "play.ai.brief.returnPreview": "Try the product",
   "play.ai.brief.verify": "Validate this brief",
-  "play.ai.brief.missing": "Still missing: {{items}}. Clarify these and include them in the brief.",
+  "play.ai.brief.missing": "Still missing: {items}. Clarify these and include them in the brief.",
   "play.ai.brief.mismatch":
-    "{{items}} differs from the client's request. Open that interview and check the original answer.",
+    "{items} differs from the client''s request. Open that interview and check the original answer.",
   "play.ai.brief.untested":
-    "The brief matches. Now try: {{items}}. Recheck after changing constraints.",
+    "The brief matches. Now try: {items}. Recheck after changing constraints.",
   "play.ai.brief.done":
     "Your brief matches the actual behavior. Three important details no longer depend on AI guessing.",
   "play.ai.brief.receipt": "Your trial record",
-  "play.ai.brief.observed": "Interpretation {{variant}}: {{result}}",
+  "play.ai.brief.observed": "Interpretation {variant}: {result}",
   "play.ai.brief.noReceipt": "Act as a user: submit or inspect the attendee list.",
-  "play.ai.brief.handoffTask": "Implement a minimal usable version of this product: {{name}}.",
+  "play.ai.brief.handoffTask": "Implement a minimal usable version of this product: {name}.",
   "play.ai.brief.handoffRules": "Required behavior:",
   "play.ai.brief.handoffChecks":
     "Before delivery, operate the product to check access, the submission result, and attendee-list visibility. Report actions and outcomes; visual plausibility alone is not completion.",
@@ -108,7 +107,7 @@ export const messages = {
   "play.ai.brief.walk.rosterAnswer": "Only organizers can see the list.",
   "play.ai.brief.club.title": "Another signup page, a different contract",
   "play.ai.brief.club.brief":
-    "This club already has members. Do not carry over the previous client's rules.",
+    "This club already has members. Do not carry over the previous client''s rules.",
   "play.ai.brief.club.goal":
     "Specify member access, confirmation, and list visibility; test before and after sign-in.",
   "play.ai.brief.club.request":
@@ -116,7 +115,7 @@ export const messages = {
   "play.ai.brief.club.name": "Thursday book club",
   "play.ai.brief.club.description":
     "Bring a recent favorite and discuss a page that made you pause.",
-  "play.ai.brief.club.action": "Join this week's event",
+  "play.ai.brief.club.action": "Join this week''s event",
   "play.ai.brief.club.accessAnswer":
     "Only existing members may join. Sign in first so we know which member it is.",
   "play.ai.brief.club.confirmAnswer":
@@ -143,6 +142,6 @@ export const messages = {
     "The organizer has enough spaces now: confirm attendance immediately after submission. First-time visitors still need no account, and only the organizer can see the roster.",
   "play.ai.brief.club.followUp":
     "A member raises a privacy concern: only the organizer should see the roster. Login is still required and submissions still confirm attendance immediately. Preserve those two rules.",
-  "play.ai.brief.identified": "Signed in: {{name}}",
-  "play.ai.brief.anonymous": "Visitor: {{name}}",
+  "play.ai.brief.identified": "Signed in: {name}",
+  "play.ai.brief.anonymous": "Visitor: {name}",
 } as const;

@@ -1,5 +1,5 @@
 import type { PlanetStudy, PlanetStudyDomain } from "./planet-copy.js";
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 
 export interface DomainPlanGroup extends PlanetStudyDomain {
   readonly studies: readonly PlanetStudy[];
@@ -52,7 +52,8 @@ export function buildDomainPlan(
 
   for (const study of studies) {
     const domainId = study.domain?.id ?? "unclassified";
-    const domainTitle = study.domain?.title ?? translate("ui.world.domain.unclassified");
+    const domainTitle =
+      study.domain?.title ?? interfaceTranslator.t("ui.world.domain.unclassified");
     const description = study.domain?.description;
     const surfaceStyle = study.domain?.surfaceStyle;
 

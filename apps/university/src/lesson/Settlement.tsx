@@ -17,7 +17,7 @@
  * whole claim — the reading happens in the DOM and the reason to care happens
  * on the map, and this is the sentence that connects them.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
@@ -39,17 +39,19 @@ export interface SettledCard {
 /** How the settlement talks about a due date a learner has to plan around. */
 function whenDue(dueAt: number, now = Date.now()): string {
   const hours = (dueAt - now) / 3_600_000;
-  if (hours <= 0) return translate("app.lesson.settlement.copy.现在就可以复习");
+  if (hours <= 0) return interfaceTranslator.t("app.lesson.settlement.copy.现在就可以复习");
   if (hours < 1)
-    return translate("app.lesson.settlement.copy.value0-分钟后回来", {
+    return interfaceTranslator.t("app.lesson.settlement.copy.value0-分钟后回来", {
       value0: Math.max(1, Math.round(hours * 60)),
     });
   if (hours < 20)
-    return translate("app.lesson.settlement.copy.value0-小时后回来", { value0: Math.round(hours) });
+    return interfaceTranslator.t("app.lesson.settlement.copy.value0-小时后回来", {
+      value0: Math.round(hours),
+    });
   const days = Math.round(hours / 24);
   return days <= 1
-    ? translate("app.lesson.settlement.copy.明天回来")
-    : translate("app.lesson.settlement.copy.value0-天后回来", { value0: days });
+    ? interfaceTranslator.t("app.lesson.settlement.copy.明天回来")
+    : interfaceTranslator.t("app.lesson.settlement.copy.value0-天后回来", { value0: days });
 }
 
 /**
@@ -64,11 +66,12 @@ function whenDue(dueAt: number, now = Date.now()): string {
  * one that stays quiet, which is also why `null` is a normal answer here.
  */
 function whatGrew(builtBefore: number, builtAfter: number, complete: boolean): string | null {
-  if (complete) return translate("app.lesson.settlement.copy.这座岛建成了-村子中央立起了会堂");
+  if (complete)
+    return interfaceTranslator.t("app.lesson.settlement.copy.这座岛建成了-村子中央立起了会堂");
   if (builtAfter <= builtBefore) return null;
   return builtBefore === 0
-    ? translate("app.lesson.settlement.copy.岛上开出了第一块地-井挖好了")
-    : translate("app.lesson.settlement.copy.岛上又立起了一间房子");
+    ? interfaceTranslator.t("app.lesson.settlement.copy.岛上开出了第一块地-井挖好了")
+    : interfaceTranslator.t("app.lesson.settlement.copy.岛上又立起了一间房子");
 }
 
 function prefersReducedMotion(): boolean {
@@ -124,6 +127,7 @@ export function Settlement({
   onMap: () => void;
   onStartUnit: (() => void) | null;
 }) {
+  const interfaceTranslator = useI18n();
   const soonest = dropped.reduce(
     (best, entry) => (best === null || entry.dueAt < best ? entry.dueAt : best),
     null as number | null,
@@ -158,16 +162,16 @@ export function Settlement({
     <div className="settle">
       <p className="settle__eyebrow">{courseTitle}</p>
       <h1 className="settle__title">{lessonTitle}</h1>
-      <p className="settle__done">{translate("app.lesson.settlement.copy.读完了")}</p>
+      <p className="settle__done">{interfaceTranslator.t("app.lesson.settlement.copy.读完了")}</p>
 
       {canShowProgress ? (
         <GameProgress
           className="settle__progress"
-          label={translate("app.lesson.settlement.copy.课程进度")}
+          label={interfaceTranslator.t("app.lesson.settlement.copy.课程进度")}
           value={shownDone}
           max={lessons}
           tone={finished ? "success" : "accent"}
-          valueLabel={translate("app.lesson.settlement.copy.value0-value1-关", {
+          valueLabel={interfaceTranslator.t("app.lesson.settlement.copy.value0-value1-关", {
             value0: shownDone,
             value1: lessons,
           })}
@@ -179,7 +183,7 @@ export function Settlement({
           <li>
             <b>{dropped.length}</b>
             <span>
-              {translate("app.lesson.settlement.copy.张卡片进了复习队列")}
+              {interfaceTranslator.t("app.lesson.settlement.copy.张卡片进了复习队列")}
               {soonest === null ? "" : ` · ${whenDue(soonest)}`}
             </span>
           </li>
@@ -187,15 +191,15 @@ export function Settlement({
         {streakDays > 0 ? (
           <li>
             <b>{streakDays}</b>
-            <span>{translate("app.lesson.settlement.copy.天连击")}</span>
+            <span>{interfaceTranslator.t("app.lesson.settlement.copy.天连击")}</span>
           </li>
         ) : null}
       </ol>
 
       {tomorrowDueCount > 0 ? (
         <p className="settle__tomorrow">
-          {translate("app.lesson.settlement.copy.明天有")} <b>{tomorrowDueCount}</b>{" "}
-          {translate("app.lesson.settlement.copy.张复习卡到期")}
+          {interfaceTranslator.t("app.lesson.settlement.copy.明天有")} <b>{tomorrowDueCount}</b>{" "}
+          {interfaceTranslator.t("app.lesson.settlement.copy.张复习卡到期")}
         </p>
       ) : null}
 
@@ -205,7 +209,7 @@ export function Settlement({
 
       {unlocked.length > 0 ? (
         <section className="settle__unlocks">
-          <h2>{translate("app.lesson.settlement.copy.这一节记下的概念")}</h2>
+          <h2>{interfaceTranslator.t("app.lesson.settlement.copy.这一节记下的概念")}</h2>
           {unlocked.map((entry) => (
             <GamePanel key={entry.id} title={entry.zh}>
               <p className="settle__unlock-tagline">{entry.tagline}</p>
@@ -216,7 +220,7 @@ export function Settlement({
 
       {dropped.length > 0 ? (
         <section className="settle__cards">
-          <h2>{translate("app.lesson.settlement.copy.今天记下的是这些")}</h2>
+          <h2>{interfaceTranslator.t("app.lesson.settlement.copy.今天记下的是这些")}</h2>
           {dropped.map(({ card }) => (
             <div className="settle__card" key={card.id}>
               <b>{card.front}</b>
@@ -224,7 +228,7 @@ export function Settlement({
             </div>
           ))}
           <p className="settle__note">
-            {translate(
+            {interfaceTranslator.t(
               "app.lesson.settlement.copy.现在不用背-到期时它们会自己回来-这是间隔重复该做的事",
             )}
           </p>
@@ -235,7 +239,7 @@ export function Settlement({
 
       {onNext && nextLesson && nextUnit ? (
         <section className="settle__next">
-          <h2>{translate("app.lesson.settlement.copy.下一关")}</h2>
+          <h2>{interfaceTranslator.t("app.lesson.settlement.copy.下一关")}</h2>
           <NodeCard
             open
             embedded
@@ -250,7 +254,7 @@ export function Settlement({
       <div className="settle__actions">
         {hasNextStep ? (
           <GameButton variant="ghost" onClick={onMap}>
-            {translate("app.lesson.settlement.copy.回关卡地图")}
+            {interfaceTranslator.t("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         ) : (
           <GameButton
@@ -260,7 +264,7 @@ export function Settlement({
             className="university-cta"
             onClick={onMap}
           >
-            {translate("app.lesson.settlement.copy.回关卡地图")}
+            {interfaceTranslator.t("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         )}
       </div>

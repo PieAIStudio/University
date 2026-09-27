@@ -7,7 +7,7 @@ import {
   type SortState,
 } from "@pieai/university-core";
 import { LiquidSurface } from "@pieai/swimmer-ui-kit";
-import { translate as t } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
@@ -69,6 +69,7 @@ export function SortGame({
   onAttempt,
   guided = false,
 }: ActivityControls<SortActivity>) {
+  const interfaceTranslator = useI18n();
   const [state, setState] = useState<SortState>(createSortState);
   const [picked, setPicked] = useState<string | null>(null);
   const [note, setNote] = useState<Note | null>(null);
@@ -105,7 +106,7 @@ export function SortGame({
     setNote({
       itemId: picked,
       right: false,
-      text: verdict.whyNot ?? t("play.sort.missGeneric"),
+      text: verdict.whyNot ?? interfaceTranslator.t("play.sort.missGeneric"),
     });
   }
 
@@ -114,7 +115,9 @@ export function SortGame({
       <p className="play-sort__question">{activity.question}</p>
       {guided && !done ? (
         <p className="play-sort__guide">
-          {picked ? t("play.sort.guidePickBucket") : t("play.sort.guidePickItem")}
+          {picked
+            ? interfaceTranslator.t("play.sort.guidePickBucket")
+            : interfaceTranslator.t("play.sort.guidePickItem")}
         </p>
       ) : null}
 
@@ -174,7 +177,9 @@ export function SortGame({
       ) : null}
       {done ? <p className="play-sort__done">{activity.takeaway}</p> : null}
       {state.misses > 0 && !done ? (
-        <p className="play-sort__misses">{t("play.sort.misses", { value0: state.misses })}</p>
+        <p className="play-sort__misses">
+          {interfaceTranslator.t("play.sort.misses", { value0: state.misses })}
+        </p>
       ) : null}
     </div>
   );

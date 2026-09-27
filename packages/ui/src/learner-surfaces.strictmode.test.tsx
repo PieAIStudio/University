@@ -1,3 +1,4 @@
+import { withInterfaceLocale } from "../test-support/interface-locale.js";
 // @vitest-environment jsdom
 
 import { StrictMode, act, type ReactElement } from "react";
@@ -159,7 +160,7 @@ afterEach(async () => {
 
 async function renderStrict(element: ReactElement): Promise<void> {
   await act(async () => {
-    root.render(<StrictMode>{element}</StrictMode>);
+    root.render(withInterfaceLocale(<StrictMode>{element}</StrictMode>));
   });
 }
 
