@@ -2,11 +2,11 @@
 /**
  * Keep every WebGL Canvas mount visible and intentional.
  *
- * The app has one world renderer and three small avatar viewports. This gate
- * reads source files only, strips comments and strings, and compares actual
- * JSX opening tags with the registry below. A fifth viewport must update this
- * registry before it can pass verification; generated `dist/` output is never
- * part of the scan.
+ * The app has one world renderer, three small avatar viewports and the rank
+ * promotion ceremony. This gate reads source files only, strips comments and
+ * strings, and compares actual JSX opening tags with the registry below. A
+ * sixth viewport must update this registry before it can pass verification;
+ * generated `dist/` output is never part of the scan.
  *
  * Usage: node scripts/check-canvas-registry.mjs
  */
@@ -39,6 +39,10 @@ const CANVAS_MOUNTS = [
   {
     path: "apps/university/src/avatar-lab/AvatarLab.tsx",
     purpose: "avatar-workshop preview",
+  },
+  {
+    path: "packages/world/src/emblems/EmblemCeremony.tsx",
+    purpose: "rank promotion ceremony; draws only while it plays",
   },
 ];
 
