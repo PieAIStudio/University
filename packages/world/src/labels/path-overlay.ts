@@ -16,6 +16,7 @@
  */
 import * as THREE from "three";
 
+import { MONSTER_TALLEST } from "../course/chests-and-monsters.js";
 import { PATH_KIND_ICON, PATH_KIND_LABEL, type PathNodeKind } from "../course/path-language";
 
 /** The fields courseSprites reads. LessonPlacement satisfies this. */
@@ -71,7 +72,13 @@ export function courseSprites(lessons: readonly PathLesson[]): PathSprite[] {
         text: PATH_KIND_ICON[lesson.kind],
         label: PATH_KIND_LABEL[lesson.kind],
         locked: lesson.state === "locked",
-        position: lesson.position.clone().setY(lesson.position.y + Math.max(1.05, radius * 0.5)),
+        // A locked stone carries a monster (V7): its icon floats over the monster's head.
+        position: lesson.position
+          .clone()
+          .setY(
+            lesson.position.y +
+              (lesson.state === "locked" ? MONSTER_TALLEST + 0.45 : Math.max(1.05, radius * 0.5)),
+          ),
       };
     });
 

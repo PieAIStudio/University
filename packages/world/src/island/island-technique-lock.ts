@@ -53,6 +53,14 @@ export const ISLAND_GRASS_BLADE_TRIANGLE_CEILING = {
  */
 export const ISLAND_DECORATION_TRIANGLE_CEILING = 1200;
 
+/** One map chest, body and lid together (V7). */
+export const COURSE_CHEST_TRIANGLE_CEILING = 280;
+/**
+ * One donor monster as shipped. The chicken is the largest at 7,120; nothing
+ * heavier is imported without amending the monster lock below.
+ */
+export const COURSE_MONSTER_TRIANGLE_CEILING = 7200;
+
 /** The explicit tree ceiling written into the tree lock below. */
 export const ISLAND_TREE_TRIANGLE_CEILING = 900;
 
@@ -421,7 +429,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "spanning the road at every segment's end (checkpoint), with a straw rope, two zig-zag " +
       "paper streamers and two ribbons that swing in the wind; a pennant on a pole " +
       "(challenge); a notice board with one pinned note (personal). Each stands on the lesson " +
-      "stone itself (same medallion, radius, unit ring and lock stone; ring green where the " +
+      "stone itself (same medallion, radius and unit ring; ring green where the " +
       "avatar can go, red where it cannot): under the gate, whose road gap the blueprint " +
       "widens (checkpointGaps), or beside the segment's middle lesson with the pennant or " +
       "board behind the stone, away from the road, and stepping stones back to it. Every " +
@@ -432,7 +440,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "never moves an existing tree, rock, landmark courtyard or path.",
     source:
       "Our own course/learning-sites.ts, learning-node-geometry.ts and LearningNodeField.tsx; " +
-      "the stone is grid/lesson-medallion.ts and LessonMarkerField's pose and lock stone.",
+      "the stone is grid/lesson-medallion.ts and LessonMarkerField's pose; a locked one " +
+      "carries a monster (see monster).",
     budget:
       "<= 160/36/60 tris for gate (rope and streamers included)/pennant (cloth " +
       "included)/board, one medallion and ring per stone and 18 per stepping stone; objects " +
@@ -480,6 +489,85 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         option: "Pads held flat to a 0.12 rise",
         why: "At lesson-stone size only 7 of 11 roadside nodes found ground on a 36-lesson course. The stone leans into the ground by the lesson stones' own pose, so it takes 0.2: 11 of 11.",
         on: "2026-09-23",
+      },
+    ],
+  },
+  chest: {
+    technique:
+      "Course only (V7): a chest on the grass beside every lesson stone, left or right of the " +
+      "road by a stable hash, plus a purple one beside each checkpoint gate and challenge " +
+      "pennant. Flat-shaded, vertex-coloured boxes and half-barrels cut down from the V7 " +
+      "review chest; per tier one body and one lid geometry, the lid authored about its hinge " +
+      "so an open chest is one extra rotation. Tier by position (wood; blue at a segment's " +
+      "last lesson; gold at the island's last; purple at gates and pennants), state from the " +
+      "record (shut, glowing and hopping for the lesson you can take now, open and empty " +
+      "when done). Placed after the learning nodes by the same free-ground search, never " +
+      "moving anything; with no free verge it hangs at its stone's edge at 0.62 scale. " +
+      "Vignettes and wildflowers keep off it.",
+    source:
+      "Our own course/chests-and-monsters.ts, chest-geometry.ts and ChestField.tsx; the look " +
+      "is docs/reference/player-journey/v7/lab/rewards3d.js.",
+    budget:
+      "<= 280 tris per chest; two instanced draws per tier present plus one additive glow " +
+      "disc; no texture, no GLB. Measured on three real course shapes: every lesson has a " +
+      "chest; 5 of 36, 2 of 8 and 2 of 9 hang at the stone's edge where dressing fills the " +
+      "verge; every resolved gate and pennant has its chest.",
+    rejected: [
+      {
+        option: "The reference video's green ordinary chest",
+        why: "On the island green is already 'you can go' (the stone ring) and green chests vanished into the meadow; the owner chose wood (H1).",
+        on: "2026-09-27",
+      },
+      {
+        option: "Holding chests clear of the road's grass shoulder as well as the road",
+        why: "On the 9-lesson cutout island one more chest had to hang at its stone; the shoulder is verge, so a chest may lean over its edge but never onto the road.",
+        on: "2026-09-27",
+      },
+    ],
+  },
+  monster: {
+    technique:
+      "Course only (V7): a donor creature on every stone and learning-node pad the learner " +
+      "cannot enter yet, where the lock stone used to be, each named after a beginner's " +
+      "fear (DOM names, never geometry); a crowned boss beside every gate whose segment is " +
+      "not cleared, beside the gate or else beside the segment's last or next lesson. The " +
+      "three nearest the learner are skinned clones playing their own idle; every other one " +
+      "is its idle frame baked on the CPU at load, untextured materials painted into " +
+      "vertex colours, drawn as instances without shadows: one draw per kind. The chicken " +
+      "animates 55 separate meshes rather than a skeleton, so it is never one of the live " +
+      "three. Each faces the stop before its own, so the learner arriving there meets it " +
+      "face to face; within 7 units of the learner it turns to watch them, easing round " +
+      "as they hop. The live three play a small friendly move now and then (a wave, a " +
+      "nod, a hop), and one on seeing the learner arrive.",
+    source:
+      "world-of-claudecraft creatures via apps/university/scripts/import-kit.mjs (roles " +
+      "monster-*, provenance in kit.json); our own course/chests-and-monsters.ts, " +
+      "monster-pose.ts and MonsterField.tsx.",
+    budget:
+      "<= 7,200 tris per shipped model; one draw per kind plus one for the crowns, plus the " +
+      "three live clones' own draws with shadows; seven GLBs, about 2.1 MB, each downloaded " +
+      "once per session. Measured with the chests on the 36-lesson island (2026-09-27): " +
+      "complete frame 134 -> 179 draws and 407,910 -> 666,913 triangles, rAF p95 unchanged.",
+    rejected: [
+      {
+        option: "Still monsters drawn with their own materials and shadows",
+        why: "239 draws and 898,425 triangles for the complete frame on 36 lessons; painting the flat materials into vertices and dropping still shadows gave 179 and 666,913 with the same look.",
+        on: "2026-09-27",
+      },
+      {
+        option: "Every monster a live skinned clone",
+        why: "Thirty skeletons updated per frame and about a hundred draws on a 36-lesson island, to animate monsters the learner is not looking at.",
+        on: "2026-09-27",
+      },
+      {
+        option: "The boss standing on the road behind its gate",
+        why: "Gate to next stone is 1.65 units on a 36-lesson island; after the avatar's ring under the gate and the next stone there is 0.3 left for a model two metres tall.",
+        on: "2026-09-27",
+      },
+      {
+        option: "Kenney character models as monsters",
+        why: "They animate, but every one is a humanoid soldier; none reads as a small fear to chase away.",
+        on: "2026-09-27",
       },
     ],
   },

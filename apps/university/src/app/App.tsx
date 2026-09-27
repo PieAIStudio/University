@@ -70,7 +70,11 @@ import {
   type MapQuickCommand,
 } from "./MapQuickActions.js";
 import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
-import { learningSiteLocked } from "@pieai/university-world/learning-nodes.js";
+import {
+  learningSiteLocked,
+  monsterAtStop,
+  type MonsterRole,
+} from "@pieai/university-world/learning-nodes.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
@@ -227,6 +231,14 @@ export function App() {
     says why and offers the current lesson or the current stretch's checkpoint
     test, never "Enter".
   */
+  /** The monster on a stop, as the card names it (V7). */
+  const guardOf = (role: MonsterRole | null) =>
+    role
+      ? {
+          name: translate(`map.monster.${role}.name`),
+          fear: translate(`map.monster.${role}.fear`),
+        }
+      : undefined;
   const lockedEntry = (locked: boolean): MapEntryLock | undefined => {
     if (view.kind !== "course" || !course) return undefined;
     const live = lessons.find((item) => item.state === "live");
@@ -951,6 +963,11 @@ export function App() {
                 title={translate(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
                 actionRef={pickCardRef}
                 locked={lockedEntry(pathOverlay.locked)}
+                guard={guardOf(
+                  monsterAtStop(lessons, {
+                    siteId: learningNodeId(pathOverlay.segment, pathOverlay.nodeKind),
+                  }),
+                )}
                 onEnter={() => setPathOverlay({ ...pathOverlay, kind: "learning-node" })}
               />
             ) : null}
@@ -964,6 +981,7 @@ export function App() {
                 locked={lockedEntry(
                   lessons.find((item) => item.lessonId === pathLesson.id)?.state === "locked",
                 )}
+                guard={guardOf(monsterAtStop(lessons, { lessonId: pathLesson.id }))}
                 onEnter={() => {
                   setPathOverlay(null);
                   setView({

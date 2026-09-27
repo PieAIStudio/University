@@ -78,18 +78,30 @@ import {
 import { GRID_LESSON_MARKER_COLOURS } from "./grid/grid-palette.js";
 import {
   composeMarkerMatrix,
+  composeStopMatrix,
   createMarkerMatrixScratch,
   LessonMarkerField,
+  MARKER_ENGRAVING_OFFSET,
   type GridLessonMarker,
 } from "./grid/LessonMarkerField.js";
 import { LearningNodeField } from "./course/LearningNodeField.js";
-import { CourseWildflowers, learningSiteExclusions } from "./course/CourseWildflowers.js";
+import { ChestField } from "./course/ChestField.js";
+import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
+import {
+  chestAndMonsterFootprints,
+  courseChests,
+  courseMonsters,
+  type CourseChest,
+  type CourseMonster,
+} from "./course/chests-and-monsters.js";
+import { CourseWildflowers } from "./course/CourseWildflowers.js";
 import { CourseVignettes } from "./course/CourseVignettes.js";
 import { planCourseVignettes } from "./island/course-vignettes.js";
 import {
   checkpointGapsForUnitSizes,
   courseLearningSites,
   courseStandingFootprints,
+  learningSiteExclusions,
   type LearningSite,
 } from "./course/learning-sites.js";
 import { LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
@@ -1463,18 +1475,29 @@ export function CourseScene({
     road, the stones, the learning nodes and everything standing; the flowers
     also keep off the vignettes.
   */
+  /*
+    V7: a chest beside every stone and a monster on every stone the learner
+    cannot enter yet, planned after the learning nodes and before the
+    vignettes and flowers, which keep off them.
+  */
+  const chests = useMemo(() => courseChests(lessons, allSites), [lessons, allSites]);
+  const monsters = useMemo(() => courseMonsters(lessons, allSites), [lessons, allSites]);
+  const chestFootprints = useMemo(
+    () => chestAndMonsterFootprints(lessons, allSites),
+    [lessons, allSites],
+  );
   const vignettes = useMemo(
     () =>
       planCourseVignettes(
         blueprint,
         courseStandingFootprints(blueprint).map((o) => ({ x: o.x, z: o.z, radius: o.r })),
-        learningSiteExclusions(allSites),
+        [...learningSiteExclusions(allSites), ...chestFootprints],
       ),
-    [allSites, blueprint],
+    [allSites, blueprint, chestFootprints],
   );
   const vignetteFootprints = useMemo(
-    () => vignettes.map((v) => ({ x: v.x, z: v.z, radius: v.radius })),
-    [vignettes],
+    () => [...vignettes.map((v) => ({ x: v.x, z: v.z, radius: v.radius })), ...chestFootprints],
+    [vignettes, chestFootprints],
   );
   const padSurfaces = useMemo(() => {
     const ground = createIslandHeightSampler(blueprint);
@@ -1505,6 +1528,47 @@ export function CourseScene({
       layout.inlays.geometry?.dispose();
     };
   }, [layout]);
+  /** Monsters stand where the lock stone used to: on the stone's or pad's top. */
+  const monsterPlacements = useMemo<readonly MonsterPlacement[]>(() => {
+    const matrix = new THREE.Matrix4();
+    const scratch = createMarkerMatrixScratch();
+    const top = (target: THREE.Matrix4) => new THREE.Vector3().setFromMatrixPosition(target);
+    return monsters.flatMap((monster) => {
+      const stop = monster.stop;
+      if (stop.kind === "gate") return [{ monster, at: monster.position }];
+      if (stop.kind === "lesson") {
+        const marker = markers.find((entry) => entry.lesson.lessonId === stop.lessonId);
+        if (!marker) return [];
+        composeMarkerMatrix(marker, MARKER_ENGRAVING_OFFSET, marker.radius, matrix, scratch);
+        return [{ monster, at: top(matrix) }];
+      }
+      const site = allSites.find((entry) => entry.id === stop.siteId);
+      if (!site) return [];
+      composeStopMatrix(
+        site.ground,
+        LEARNING_PAD_RADIUS,
+        padSurfaces.get(site.id),
+        MARKER_ENGRAVING_OFFSET,
+        LEARNING_PAD_RADIUS,
+        matrix,
+        scratch,
+      );
+      return [{ monster, at: top(matrix) }];
+    });
+  }, [monsters, markers, allSites, padSurfaces]);
+  const pickOwner = (owner: CourseChest["owner"] | CourseMonster["stop"]) => {
+    if (owner.kind === "lesson") {
+      const lesson = lessons.find((entry) => entry.lessonId === owner.lessonId);
+      if (!lesson) return;
+      recordMapTravel(travelClock, lesson.lessonId, performance.now());
+      onPick(lesson);
+      return;
+    }
+    const site = allSites.find((entry) => entry.id === owner.siteId);
+    if (!site || !onPickNode) return;
+    recordMapTravel(travelClock, site.id, performance.now());
+    onPickNode(site);
+  };
 
   return (
     <>
@@ -1567,6 +1631,14 @@ export function CourseScene({
             : undefined
         }
       />
+      <ChestField chests={chests} onPick={(chest) => pickOwner(chest.owner)} />
+      <Suspense fallback={null}>
+        <MonsterField
+          placements={monsterPlacements}
+          focus={avatarAt?.position ?? layout.idlePosition ?? null}
+          onPick={(monster) => pickOwner(monster.stop)}
+        />
+      </Suspense>
       {avatarAt || layout.idlePosition ? (
         <LearnerMarker
           position={(avatarAt?.position ?? layout.idlePosition)!}

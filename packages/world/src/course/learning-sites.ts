@@ -107,6 +107,25 @@ export const LEARNING_SITE_HEIGHT: Readonly<Record<MapLearningKind, number>> = {
   personal: 0.9 * LEARNING_NODE_KIND_SCALE.personal,
 };
 
+/** Ground the learning nodes stand on: pads, objects, gate posts and stepping stones. */
+export function learningSiteExclusions(
+  sites: readonly LearningSite[],
+): readonly (IslandPoint & { readonly radius: number })[] {
+  return sites
+    .filter((site) => site.resolved)
+    .flatMap((site) => [
+      { x: site.ground.x, z: site.ground.z, radius: LEARNING_PAD_RADIUS + 0.2 },
+      {
+        x: site.object.x,
+        z: site.object.z,
+        radius:
+          (site.kind === "checkpoint" ? LEARNING_GATE_HALF_SPAN : LEARNING_SITE_RADIUS[site.kind]) +
+          0.3,
+      },
+      ...site.branch.map((stone) => ({ x: stone.x, z: stone.z, radius: 0.3 })),
+    ]);
+}
+
 /** Where the pad is first looked for, beside its lesson. */
 const SIDE_OFFSET = 2.5;
 const SEARCH_RINGS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.8, 3.2, 3.6, 4.0];

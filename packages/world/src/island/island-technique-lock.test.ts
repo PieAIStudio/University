@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  COURSE_MONSTER_TRIANGLE_CEILING,
   ISLAND_COURSE_TERRAIN_TRIANGLES,
   ISLAND_DECORATION_TRIANGLE_CEILING,
   ISLAND_GRASS_BLADE_TRIANGLE_CEILING,
@@ -82,6 +83,14 @@ function walkGlb(root: string): string[] {
 }
 
 describe("Island technique lock", () => {
+  it("keeps every shipped monster model under the monster lock's ceiling", () => {
+    const root = resolve(import.meta.dirname, "../../../../apps/university/public/kit");
+    const monsters = walkGlb(root).filter((path) => /monster-[a-z]+\.glb$/.test(path));
+    expect(monsters.length).toBe(7);
+    for (const model of monsters)
+      expect(glbTriangles(model), model).toBeLessThanOrEqual(COURSE_MONSTER_TRIANGLE_CEILING);
+  });
+
   it("records a source, a budget and dated evidence for every locked element", () => {
     const entries = Object.entries(ISLAND_TECHNIQUE_LOCK);
     expect(entries.length).toBeGreaterThan(0);

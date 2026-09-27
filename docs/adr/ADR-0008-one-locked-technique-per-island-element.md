@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-18
+last_reviewed: 2026-09-27
 domain: architecture
 tags:
   - 3d
@@ -35,6 +35,48 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### V7-01: a chest beside every stone, a monster where the lock stone was
+
+Owner, 2026-09-27 (V7 journey, approved for building): every lesson stone gets a
+chest on the grass beside it, left or right of the road, and every stop the learner
+cannot enter yet carries a monster named after a beginner's fear instead of the lock
+stone. Two new locked elements, `chest` and `monster`, in `island-technique-lock.ts`:
+
+- **Chest.** Procedural, flat-shaded and vertex-coloured, cut down from the V7 review
+  chest to 200–228 triangles (ceiling 280); per tier one body and one lid geometry,
+  instanced. Tier by position — wood, blue at a segment's last lesson, gold at the
+  island's last, purple beside gates and pennants — and state from the record, never
+  stored. Placed after the learning nodes by the same free-ground search; where
+  dressing fills the verge it hangs at its stone's edge at 0.62 scale (5 of 36, 2 of 8,
+  2 of 9 lessons on the three measured course shapes). It may lean over the road's
+  grass shoulder but never onto the road. Vignettes and wildflowers keep off it.
+- **Monster.** World of ClaudeCraft creatures through the kit import (seven GLBs,
+  about 2.1 MB, at most 7,120 triangles each). The three nearest the learner that
+  have a skeleton animate as clones; every other one is its idle frame baked on the
+  CPU at load, untextured materials painted into vertex colours, one instanced draw
+  per kind and no shadow. The boss stands beside its gate, or beside the segment's
+  last or next lesson where the gate's verge is taken; 11 of 11 gates on a
+  36-lesson island. The lesson kind icon over a locked stone floats above the
+  monster's head. Fear names are DOM text in the stop's card. Owner, same day: each
+  monster faces the stop before its own, so the learner arriving there meets it face
+  to face; those within 7 units turn to watch the learner as they hop, and the live
+  three make a small move (a wave, a nod, a hop) now and then.
+
+Measured on the 36-lesson `understanding-ai` island, fresh learner, 1440×900 at DPR 1,
+three runs each under a camera drag (Mac, headless Chromium on Metal):
+
+| Complete Stage frame | Before | After |
+| --- | ---: | ---: |
+| Draw calls | 134 | 179 |
+| Triangles | 407,910 | 666,913 |
+| CPU submission median / p95 ms | 1.0 / 1.57 | 1.3 / 1.5 |
+| rAF interval p95 ms | 16.73 | 16.73 |
+
+The frame interval did not move; a phone is not measured here. The first version drew
+every monster with its own materials and shadows: 239 calls and 898,425 triangles.
+If a phone loses more than a tenth of its frame rate, simplify the baked monsters
+before anything else.
+
 ### R59-02 to R59-05: every stop is the lesson stone; a gate every segment
 
 Owner, 2026-09-23 (second review): the learning nodes' gold and lavender pads were
@@ -997,6 +1039,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
 | Course geological scenery and surface detail | R59-06: four baked Kenney Nature Kit rocks, 336 triangles/rock cluster; roadside and ground stones are Kenney compositions inside their old footprints. R58-02: four procedural hexagonal boulders, 176. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
+| Chest and monster                            | V7-01: procedural chest ≤280 triangles, two instanced draws per tier; donor monsters ≤7,200 triangles as shipped, baked still poses instanced per kind without shadows, the three nearest skinned ones live. Placed after the learning nodes on free ground; no stored state. Readable names stay DOM. |
 | Learning node                                | R59: procedural gate (rope and streamers) / pennant / notice board, ≤160/36/60 triangles, stepping stones 18 each; each stands on the lesson stone itself (ring green or red by state). Every segment: a gate and one roadside node, board and pennant in turn; instanced. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
 | Buildings/camp/bridge                        | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks.                                                                                                                                                                    |

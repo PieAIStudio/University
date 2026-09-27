@@ -6,7 +6,6 @@ import type { MapLearningKind } from "@pieai/university-core";
 import { createMedallionGeometry, MEDALLION_TOP_RADIUS } from "../grid/lesson-medallion.js";
 import {
   composeStopMatrix,
-  createLockStoneGeometry,
   createMarkerMatrixScratch,
   MARKER_ENGRAVING_OFFSET,
   MARKER_PLINTH_OFFSET,
@@ -28,7 +27,6 @@ import {
 } from "./learning-node-geometry.js";
 import { learningSiteLocked, type LearningSite } from "./learning-sites.js";
 
-const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 /** A pad's unit ring when its lesson carries no sigil. */
 const DEFAULT_ARCS = 4;
@@ -43,7 +41,8 @@ interface Stop {
 /**
  * The course's learning nodes as places on the island (V5 R59). Every node
  * stands on the lesson stone itself — the same medallion, the same unit ring,
- * the same lock stone — and only the object beside it says what it is: a gate
+ * and (V7) the same monster while it is locked — and only the object beside it
+ * says what it is: a gate
  * across the road, a pennant, a notice board. The ring is green where the
  * avatar can go and red where it cannot. Clicking the object or its stone does
  * what clicking its DOM chip does; the chip stays the accessible name, because
@@ -96,7 +95,6 @@ export function LearningNodeField({
       challenge: learningNodeKindGeometry("challenge"),
       personal: learningNodeKindGeometry("personal"),
       pad: createMedallionGeometry(),
-      lock: createLockStoneGeometry(),
     }),
     [],
   );
@@ -150,7 +148,6 @@ export function LearningNodeField({
         opacity: 0.85,
         depthWrite: false,
       }),
-      lock: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
     }),
     [],
   );
@@ -173,7 +170,6 @@ export function LearningNodeField({
     pennant: useRef<THREE.InstancedMesh>(null),
     streamers: useRef<THREE.InstancedMesh>(null),
     pad: useRef<THREE.InstancedMesh>(null),
-    lock: useRef<THREE.InstancedMesh>(null),
   };
   const ringRefs = useRef<(THREE.InstancedMesh | null)[]>([]);
   const scratch = useMemo(() => createMarkerMatrixScratch(), []);
@@ -205,7 +201,6 @@ export function LearningNodeField({
     const matrix = new THREE.Matrix4();
     const tint = new THREE.Color();
     const pad = refs.pad.current;
-    const lock = refs.lock.current;
     stops.forEach((stop, index) => {
       const at = stop.site.ground;
       if (pad) {
@@ -226,22 +221,8 @@ export function LearningNodeField({
           tint.set(GRID_LESSON_PLINTH_ALBEDO).multiplyScalar(stop.locked ? 0.78 : 1),
         );
       }
-      lock?.setMatrixAt(
-        index,
-        stop.locked
-          ? composeStopMatrix(
-              at,
-              LEARNING_PAD_RADIUS,
-              stop.surface,
-              MARKER_ENGRAVING_OFFSET,
-              LEARNING_PAD_RADIUS,
-              matrix,
-              scratch,
-            )
-          : HIDDEN,
-      );
     });
-    for (const mesh of [pad, lock]) {
+    for (const mesh of [pad]) {
       if (!mesh) continue;
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -366,15 +347,6 @@ export function LearningNodeField({
         ref={refs.pad}
         name="learning-node-pads"
         args={[geometries.pad, materials.pad, stops.length]}
-        castShadow
-        receiveShadow
-        frustumCulled={false}
-        onClick={pick(stops)}
-      />
-      <instancedMesh
-        ref={refs.lock}
-        name="learning-node-lock-stones"
-        args={[geometries.lock, materials.lock, stops.length]}
         castShadow
         receiveShadow
         frustumCulled={false}

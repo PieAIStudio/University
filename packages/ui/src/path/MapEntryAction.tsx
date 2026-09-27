@@ -24,6 +24,7 @@ export function MapEntryAction({
   onEnter,
   actionRef,
   locked,
+  guard,
 }: {
   /** What kind of stop this is: 「第 3 节」, 「小节关卡 · 第 1–3 节」. */
   readonly eyebrow?: string;
@@ -32,11 +33,17 @@ export function MapEntryAction({
   readonly actionRef: RefObject<HTMLElement | null>;
   /** The stop is still locked: say why and offer the two ways on, never "Enter". */
   readonly locked?: MapEntryLock;
+  /**
+   * The monster standing on this stop (V7), named after the fear it stands for.
+   * Its name is text here, never geometry on the island.
+   */
+  readonly guard?: { readonly name: string; readonly fear: string };
 }) {
   const heading = (
     <>
       {eyebrow ? <p className="map-entry-action__eyebrow">{eyebrow}</p> : null}
       {eyebrow ? <p className="map-entry-action__title">{title}</p> : null}
+      {guard ? <p className="map-entry-action__guard">{translate("map.guard", guard)}</p> : null}
     </>
   );
   if (locked)

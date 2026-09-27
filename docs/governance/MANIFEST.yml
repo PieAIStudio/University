@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-27T09:59:05.558Z
+generated_at: 2026-09-27T11:54:13.633Z
 generator_version: doc-gov@0.14.1
 docs_count: 163
 docs:
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-18
+    last_reviewed: 2026-09-27
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
@@ -200,13 +200,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-16
     pinned: false
-  - id: PLAN-V7-01-CHESTS-AND-MONSTERS
-    path: docs/plans/active/01-v7-chests-and-monsters-on-the-island.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-27
-    pinned: false
   - id: PLAN-V7-02-CHEST-OPENING
     path: docs/plans/active/02-v7-chest-opening-and-star-throw.md
     type: plan
@@ -304,6 +297,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-13
+    pinned: false
+  - id: PLAN-V7-01-CHESTS-AND-MONSTERS
+    path: docs/plans/completed/01-v7-chests-and-monsters-on-the-island.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-27
     pinned: false
   - id: PLAN-AI-PRODUCT-PLAY
     path: docs/plans/completed/ai-product-play.md

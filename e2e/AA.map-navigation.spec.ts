@@ -121,6 +121,8 @@ for (const [mode, origin] of [
       await expect(page.locator(".map-shell__heading h2")).toHaveText(titleFor(second, language));
       const locked = page.locator('[data-map-entry="locked"]');
       await expect(locked).toBeVisible();
+      // V7: a monster stands on the locked stone; the card names the fear it is, as text.
+      await expect(locked.locator(".map-entry-action__guard")).toHaveText(/\S/);
       await expect(entry(page)).toHaveCount(0);
       await ready(page, "course");
       expect(await pose(page)).toEqual(firstPose);

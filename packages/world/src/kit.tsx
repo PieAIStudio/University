@@ -191,6 +191,30 @@ export function useIslandGLTF(src: string) {
   });
 }
 
+/** Where a kit role's model is served, for a projection that needs the raw model. */
+export function kitSource(role: Role): string {
+  return kit[role].src;
+}
+
+/**
+ * Several raw kit models through the one loader stack, suspending once. For
+ * projections that need a model's skeleton and clips (the course monsters)
+ * rather than the instanced parts the prop fields flatten it into.
+ */
+export function useKitModels(roles: readonly Role[]) {
+  const ktx2 = useKtx2();
+  const loaded = useGLTF(
+    roles.map((role) => kit[role].src),
+    false,
+    true,
+    (loader) => {
+      loader.setDRACOLoader(dracoLoader);
+      loader.setKTX2Loader(ktx2);
+    },
+  );
+  return Array.isArray(loaded) ? loaded : [loaded];
+}
+
 /**
  * `useGLTF` must be called unconditionally, so an empty library still needs a
  * stable list to suspend on. This is the one model already shipped for every

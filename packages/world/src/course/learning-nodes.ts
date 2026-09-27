@@ -4,6 +4,8 @@ import { SPRITE_WINDOW } from "../labels/path-overlay.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 import { courseLearningSites, learningSiteLocked } from "./learning-sites.js";
 
+export { monsterAtStop, type MonsterRole } from "./chests-and-monsters.js";
+
 const symbols = { personal: "✦", challenge: "⚡", checkpoint: "◇" } as const;
 /**
  * A node's chip floats over its stone exactly as a lesson's kind icon floats

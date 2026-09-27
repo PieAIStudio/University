@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
-import * as THREE from "three";
 
-import { islandBlueprint } from "../island/island-blueprint.js";
-import { islandThemeSelectionForCourse } from "../island/kenney-recipes.js";
 import { planIslandDressing, placementFootprintRadius } from "../island/island-dressing.js";
 import { courseLandscapePlan } from "../island/course-landscape-plan.js";
 import { distanceToIslandRoute } from "../island/island-route-geometry.js";
-import type { LessonPlacement } from "../Maps.js";
 import {
   LEARNING_GATE_HALF_SPAN,
   LEARNING_NODE_KIND_SCALE,
@@ -27,53 +23,7 @@ import {
   islandLearningKinds,
   segmentsFromPlacements,
 } from "./learning-sites.js";
-
-/** Real course shapes: the study and course ids pick the recipe, the unit sizes pick the segments. */
-function placements(
-  studyId: string,
-  courseId: string,
-  unitSizes: readonly number[],
-): LessonPlacement[] {
-  const unitIds = unitSizes.flatMap((size, unit) =>
-    Array.from({ length: size }, () => `unit-${unit}`),
-  );
-  const lessonIds = unitIds.map((_, index) => `lesson-${index}`);
-  // The same derivation `placeCourse` uses, so the gaps match the gates.
-  const segments = segmentsFromPlacements(
-    unitIds.map((unitId, index) => ({ unitId, unitTitle: unitId, lessonId: lessonIds[index]! })),
-  );
-  const blueprint = islandBlueprint({
-    studyId,
-    courseId,
-    lessonCount: lessonIds.length,
-    lessonIds,
-    unitIds,
-    themeSelection: islandThemeSelectionForCourse(studyId, courseId),
-    checkpointGaps: checkpointGaps(segments, lessonIds.length),
-  });
-  return blueprint.nodes.map((node, index) => ({
-    studyId,
-    courseId,
-    unitId: node.unitId,
-    unitTitle: node.unitId,
-    unitIndex: node.unitIndex,
-    lessonId: node.id,
-    lessonTitle: node.id,
-    chars: 4000,
-    position: new THREE.Vector3(node.x, node.y, node.z),
-    state: index === 0 ? "live" : "idle",
-    kind: "lesson",
-    hueShift: 0,
-    blueprint,
-    visualToken: node.visualToken,
-  })) as unknown as LessonPlacement[];
-}
-
-const COURSES = [
-  ["ai-literacy", "understanding-ai", [5, 6, 7, 6, 6, 6]],
-  ["browser-ai", "run-a-real-project-with-ai", [4, 4]],
-  ["browser-ai", "make-the-cutout-app-yours", [2, 2, 3, 2]],
-] as const;
+import { COURSES, placements } from "./course-placements.fixture.js";
 
 describe("learning sites", () => {
   for (const [studyId, courseId, units] of COURSES) {

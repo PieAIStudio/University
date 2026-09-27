@@ -48,3 +48,11 @@
   font-size: 0.9rem;
   line-height: 1.4;
 }
+/* V7: the monster on this stop, by the fear it stands for. */
+.map-entry-action__guard {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--game-ui-text-muted);
+  overflow-wrap: anywhere;
+}

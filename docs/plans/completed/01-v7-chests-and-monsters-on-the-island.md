@@ -2,7 +2,7 @@
 id: PLAN-V7-01-CHESTS-AND-MONSTERS
 title: "V7 · 01 Chests and monsters on the island"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
@@ -159,3 +159,32 @@ stone (readable text is DOM; labels must not multiply 36-fold).
 
 Gate numbers verbatim, the two captures, the before/after frame numbers, the
 ADR-0008 rows, and anything noticed but not done.
+
+## 8 Delivery receipt (2026-09-27)
+
+- Chests: `course/chests-and-monsters.ts` (placement, tier, state), `chest-geometry.ts`
+  (200–228 triangles per chest), `ChestField.tsx`. Every lesson on the three measured
+  course shapes has its chest; 5 of 36, 2 of 8 and 2 of 9 hang at their stone's edge;
+  every resolved gate and pennant has its purple chest.
+- Monsters: seven World of ClaudeCraft creatures imported as kit roles `monster-*`
+  (provenance in `packages/world/src/kit.json`); `monster-pose.ts` bakes each idle
+  frame, `MonsterField.tsx` draws still ones as instances and the nearest three skinned
+  ones live. The lock stone is gone from lesson stones and learning-node pads. A boss
+  guards 11 of 11 gates on the 36-lesson island. The locked card names the monster
+  (`.map-entry-action__guard`, zh-CN and en), and the kind icon over a locked stone
+  floats above the monster. Owner addition the same day: each monster faces the stop
+  before its own, turns to watch the learner within 7 units, and the live three make a
+  small friendly move now and then.
+- ADR-0008 V7-01 and the `chest` / `monster` rows in `island-technique-lock.ts`.
+- Frame cost on the 36-lesson island, 1440×900, DPR 1, three runs each (headless
+  Chromium on Metal): rAF interval p95 16.73 → 16.73 ms; complete-frame draws 134 → 179,
+  triangles 407,910 → 666,913; CPU submission median 1.0 → 1.3 ms. A first version at
+  239 draws and 898,425 triangles was cut down before landing. No phone was measured.
+- Unit tests: world 1,114 → 1,154 passed (plus 45 in the remote-performance project);
+  ui 632 → 634. The complete gate runs on this commit's push.
+- Captures (not committed): desktop and phone course views, the island's far end with
+  the gold chest and crowned bosses, and the locked card naming 没基础菇.
+- Not done here, as planned: opening, star throw and flee (task 02); wisps (task 06);
+  the phone medallion size (task 08). The challenge pennant's chest stays shut until
+  task 02 defines claiming it.
+
