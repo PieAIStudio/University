@@ -271,6 +271,16 @@
       "author": "Quaternius",
       "source": "https://poly.pizza/u/Quaternius · https://quaternius.com",
       "license": "CC0 1.0"
+    },
+    "wisp": {
+      "src": "/kit/wisp.glb",
+      "bytes": 162784,
+      "sha256": "25010f4fcd2a0aba",
+      "from": "models/creatures/glimmerwisp.glb",
+      "pack": "World of ClaudeCraft creatures",
+      "author": "Levy Street (World of ClaudeCraft)",
+      "source": "https://github.com/levy-street/world-of-claudecraft",
+      "license": "Owner-arranged permission, 2026-09-27"
     }
   }
 }

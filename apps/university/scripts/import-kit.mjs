@@ -145,6 +145,9 @@ const KIT = [
   ["monster-mushroom", "models/creatures/mushroom_pixie.glb", "ownerArranged"],
   ["monster-chicken", "models/creatures/chicken_cow.glb", "ownerArranged"],
   ["monster-boss", "models/creatures/golelingevolved.glb", "creatures"],
+
+  // A card about to be forgotten, come back to a cleared stone (V7 decision O1).
+  ["wisp", "models/creatures/glimmerwisp.glb", "ownerArranged"],
 ];
 
 function sha256(bytes) {

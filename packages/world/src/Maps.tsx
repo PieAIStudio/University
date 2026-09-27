@@ -97,7 +97,8 @@ import {
   useChestSequence,
 } from "./course/chest-sequence.js";
 import { StarThrow } from "./course/StarThrow.js";
-import { useDevOpening } from "./course/dev-opening.js";
+import { devWispLessons, useDevOpening } from "./course/dev-opening.js";
+import { WispField, type WispSpot } from "./course/WispField.js";
 import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
 import {
   chestAndMonsterFootprints,
@@ -1442,6 +1443,7 @@ export function CourseScene({
   skyStudyId: _skyStudyId = null,
   assetRevision = 0,
   opening = null,
+  reviewDue = null,
 }: {
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
@@ -1458,6 +1460,8 @@ export function CourseScene({
   assetRevision?: number;
   /** A lesson's chest being opened after it was finished (V7 station 4). */
   opening?: CourseOpening | null;
+  /** Finished lessons whose review cards are due: a wisp comes back to each (V7 decision O1). */
+  reviewDue?: readonly string[] | null;
 }) {
   const overview = useContext(CourseOverviewContext);
   const travelClock = useContext(MapTravelClockContext);
@@ -1614,6 +1618,23 @@ export function CourseScene({
       return [{ monster, at: top(matrix) }];
     });
   }, [monsters, markers, allSites, padSurfaces]);
+  const wispLessons = reviewDue ?? devWispLessons(lessons.map((lesson) => lesson.lessonId));
+  const wisps = useMemo<readonly WispSpot[]>(() => {
+    if (!wispLessons?.length) return [];
+    const matrix = new THREE.Matrix4();
+    const scratch = createMarkerMatrixScratch();
+    return markers.flatMap((marker) => {
+      if (!wispLessons.includes(marker.lesson.lessonId)) return [];
+      composeMarkerMatrix(marker, MARKER_ENGRAVING_OFFSET, marker.radius, matrix, scratch);
+      return [
+        {
+          id: marker.lesson.lessonId,
+          at: new THREE.Vector3().setFromMatrixPosition(matrix),
+          radius: marker.radius,
+        },
+      ];
+    });
+  }, [markers, wispLessons?.join("|")]);
   const guardedStop = sequence.guard;
   const chased = guardedStop
     ? (monsterPlacements.find((entry) => isGuardedPlacement(entry, guardedStop)) ?? null)
@@ -1722,6 +1743,11 @@ export function CourseScene({
           onPick={(monster) => pickOwner(monster.stop)}
         />
       </Suspense>
+      {wisps.length ? (
+        <Suspense fallback={null}>
+          <WispField spots={wisps} />
+        </Suspense>
+      ) : null}
       {staged?.throwing && openingChest && chased && avatarPoint ? (
         <StarThrow
           key={`${openingChest.id}:${chased.monster.id}`}

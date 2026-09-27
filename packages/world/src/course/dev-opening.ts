@@ -60,3 +60,13 @@ export function useDevOpening(chests: readonly CourseChest[]): CourseOpening | n
     onTap: () => setStarted(true),
   };
 }
+
+/**
+ * Development only: `?v7wisps=<n>` brings wisps back to the first n lesson
+ * stones, so the review wisps can be judged before review data drives them.
+ */
+export function devWispLessons(lessonIds: readonly string[]): readonly string[] | null {
+  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  const count = Number(new URLSearchParams(location.search).get("v7wisps") ?? "0");
+  return count > 0 ? lessonIds.slice(0, count) : null;
+}
