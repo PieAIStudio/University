@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-27T09:01:27.796Z
+generated_at: 2026-09-27T09:59:05.558Z
 generator_version: doc-gov@0.14.1
-docs_count: 154
+docs_count: 163
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -199,6 +199,69 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-16
+    pinned: false
+  - id: PLAN-V7-01-CHESTS-AND-MONSTERS
+    path: docs/plans/active/01-v7-chests-and-monsters-on-the-island.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-02-CHEST-OPENING
+    path: docs/plans/active/02-v7-chest-opening-and-star-throw.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-03-SPLASH-AND-FIRST-MEETING
+    path: docs/plans/active/03-v7-splash-and-first-meeting.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-04-RETURN-REASONS
+    path: docs/plans/active/04-v7-wrap-up-continue-and-avatar-panel.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-05-BADGES-AND-CARDS
+    path: docs/plans/active/05-v7-badges-ranks-and-knowledge-cards.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-06-WISPS-AND-PACKS
+    path: docs/plans/active/06-v7-review-wisps-card-packs-and-cosmetics.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-07-WEEKLY-BOSS
+    path: docs/plans/active/07-v7-weekly-boss.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-08-MENU-AND-TIDY
+    path: docs/plans/active/08-v7-menu-doors-naming-and-author-speech.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-09-BEFORE-CHARGING
+    path: docs/plans/active/09-v7-before-charging.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-27
     pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/active/ai-foundations-revival.md

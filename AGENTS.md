@@ -178,9 +178,10 @@ What follows from them:
   defect.
 - **Design before build.** A user-facing behaviour gets designed in
   `docs/reference/player-journey/` before it gets implemented. The current
-  journey is `docs/reference/player-journey/v5/`; it replaces v1, v2, v3 and
-  v4. V5 is an amendment: what v4 says and v5 does not contradict still
-  stands.
+  journey is `docs/reference/player-journey/v7/` (approved for building
+  2026-09-27); it amends v5, which amends v4. What an earlier version says and
+  a later one does not contradict still stands. V6 was a review draft folded
+  into v7 and was never landed.
 - **The learner surface is the same in both modes.** V5 permits only the three
   port-boundary answers above: AI source, lesson material source and access to
   the repository behind a lesson. A missing learner capability still renders
