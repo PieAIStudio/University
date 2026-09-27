@@ -5,8 +5,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:2958be6d4cb5b04447c78e153270285eb0b6f8585d358e25adbfa83c681b3883",
-    "assetCount": 71
+    "hash": "sha256:47cbf2e83ef1594cfcdc350913052dc71305360e64f7c2c174733a03ba752299",
+    "assetCount": 72
   },
   "assets": [
     {
@@ -204,7 +204,7 @@
       "id": "pie-rules/brand-kit-first",
       "sourcePath": "rules/pie-rules/brand-kit-first.md",
       "delivery": "symlink",
-      "contentHash": "sha256:7f4a7a9e694cda67dd184247f7a4d11cfb423937d1d52f09c5baaeec62c0183c",
+      "contentHash": "sha256:734154e98947bc7743e930a8fe018a6dc2b3f058b14a85af798b0c52352b07fe",
       "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
     },
     {
@@ -213,6 +213,13 @@
       "delivery": "symlink",
       "contentHash": "sha256:3642eb50666795d9bed4b835d74bae9c1c729d70ac11156a7280132b3b24efc8",
       "targetPath": "docs/policy/shared-rules/clean-image-generation-rules.md"
+    },
+    {
+      "id": "pie-rules/cloud-platform-access",
+      "sourcePath": "rules/pie-rules/cloud-platform-access.md",
+      "delivery": "symlink",
+      "contentHash": "sha256:ebdeb5a52d65df9d13f683ca5a6b905bf9833f54aa16836d472e727833fcfc2e",
+      "targetPath": "docs/policy/shared-rules/cloud-platform-access.md"
     },
     {
       "id": "pie-rules/document-convergence",
@@ -225,14 +232,14 @@
       "id": "pie-rules/donors",
       "sourcePath": "rules/pie-rules/donors.md",
       "delivery": "symlink",
-      "contentHash": "sha256:1dbbbed5bf5234f2e0078c5fe323b182a493e45c2fc591bd2fe20b02cdd70f5c",
+      "contentHash": "sha256:c3f709f66b2966f7bafde2cacac0c89f5cc3efc059eb53cb3b015c8ac5aab7a8",
       "targetPath": "docs/policy/shared-rules/donors.md"
     },
     {
       "id": "pie-rules/web3d-capability-alignment",
       "sourcePath": "rules/pie-rules/web3d-capability-alignment.md",
       "delivery": "symlink",
-      "contentHash": "sha256:c557d97eb5b03f6d2a506d2d75a1959377f561379e9d78069c95be1a6f42c164",
+      "contentHash": "sha256:d882fc1742253a3d798eda11388dc639e0c66e4e6a692beaf89132bbbc9280e8",
       "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
     },
     {

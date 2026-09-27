@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-27T11:54:13.633Z
-generator_version: doc-gov@0.14.1
-docs_count: 163
+generated_at: 2026-09-27T16:03:05.171Z
+generator_version: doc-gov@0.14.2
+docs_count: 164
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -388,6 +388,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: POLICY-SHARED-CLOUD-PLATFORM-ACCESS
+    path: docs/policy/shared-rules/cloud-platform-access.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-27
     pinned: false
   - id: POLICY-SHARED-DOCUMENT-CONVERGENCE
     path: docs/policy/shared-rules/document-convergence.md

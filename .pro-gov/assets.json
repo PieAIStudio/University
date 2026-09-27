@@ -105,6 +105,9 @@
       "id": "pie-rules/clean-image-generation-rules"
     },
     {
+      "id": "pie-rules/cloud-platform-access"
+    },
+    {
       "id": "pie-rules/document-convergence"
     },
     {

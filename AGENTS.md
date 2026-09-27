@@ -44,6 +44,13 @@ for metadata or lifecycle changes, `docs/governance/boundary.md` and relevant
 aliases, and the selected agents routing file for workflow changes. Project
 AI development policy stays in `docs/policy/`.
 
+## Credentials And Local Environment
+
+For credentials, login or local environment files, first read
+`<portfolio-root>/.secrets/README.md`, then
+`docs/policy/shared-rules/cloud-platform-access.md`. Use the project’s existing
+adapter and recorded central location; do not assume secrets belong in this repository.
+
 <!-- PGS-ROUTER:END -->
 
 ## Three-Stage Delivery

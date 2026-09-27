@@ -16,11 +16,11 @@ importers:
         specifier: ^4.13.0
         version: 4.13.0(playwright-core@1.63.0)
       '@pieai/doc-gov':
-        specifier: 0.14.1
-        version: 0.14.1
+        specifier: 0.14.2
+        version: 0.14.2
       '@pieai/pro-gov':
-        specifier: 0.14.1
-        version: 0.14.1
+        specifier: 0.14.2
+        version: 0.14.2
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -795,8 +795,8 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
-  '@pieai/doc-gov@0.14.1':
-    resolution: {integrity: sha512-w+LmjfXybVm4eRaB98xv2HYLnMVPTkR/QEms7UiPFViMIJXllDw1OdKBBrGFk71rsLs1WGzc5Ebd/dZenLXKDw==}
+  '@pieai/doc-gov@0.14.2':
+    resolution: {integrity: sha512-jK/EgL9jNV2SsYmld2cZ6h36p3crO9CbiidZD+B8G7iMDrhBs/0o7JzqrGmQUJadPvhyfeLyIJOar152lWHRRQ==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
@@ -805,8 +805,8 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
-  '@pieai/pro-gov@0.14.1':
-    resolution: {integrity: sha512-mN/5v6rdQnaLKnEq4ecrNrb/lbk8Y2wfXbJp8GXfsMsxsyWye5hO+Q2drtLNz3iLZ05cBVuv9nPB7CojSJRCFw==}
+  '@pieai/pro-gov@0.14.2':
+    resolution: {integrity: sha512-vuEcQVtuW6L/yHQpbeuONiPdoiV8DCxAAiPqzSIwgJBWIMz3hVB/I5PRrsNfgfWGacDzUac2wJXWw5QpPa1/qQ==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
@@ -3312,7 +3312,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@pieai/doc-gov@0.14.1':
+  '@pieai/doc-gov@0.14.2':
     dependencies:
       mdast-util-from-markdown: 2.0.3
       yaml: 2.9.1
@@ -3325,9 +3325,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@pieai/pro-gov@0.14.1':
+  '@pieai/pro-gov@0.14.2':
     dependencies:
-      '@pieai/doc-gov': 0.14.1
+      '@pieai/doc-gov': 0.14.2
       yaml: 2.9.0
     transitivePeerDependencies:
       - supports-color
