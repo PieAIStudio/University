@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 import { hasWebGLContext } from "../webgl-capability.js";
+import {
+  EMBLEM_EXPOSURE,
+  EMBLEM_TONE_MAPPING,
+  frameEmblem,
+  lightEmblemStage,
+} from "./emblem-stage.js";
 import { buildBadgeEmblem, buildRankEmblem, type Emblem } from "./emblems.js";
 
 /**
@@ -41,7 +46,7 @@ interface Stage {
   readonly renderer: THREE.WebGLRenderer;
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
-  readonly environment: THREE.Texture;
+  readonly unlight: () => void;
 }
 
 let stage: Stage | null = null;
@@ -57,31 +62,19 @@ function openStage(): Stage {
     preserveDrawingBuffer: true,
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMapping = EMBLEM_TONE_MAPPING;
+  renderer.toneMappingExposure = EMBLEM_EXPOSURE;
   renderer.setClearColor(0x000000, 0);
   const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const room = new RoomEnvironment();
-  const environment = pmrem.fromScene(room, 0.04).texture;
-  room.dispose();
-  pmrem.dispose();
-  scene.environment = environment;
-  scene.environmentIntensity = 0.55;
-  scene.add(new THREE.HemisphereLight(0xfff6ea, 0x6d5a86, 1.15));
-  const key = new THREE.DirectionalLight(0xfff1dc, 2.4);
-  key.position.set(-2.2, 4.2, 3.2);
-  const rim = new THREE.DirectionalLight(0xbfd8ff, 1.3);
-  rim.position.set(2.5, 2, -3);
-  scene.add(key, rim);
+  const unlight = lightEmblemStage(scene, renderer);
   const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 100);
-  stage = { renderer, scene, camera, environment };
+  stage = { renderer, scene, camera, unlight };
   return stage;
 }
 
 function releaseStage() {
   if (!stage) return;
-  stage.environment.dispose();
+  stage.unlight();
   stage.renderer.dispose();
   stage.renderer.forceContextLoss();
   stage = null;
@@ -93,15 +86,7 @@ function draw(emblem: Emblem, size: number): string {
   renderer.setSize(pixels, pixels, false);
   emblem.group.rotation.y = TURN;
   scene.add(emblem.group);
-  // Fit the emblem's own face, so a winged rank and a small coin both fill the frame.
-  const box = new THREE.Box3().setFromObject(emblem.group);
-  const centre = box.getCenter(new THREE.Vector3());
-  const extent = box.getSize(new THREE.Vector3());
-  const half = (Math.max(extent.x, extent.y) / 2) * 1.08;
-  const distance = half / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) + extent.z / 2;
-  camera.position.set(centre.x, centre.y, centre.z + distance);
-  camera.lookAt(centre);
-  camera.updateProjectionMatrix();
+  frameEmblem(camera, emblem.group);
   renderer.render(scene, camera);
   const url = renderer.domElement.toDataURL("image/png");
   scene.remove(emblem.group);
