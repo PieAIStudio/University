@@ -169,22 +169,24 @@ describe("chests and monsters", () => {
         }
       });
 
-      it("guards each uncleared segment's gate with one boss on free ground", () => {
+      it("guards each uncleared segment's gate with one boss over the gate's own pad", () => {
         const bosses = monsters.filter((monster) => monster.boss);
         expect(bosses.every((boss) => boss.role === "boss" && boss.stop.kind === "gate")).toBe(
           true,
         );
-        const clearance = blueprint.route.roadWidth / 2;
-        for (const boss of bosses) {
-          const { x, z } = boss.position;
-          expect(distanceToIslandRoute(blueprint, { x, z })).toBeGreaterThanOrEqual(
-            clearance + BOSS_FOOTPRINT_RADIUS - 1e-6,
-          );
-        }
         const gates = sites.filter((site) => site.kind === "checkpoint" && site.resolved);
-        // The first segment is cleared only if all its lessons are done; with
-        // three done, at most one gate can have lost its boss.
-        expect(bosses.length).toBeGreaterThanOrEqual(gates.length - 1);
+        for (const boss of bosses) {
+          const gate = gates.find((site) => "siteId" in boss.stop && site.id === boss.stop.siteId)!;
+          // Under the arch, on the stone it guards, like every monster on its stone.
+          expect(boss.position.toArray()).toEqual(gate.ground.toArray());
+        }
+        // Every gate not yet cleared has its boss: none is lost for want of grass.
+        const uncleared = gates.filter((gate) =>
+          gate.segment.lessonIds.some(
+            (id) => lessons.find((lesson) => lesson.lessonId === id)?.state !== "done",
+          ),
+        );
+        expect(bosses.length).toBe(uncleared.length);
         expect(new Set(bosses.map((boss) => boss.id)).size).toBe(bosses.length);
       });
 

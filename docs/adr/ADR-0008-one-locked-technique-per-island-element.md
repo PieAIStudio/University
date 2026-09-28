@@ -54,9 +54,9 @@ stone. Two new locked elements, `chest` and `monster`, in `island-technique-lock
   about 2.1 MB, at most 7,120 triangles each). The three nearest the learner that
   have a skeleton animate as clones; every other one is its idle frame baked on the
   CPU at load, untextured materials painted into vertex colours, one instanced draw
-  per kind and no shadow. The boss stands beside its gate, or beside the segment's
-  last or next lesson where the gate's verge is taken; 11 of 11 gates on a
-  36-lesson island. The lesson kind icon over a locked stone floats above the
+  per kind and no shadow. The boss hovers over its gate's pad, under the arch
+  (Owner, 2026-09-28; it first stood on the grass beside the gate, which read as
+  off its stone and left a gate bare where the verge was full). The lesson kind icon over a locked stone floats above the
   monster's head. Fear names are DOM text in the stop's card. Owner, same day: each
   monster faces the stop before its own, so the learner arriving there meets it face
   to face; those within 7 units turn to watch the learner as they hop, and the live
@@ -132,6 +132,15 @@ take turns beside the segment's middle lesson, so a 36-lesson course carries ele
 gates and eleven roadside nodes instead of one segment's three; all of it is
 instanced. The floating unit names are gone from the island: their position followed
 the live stone and read as lesson names in the wrong place.
+
+Owner, 2026-09-28 (V7 review): the end of a segment reads as an arrival. The gate's
+pad is the one stone drawn larger (0.95 against 0.62); the gate is drawn 3.5× (was
+2.3) and 14% taller than that (`GATE_RISE`) so the boss and its crown hover under the
+rope — wider did not fit the posts on narrow verges. Each gate's gap is 2.2 ordinary
+gaps (was 1.5, minimum 4.6 units), and the island adds that length to the route
+instead of taking it from the other gaps, so ordinary spacing is unchanged and a
+gated island is larger. One gate to a road gap: a one-lesson segment that ends the
+course used to put its gate on top of the previous segment's.
 
 ### R59-08: small Kenney scenes between everything else
 

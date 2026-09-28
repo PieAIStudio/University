@@ -20,7 +20,7 @@ import {
   buildLearningStoneGeometry,
   flutterGateStreamers,
   flutterPennant,
-  LEARNING_PAD_RADIUS,
+  learningPadRadius,
   learningGateStreamerGeometry,
   learningNodeKindGeometry,
   learningPennantGeometry,
@@ -208,10 +208,10 @@ export function LearningNodeField({
           index,
           composeStopMatrix(
             at,
-            LEARNING_PAD_RADIUS,
+            learningPadRadius(stop.site.kind),
             stop.surface,
             MARKER_PLINTH_OFFSET,
-            LEARNING_PAD_RADIUS,
+            learningPadRadius(stop.site.kind),
             matrix,
             scratch,
           ),
@@ -234,10 +234,10 @@ export function LearningNodeField({
       batch.members.forEach((stop, slot) => {
         composeStopMatrix(
           stop.site.ground,
-          LEARNING_PAD_RADIUS,
+          learningPadRadius(stop.site.kind),
           stop.surface,
           MARKER_ENGRAVING_OFFSET,
-          LEARNING_PAD_RADIUS * MEDALLION_TOP_RADIUS,
+          learningPadRadius(stop.site.kind) * MEDALLION_TOP_RADIUS,
           matrix,
           scratch,
         );

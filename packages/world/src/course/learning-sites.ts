@@ -20,8 +20,10 @@ import {
   LEARNING_GATE_HALF_SPAN,
   LEARNING_NODE_KIND_SCALE,
   LEARNING_NODE_POST_SINK,
+  LEARNING_CHECKPOINT_PAD_RADIUS,
   LEARNING_OBJECT_OFFSET,
   LEARNING_PAD_RADIUS,
+  learningPadRadius,
 } from "./learning-node-geometry.js";
 
 /**
@@ -114,7 +116,7 @@ export function learningSiteExclusions(
   return sites
     .filter((site) => site.resolved)
     .flatMap((site) => [
-      { x: site.ground.x, z: site.ground.z, radius: LEARNING_PAD_RADIUS + 0.2 },
+      { x: site.ground.x, z: site.ground.z, radius: learningPadRadius(site.kind) + 0.2 },
       {
         x: site.object.x,
         z: site.object.z,
@@ -412,6 +414,14 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
       return stones;
     };
 
+    /*
+      One gate to a gap. A one-lesson segment that ends the course takes the
+      gap before its lesson, which is the previous segment's gate's gap; both
+      gates stood in the same place, and once bosses stood over the gates two
+      stood inside each other. The later gate is not drawn; its checkpoint is
+      still reached through the course's list.
+    */
+    const gatedGaps = new Set<number>();
     for (const segment of segments) {
       const index = lessons.findIndex(
         (lesson) => lesson.lessonId === segment.anchorLessonId && lesson.unitId === segment.unitId,
@@ -452,7 +462,8 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
           // through it when the segment ends. Only the two posts need free verge.
           const gap = checkpointGapOf(segment, lessons.length);
           const nodeT = (at: number) => blueprint.nodes[at]?.t;
-          const from = gap === null ? undefined : nodeT(gap);
+          const unclaimed = gap !== null && !gatedGaps.has(gap);
+          const from = gap === null || !unclaimed ? undefined : nodeT(gap);
           const to = gap === null ? undefined : nodeT(gap + 1);
           if (from !== undefined && to !== undefined) {
             for (const share of [0.5, 0.42, 0.58, 0.35, 0.65]) {
@@ -466,7 +477,9 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
               const clearOfLessons = lessons.every(
                 (lesson) =>
                   Math.hypot(road.x - lesson.position.x, road.z - lesson.position.z) >
-                  blueprint.route.nodeRadius + AVATAR_RING_RADIUS + 0.04,
+                  blueprint.route.nodeRadius +
+                    Math.max(AVATAR_RING_RADIUS, LEARNING_CHECKPOINT_PAD_RADIUS) +
+                    0.04,
               );
               const postsFree = posts.every((post) => {
                 const sample = ground.heightAt(post.x, post.z);
@@ -486,6 +499,7 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
                 const at = new Vector3(road.x, centre.y, road.z);
                 found = { pad: at, object: at };
                 yaw = Math.atan2(-normal.z, normal.x);
+                gatedGaps.add(gap!);
                 break;
               }
             }

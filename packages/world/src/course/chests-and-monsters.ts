@@ -139,7 +139,7 @@ export const CHEST_TIER_SCALE: Readonly<Record<ChestTier, number>> = {
 };
 /** A chest that found no free verge is drawn this much smaller at its stone's edge. */
 export const CHEST_EDGE_SCALE = 0.62;
-/** Ground the boss needs beside its gate. */
+/** Ground a boss needs: the weekly boss's landing spot at the shore. */
 export const BOSS_FOOTPRINT_RADIUS = 0.62;
 
 const STONE_GAP = 0.25;
@@ -173,7 +173,6 @@ interface Spot {
 
 interface Placement {
   readonly chests: ReadonlyMap<string, Spot>;
-  readonly bosses: ReadonlyMap<string, Spot>;
   /**
    * Free ground near the shore, one per direction round the island: where a
    * weekly boss may stand. Planned whether or not one comes, so nothing else
@@ -271,7 +270,7 @@ function placeChestsAndBosses(
   sites: readonly LearningSite[],
 ): Placement {
   const blueprint = lessons[0]?.blueprint;
-  if (!blueprint) return { chests: new Map(), bosses: new Map(), shore: [] };
+  if (!blueprint) return { chests: new Map(), shore: [] };
   const key = placementKey(lessons, sites);
   const hit = cache.get(blueprint)?.get(key);
   if (hit) return hit;
@@ -286,7 +285,6 @@ function placeChestsAndBosses(
   const taken: Circle[] = [];
   const ground = createIslandHeightSampler(blueprint);
   const chests = new Map<string, Spot>();
-  const bosses = new Map<string, Spot>();
   const shore: Spot[] = [];
   try {
     const free = (x: number, z: number, radius: number): number | null => {
@@ -417,37 +415,6 @@ function placeChestsAndBosses(
       const yaw = site.yaw ?? 0;
       const tangent = new Vector3(Math.sin(yaw), 0, Math.cos(yaw));
       const gateReach = reach + 0.5;
-      // Beside the gate first; where its verge is taken, at the segment's end
-      // on either side of the gate: its last lesson, then the next one.
-      const last = lessons.findIndex(
-        (lesson) =>
-          lesson.unitId === site.segment.unitId &&
-          lesson.lessonId === site.segment.lessonIds.at(-1),
-      );
-      const neighbours = [last, last + 1].filter((index) => index >= 0 && index < lessons.length);
-      let boss = beside(
-        site.object,
-        tangent,
-        gateReach,
-        BOSS_FOOTPRINT_RADIUS,
-        `${site.id}:boss`,
-        GATE_RINGS,
-      );
-      for (const index of neighbours) {
-        if (boss) break;
-        boss = beside(
-          lessons[index]!.position,
-          tangentAt(index),
-          reach + BOSS_FOOTPRINT_RADIUS - CHEST_FOOTPRINT_RADIUS,
-          BOSS_FOOTPRINT_RADIUS,
-          `${site.id}:boss:${index}`,
-          GATE_RINGS,
-        );
-      }
-      if (boss) {
-        taken.push({ x: boss.x, z: boss.z, r: BOSS_FOOTPRINT_RADIUS });
-        bosses.set(site.id, boss);
-      }
       const chest = besideEpic(site.object, tangent, gateReach, site.id);
       if (chest) {
         taken.push({ x: chest.x, z: chest.z, r: chest.radius ?? EPIC_RADIUS });
@@ -507,7 +474,7 @@ function placeChestsAndBosses(
   } finally {
     ground.dispose();
   }
-  const placement: Placement = { chests, bosses, shore };
+  const placement: Placement = { chests, shore };
   let perBlueprint = cache.get(blueprint);
   if (!perBlueprint) {
     perBlueprint = new Map();
@@ -587,18 +554,19 @@ export function courseMonsters(
       faces: before.position.clone(),
     });
   });
-  const placement = placeChestsAndBosses(lessons, sites);
   sites.forEach((site, index) => {
     if (!site.resolved) return;
     if (site.kind === "checkpoint") {
-      const spot = placement.bosses.get(site.id);
-      if (!spot || segmentCleared(site, lessons)) return;
+      // Over the gate's own pad, under the arch (Owner, 2026-09-28): it guards
+      // the segment's end the way every monster guards its stone, and it can
+      // never be left out for want of grass beside the gate.
+      if (segmentCleared(site, lessons)) return;
       monsters.push({
         id: `monster:gate:${site.id}`,
         role: "boss",
         boss: true,
         stop: { kind: "gate", siteId: site.id },
-        position: new Vector3(spot.x, spot.y, spot.z),
+        position: site.ground.clone(),
         faces: (
           lessonAt(site.segment.lessonIds.at(-1) ?? "", site.segment.unitId)?.position ??
           site.ground
@@ -734,11 +702,6 @@ export function chestAndMonsterFootprints(
         radius: (spot.radius ?? CHEST_FOOTPRINT_RADIUS) + 0.12,
       })),
     ...placement.shore.map((spot) => ({
-      x: spot.x,
-      z: spot.z,
-      radius: BOSS_FOOTPRINT_RADIUS + 0.12,
-    })),
-    ...[...placement.bosses.values()].map((spot) => ({
       x: spot.x,
       z: spot.z,
       radius: BOSS_FOOTPRINT_RADIUS + 0.12,

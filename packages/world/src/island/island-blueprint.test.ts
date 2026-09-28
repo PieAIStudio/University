@@ -559,11 +559,27 @@ describe("checkpoint gaps", () => {
   const plain = islandBlueprint(base);
   const gated = islandBlueprint({ ...base, checkpointGaps: [4, 9] });
 
-  it("moves only where lessons stand: the road, outline and terrain are the same island", () => {
-    expect(gated.centerline).toEqual(plain.centerline);
-    expect(gated.outline).toEqual(plain.outline);
-    expect(gated.terrainPatches).toEqual(plain.terrainPatches);
-    expect(gated.nodes.map((node) => node.t)).not.toEqual(plain.nodes.map((node) => node.t));
+  /** Route length, from the centreline the blueprint lays. */
+  const lengthOf = (blueprint: typeof plain) =>
+    blueprint.centerline
+      .slice(1)
+      .reduce(
+        (sum, point, index) =>
+          sum +
+          Math.hypot(
+            point.x - blueprint.centerline[index]!.x,
+            point.z - blueprint.centerline[index]!.z,
+          ),
+        0,
+      );
+
+  it("buys its gates' length: the island grows and the ordinary gaps keep their spacing", () => {
+    // Owner, 2026-09-28: the road loosens at a segment's end; it was borrowed
+    // from the other gaps, which the island now pays for instead.
+    expect(lengthOf(gated)).toBeGreaterThan(lengthOf(plain));
+    const plainGap = (plain.nodes[1]!.t - plain.nodes[0]!.t) * lengthOf(plain);
+    const gatedGap = (gated.nodes[1]!.t - gated.nodes[0]!.t) * lengthOf(gated);
+    expect(Math.abs(gatedGap - plainGap) / plainGap).toBeLessThan(0.05);
     expect(validateIslandBlueprint(gated)).toEqual([]);
   });
 
@@ -571,7 +587,7 @@ describe("checkpoint gaps", () => {
     const gaps = gated.nodes.slice(1).map((node, i) => node.t - gated.nodes[i]!.t);
     const ordinary = gaps.filter((_, i) => i !== 4 && i !== 9);
     expect(Math.max(...ordinary) - Math.min(...ordinary)).toBeLessThan(1e-9);
-    expect(gaps[4]! / ordinary[0]!).toBeGreaterThanOrEqual(1.5 - 1e-9);
+    expect(gaps[4]! / ordinary[0]!).toBeGreaterThanOrEqual(2.2 - 1e-9);
     expect(gaps[9]).toBeCloseTo(gaps[4]!, 12);
     expect(gated.nodes[0]!.t).toBe(0);
     expect(gated.nodes.at(-1)!.t).toBe(1);

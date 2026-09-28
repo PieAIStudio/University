@@ -128,7 +128,7 @@ import {
   learningSiteExclusions,
   type LearningSite,
 } from "./course/learning-sites.js";
-import { LEARNING_GATE_HALF_SPAN, LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
+import { LEARNING_GATE_HALF_SPAN, learningPadRadius } from "./course/learning-node-geometry.js";
 import {
   buildMedallionFooting,
   MARKER_PLINTH_OFFSET,
@@ -1589,7 +1589,7 @@ export function CourseScene({
         ...allSites
           .filter((site) => site.resolved)
           .flatMap((site) => [
-            { x: site.ground.x, z: site.ground.z, r: LEARNING_PAD_RADIUS },
+            { x: site.ground.x, z: site.ground.z, r: learningPadRadius(site.kind) },
             { x: site.object.x, z: site.object.z, r: LEARNING_GATE_HALF_SPAN },
           ]),
       ]);
@@ -1640,7 +1640,7 @@ export function CourseScene({
             const pose = courseStopPose(
               blueprint,
               site.ground,
-              LEARNING_PAD_RADIUS,
+              learningPadRadius(site.kind),
               ground.heightAt,
             );
             return [
@@ -1667,8 +1667,7 @@ export function CourseScene({
     return monsters.flatMap((monster) => {
       const stop = monster.stop;
       if (stop.kind === "weekly" && weeklyAnchor) return [{ monster, at: weeklyAnchor.at }];
-      if (stop.kind === "gate" || stop.kind === "weekly")
-        return [{ monster, at: monster.position }];
+      if (stop.kind === "weekly") return [{ monster, at: monster.position }];
       if (stop.kind === "lesson") {
         const marker = markers.find((entry) => entry.lesson.lessonId === stop.lessonId);
         if (!marker) return [];
@@ -1677,12 +1676,13 @@ export function CourseScene({
       }
       const site = allSites.find((entry) => entry.id === stop.siteId);
       if (!site) return [];
+      // On its pad, the gate's boss included: it hovers over the stone it guards.
       composeStopMatrix(
         site.ground,
-        LEARNING_PAD_RADIUS,
+        learningPadRadius(site.kind),
         padSurfaces.get(site.id),
         MARKER_ENGRAVING_OFFSET,
-        LEARNING_PAD_RADIUS,
+        learningPadRadius(site.kind),
         matrix,
         scratch,
       );
@@ -1749,7 +1749,7 @@ export function CourseScene({
         .map((site) => ({
           x: site.ground.x,
           z: site.ground.z,
-          r: site.kind === "checkpoint" ? LEARNING_GATE_HALF_SPAN : LEARNING_PAD_RADIUS,
+          r: site.kind === "checkpoint" ? LEARNING_GATE_HALF_SPAN : learningPadRadius(site.kind),
         })),
       ...chests.map((chest) => ({
         x: chest.position.x,

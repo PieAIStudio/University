@@ -26,13 +26,21 @@ import type { LearningSite } from "./learning-sites.js";
 /**
  * Objects are authored at a unit scale and drawn this much larger. The gate is
  * the largest because the avatar stands under it; the owner asked for all
- * three to read bigger than the first 1.6 on 2026-09-23.
+ * three to read bigger than the first 1.6 on 2026-09-23. On 2026-09-28 the
+ * gate grew again so that the segment's boss hovers under it, over the pad,
+ * the way every other monster stands on its stone: 「红门也可以大很多」.
  */
 export const LEARNING_NODE_KIND_SCALE: Readonly<Record<MapLearningKind, number>> = {
-  checkpoint: 2.3,
+  checkpoint: 3.5,
   challenge: 2.1,
   personal: 1.95,
 };
+/**
+ * The gate is drawn this much taller than its width scale: room under the rope
+ * for the segment's boss and its crown. A wider gate would not fit the verges
+ * of narrow roads (its posts need free ground); a taller one costs nothing there.
+ */
+export const GATE_RISE = 1.14;
 /** The gate's posts stand this far either side of the road's centre (scaled). */
 export const LEARNING_GATE_HALF_SPAN = 0.36 * LEARNING_NODE_KIND_SCALE.checkpoint;
 /** Posts and legs reach this far below the site's ground point (unscaled). */
@@ -44,6 +52,15 @@ export const LEARNING_NODE_POST_SINK = 0.3;
  * owner rejected the smaller, differently coloured pads of R58-01.
  */
 export const LEARNING_PAD_RADIUS = 0.62;
+/**
+ * The gate's pad is the one stone drawn larger (Owner, 2026-09-28: 「这里的垫石
+ * 可以大很多」): the end of a segment reads as an arrival, and the boss that
+ * guards it hovers over it.
+ */
+export const LEARNING_CHECKPOINT_PAD_RADIUS = 0.95;
+/** The pad under a learning node: the lesson stone's size, the gate's larger. */
+export const learningPadRadius = (kind: MapLearningKind) =>
+  kind === "checkpoint" ? LEARNING_CHECKPOINT_PAD_RADIUS : LEARNING_PAD_RADIUS;
 /** How far behind its pad (away from the road) the object stands, in world units. */
 export const LEARNING_OBJECT_OFFSET: Readonly<Record<"challenge" | "personal", number>> = {
   challenge: 0.66,
@@ -282,7 +299,8 @@ export function learningGateStreamerGeometry(): GateStreamers {
       const k = row / STREAMER_ROWS;
       // Paper streamers step left and right as they fall; ribbons hang straight.
       const shift = streamer.zig * (row % 2 === 0 ? -1 : 1) * Math.min(1, row);
-      const y = streamer.top - streamer.length * k;
+      // Hung from the raised rope and cap; the streamers keep their own length.
+      const y = streamer.top * GATE_RISE - streamer.length * k;
       const narrow = streamer.width * (1 - k * 0.25);
       for (const side of [-1, 1]) {
         positions.push((streamer.x + shift + (side * narrow) / 2) * scale, y * scale, 0);
@@ -418,7 +436,9 @@ const ADD: Readonly<Record<MapLearningKind, (builder: Builder, frame: Frame) => 
 export function learningNodeKindGeometry(kind: MapLearningKind): THREE.BufferGeometry {
   const builder = new Builder();
   ADD[kind](builder, new Frame(new THREE.Vector3(), LEARNING_NODE_KIND_SCALE[kind]));
-  return builder.geometry()!;
+  const geometry = builder.geometry()!;
+  if (kind === "checkpoint") geometry.scale(1, GATE_RISE, 1);
+  return geometry;
 }
 
 /** Every stepping stone of the drawn nodes, merged in blueprint space. */
