@@ -798,6 +798,11 @@ export function searchAssemblyPlacement(
     readonly seedKey: string;
     readonly fractions: readonly number[];
     readonly spanAlongTangent?: boolean;
+    /** A bounded second pass; never changes a site accepted by the original search. */
+    readonly fallback?: {
+      readonly fractions: readonly number[];
+      readonly sideOffsets: readonly number[];
+    };
   },
 ): readonly AssemblyPlacement[] | null {
   const parts = resolveAssemblyParts(spec, context.packByAsset);
@@ -829,42 +834,48 @@ export function searchAssemblyPlacement(
           ),
         ];
 
-  for (const fraction of uniqueFractions) {
-    const frame = islandRouteFrameAtFraction(context.blueprint, fraction);
-    if (!frame) continue;
-    for (const currentSide of [side, -side]) {
-      for (const offset of SIDE_OFFSETS) {
-        const anchor = islandRouteAnchorFromFrame(frame, currentSide, offset);
-        const directions: IslandPoint[] =
-          spec.kind === "bridge"
-            ? options.spanAlongTangent === false
-              ? [anchor.normal, frame.tangent]
-              : [frame.tangent, anchor.normal]
-            : [frame.tangent];
-        for (const direction of directions) {
-          attempts += 1;
-          const result = evaluateAssembly(
-            spec,
-            context,
-            spec.kind === "bridge" ? { ...anchor, tangent: direction } : anchor,
-            spec.kind === "bridge" ? direction : undefined,
-          );
-          if (result.ok && result.placements) {
-            context.onSearchResult?.({
-              assemblyId: spec.id,
-              kind: spec.kind,
-              status: "placed",
-              attempts,
-              rejections,
-              members: result.placements.map((placement) => placement.id),
-              baseY: result.baseY,
-              span: result.span,
-              slope: result.slope,
-            });
-            return result.placements;
+  const passes = [
+    { fractions: uniqueFractions, sideOffsets: SIDE_OFFSETS },
+    ...(options.fallback ? [options.fallback] : []),
+  ];
+  for (const pass of passes) {
+    for (const fraction of pass.fractions) {
+      const frame = islandRouteFrameAtFraction(context.blueprint, fraction);
+      if (!frame) continue;
+      for (const currentSide of [side, -side]) {
+        for (const offset of pass.sideOffsets) {
+          const anchor = islandRouteAnchorFromFrame(frame, currentSide, offset);
+          const directions: IslandPoint[] =
+            spec.kind === "bridge"
+              ? options.spanAlongTangent === false
+                ? [anchor.normal, frame.tangent]
+                : [frame.tangent, anchor.normal]
+              : [frame.tangent];
+          for (const direction of directions) {
+            attempts += 1;
+            const result = evaluateAssembly(
+              spec,
+              context,
+              spec.kind === "bridge" ? { ...anchor, tangent: direction } : anchor,
+              spec.kind === "bridge" ? direction : undefined,
+            );
+            if (result.ok && result.placements) {
+              context.onSearchResult?.({
+                assemblyId: spec.id,
+                kind: spec.kind,
+                status: "placed",
+                attempts,
+                rejections,
+                members: result.placements.map((placement) => placement.id),
+                baseY: result.baseY,
+                span: result.span,
+                slope: result.slope,
+              });
+              return result.placements;
+            }
+            const reason = result.reason ?? "no-feasible-site";
+            rejections[reason] = (rejections[reason] ?? 0) + 1;
           }
-          const reason = result.reason ?? "no-feasible-site";
-          rejections[reason] = (rejections[reason] ?? 0) + 1;
         }
       }
     }
@@ -890,7 +901,23 @@ export function searchAcademyPlacement(
   const fractions = frame
     ? [near! / Math.max(1, context.blueprint.centerline.length - 1), 0.9, 0.84, 0.96]
     : [0.9, 0.84, 0.96];
-  return searchAssemblyPlacement(SUMMIT_ACADEMY_ASSEMBLY, context, { seedKey, fractions });
+  // Widened checkpoint gaps can stretch the summit onto a sloping shoulder.
+  // Keep the original search first, then sample more finely back along the
+  // latter 40% of the route. Narrower shoulders are candidates, not permission
+  // to overlap the road: every full-footprint and ground check still applies.
+  // At most 37 × 2 × 33 extra candidates, only when the original search fails.
+  return searchAssemblyPlacement(SUMMIT_ACADEMY_ASSEMBLY, context, {
+    seedKey,
+    fractions,
+    ...(context.blueprint.checkpointGaps?.length
+      ? {
+          fallback: {
+            fractions: Array.from({ length: 37 }, (_, index) => (96 - index) / 100),
+            sideOffsets: Array.from({ length: 33 }, (_, index) => 2.5 + index / 8),
+          },
+        }
+      : {}),
+  });
 }
 
 export function searchCampPlacement(

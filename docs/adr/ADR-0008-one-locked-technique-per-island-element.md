@@ -77,6 +77,20 @@ every monster with its own materials and shadows: 239 calls and 898,425 triangle
 If a phone loses more than a tenth of its frame rate, simplify the baked monsters
 before anything else.
 
+#### Gated-island academy recovery (2026-09-28)
+
+The enlarged checkpoint gaps changed the inspector island's terrain: its academy
+was omitted after all 80 coarse candidates failed (shore 32, outside 8, slope 40).
+Keep the approved gates and the added route length. `searchAcademyPlacement` now
+retains the original search first; only a gated island that fails it gets a
+bounded finer pass along the latter 40% of its route. Existing accepted sites and
+ungated islands do not change. Every candidate uses the same complete-footprint,
+route, shore, slope and elevation checks; no foundation tolerance is relaxed.
+The actual drawing still comes from the original five-member assembly and its
+existing `courseAcademyPlan`, not a replacement landmark or another terrain field.
+`gated-academy.test.ts` guards recovery of the expanded island, unchanged accepted
+sites, one honest search decision and continued rejection of unsafe ground.
+
 ### V7-02, V7-06, V7-07: the opening, the wisps and the weekly boss
 
 Owner, 2026-09-27 (V7 stations 4 and 8, decisions J2, O1, P1, R1). All three are
