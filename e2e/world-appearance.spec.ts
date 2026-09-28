@@ -179,7 +179,7 @@ for (const sample of [
     // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
     // island's bare west side, and one meadow flower now yields to a trunk.
     // 11 until R58-04 the same day: denser interior groves take two more.
-    flora: 28,
+    flora: 25,
     width: 1440,
     height: 900,
     locale: "zh-CN",
@@ -194,7 +194,7 @@ for (const sample of [
     name: "long-delivery",
     origin: ONLINE_ORIGIN,
     route: "/ai-literacy/understanding-ai",
-    flora: 134,
+    flora: 127,
     width: 1440,
     height: 900,
     locale: "en",
@@ -207,7 +207,7 @@ for (const sample of [
     // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
     // island's bare west side, and one meadow flower now yields to a trunk.
     // 11 until R58-04 the same day: denser interior groves take two more.
-    flora: 28,
+    flora: 25,
     width: 872,
     height: 286,
     locale: "en",
@@ -221,7 +221,7 @@ for (const sample of [
     // each checkpoint gate a wider gap, and one flower yields to them.
     // 68 until R58-04: with denser interior groves the landscape plan places
     // 72 here (it rose on this island while it fell on the two above).
-    flora: 141,
+    flora: 127,
     width: 375,
     height: 812,
     locale: "zh-CN",

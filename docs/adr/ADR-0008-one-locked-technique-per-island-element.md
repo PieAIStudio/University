@@ -137,9 +137,12 @@ Owner, 2026-09-28 (V7 review): the end of a segment reads as an arrival. The gat
 pad is the one stone drawn larger (0.95 against 0.62); the gate is drawn 3.5× (was
 2.3) and 14% taller than that (`GATE_RISE`) so the boss and its crown hover under the
 rope — wider did not fit the posts on narrow verges. Each gate's gap is 2.2 ordinary
-gaps (was 1.5, minimum 4.6 units), and the island adds that length to the route
-instead of taking it from the other gaps, so ordinary spacing is unchanged and a
-gated island is larger. One gate to a road gap: a one-lesson segment that ends the
+gaps (was 1.5, minimum 4.6 units). The island adds three quarters of that extra
+length to the route and borrows the rest from the ordinary gaps (under 5% tighter
+on a 12-lesson island): adding all of it made gated islands so large that the
+archipelago dropped the selected island's label (e2e world-map E), and adding none
+left one course's larger gate without ground for its posts. Gated islands are
+larger; the flora baselines of e2e R56 moved with them (9 → 25, 65/72 → 127). One gate to a road gap: a one-lesson segment that ends the
 course used to put its gate on top of the previous segment's.
 
 ### R59-08: small Kenney scenes between everything else

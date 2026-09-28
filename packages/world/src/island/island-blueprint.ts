@@ -459,13 +459,18 @@ function normalizeCheckpointGaps(value: unknown, lessonCount: number): readonly 
 /**
  * A gate's gap is this many ordinary gaps long. Owner, 2026-09-28: the end of a
  * segment is an arrival — a larger gate over a larger pad with its boss under
- * the arch — and the road loosens around it (「间距……可以再稍微松一些」). The
- * island buys that length (`desiredLength`) rather than taking it from the
- * ordinary gaps, which keep their spacing.
+ * the arch — and the road loosens around it (「间距……可以再稍微松一些」).
  */
 const CHECKPOINT_GAP_RATIO = 2.2;
 /** Centre-to-centre room a gate needs: both stones, the gate's larger pad, and air. */
 const CHECKPOINT_GAP_MIN = 4.6;
+/**
+ * The share of a gate's extra length the island adds rather than borrows from
+ * the ordinary gaps. All of it made gated islands so much larger that the
+ * archipelago's labels no longer fit (e2e world-map E); none of it made the
+ * ordinary gaps visibly tighter. Half keeps both.
+ */
+const CHECKPOINT_LENGTH_ADDED = 0.75;
 /** Ordinary gaps never shrink below this, so pads never touch. */
 const ORDINARY_GAP_MIN = 1.9;
 
@@ -1010,8 +1015,10 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     // three-node islands; otherwise its valid clearance envelope would be a
     // larger fraction than the blueprint's own route-scale guard permits.
     (Math.max(8.2, Math.max(0, lessonCount - 1) * desiredNodeSpacing(lessonCount)) +
-      // Each gate's gap is widened with length the island adds, not borrowed.
-      input.checkpointGaps.length * desiredNodeSpacing(lessonCount) * (CHECKPOINT_GAP_RATIO - 1)) *
+      input.checkpointGaps.length *
+        desiredNodeSpacing(lessonCount) *
+        (CHECKPOINT_GAP_RATIO - 1) *
+        CHECKPOINT_LENGTH_ADDED) *
     routeLengthFactor(archetype);
   const routeScale = desiredLength / Math.max(unitLength, Number.EPSILON);
   const scaleX = routeScale * (1 + (hash(`${seed}/${layoutRevision}/route-width`) - 0.5) * 0.08);

@@ -573,13 +573,15 @@ describe("checkpoint gaps", () => {
         0,
       );
 
-  it("buys its gates' length: the island grows and the ordinary gaps keep their spacing", () => {
-    // Owner, 2026-09-28: the road loosens at a segment's end; it was borrowed
-    // from the other gaps, which the island now pays for instead.
+  it("buys most of its gates' length: the island grows and the ordinary gaps barely tighten", () => {
+    // Owner, 2026-09-28: the road loosens at a segment's end. The island adds
+    // three quarters of that length (CHECKPOINT_LENGTH_ADDED) and borrows the
+    // rest; all of it made the archipelago's labels collide.
     expect(lengthOf(gated)).toBeGreaterThan(lengthOf(plain));
     const plainGap = (plain.nodes[1]!.t - plain.nodes[0]!.t) * lengthOf(plain);
     const gatedGap = (gated.nodes[1]!.t - gated.nodes[0]!.t) * lengthOf(gated);
-    expect(Math.abs(gatedGap - plainGap) / plainGap).toBeLessThan(0.05);
+    expect(gatedGap).toBeLessThanOrEqual(plainGap + 1e-9);
+    expect((plainGap - gatedGap) / plainGap).toBeLessThan(0.08);
     expect(validateIslandBlueprint(gated)).toEqual([]);
   });
 
