@@ -104,7 +104,23 @@ for (const viewport of [
           if (await aside.count()) await humanClick(page, aside.last(), "收起上下文栏");
           await waitForCourseFraming(page);
         }
-        const before = await receipt();
+        /*
+          The baseline for the return check, once nothing is still uploading. A
+          registered kit model (the short fixture's stall since gated islands
+          grew) loads its textures after the scene reports ready; under the
+          pre-push load the first reading missed six of them and the return
+          looked like a leak. Two equal texture counts in a row, the comparison
+          below unchanged.
+        */
+        let before = await receipt();
+        for (let reading = 0; reading < 20; reading += 1) {
+          await page.waitForTimeout(500);
+          const next = await receipt();
+          const settled =
+            next.rendererObjectCounts.textures === before.rendererObjectCounts.textures;
+          before = next;
+          if (settled) break;
+        }
         const materials = await captureDrawnMaterials(page);
         const drawnTerrain = materials.materials.find((m) => m.mesh === "island-terrain");
         expect(drawnTerrain?.maps.uCourseSurface?.width).toBe(256);
