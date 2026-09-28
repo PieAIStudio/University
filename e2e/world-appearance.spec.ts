@@ -121,6 +121,23 @@ const geometryIdentity = (r: Awaited<ReturnType<typeof receipt>>, source = false
     scene: c.scene,
     meshes: c.meshes.map((m: any) => [m.id, m.name, source ? m.sourceGeometry : m.geometry]),
   }));
+/**
+ * The receipt once nothing new is still arriving. The course's monsters sit
+ * behind a Suspense boundary of their own and can mount after the dressing is
+ * ready; under the pre-push load they did, and the first receipt missed them
+ * while the clay one did not. Two equal readings in a row, never a looser check.
+ */
+async function settledReceipt(page: Page) {
+  let previous = await receipt(page);
+  for (let reading = 0; reading < 20; reading += 1) {
+    await page.waitForTimeout(750);
+    const next = await receipt(page);
+    if (JSON.stringify(geometryIdentity(next)) === JSON.stringify(geometryIdentity(previous)))
+      return next;
+    previous = next;
+  }
+  throw new Error("the course scene kept gaining or losing meshes for 15 seconds");
+}
 const SHAPED = new Set([
   "course-bush-crowns",
   "course-rock-outcrops",
@@ -239,7 +256,7 @@ for (const sample of [
     );
     await settled(page, "classic");
     await waitForCourseFraming(page);
-    const original = await receipt(page);
+    const original = await settledReceipt(page);
     expect(original.landscape.floraCount).toBe(sample.flora);
     // The portrait and short-landscape chrome omit the persistent avatar.
     // Keep the original desktop two-canvas floor; settled() still requires
