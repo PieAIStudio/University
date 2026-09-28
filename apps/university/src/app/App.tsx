@@ -42,6 +42,7 @@ import {
   learningNodeId,
   learningSegments,
   lessonRefKey,
+  lessonsWithDueCards,
   progressSourceOf,
   type FeedbackContext,
   type LessonRef,
@@ -808,6 +809,18 @@ export function App() {
     the delivery shell catching up to it.
   */
   const inCourse = view.kind === "course" || view.kind === "lesson" || openingOnMap;
+  // V7 decision O1: a wisp comes back to each finished stone whose review cards are due.
+  const reviewDue = useMemo(() => {
+    if (!inCourse || !course || !("studyId" in view)) return null;
+    const due = lessonsWithDueCards(
+      progress,
+      { studyId: view.studyId, courseId: course.id },
+      Date.now(),
+    );
+    return lessons
+      .filter((lesson) => lesson.state === "done" && due.has(lesson.lessonId))
+      .map((lesson) => lesson.lessonId);
+  }, [inCourse, course, view, progress, lessons]);
   const lookShotIsCourse = import.meta.env.DEV && (lookDebug?.shot?.startsWith("course-") ?? false);
   const lookViewport = {
     width: typeof window === "undefined" ? (wide ? 1440 : 390) : window.innerWidth,
@@ -958,6 +971,7 @@ export function App() {
                 }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
                 opening={openingOnMap ? chest.opening : null}
+                reviewDue={reviewDue}
               />
             ) : null}
           </>
