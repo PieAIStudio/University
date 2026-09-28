@@ -94,10 +94,10 @@ async function reportExperience(page: Page): Promise<void> {
 }
 
 async function answerOneQuestion(page: Page, answers: ReadonlyMap<string, string>): Promise<void> {
-  const prompt = (await page.locator(".skip-test__prompt").first().innerText()).trim();
+  const prompt = (await page.locator(".question-step__prompt").first().innerText()).trim();
   const expected = answers.get(prompt);
   expect(expected, `没有这道题的参考答案：${prompt}`).toBeTruthy();
-  await page.locator(".skip-test__answer").first().fill(expected!);
+  await page.locator(".question-step__answer").first().fill(expected!);
   await humanClick(page, page.getByRole("button", { name: "交这一题" }).first(), "交这一题");
 }
 
@@ -305,12 +305,12 @@ test.describe("跳级面板：深色校园", () => {
     await reportExperience(page);
     await expect(page.locator(".course-route-quiz__result")).toContainText("看起来你可以跳过前面");
     await humanClick(page, page.getByRole("button", { name: "我会了" }).first(), "我会了");
-    await expect(page.locator(".skip-test__prompt").first()).toBeVisible();
+    await expect(page.locator(".question-step__prompt").first()).toBeVisible();
 
     await namedStep(page, "深色下也读得清", async () => {
       for (const selector of [
-        ".skip-test__prompt",
-        ".skip-test__label",
+        ".question-step__prompt",
+        ".question-step__label",
         ".course-route-quiz__result h4",
         ".course-route-quiz__reason",
         ".course-route-quiz__note",

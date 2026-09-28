@@ -72,6 +72,39 @@ export function usableClips(
   });
 }
 
+/** How it moves about: a walk where the model has one, else its flight or run. */
+export function travelClip(clips: readonly THREE.AnimationClip[]): THREE.AnimationClip | null {
+  return (
+    clips.find((clip) => /^Walk(_|$)/.test(clip.name)) ??
+    clips.find((clip) => /^Fast_Flying(_|$)/.test(clip.name)) ??
+    clips.find((clip) => /^(Run|Gallop)(_|$)/.test(clip.name)) ??
+    null
+  );
+}
+
+const GOLD = new THREE.Color("#e9b43c");
+
+/**
+ * The weekly boss's gold (Owner, 2026-09-28): 「不能是全身的材质都变成一种颜色，
+ * 哪些地方偏金一点」. One rule for every model it may be drawn from: eyes and
+ * teeth keep their colour so the face still reads; a material already named
+ * gold, or the model's secondary colour, turns fully gold; the main body keeps
+ * its own colour under a gold wash, and everything takes a slight metallic
+ * sheen. Returns a copy; the shared model's materials are never touched.
+ */
+export function gildedCopy(material: THREE.Material): THREE.Material {
+  const standard = material as THREE.MeshStandardMaterial;
+  const name = material.name.toLowerCase();
+  if (!standard.isMeshStandardMaterial || /eye|teeth|tooth|pupil|mouth/.test(name)) return material;
+  const copy = standard.clone();
+  const strength = /gold/.test(name) ? 1 : /second|accent|detail|trim/.test(name) ? 0.85 : 0.35;
+  copy.color.lerp(GOLD, strength);
+  copy.metalness = Math.max(copy.metalness, 0.35);
+  copy.roughness = Math.min(copy.roughness, 0.45);
+  copy.emissive.copy(GOLD).multiplyScalar(0.05);
+  return copy;
+}
+
 /**
  * Short, friendly one-shots a standing monster may play now and then: a wave,
  * a nod, a head shake, a hop, a little dance, a sneeze. Never an attack, a hit

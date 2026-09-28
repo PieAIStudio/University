@@ -69,7 +69,9 @@ export const MONSTER_TALLEST =
 
 export type ChestOwner =
   | { readonly kind: "lesson"; readonly lessonId: string }
-  | { readonly kind: "checkpoint" | "challenge"; readonly siteId: string };
+  | { readonly kind: "checkpoint" | "challenge"; readonly siteId: string }
+  /** The chest the weekly boss drops where it stood when it runs. */
+  | { readonly kind: "weekly"; readonly week: string };
 
 export interface CourseChest {
   readonly id: string;
@@ -113,10 +115,13 @@ export interface CourseMonster {
 }
 
 /**
- * The weekly boss is the gate boss grown larger, an event rather than another
- * guard: as large as the island's shore has room for, largest first.
+ * The weekly boss is the gate boss 20% larger and gilded, and it roams (Owner,
+ * 2026-09-28: 「都要大 20%……凸显它不一样」): one size, so every week's boss,
+ * whatever model it is drawn from later, reads as the same kind of thing. It
+ * flies, so the ground it needs is a landing spot of a gate boss's size; it was
+ * once searched at its drawn size, and a crowded shore then held no boss at all.
  */
-export const WEEKLY_BOSS_SIZES = [1.5, 1.25, 1] as const;
+export const WEEKLY_BOSS_SIZE = 1.2;
 
 /** Ground a chest needs around its centre, in blueprint units (a lesson stone is 0.62). */
 export const CHEST_FOOTPRINT_RADIUS = 0.48;
@@ -165,7 +170,9 @@ interface Placement {
 
 /** The chest's id for a lesson or a learning site. */
 export function chestIdOf(owner: ChestOwner): string {
-  return owner.kind === "lesson" ? `chest:lesson:${owner.lessonId}` : `chest:${owner.siteId}`;
+  if (owner.kind === "lesson") return `chest:lesson:${owner.lessonId}`;
+  if (owner.kind === "weekly") return `chest:weekly:${owner.week}`;
+  return `chest:${owner.siteId}`;
 }
 
 /**
@@ -439,23 +446,20 @@ function placeChestsAndBosses(
     // The weekly boss comes to the shore: free ground near the island's edge,
     // off every path, facing inland. Planned last, so it moves nothing else.
     // Largest first: a small island's shore may only hold it at a guard's size.
-    for (const size of WEEKLY_BOSS_SIZES) {
-      const radius = BOSS_FOOTPRINT_RADIUS * size;
-      for (let step = 0; step < SHORE_DIRECTIONS; step += 1) {
-        const a = (step / SHORE_DIRECTIONS) * Math.PI * 2;
-        for (let reach = 0.95; reach >= 0.3; reach -= 0.05) {
-          const x = Math.cos(a) * blueprint.bounds.halfX * reach;
-          const z = Math.sin(a) * blueprint.bounds.halfZ * reach;
-          if (sampleIslandSurface(blueprint, x, z).radial > SHORE_RADIAL) continue;
-          const y = free(x, z, radius);
-          if (y === null) continue;
-          const length = Math.hypot(x, z) || 1;
-          shore.push({ x, y, z, facing: { x: -x / length, z: -z / length }, scale: size });
-          taken.push({ x, z, r: radius });
-          break;
-        }
+    const radius = BOSS_FOOTPRINT_RADIUS;
+    for (let step = 0; step < SHORE_DIRECTIONS; step += 1) {
+      const a = (step / SHORE_DIRECTIONS) * Math.PI * 2;
+      for (let reach = 0.95; reach >= 0.3; reach -= 0.05) {
+        const x = Math.cos(a) * blueprint.bounds.halfX * reach;
+        const z = Math.sin(a) * blueprint.bounds.halfZ * reach;
+        if (sampleIslandSurface(blueprint, x, z).radial > SHORE_RADIAL) continue;
+        const y = free(x, z, radius);
+        if (y === null) continue;
+        const length = Math.hypot(x, z) || 1;
+        shore.push({ x, y, z, facing: { x: -x / length, z: -z / length }, scale: 1 });
+        taken.push({ x, z, r: radius });
+        break;
       }
-      if (shore.length > 0) break;
     }
   } finally {
     ground.dispose();
@@ -609,9 +613,13 @@ export function courseWeeklyBoss(
   sites: readonly LearningSite[],
   week: string,
 ): CourseMonster | null {
-  const { shore } = placeChestsAndBosses(lessons, sites);
+  const { shore: all } = placeChestsAndBosses(lessons, sites);
   const here = (lessons.find((lesson) => lesson.state !== "done") ?? lessons.at(-1))?.position;
-  if (!here || shore.length === 0) return null;
+  const blueprint = lessons[0]?.blueprint;
+  if (!here || !blueprint || all.length === 0) return null;
+  // Out toward the edge where there is room; inland only on an island with none.
+  const outer = all.filter((spot) => sampleIslandSurface(blueprint, spot.x, spot.z).radial > 0.5);
+  const shore = outer.length ? outer : all;
   const spot = shore.reduce((best, next) =>
     Math.hypot(next.x - here.x, next.z - here.z) < Math.hypot(best.x - here.x, best.z - here.z)
       ? next
@@ -624,8 +632,28 @@ export function courseWeeklyBoss(
     boss: true,
     stop: { kind: "weekly", week },
     position,
-    size: spot.scale,
+    size: WEEKLY_BOSS_SIZE,
     faces: position.clone().add(new Vector3(spot.facing.x, 0, spot.facing.z).multiplyScalar(3)),
+  };
+}
+
+/**
+ * The chest the weekly boss drops where it stood when it runs (PLAN-V7-07 §2a):
+ * purple, facing inland as the boss did. Nothing stands beside the boss before
+ * then; the fight's card names the prize instead, and the drop is the reveal.
+ */
+export function courseWeeklyChest(boss: CourseMonster): CourseChest | null {
+  if (boss.stop.kind !== "weekly") return null;
+  const owner: ChestOwner = { kind: "weekly", week: boss.stop.week };
+  const facing = boss.faces.clone().sub(boss.position);
+  return {
+    id: chestIdOf(owner),
+    owner,
+    tier: "epic",
+    state: "ready",
+    position: boss.position.clone(),
+    yaw: Math.atan2(facing.x, facing.z),
+    scale: 1,
   };
 }
 
@@ -659,7 +687,7 @@ export function chestAndMonsterFootprints(
     ...placement.shore.map((spot) => ({
       x: spot.x,
       z: spot.z,
-      radius: BOSS_FOOTPRINT_RADIUS * spot.scale + 0.12,
+      radius: BOSS_FOOTPRINT_RADIUS + 0.12,
     })),
     ...[...placement.bosses.values()].map((spot) => ({
       x: spot.x,

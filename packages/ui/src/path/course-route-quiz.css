@@ -266,7 +266,7 @@
   font-weight: 800;
 }
 
-.skip-test__prompt {
+.question-step__prompt {
   max-width: 760px;
   margin: 0;
   color: var(--game-ui-text);
@@ -274,12 +274,12 @@
   line-height: 1.5;
 }
 
-.skip-test__label {
+.question-step__label {
   color: var(--game-ui-text-muted);
   font-size: 0.74rem;
 }
 
-.skip-test__answer {
+.question-step__answer {
   width: 100%;
   padding: 9px 11px;
   border: 1px solid var(--game-ui-border-strong);
@@ -292,7 +292,7 @@
   resize: vertical;
 }
 
-.skip-test__answer:focus-visible {
+.question-step__answer:focus-visible {
   border-color: var(--game-ui-secondary);
   outline: none;
 }
@@ -317,7 +317,8 @@
  * skipped some lessons and a product that quietly told the review scheduler
  * those lessons were read.
  */
-.skip-test__note {
+.skip-test__note,
+.question-step__note {
   max-width: 760px;
   margin: 0;
   color: var(--game-ui-text-muted);

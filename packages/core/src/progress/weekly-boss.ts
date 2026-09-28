@@ -1,20 +1,25 @@
 /**
- * The weekly boss (V7 mechanic 8, decision R1): each week a big monster stands
- * at the edge of the island the learner studied most, and five questions on
- * what they studied drive it away for a purple chest.
+ * The weekly boss (V7 mechanic 8, decision R1; rules decided 2026-09-28 in
+ * PLAN-V7-07 §2a): each week a big monster stands at the edge of the island
+ * the learner last studied on, with five hearts. Every right answer on what
+ * they studied throws a star and takes a heart, and a heart taken stays taken
+ * until the boss leaves; the last one opens a purple chest.
  *
- * Two readings of the design had to be reconciled. The boss arrives on Monday,
- * and its questions come from what the learner studied that week — but on
- * Monday morning this week holds nothing yet. So "that week" is the seven days
- * up to now: on Monday it is last week's work, by Sunday it is this week's.
- * The boss's own identity is the Monday-start calendar week: beaten or not, it
- * leaves at the end of Sunday, and a beaten boss stays gone until Monday.
+ * Hearts are the pull in both directions. In the moment, each answer visibly
+ * does something; across the week, a two-minute visit is never wasted, so
+ * coming back to finish is cheap. A wrong answer costs nothing: the question
+ * goes back into the pool and another round can start at once.
+ *
+ * Everything here derives from the progress document. A heart taken is an XP
+ * event named for the question that took it, and the win is an XP event named
+ * for the week, so every device agrees by the same set union that already
+ * merges XP — no new field, no new table.
  *
  * The questions are the lessons' own exercises that grade deterministically,
  * picked with the skip test's machinery (skip-test.ts): no second bank, no
- * model call, and if fewer than five exist the boss does not come that week —
- * the pool is never padded with anything the learner has not finished. The
- * system never adapts difficulty (ADR-0010).
+ * model call. If fewer than five exist the boss does not come — the pool is
+ * never padded with anything the learner has not finished. The system never
+ * adapts difficulty (ADR-0010).
  */
 import type { ProgressDocument } from "../ports/progress.js";
 import { calendarDay, startOfWeek } from "./goals.js";
@@ -23,13 +28,14 @@ import {
   pickSkipTest,
   skipTestCandidates,
   type SkipTestCandidate,
+  type SkipTestVerdict,
 } from "./skip-test.js";
 
-export const WEEKLY_BOSS_QUESTIONS = 5;
-/** Like the skip test: nearly all right is right; two wrong is a retry, which costs nothing. */
-export const WEEKLY_BOSS_ALLOWED_WRONG = 1;
-const WINDOW_DAYS = 7;
-const DAY = 86_400_000;
+export const WEEKLY_BOSS_HEARTS = 5;
+/** About what a card recalled after two or three days earns (xp.ts). */
+export const WEEKLY_BOSS_HIT_XP = 10;
+/** With the hearts, the boss is worth about three lessons: an appointment, not a grind. */
+export const WEEKLY_BOSS_WIN_XP = 50;
 
 export interface FinishedLesson {
   readonly studyId: string;
@@ -44,16 +50,34 @@ export const weeklyBossWeek = (now: number) => calendarDay(startOfWeek(now));
 /** A beaten boss is written as an XP event under this id, so every device knows. */
 export const weeklyBossWonEventId = (week: string) => `weekly-boss:${week}`;
 
-/** Lessons finished in the seven days up to `now`, newest first. */
-export function recentlyFinishedLessons(
+const hitPrefix = (week: string) => `weekly-boss:${week}:hit:`;
+
+/** One question's identity across rounds and devices. */
+export const weeklyBossQuestionId = (question: SkipTestCandidate) =>
+  `${question.lessonId}#${question.exerciseId}`;
+
+/** A heart taken, written under the question that took it: the same one cannot take two. */
+export const weeklyBossHitEventId = (week: string, question: SkipTestCandidate) =>
+  `${hitPrefix(week)}${weeklyBossQuestionId(question)}`;
+
+/**
+ * Lessons finished since the Monday before this week's, newest first.
+ *
+ * The window's start is fixed for the week, so the pool only grows while the
+ * boss stands: on Monday it holds last week's work, by Sunday two weeks'. A
+ * sliding seven days would let a question that already took a heart age out
+ * and leave the boss with hearts no question can reach.
+ */
+export function weeklyBossLessons(
   document: ProgressDocument,
   now: number,
 ): readonly FinishedLesson[] {
-  const since = now - WINDOW_DAYS * DAY;
+  const since = new Date(startOfWeek(now));
+  since.setDate(since.getDate() - 7);
   const finished: FinishedLesson[] = [];
   for (const [key, lesson] of Object.entries(document.lessons)) {
-    if (lesson.completedAt === null || lesson.completedAt < since || lesson.completedAt > now)
-      continue;
+    if (lesson.completedAt === null) continue;
+    if (lesson.completedAt < since.getTime() || lesson.completedAt > now) continue;
     const [studyId, courseId, lessonId] = key.split("/");
     if (!studyId || !courseId || !lessonId) continue;
     finished.push({ studyId, courseId, lessonId, completedAt: lesson.completedAt });
@@ -61,38 +85,16 @@ export function recentlyFinishedLessons(
   return finished.sort((a, b) => b.completedAt - a.completedAt);
 }
 
-/**
- * Where the boss stands: the course with the most lessons finished in the
- * window, the most recently studied of those on a tie.
- */
-export function weeklyBossIsland(
-  finished: readonly FinishedLesson[],
-): { readonly studyId: string; readonly courseId: string } | null {
-  const counts = new Map<
-    string,
-    { studyId: string; courseId: string; count: number; last: number }
-  >();
-  for (const lesson of finished) {
-    const key = `${lesson.studyId}/${lesson.courseId}`;
-    const entry = counts.get(key) ?? { ...lesson, count: 0, last: 0 };
-    entry.count += 1;
-    entry.last = Math.max(entry.last, lesson.completedAt);
-    counts.set(key, entry);
-  }
-  let best: { studyId: string; courseId: string; count: number; last: number } | null = null;
-  for (const entry of counts.values())
-    if (!best || entry.count > best.count || (entry.count === best.count && entry.last > best.last))
-      best = entry;
-  return best ? { studyId: best.studyId, courseId: best.courseId } : null;
-}
-
 export interface WeeklyBoss {
   readonly week: string;
+  /** Where the learner last finished a lesson: where they will next open the map. */
   readonly island: { readonly studyId: string; readonly courseId: string };
   /** The end of Sunday: it leaves then, beaten or not. */
   readonly leavesAt: number;
   readonly beaten: boolean;
-  /** Every question it may ask; `pickWeeklyBossQuestions` draws the five for one fight. */
+  /** Hearts still standing; 0 once beaten. */
+  readonly hearts: number;
+  /** The questions that have not taken a heart yet; a round draws from these. */
   readonly pool: readonly SkipTestCandidate[];
 }
 
@@ -108,45 +110,104 @@ export function weeklyBoss(
     lesson: FinishedLesson,
   ) => Parameters<typeof skipTestCandidates>[0][number]["exercises"],
 ): WeeklyBoss | null {
-  const finished = recentlyFinishedLessons(document, now);
-  const island = weeklyBossIsland(finished);
-  if (!island) return null;
-  const pool = skipTestCandidates(
+  const finished = weeklyBossLessons(document, now);
+  const last = finished[0];
+  if (!last) return null;
+  const all = skipTestCandidates(
     finished.map((lesson) => ({
       id: `${lesson.studyId}/${lesson.courseId}/${lesson.lessonId}`,
       exercises: exercisesOf(lesson),
     })),
   );
-  if (pool.length < WEEKLY_BOSS_QUESTIONS) return null;
+  if (all.length < WEEKLY_BOSS_HEARTS) return null;
   const week = weeklyBossWeek(now);
-  const monday = startOfWeek(now);
-  const leaves = new Date(monday);
+  const hit = new Set(
+    Object.keys(document.xpEvents)
+      .filter((id) => id.startsWith(hitPrefix(week)))
+      .map((id) => id.slice(hitPrefix(week).length)),
+  );
+  const beaten = Object.hasOwn(document.xpEvents, weeklyBossWonEventId(week));
+  const leaves = new Date(startOfWeek(now));
   leaves.setDate(leaves.getDate() + 7);
   return {
     week,
-    island,
+    island: { studyId: last.studyId, courseId: last.courseId },
     leavesAt: leaves.getTime(),
-    beaten: Object.hasOwn(document.xpEvents, weeklyBossWonEventId(week)),
-    pool,
+    beaten,
+    hearts: beaten ? 0 : Math.max(0, WEEKLY_BOSS_HEARTS - hit.size),
+    pool: all.filter((question) => !hit.has(weeklyBossQuestionId(question))),
   };
 }
 
-/** Five questions for one fight, spread across as many lessons as possible. */
-export function pickWeeklyBossQuestions(
-  pool: readonly SkipTestCandidate[],
-  pick?: (length: number) => number,
-): readonly SkipTestCandidate[] {
-  return pickSkipTest(pool, { size: WEEKLY_BOSS_QUESTIONS, ...(pick ? { pick } : {}) });
+/** Whole days left before the boss leaves, counting today: 1 on Sunday. */
+export function weeklyBossDaysLeft(boss: WeeklyBoss, now: number): number {
+  return Math.max(1, Math.ceil((boss.leavesAt - now) / 86_400_000));
 }
 
-/** Whether the answers drive the boss away. Unanswered counts as wrong. */
-export function weeklyBossBeaten(
-  questions: readonly SkipTestCandidate[],
-  answers: readonly string[],
-): boolean {
-  if (questions.length < WEEKLY_BOSS_QUESTIONS) return false;
-  const wrong = questions.filter(
-    (question, index) => judgeSkipAnswer(answers[index] ?? "", question.answerKey) !== "correct",
-  ).length;
-  return wrong <= WEEKLY_BOSS_ALLOWED_WRONG;
+export interface WeeklyBossRound {
+  readonly week: string;
+  readonly questions: readonly SkipTestCandidate[];
+  readonly verdicts: readonly Exclude<SkipTestVerdict, "unanswered">[];
+  /** Hearts standing when the round began. */
+  readonly hearts: number;
 }
+
+/**
+ * One round: as many questions as the boss has hearts, spread across as many
+ * lessons as possible. Two devices taking hearts offline can leave a boss at
+ * none without the win written; one question then finishes it.
+ */
+export function startWeeklyBossRound(
+  boss: WeeklyBoss,
+  pick?: (length: number) => number,
+): WeeklyBossRound {
+  const size = Math.max(1, boss.hearts);
+  return {
+    week: boss.week,
+    questions: pickSkipTest(boss.pool, { size, ...(pick ? { pick } : {}) }),
+    verdicts: [],
+    hearts: boss.hearts,
+  };
+}
+
+export interface WeeklyBossAnswer {
+  readonly round: WeeklyBossRound;
+  /** `unanswered` changes nothing: the card asks for an answer instead. */
+  readonly verdict: SkipTestVerdict;
+  /** The XP event to write for a heart taken, or null. */
+  readonly hitEventId: string | null;
+}
+
+export function answerWeeklyBoss(round: WeeklyBossRound, answer: string): WeeklyBossAnswer {
+  const question = round.questions[round.verdicts.length];
+  if (!question) return { round, verdict: "unanswered", hitEventId: null };
+  const verdict = judgeSkipAnswer(answer, question.answerKey);
+  if (verdict === "unanswered") return { round, verdict, hitEventId: null };
+  return {
+    round: { ...round, verdicts: [...round.verdicts, verdict] },
+    verdict,
+    hitEventId: verdict === "correct" ? weeklyBossHitEventId(round.week, question) : null,
+  };
+}
+
+const hits = (round: WeeklyBossRound) =>
+  round.verdicts.filter((verdict) => verdict === "correct").length;
+
+export const weeklyBossHeartsLeft = (round: WeeklyBossRound) =>
+  Math.max(0, round.hearts - hits(round));
+
+export const weeklyBossRoundOver = (round: WeeklyBossRound) =>
+  round.verdicts.length >= round.questions.length;
+
+/** The last heart fell in this round. */
+export const weeklyBossRoundWon = (round: WeeklyBossRound) =>
+  hits(round) >= Math.max(1, round.hearts);
+
+/**
+ * All five hearts in one round without a miss. The only thing at stake in a
+ * fight, and it is a bigger chest: the first-try upgrade every chest has.
+ */
+export const weeklyBossFlawless = (round: WeeklyBossRound) =>
+  round.hearts === WEEKLY_BOSS_HEARTS &&
+  weeklyBossRoundWon(round) &&
+  round.verdicts.every((verdict) => verdict === "correct");

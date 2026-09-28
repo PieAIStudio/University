@@ -16,7 +16,7 @@ import {
 import { useI18n } from "../i18n/index.js";
 import type { ContentPort } from "../content/port.js";
 import type { UnitView } from "../view/lesson-view.js";
-import { ChoiceOptions } from "../review/ChoiceOptions.js";
+import { QuestionStep } from "./QuestionStep.js";
 
 type Sitting =
   | { readonly kind: "idle" }
@@ -231,39 +231,15 @@ export function UnitSkipTest({
           {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.第")} {sitting.results.length + 1} /{" "}
           {sitting.questions.length} {interfaceTranslator.t("ui.path.courseRouteQuiz.copy.题")}
         </p>
-        <p className="skip-test__prompt">{question.prompt}</p>
-        {question.options ? (
-          <ChoiceOptions
-            options={question.options}
-            selectedId={sitting.answer}
-            onSelect={(answer) => setSitting({ ...sitting, answer, blank: false })}
-          />
-        ) : (
-          <>
-            <label className="skip-test__label" htmlFor={`skip-${unit.id}`}>
-              {interfaceTranslator.t("ui.path.unitSkipTest.copy.把你的答案写在这里")}
-            </label>
-            <textarea
-              id={`skip-${unit.id}`}
-              className="skip-test__answer"
-              rows={2}
-              value={sitting.answer}
-              onChange={(event) =>
-                setSitting({ ...sitting, answer: event.target.value, blank: false })
-              }
-            />
-          </>
-        )}
-        {sitting.blank ? (
-          <p className="skip-test__note">
-            {question.options
-              ? interfaceTranslator.t("grading.answer.chooseHint")
-              : interfaceTranslator.t("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
-          </p>
-        ) : null}
-        <GameButton variant="primary" onClick={submit}>
-          {interfaceTranslator.t("ui.path.unitSkipTest.copy.交这一题")}
-        </GameButton>
+        <QuestionStep
+          question={question}
+          answer={sitting.answer}
+          blank={sitting.blank}
+          inputId={`skip-${unit.id}`}
+          submitLabel={interfaceTranslator.t("ui.path.unitSkipTest.copy.交这一题")}
+          onAnswer={(answer) => setSitting({ ...sitting, answer, blank: false })}
+          onSubmit={submit}
+        />
       </div>
     );
   }

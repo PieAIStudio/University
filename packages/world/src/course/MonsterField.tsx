@@ -8,7 +8,6 @@ import { hash, seeded } from "../island/random.js";
 import { useKitModels, type Role } from "../kit.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 import {
-  BOSS_FOOTPRINT_RADIUS,
   BOSS_HEIGHT,
   MONSTER_HEIGHT,
   MONSTER_ROLE_HEIGHT,
@@ -19,12 +18,20 @@ import {
   bakeMonsterPose,
   buildCrownGeometry,
   fidgetClips,
+  gildedCopy,
   idleClip,
+  travelClip,
   usableClips,
   type BakedMonster,
 } from "./monster-pose.js";
-
-const WEEKLY_RING = 0x8a4dff;
+import {
+  moveWeeklyAnchor,
+  ROAM_REST,
+  ROAM_SPEED,
+  ROAM_STEP,
+  type WeeklyAnchor,
+  type WeeklyRoam,
+} from "./weekly-roam.js";
 
 /** Only this many monsters animate: the ones nearest the learner (V7 decision N1). */
 export const LIVE_MONSTERS = 3;
@@ -86,6 +93,18 @@ export interface MonsterReaction {
   /** Once it has run out of sight. */
   readonly onGone?: () => void;
 }
+/**
+ * The weekly boss on the move (weekly-roam.ts): where it may wander, the shared
+ * point that records where it is, and whether to stay put — a fight is on, so
+ * it stops and faces the learner.
+ */
+export interface MonsterRoaming {
+  readonly id: string;
+  readonly roam: WeeklyRoam;
+  readonly anchor: WeeklyAnchor;
+  readonly hold: boolean;
+}
+
 /** Seconds from starting to flee until it is out of sight. */
 export const FLEE_SECONDS = 1.4;
 const FLEE_DISTANCE = 3.6;
@@ -98,6 +117,7 @@ export function MonsterField({
   placements,
   focus,
   reaction = null,
+  roaming = null,
   onPick,
 }: {
   readonly placements: readonly MonsterPlacement[];
@@ -105,6 +125,8 @@ export function MonsterField({
   readonly focus: THREE.Vector3 | null;
   /** The monster being chased away now, if any; it always animates. */
   readonly reaction?: MonsterReaction | null;
+  /** The weekly boss, always animated and gilded, wandering its legs. */
+  readonly roaming?: MonsterRoaming | null;
   readonly onPick?: (monster: CourseMonster) => void;
 }) {
   const roles = useMemo(() => ROLES(placements), [placements]);
@@ -152,17 +174,22 @@ export function MonsterField({
   );
 
   const reactingId = reaction?.monsterId ?? null;
+  const roamingId = roaming?.id ?? null;
   const live = useMemo(() => {
     const chosen = new Set<string>(reactingId ? [reactingId] : []);
-    if (!focus) return chosen;
+    // The weekly boss is always live: it moves, and it is not one of the three nearest.
+    const always = roamingId && placements.some((entry) => entry.monster.id === roamingId);
+    if (!focus) return always ? new Set([...chosen, roamingId]) : chosen;
     for (const entry of placements
       .filter((item) => models.get(item.monster.role)?.baked.skinned)
       .sort((a, b) => a.at.distanceToSquared(focus) - b.at.distanceToSquared(focus))) {
+      if (entry.monster.id === roamingId) continue;
       if (chosen.size >= LIVE_MONSTERS) break;
       chosen.add(entry.monster.id);
     }
+    if (always) chosen.add(roamingId);
     return chosen;
-  }, [focus, models, placements, reactingId]);
+  }, [focus, models, placements, reactingId, roamingId]);
   const still = useMemo(() => {
     const byRole = new Map<MonsterRole, MonsterPlacement[]>();
     for (const entry of placements) {
@@ -245,6 +272,8 @@ export function MonsterField({
     const ease = snap ? 1 : 1 - Math.exp(-Math.min(delta, 0.1) * TURN_EASE);
     let stillMoved = false;
     for (const entry of placements) {
+      // The roaming boss turns itself, toward where it is going.
+      if (entry.monster.id === roamingId) continue;
       const fleeing = reaction?.monsterId === entry.monster.id && reaction.phase === "flee";
       // A fleeing monster turns its back and runs; nothing eases that turn.
       const target = fleeing
@@ -302,15 +331,6 @@ export function MonsterField({
         />
       ) : null}
       {placements
-        .filter((entry) => entry.monster.stop.kind === "weekly")
-        .map((entry) => (
-          <WeeklyRing
-            key={`${entry.monster.id}:ring`}
-            at={entry.at}
-            radius={BOSS_FOOTPRINT_RADIUS * (entry.monster.size ?? 1)}
-          />
-        ))}
-      {placements
         .filter((entry) => live.has(entry.monster.id))
         .map((entry) => {
           const model = models.get(entry.monster.role)!;
@@ -321,6 +341,8 @@ export function MonsterField({
               gltf={model.gltf}
               baked={model.baked}
               crown={entry.monster.boss ? { geometry: crown, material: crownMaterial } : null}
+              roaming={entry.monster.id === roamingId ? roaming : null}
+              focus={focus}
               alert={watching(entry, focus)}
               reaction={reaction?.monsterId === entry.monster.id ? reaction : null}
               groupRef={(node) => {
@@ -339,18 +361,32 @@ interface Rig {
   readonly model: THREE.Object3D;
   readonly mixer: THREE.AnimationMixer;
   readonly idle: THREE.AnimationAction | null;
+  /** Walking or flying about, for the roaming boss. */
+  readonly travel: THREE.AnimationAction | null;
   readonly fidgets: readonly THREE.AnimationAction[];
+  /** Materials this rig made for itself (the gold); disposed with it. */
+  readonly owned: readonly THREE.Material[];
   readonly random: () => number;
 }
 
 function buildRig(
   gltf: { readonly scene: THREE.Object3D; readonly animations: THREE.AnimationClip[] },
   id: string,
+  gilded: boolean,
 ): Rig {
   const model = cloneSkinned(gltf.scene);
+  const owned: THREE.Material[] = [];
   model.traverse((object) => {
     const mesh = object as THREE.Mesh;
     if (!mesh.isMesh) return;
+    if (gilded) {
+      const gild = (material: THREE.Material) => {
+        const copy = gildedCopy(material);
+        if (copy !== material) owned.push(copy);
+        return copy;
+      };
+      mesh.material = Array.isArray(mesh.material) ? mesh.material.map(gild) : gild(mesh.material);
+    }
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     // A skinned mesh's bounds are its bind pose; the idle moves it outside them.
@@ -375,7 +411,9 @@ function buildRig(
     idle.reset().play();
     idle.crossFadeFrom(event.action as THREE.AnimationAction, 0.3, false);
   });
-  return { model, mixer, idle, fidgets, random: seeded(`${id}:fidget`) };
+  const travelling = travelClip(usableClips(model, gltf.animations));
+  const travel = travelling ? mixer.clipAction(travelling) : null;
+  return { model, mixer, idle, travel, fidgets, owned, random: seeded(`${id}:fidget`) };
 }
 
 /** Seconds between a standing monster's small moves. */
@@ -386,6 +424,8 @@ function LiveMonster({
   gltf,
   baked,
   crown,
+  roaming,
+  focus,
   alert,
   reaction,
   groupRef,
@@ -398,6 +438,9 @@ function LiveMonster({
     readonly geometry: THREE.BufferGeometry;
     readonly material: THREE.Material;
   } | null;
+  /** Set for the weekly boss: it wanders, gilded, and steers itself. */
+  readonly roaming: MonsterRoaming | null;
+  readonly focus: THREE.Vector3 | null;
   /** The learner has just come into sight: react soon with one small move. */
   readonly alert: boolean;
   readonly reaction: MonsterReaction | null;
@@ -411,10 +454,12 @@ function LiveMonster({
     clip afterwards. One rig per mount, disposed with it.
   */
   const [rig, setRig] = useState<Rig | null>(null);
+  const gilded = roaming !== null;
   useEffect(() => {
-    const built = buildRig(gltf, monster.id);
+    const built = buildRig(gltf, monster.id, gilded);
     setRig(built);
     return () => {
+      for (const material of built.owned) material.dispose();
       built.mixer.stopAllAction();
       built.mixer.uncacheRoot(built.model);
       // Each cloned skeleton owns a bone texture on the GPU; without this a
@@ -424,7 +469,7 @@ function LiveMonster({
         if (skinned.isSkinnedMesh) skinned.skeleton.dispose();
       });
     };
-  }, [gltf, monster.id]);
+  }, [gltf, monster.id, gilded]);
   const head = useMemo(() => {
     if (!crown || !rig) return null;
     let found: THREE.Object3D | null = null;
@@ -508,8 +553,71 @@ function LiveMonster({
     if (phase === "flee") flee.current = { t: 0, gone: false };
   }, [phase, rig, gltf]);
 
+  /*
+    The weekly boss's wandering (weekly-roam.ts): rest, walk a leg out, rest,
+    walk it back, pick another. It stops wherever it is when told to hold (a
+    fight is on) or when a star is on its way, and turns to face the learner.
+  */
+  const outer = useRef<THREE.Group | null>(null);
+  const walk = useRef({ leg: -1, along: 0, out: true, moving: false, rest: ROAM_REST[0] });
+  const setTravelling = (moving: boolean) => {
+    if (!rig?.travel || !rig.idle || walk.current.moving === moving) {
+      walk.current.moving = moving;
+      return;
+    }
+    walk.current.moving = moving;
+    const [from, to] = moving ? [rig.idle, rig.travel] : [rig.travel, rig.idle];
+    to.reset().play();
+    to.crossFadeFrom(from, 0.35, false);
+  };
+  const roam = (step: number) => {
+    const group = outer.current;
+    if (!roaming || !group || !rig) return;
+    const state = walk.current;
+    const legs = roaming.roam.legs;
+    const halted = roaming.hold || phase !== null || !legs.length;
+    let heading: number | null = null;
+    if (halted) {
+      if (state.moving) setTravelling(false);
+      if (phase === "flee" && reaction) heading = Math.atan2(reaction.away.x, reaction.away.z);
+      else if (focus) heading = yawToward(roaming.anchor.at, focus);
+    } else if (!state.moving) {
+      state.rest -= step;
+      if (state.rest <= 0) {
+        if (state.out) state.leg = Math.floor(rig.random() * legs.length);
+        setTravelling(true);
+      }
+    } else {
+      const leg = legs[Math.min(state.leg, legs.length - 1)]!;
+      const length = (leg.length - 1) * ROAM_STEP;
+      state.along = Math.min(
+        length,
+        Math.max(0, state.along + (state.out ? 1 : -1) * ROAM_SPEED * step),
+      );
+      const slot = state.along / ROAM_STEP;
+      const index = Math.min(leg.length - 2, Math.floor(slot));
+      const from = leg[index]!;
+      const to = leg[index + 1] ?? from;
+      const point = scratchPoint.copy(from).lerp(to, slot - index);
+      heading = state.out ? yawToward(from, to) : yawToward(to, from);
+      moveWeeklyAnchor(roaming.anchor, point, monster);
+      group.position.copy(roaming.anchor.at);
+      if ((state.out && state.along >= length) || (!state.out && state.along <= 0)) {
+        state.out = !state.out;
+        state.rest = ROAM_REST[0] + rig.random() * (ROAM_REST[1] - ROAM_REST[0]);
+        setTravelling(false);
+      }
+    }
+    if (heading !== null) {
+      const current = group.rotation.y;
+      group.rotation.y =
+        current + turnBetween(current, heading) * (1 - Math.exp(-step * TURN_EASE));
+    }
+  };
+  const scratchPoint = useMemo(() => new THREE.Vector3(), []);
+
   const fidget = () => {
-    if (!rig || phase) return;
+    if (!rig || phase || walk.current.moving) return;
     const { fidgets, idle, random } = rig;
     if (!fidgets.length || !idle) return;
     const action = fidgets[Math.floor(random() * fidgets.length)]!;
@@ -527,6 +635,7 @@ function LiveMonster({
         timer.next = timer.elapsed + FIDGET_GAP[0] + rig.random() * (FIDGET_GAP[1] - FIDGET_GAP[0]);
       }
       rig.mixer.update(step);
+      roam(step);
     }
     const body = bodyRef.current;
     if (body) {
@@ -556,7 +665,10 @@ function LiveMonster({
   const height = heightOf(monster);
   return (
     <group
-      ref={groupRef}
+      ref={(node) => {
+        outer.current = node;
+        groupRef(node);
+      }}
       position={at}
       name={`course-monster-live-${monster.role}`}
       onClick={(event) => {
@@ -573,46 +685,5 @@ function LiveMonster({
         </group>
       </group>
     </group>
-  );
-}
-
-/** A purple ring pulsing at the weekly boss's feet, so it reads as this week's event. */
-function WeeklyRing({ at, radius }: { readonly at: THREE.Vector3; readonly radius: number }) {
-  const reducedMotion = usePrefersReducedMotion();
-  const [geometry, material] = useMemo(() => {
-    const ring = new THREE.RingGeometry(0.9, 1.25, 48);
-    ring.rotateX(-Math.PI / 2);
-    return [
-      ring,
-      // Painted, not added: on bright grass an additive ring washes out to white.
-      new THREE.MeshBasicMaterial({
-        color: WEEKLY_RING,
-        transparent: true,
-        opacity: 0.85,
-        depthWrite: false,
-      }),
-    ] as const;
-  }, []);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      material.dispose();
-    },
-    [geometry, material],
-  );
-  useFrame(({ clock }) => {
-    if (reducedMotion || islandLookFrozen()) return;
-    material.opacity = 0.65 + 0.25 * Math.sin(clock.elapsedTime * 2.2);
-  });
-  return (
-    <mesh
-      geometry={geometry}
-      material={material}
-      // Above the grass blades, which would otherwise hide it.
-      position={[at.x, at.y + 0.12, at.z]}
-      scale={radius}
-      renderOrder={2}
-      raycast={() => {}}
-    />
   );
 }

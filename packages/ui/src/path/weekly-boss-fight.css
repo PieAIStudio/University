@@ -1,0 +1,97 @@
+/*
+  The weekly boss's fight (V7 mechanic 8): one card low over the island, like
+  the chest's, so the boss and the stars stay in sight above it. Hearts, not a
+  question count: the thing being worn down is the boss.
+*/
+.weekly-boss-fight {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--game-ui-safe-bottom, 0px) + 1.5rem);
+  z-index: 30;
+  display: grid;
+  gap: 0.6rem;
+  width: min(28rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 8rem);
+  overflow-y: auto;
+  margin-inline: auto;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 1.1rem;
+  background: var(--game-ui-surface-raised);
+  color: var(--game-ui-text);
+  box-shadow: var(--game-ui-shadow-panel);
+}
+.weekly-boss-fight button {
+  min-height: 44px;
+}
+.weekly-boss-fight__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+.weekly-boss-fight__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-weight: var(--game-ui-weight-strong);
+  font-size: var(--game-ui-font-md);
+}
+.weekly-boss-fight__crown {
+  width: 1.2rem;
+  height: 1rem;
+  fill: var(--game-ui-warning);
+}
+.weekly-boss-fight__days {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm);
+}
+.weekly-boss-fight__hearts {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.3rem;
+  margin: 0;
+}
+.weekly-boss-fight__heart {
+  width: 1.35rem;
+  height: 1.2rem;
+  fill: none;
+  stroke: var(--game-ui-text-muted);
+  stroke-width: 1.4;
+  transition:
+    fill var(--game-ui-motion-fast) var(--game-ui-ease-soft),
+    transform var(--game-ui-motion-fast) var(--game-ui-ease-soft);
+}
+.weekly-boss-fight__heart[data-full] {
+  fill: var(--game-ui-danger);
+  stroke: var(--game-ui-danger);
+}
+.weekly-boss-fight__pitch,
+.weekly-boss-fight__verdict {
+  margin: 0;
+  font-size: var(--game-ui-font-md);
+  line-height: 1.5;
+}
+.weekly-boss-fight__verdict[data-verdict="correct"] {
+  font-weight: var(--game-ui-weight-strong);
+}
+.weekly-boss-fight__note {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm);
+  line-height: 1.55;
+}
+.weekly-boss-fight__question,
+.weekly-boss-fight__result {
+  display: grid;
+  gap: 0.55rem;
+}
+.weekly-boss-fight__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.weekly-boss-fight__reread {
+  justify-self: start;
+}

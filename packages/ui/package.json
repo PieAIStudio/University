@@ -8,6 +8,8 @@
     "./navigation/location-breadcrumbs.css": "./src/navigation/location-breadcrumbs.css",
     "./path/map-entry-action.css": "./src/path/map-entry-action.css",
     "./path/chest-rewards.css": "./src/path/chest-rewards.css",
+    "./path/weekly-boss-fight.css": "./src/path/weekly-boss-fight.css",
+    "./path/WeeklyBossFight.js": "./src/path/WeeklyBossFight.tsx",
     "./shell/map-shell.css": "./src/shell/map-shell.css",
     "./navigation/LocationBreadcrumbs.js": "./src/navigation/LocationBreadcrumbs.tsx",
     "./navigation/AvatarPanel.js": "./src/navigation/AvatarPanel.tsx",

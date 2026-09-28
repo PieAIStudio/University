@@ -3,16 +3,20 @@ import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { SPRITE_WINDOW } from "../labels/path-overlay.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 import { courseLearningSites, learningSiteLocked } from "./learning-sites.js";
+import { courseWeeklyBoss } from "./chests-and-monsters.js";
+import { weeklyBossAnchor } from "./weekly-roam.js";
 
 export {
   lessonChestTier,
   monsterAtStop,
   openingGuard,
+  type ChestOwner,
   type ChestTier,
   type MonsterRole,
 } from "./chests-and-monsters.js";
 export { UPGRADE_LEAD, type CourseOpening, type OpeningPhase } from "./ChestOpening.js";
 export { openedTier, openingLength } from "./chest-opening.js";
+export type { BossStrike, WeeklyBossScene } from "./boss-strike.js";
 
 const symbols = { personal: "✦", challenge: "⚡", checkpoint: "◇" } as const;
 /**
@@ -66,6 +70,34 @@ export function learningOpportunityMarkers(
       },
     ];
   });
+}
+
+/**
+ * The weekly boss's chip: a crown over its head, the same DOM label the stones
+ * wear, so a keyboard, a screen reader and a thumb can start the fight — picking
+ * the boss in the canvas is a mouse-only way in. It stands where the scene puts
+ * the boss, from the same `courseWeeklyBoss`.
+ */
+export function weeklyBossMarker(
+  lessons: readonly LessonPlacement[],
+  week: string,
+  label: string,
+  activate: () => void,
+): Marker | null {
+  const boss = courseWeeklyBoss(lessons, courseLearningSites(lessons), week);
+  if (!boss) return null;
+  // The same point the scene moves as it roams, so the chip follows it.
+  const position = weeklyBossAnchor(boss).chip;
+  return {
+    id: `weekly-boss:${week}`,
+    kind: "icon",
+    text: "♛",
+    label,
+    position,
+    pinned: true,
+    weight: 2,
+    activate,
+  };
 }
 
 export { learningSiteLocked } from "./learning-sites.js";

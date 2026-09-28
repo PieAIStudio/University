@@ -7,7 +7,7 @@ import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { CHEST_COLOURS, CHEST_WIDTH } from "./chest-geometry.js";
 import { OPENING_FX, openingTimeline, type OpeningEvent } from "./chest-opening.js";
 import type { GuardedStop } from "./chest-sequence.js";
-import type { ChestTier, CourseChest } from "./chests-and-monsters.js";
+import type { ChestOwner, ChestTier, CourseChest } from "./chests-and-monsters.js";
 import { buildHeroChest, type HeroChest } from "./hero-chest.js";
 import { OpeningParticles, softDotTexture } from "./opening-particles.js";
 
@@ -312,6 +312,8 @@ export function ChestOpening({
 export interface CourseOpening {
   /** The lesson whose chest opens. */
   readonly lessonId: string;
+  /** A chest that is not a lesson's: the one the weekly boss dropped. */
+  readonly owner?: ChestOwner;
   /** The tier it opens as; `from` is the map's tier when it upgraded. */
   readonly tier: ChestTier;
   readonly from: ChestTier;

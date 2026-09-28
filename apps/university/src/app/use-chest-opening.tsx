@@ -32,9 +32,19 @@ const SKIP_DEADLINE_SECONDS = 1.2;
 /** Three stars for a boss, each rising, flying and landing, then the flee. */
 const THROW_DEADLINE_SECONDS = 6;
 
+/** The chest the weekly boss dropped: what it holds was written when the last heart fell. */
+export interface WeeklyChest {
+  readonly week: string;
+  readonly flawless: boolean;
+  readonly reward: ChestReward;
+  /** Once its card has closed. */
+  readonly onDone?: () => void;
+}
+
 interface Flow {
-  readonly locator: LessonRef;
-  readonly lessonNumber: number;
+  readonly source:
+    | { readonly kind: "lesson"; readonly locator: LessonRef; readonly lessonNumber: number }
+    | { readonly kind: "weekly"; readonly week: string; readonly onDone?: () => void };
   readonly tier: ChestTier;
   readonly from: ChestTier;
   readonly reward: ChestReward;
@@ -62,9 +72,12 @@ export function useChestOpening({
   readonly guardName: (role: MonsterRole) => string;
 }): {
   readonly active: boolean;
+  /** The chest open now is the weekly boss's, on the course island rather than after a lesson. */
+  readonly weekly: boolean;
   readonly opening: CourseOpening | null;
   readonly overlay: ReactNode;
   begin(locator: LessonRef): void;
+  beginWeekly(chest: WeeklyChest): void;
 } {
   const reducedMotion = usePrefersReducedMotion();
   const baseline = useRef<{ key: string; value: ChestBaseline } | null>(null);
@@ -103,8 +116,7 @@ export function useChestOpening({
     }
     const tier = lessonChestTier(lessons, index);
     setFlow({
-      locator,
-      lessonNumber: index + 1,
+      source: { kind: "lesson", locator, lessonNumber: index + 1 },
       from: tier,
       tier: openedTier(tier, reward.allFirstTry),
       reward,
@@ -114,6 +126,22 @@ export function useChestOpening({
       skipped: false,
     });
   };
+
+  const beginWeekly = (chest: WeeklyChest) =>
+    setFlow({
+      source: {
+        kind: "weekly",
+        week: chest.week,
+        ...(chest.onDone ? { onDone: chest.onDone } : {}),
+      },
+      from: "epic",
+      tier: openedTier("epic", chest.flawless),
+      reward: chest.reward,
+      dailyFirst: false,
+      guard: null,
+      stage: "closed",
+      skipped: false,
+    });
 
   const update = (patch: Partial<Flow>) =>
     setFlow((current) => (current ? { ...current, ...patch } : current));
@@ -148,20 +176,32 @@ export function useChestOpening({
 
   useEffect(() => {
     if (flow?.stage !== "leaving") return;
-    const timer = window.setTimeout(() => setFlow(null), reducedMotion ? 0 : LEAVING_MS);
+    const done = flow.source.kind === "weekly" ? flow.source.onDone : undefined;
+    const timer = window.setTimeout(
+      () => {
+        setFlow(null);
+        done?.();
+      },
+      reducedMotion ? 0 : LEAVING_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [flow?.stage, reducedMotion]);
 
   const opening = useMemo<CourseOpening | null>(() => {
     if (!flow) return null;
     const started = flow.stage !== "closed";
+    const weekly = flow.source.kind === "weekly";
     return {
-      lessonId: flow.locator.lessonId,
+      lessonId: flow.source.kind === "lesson" ? flow.source.locator.lessonId : "",
+      ...(flow.source.kind === "weekly"
+        ? { owner: { kind: "weekly" as const, week: flow.source.week } }
+        : {}),
       tier: flow.tier,
       from: flow.from,
       started,
       skipped: flow.skipped,
-      closeUp: started && flow.stage !== "leaving",
+      // The boss's chest drops beside the learner in close-up; the camera stays for the tap.
+      closeUp: (started || weekly) && flow.stage !== "leaving",
       guard: flow.guard?.stop ?? null,
       throwing: {
         started: flow.stage === "throwing" || flow.stage === "done" || flow.stage === "leaving",
@@ -194,7 +234,7 @@ export function useChestOpening({
         upgraded={flow.tier !== flow.from}
         reward={flow.reward}
         dailyFirst={flow.dailyFirst}
-        lessonNumber={flow.lessonNumber}
+        {...(flow.source.kind === "lesson" ? { lessonNumber: flow.source.lessonNumber } : {})}
         guardName={flow.guard ? guardName(flow.guard.role) : null}
         reducedMotion={reducedMotion}
         onOpen={() => update({ stage: "opening" })}
@@ -204,5 +244,12 @@ export function useChestOpening({
       />
     ) : null;
 
-  return { active: flow !== null, opening, overlay, begin };
+  return {
+    active: flow !== null,
+    weekly: flow?.source.kind === "weekly",
+    opening,
+    overlay,
+    begin,
+    beginWeekly,
+  };
 }

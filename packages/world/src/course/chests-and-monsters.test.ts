@@ -62,7 +62,7 @@ describe("chests and monsters", () => {
         for (const chest of chests.filter((entry) => entry.owner.kind !== "lesson"))
           expect(chest.tier).toBe("epic");
         const owners = new Set(
-          chests.flatMap((chest) => (chest.owner.kind === "lesson" ? [] : [chest.owner.siteId])),
+          chests.flatMap((chest) => ("siteId" in chest.owner ? [chest.owner.siteId] : [])),
         );
         for (const site of sites.filter((entry) => entry.kind === "personal"))
           expect(owners.has(site.id)).toBe(false);

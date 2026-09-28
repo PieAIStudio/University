@@ -52,7 +52,8 @@ export function ChestRewards({
   readonly reward: ChestReward;
   /** The day's first lesson: its XP was doubled. */
   readonly dailyFirst: boolean;
-  readonly lessonNumber: number;
+  /** The lesson whose chest this is; absent for the one the weekly boss dropped. */
+  readonly lessonNumber?: number;
   /** The monster the knowledge star chases away; absent when nothing stands next. */
   readonly guardName?: string | null;
   readonly reducedMotion: boolean;
@@ -114,7 +115,11 @@ export function ChestRewards({
     <section
       className={`chest-rewards chest-rewards--${stage}`}
       data-chest-stage={stage}
-      aria-label={t("chest.label", { tier: tierName, number: lessonNumber })}
+      aria-label={
+        lessonNumber === undefined
+          ? t("chest.weeklyLabel", { tier: tierName })
+          : t("chest.label", { tier: tierName, number: lessonNumber })
+      }
     >
       <p className="chest-rewards__title">
         {upgraded && stage !== "closed" ? t("chest.upgraded", { tier: tierName }) : tierName}

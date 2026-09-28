@@ -97,15 +97,24 @@ import {
   useChestSequence,
 } from "./course/chest-sequence.js";
 import { StarThrow } from "./course/StarThrow.js";
+import { useBossStrike, type WeeklyBossScene } from "./course/boss-strike.js";
+import { planWeeklyRoam, weeklyBossAnchor } from "./course/weekly-roam.js";
 import { devWeeklyBoss, devWispLessons, useDevOpening } from "./course/dev-opening.js";
 import { WispField, type WispSpot } from "./course/WispField.js";
-import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
+import {
+  MonsterField,
+  type MonsterPlacement,
+  type MonsterReaction,
+} from "./course/MonsterField.js";
 import {
   BOSS_FOOTPRINT_RADIUS,
+  CHEST_FOOTPRINT_RADIUS,
   chestAndMonsterFootprints,
+  chestIdOf,
   courseChests,
   courseMonsters,
   courseWeeklyBoss,
+  courseWeeklyChest,
   type CourseChest,
   type CourseMonster,
 } from "./course/chests-and-monsters.js";
@@ -1467,7 +1476,7 @@ export function CourseScene({
   /** Finished lessons whose review cards are due: a wisp comes back to each (V7 decision O1). */
   reviewDue?: readonly string[] | null;
   /** This week's boss, when it stands on this island and has not been beaten (V7 mechanic 8). */
-  weeklyBoss?: { readonly week: string } | null;
+  weeklyBoss?: WeeklyBossScene | null;
   onPickWeeklyBoss?: () => void;
 }) {
   const overview = useContext(CourseOverviewContext);
@@ -1517,12 +1526,34 @@ export function CourseScene({
     cannot enter yet, planned after the learning nodes and before the
     vignettes and flowers, which keep off them.
   */
-  const chests = useMemo(() => courseChests(lessons, allSites), [lessons, allSites]);
+  const weekly: WeeklyBossScene | null = weeklyBoss ?? devWeeklyBoss();
+  // Where this week's boss stands, and where its chest drops once it runs.
+  const weeklyMonster = useMemo(
+    () => (weekly ? courseWeeklyBoss(lessons, allSites, weekly.week) : null),
+    [lessons, allSites, weekly?.week],
+  );
+  const weeklyFled = weekly?.fled === true;
+  // Where it is right now; it roams, and everything that follows it reads this.
+  const weeklyAnchor = useMemo(
+    () => (weeklyMonster ? weeklyBossAnchor(weeklyMonster) : null),
+    [weeklyMonster],
+  );
+  const chests = useMemo(() => {
+    const onIsland = courseChests(lessons, allSites);
+    // The chest drops where the boss was when it ran, not where it came ashore.
+    const dropped =
+      weeklyFled && weeklyMonster && weeklyAnchor
+        ? courseWeeklyChest({ ...weeklyMonster, position: weeklyAnchor.at.clone() })
+        : null;
+    return dropped ? [...onIsland, dropped] : onIsland;
+  }, [lessons, allSites, weeklyFled, weeklyMonster, weeklyAnchor]);
   const devOpening = useDevOpening(chests);
   const staged = opening ?? devOpening;
   const openingChest = staged
-    ? (chests.find(
-        (chest) => chest.owner.kind === "lesson" && chest.owner.lessonId === staged.lessonId,
+    ? (chests.find((chest) =>
+        staged.owner
+          ? chest.id === chestIdOf(staged.owner)
+          : chest.owner.kind === "lesson" && chest.owner.lessonId === staged.lessonId,
       ) ?? null)
     : null;
   const mapChests = useMemo(
@@ -1536,12 +1567,10 @@ export function CourseScene({
     () => guardedLessons(lessons, staged?.lessonId ?? "", sequence.guard),
     [lessons, staged?.lessonId, sequence.guard],
   );
-  const weekly = weeklyBoss ?? devWeeklyBoss();
   const monsters = useMemo(() => {
     const standing = courseMonsters(monsterLessons, allSites);
-    const boss = weekly ? courseWeeklyBoss(monsterLessons, allSites, weekly.week) : null;
-    return boss ? [...standing, boss] : standing;
-  }, [monsterLessons, allSites, weekly?.week]);
+    return weeklyMonster && !weeklyFled ? [...standing, weeklyMonster] : standing;
+  }, [monsterLessons, allSites, weeklyMonster, weeklyFled]);
   const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
   // The close-up keeps its eye clear of what stands, gates and bosses included:
   // a crowned boss twice the learner's height fills the frame from in front.
@@ -1614,6 +1643,7 @@ export function CourseScene({
     const top = (target: THREE.Matrix4) => new THREE.Vector3().setFromMatrixPosition(target);
     return monsters.flatMap((monster) => {
       const stop = monster.stop;
+      if (stop.kind === "weekly" && weeklyAnchor) return [{ monster, at: weeklyAnchor.at }];
       if (stop.kind === "gate" || stop.kind === "weekly")
         return [{ monster, at: monster.position }];
       if (stop.kind === "lesson") {
@@ -1635,7 +1665,7 @@ export function CourseScene({
       );
       return [{ monster, at: top(matrix) }];
     });
-  }, [monsters, markers, allSites, padSurfaces]);
+  }, [monsters, markers, allSites, padSurfaces, weeklyAnchor]);
   const wispLessons = reviewDue ?? devWispLessons(lessons.map((lesson) => lesson.lessonId));
   const wisps = useMemo<readonly WispSpot[]>(() => {
     if (!wispLessons?.length) return [];
@@ -1658,6 +1688,61 @@ export function CourseScene({
     ? (monsterPlacements.find((entry) => isGuardedPlacement(entry, guardedStop)) ?? null)
     : null;
   const throwing = staged?.throwing?.started === true && chased !== null;
+  // The weekly boss's fight: a star for each right answer, a head shake for each miss.
+  const bossStrike = useBossStrike(weekly?.strike ?? null);
+  const bossAt = weeklyMonster
+    ? (monsterPlacements.find((entry) => entry.monster.id === weeklyMonster.id) ?? null)
+    : null;
+  const bossReaction: MonsterReaction | null =
+    bossAt && bossStrike.phase && avatarPoint
+      ? {
+          monsterId: bossAt.monster.id,
+          phase: bossStrike.phase,
+          away: (() => {
+            const away = bossAt.at.clone().sub(avatarPoint).setY(0);
+            if (away.lengthSq() < 1e-6) away.set(0, 0, -1);
+            return away.normalize();
+          })(),
+          ...(weekly?.strike?.onGone ? { onGone: weekly.strike.onGone } : {}),
+        }
+      : null;
+  const facingBoss = weekly?.fighting === true && weeklyAnchor ? weeklyAnchor.at : null;
+  /*
+    Its wandering keeps clear of what already stands: stones and pads, gates,
+    trees and tents, chests and vignettes. Planned once per island and spot.
+  */
+  const weeklyRoam = useMemo(() => {
+    if (!weeklyMonster) return null;
+    const route = blueprint.route.nodeRadius;
+    return planWeeklyRoam(blueprint, weeklyMonster, [
+      ...standing,
+      ...markers.map((marker) => ({
+        x: marker.lesson.position.x,
+        z: marker.lesson.position.z,
+        r: Math.max(route, marker.radius),
+      })),
+      ...allSites
+        .filter((site) => site.resolved)
+        .map((site) => ({
+          x: site.ground.x,
+          z: site.ground.z,
+          r: site.kind === "checkpoint" ? LEARNING_GATE_HALF_SPAN : LEARNING_PAD_RADIUS,
+        })),
+      ...chests.map((chest) => ({
+        x: chest.position.x,
+        z: chest.position.z,
+        r: CHEST_FOOTPRINT_RADIUS * chest.scale,
+      })),
+      ...vignettes.map((vignette) => ({ x: vignette.x, z: vignette.z, r: vignette.radius })),
+    ]);
+  }, [weeklyMonster, blueprint, standing, markers, allSites, chests, vignettes]);
+  // One close-up for both: the chest being opened wins; otherwise the boss being fought.
+  const closeUp =
+    staged && openingChest
+      ? { active: staged.closeUp, other: throwing ? chased.at : openingChest.position }
+      : weekly && weeklyAnchor
+        ? { active: weekly.fighting === true, other: weeklyAnchor.at }
+        : null;
   const pickOwner = (owner: CourseChest["owner"] | CourseMonster["stop"]) => {
     if (owner.kind === "lesson") {
       const lesson = lessons.find((entry) => entry.lessonId === owner.lessonId);
@@ -1750,11 +1835,11 @@ export function CourseScene({
           onTap={staged.onTap}
         />
       ) : null}
-      {staged && openingChest && (avatarAt || layout.idlePosition) ? (
+      {closeUp && (avatarAt || layout.idlePosition) ? (
         <CloseUpCamera
-          active={staged.closeUp}
+          active={closeUp.active}
           subject={(avatarAt?.position ?? layout.idlePosition)!}
-          other={throwing ? chased.at : openingChest.position}
+          other={closeUp.other}
           obstacles={closeUpObstacles}
         />
       ) : null}
@@ -1762,7 +1847,17 @@ export function CourseScene({
         <MonsterField
           placements={monsterPlacements}
           focus={avatarAt?.position ?? layout.idlePosition ?? null}
-          reaction={sequence.reactionFor(chased)}
+          reaction={sequence.reactionFor(chased) ?? bossReaction}
+          roaming={
+            weeklyMonster && weeklyRoam && weeklyAnchor
+              ? {
+                  id: weeklyMonster.id,
+                  roam: weeklyRoam,
+                  anchor: weeklyAnchor,
+                  hold: weekly?.fighting === true || Boolean(weekly?.strike),
+                }
+              : null
+          }
           onPick={(monster) => pickOwner(monster.stop)}
         />
       </Suspense>
@@ -1785,6 +1880,18 @@ export function CourseScene({
           onEvent={sequence.onThrow}
         />
       ) : null}
+      {bossStrike.throwing && bossAt && avatarPoint ? (
+        <StarThrow
+          key={`weekly:${bossStrike.throwing.key}`}
+          from={avatarPoint.clone().setY(avatarPoint.y + 0.3)}
+          avatarAt={avatarPoint}
+          target={starTarget(bossAt)}
+          stars={bossStrike.throwing.stars}
+          started
+          avatar={sequence.avatar}
+          onEvent={bossStrike.onThrow}
+        />
+      ) : null}
       {avatarAt || layout.idlePosition ? (
         <LearnerMarker
           position={(avatarAt?.position ?? layout.idlePosition)!}
@@ -1793,7 +1900,7 @@ export function CourseScene({
           showRing={avatarAt !== null}
           surface="course"
           travelKey={avatarAt?.travelKey ?? null}
-          faceToward={throwing ? chased.at : null}
+          faceToward={throwing ? chased.at : facingBoss}
           onAvatar={sequence.onAvatar}
         />
       ) : null}

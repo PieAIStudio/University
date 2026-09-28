@@ -108,6 +108,7 @@ import { MapGuide } from "../guide/MapGuide.js";
 import { mapGuideScope, type MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { useChestOpening } from "./use-chest-opening.js";
+import { useWeeklyBoss } from "./use-weekly-boss.js";
 import { AvatarPanel } from "@pieai/university-ui/navigation/AvatarPanel.js";
 import { leagueTierName } from "@pieai/university-ui/navigation/league-tier-name.js";
 import { EmblemImage } from "@pieai/university-world";
@@ -727,6 +728,20 @@ export function App() {
     setPathOverlay,
     setView,
   });
+  // V7 mechanic 8: this week's boss, on the course island you last finished a lesson on.
+  const weekly = useWeeklyBoss({
+    progress,
+    island:
+      view.kind === "course" && course ? { studyId: view.studyId, courseId: course.id } : null,
+    lessons,
+    courseOf,
+    onOpenLesson: openCourseLesson,
+    onChest: chest.beginWeekly,
+  });
+  const labelMarkers = useMemo(
+    () => (weekly.marker ? [...markers, weekly.marker] : markers),
+    [markers, weekly.marker],
+  );
   const { markUnitProven, provenLessonKeys, unmetFor } = useSkipTest({
     nodes,
     progress,
@@ -890,7 +905,7 @@ export function App() {
         }
         skyStudyId={focusedStudyId}
         // The chest's close-up is a moment of its own: no map labels over it.
-        markers={openingOnMap ? NO_MARKERS : markers}
+        markers={openingOnMap ? NO_MARKERS : labelMarkers}
         followId={
           view.kind === "world" && picked
             ? picked.courseId
@@ -978,14 +993,18 @@ export function App() {
                   });
                 }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
-                opening={openingOnMap ? chest.opening : null}
+                opening={openingOnMap || chest.weekly ? chest.opening : null}
                 reviewDue={reviewDue}
+                weeklyBoss={weekly.scene}
+                onPickWeeklyBoss={weekly.open}
               />
             ) : null}
           </>
         }
         overlay={
           <>
+            {weekly.overlay}
+            {chest.weekly ? chest.overlay : null}
             <PresenceLayer
               port={presencePort}
               surface={companionSurface}
