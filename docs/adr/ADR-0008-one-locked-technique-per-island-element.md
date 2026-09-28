@@ -109,6 +109,15 @@ added to what V7-01 placed; none is stored, and every word stays DOM.
   stone's monster (three stars for a gate's boss), which flees and is gone; the
   live monsters' skeletons are freed with them (their bone textures had leaked 12
   textures per return to the island).
+- **Opening time under slow frames (2026-09-29).** Phase time consumes the real
+  frame interval rather than the ambient animation's 50 ms cap. The cap had
+  lengthened all four openings on the expanded island; a controlled 100 ms frame
+  cadence made the wood chest take 6.62 s. Particle physics consumes the same
+  elapsed time in bounded substeps, then stops loot after its existing 1.5 s
+  flight budget; a long interruption cannot add unbounded simulation work or
+  leave a spark alive forever. The tier durations, wave counts, particle pools,
+  renderer owner and reduced-motion/skip behavior are unchanged. The timing gate
+  retains its original ±0.75 s bounds and adds a slow-frame regression.
 - **Chest sizes and where the avatar waits.** Owner, 2026-09-28: each tier is 20%
   larger than the one below (wood 1, blue 1.2, purple 1.44, gold 1.728 of the base
   chest), and a chest's planned ground grows with it; a purple chest on a verge too

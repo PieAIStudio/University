@@ -179,7 +179,10 @@ export function ChestOpening({
     const group = holder.current;
     if (!pair || !group) return;
     const frozen = islandLookFrozen();
-    const dt = frozen ? 0 : Math.min(delta, 0.05);
+    // A slow frame must not lengthen the celebration. Only ambient motion is
+    // clamped; the tier's clock and the particles consume real elapsed time.
+    const elapsed = frozen || !Number.isFinite(delta) ? 0 : Math.max(0, delta);
+    const dt = Math.min(elapsed, 0.05);
     const state = clock.current;
     const shown = started && state.t >= lead / 2 ? pair.to : pair.from;
     pair.from.group.visible = shown === pair.from;
@@ -195,7 +198,7 @@ export function ChestOpening({
         !reducedMotion && cycle < 0.35 ? Math.sin(cycle * 40) * 0.05 * (1 - cycle / 0.35) : 0;
       return;
     }
-    state.t += dt;
+    state.t += elapsed;
     if (skipped && state.t < end) {
       // Nothing left to spray: the waves not yet fired are dropped, not bunched.
       state.t = end;
@@ -291,7 +294,7 @@ export function ChestOpening({
       material.opacity = (1 - k) * 0.9;
     }
     effects.flash.lookAt(camera.position);
-    particles.update(dt);
+    particles.update(elapsed);
   });
 
   const size = CHEST_WIDTH * chest.scale;

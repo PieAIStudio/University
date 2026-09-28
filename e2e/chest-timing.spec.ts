@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { expect, test, type Page } from "@playwright/test";
 
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
@@ -15,43 +17,82 @@ const TARGETS = { wood: 2.5, rare: 3.5, epic: 4.5, legendary: 6 } as const;
 /** Either side of the target: the tier's feel, not a frame count. */
 const TOLERANCE = 0.75;
 
+async function measureOpening(page: Page, tier: string, label = tier): Promise<number> {
+  await openOnline(page);
+  await waitForMapReady(page);
+  await page.goto(
+    `${ONLINE_ORIGIN}${coursePathOf(CATALOGUE_ROLES.settlement.course)}?v7open=${tier}`,
+  );
+  await page.waitForFunction(
+    (kind) => {
+      const bag = window as any;
+      return Boolean(bag.__v7OpenStart && bag.three?.scene.getObjectByName(`hero-chest-${kind}`));
+    },
+    tier,
+    { timeout: 60_000 },
+  );
+  // Keep the existing steady-frame preparation; readiness also names the actual chest.
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => (globalThis as any).__v7OpenStart());
+  const seconds = await page
+    .waitForFunction(
+      () => {
+        const timeline = (globalThis as any).__v7Timeline;
+        const settled = timeline?.phases.find(
+          (entry: { phase: string }) => entry.phase === "settled",
+        );
+        return settled && timeline.started !== null
+          ? (settled.at - timeline.started) / 1000
+          : false;
+      },
+      undefined,
+      { timeout: 20_000 },
+    )
+    .then((handle) => handle.jsonValue() as Promise<number>);
+  test
+    .info()
+    .annotations.push({ type: "measured", description: `${label}: ${seconds.toFixed(2)}s` });
+  console.log(`chest ${label}: ${seconds.toFixed(2)}s`);
+  const evidence = process.env.V7_CHEST_EVIDENCE;
+  if (evidence) {
+    mkdirSync(evidence, { recursive: true });
+    await page.screenshot({ path: join(evidence, `${label}.png`) });
+    writeFileSync(
+      join(evidence, `${label}.json`),
+      JSON.stringify({ url: page.url(), viewport: page.viewportSize(), seconds }, null, 2),
+    );
+  }
+  return seconds;
+}
+
 test.describe("V7 chest opening length", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   for (const [tier, target] of Object.entries(TARGETS)) {
     test(`${tier} opens in about ${target}s`, async ({ page }) => {
-      await openOnline(page);
-      await waitForMapReady(page);
-      await page.goto(
-        `${ONLINE_ORIGIN}${coursePathOf(CATALOGUE_ROLES.settlement.course)}?v7open=${tier}`,
-      );
-      await page.waitForFunction(() => Boolean((globalThis as any).__v7OpenStart), undefined, {
-        timeout: 60_000,
-      });
-      // Let the island settle into its steady frame before timing anything.
-      await page.waitForTimeout(1500);
-      await page.evaluate(() => (globalThis as any).__v7OpenStart());
-      const seconds = await page
-        .waitForFunction(
-          () => {
-            const timeline = (globalThis as any).__v7Timeline;
-            const settled = timeline?.phases.find(
-              (entry: { phase: string }) => entry.phase === "settled",
-            );
-            return settled && timeline.started !== null
-              ? (settled.at - timeline.started) / 1000
-              : false;
-          },
-          undefined,
-          { timeout: 20_000 },
-        )
-        .then((handle) => handle.jsonValue() as Promise<number>);
-      test
-        .info()
-        .annotations.push({ type: "measured", description: `${tier}: ${seconds.toFixed(2)}s` });
-      console.log(`chest ${tier}: ${seconds.toFixed(2)}s (target ${target}s)`);
+      const seconds = await measureOpening(page, tier);
       expect(seconds).toBeGreaterThan(target - TOLERANCE);
       expect(seconds).toBeLessThan(target + TOLERANCE);
     });
   }
+
+  test("slow frames do not turn a wood chest into a longer celebration", async ({ page }) => {
+    // A deterministic low-cadence renderer, not a claim about physical-device FPS.
+    // Both scheduling and cancellation use the same timer owner for this page only.
+    await page.addInitScript(() => {
+      window.requestAnimationFrame = (callback) =>
+        window.setTimeout(() => callback(performance.now()), 100);
+      window.cancelAnimationFrame = (handle) => window.clearTimeout(handle);
+    });
+    const seconds = await measureOpening(page, "wood", "wood-slow-frames");
+    expect(seconds).toBeGreaterThan(TARGETS.wood - TOLERANCE);
+    expect(seconds).toBeLessThan(TARGETS.wood + TOLERANCE);
+  });
+
+  test("a phone keeps the wood chest's duration", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const seconds = await measureOpening(page, "wood", "wood-phone");
+    expect(seconds).toBeGreaterThan(TARGETS.wood - TOLERANCE);
+    expect(seconds).toBeLessThan(TARGETS.wood + TOLERANCE);
+  });
 });

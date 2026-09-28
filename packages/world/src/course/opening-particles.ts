@@ -22,6 +22,7 @@ interface Piece {
   rotation: THREE.Euler;
   drag: number;
   alive: boolean;
+  age: number;
 }
 
 interface Spark {
@@ -41,6 +42,10 @@ const CAPACITY: Readonly<Record<PieceKind, number>> = {
   coin: 140,
 };
 const SPARKS = 600;
+/** V7: loot has landed within 1.5 seconds, independently of frame cadence. */
+const FLIGHT_SECONDS = 1.5;
+/** Integrate safely, but never discard the elapsed part of a slow frame. */
+const PHYSICS_STEP = 0.05;
 const CONFETTI = [0xff5ea5, 0xffd84d, 0x4fd3ff, 0x7dff9a, 0xb07bff, 0xffffff];
 const GEMS = [0xff6fb5, 0x6fd3ff, 0xb68bff, 0x7dffb0];
 const FIREWORK = [0xffe14a, 0xff6fb5, 0x6fd3ff, 0xb68bff];
@@ -163,6 +168,7 @@ export class OpeningParticles {
       rotation: new THREE.Euler(),
       drag,
       alive: true,
+      age: 0,
     });
   }
 
@@ -260,22 +266,35 @@ export class OpeningParticles {
   }
 
   update(dt: number) {
+    if (!Number.isFinite(dt) || dt < 0) return;
     for (const piece of this.pieces) {
-      if (!piece.alive) continue;
-      piece.velocity.y -= 7.5 * dt;
-      piece.velocity.multiplyScalar(Math.max(0, 1 - piece.drag * dt));
-      piece.position.addScaledVector(piece.velocity, dt);
-      piece.rotation.x += piece.spin.x * dt;
-      piece.rotation.y += piece.spin.y * dt;
-      piece.rotation.z += piece.spin.z * dt;
-      if (piece.kind !== "confetti" && piece.position.y < 0.02) {
+      if (!piece.alive || piece.age >= FLIGHT_SECONDS) continue;
+      const duration = Math.min(dt, FLIGHT_SECONDS - piece.age);
+      const steps = Math.ceil(duration / PHYSICS_STEP);
+      const step = steps > 0 ? duration / steps : 0;
+      // At most thirty steps even after a long interruption, and one matrix
+      // upload per rendered frame. Settled pieces never keep bouncing/spinning.
+      for (let index = 0; index < steps; index += 1) {
+        piece.velocity.y -= 7.5 * step;
+        piece.velocity.multiplyScalar(Math.max(0, 1 - piece.drag * step));
+        piece.position.addScaledVector(piece.velocity, step);
+        piece.rotation.x += piece.spin.x * step;
+        piece.rotation.y += piece.spin.y * step;
+        piece.rotation.z += piece.spin.z * step;
+        if (piece.kind !== "confetti" && piece.position.y < 0.02) {
+          piece.position.y = 0.02;
+          piece.velocity.y *= -0.35;
+          piece.velocity.x *= 0.6;
+          piece.velocity.z *= 0.6;
+        }
+      }
+      piece.age = Math.min(FLIGHT_SECONDS, piece.age + dt);
+      if (piece.age >= FLIGHT_SECONDS && piece.kind !== "confetti") {
         piece.position.y = 0.02;
-        piece.velocity.y *= -0.35;
-        piece.velocity.x *= 0.6;
-        piece.velocity.z *= 0.6;
+        piece.velocity.set(0, 0, 0);
       }
       const mesh = this.meshes.get(piece.kind)!;
-      if (piece.kind === "confetti" && piece.position.y < 0) {
+      if (piece.kind === "confetti" && (piece.position.y < 0 || piece.age >= FLIGHT_SECONDS)) {
         piece.alive = false;
         mesh.setMatrixAt(piece.slot, this.hidden);
         this.free.get(piece.kind)!.push(piece.slot);
@@ -295,10 +314,14 @@ export class OpeningParticles {
     let live = 0;
     for (const spark of this.sparks) {
       spark.age += dt;
-      if (spark.age > spark.ttl) continue;
-      spark.velocity.y -= 2.5 * dt;
-      spark.velocity.multiplyScalar(Math.max(0, 1 - spark.drag * dt));
-      spark.position.addScaledVector(spark.velocity, dt);
+      if (spark.age >= spark.ttl) continue;
+      const steps = Math.ceil(dt / PHYSICS_STEP);
+      const step = steps > 0 ? dt / steps : 0;
+      for (let index = 0; index < steps; index += 1) {
+        spark.velocity.y -= 2.5 * step;
+        spark.velocity.multiplyScalar(Math.max(0, 1 - spark.drag * step));
+        spark.position.addScaledVector(spark.velocity, step);
+      }
       const fade = 1 - spark.age / spark.ttl;
       position.setXYZ(live, spark.position.x, spark.position.y, spark.position.z);
       // Additive: darker is more transparent, so fading is scaling the colour.
