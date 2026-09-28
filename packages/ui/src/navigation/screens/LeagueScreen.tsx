@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameAssetIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
+import { leagueTierName } from "../league-tier-name.js";
 import {
   LEAGUE_TIERS,
   LONG_TERM_STABILITY_DAYS,
@@ -50,7 +51,7 @@ export function LeagueScreen({
             ) : (
               <GameAssetIcon icon="medal" size="lg" />
             )}
-            <span className="league-standing__name">{standing.tier.name}</span>
+            <span className="league-standing__name">{leagueTierName(standing.tier)}</span>
             <GameBadge tone="success">
               {standing.cards}{" "}
               {interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.张记牢了")}
@@ -92,7 +93,7 @@ export function LeagueScreen({
                   {emblem(tier.id)}
                 </span>
               ) : null}
-              <span className="league-rung__name">{tier.name}</span>
+              <span className="league-rung__name">{leagueTierName(tier)}</span>
               <span className="league-rung__at">
                 {tier.at} {interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.张")}
               </span>

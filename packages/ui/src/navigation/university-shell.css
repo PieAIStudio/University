@@ -1008,3 +1008,144 @@ a.linkish {
   width: 100%;
   height: 100%;
 }
+
+/*
+  V7 station 6: the avatar panel. The face carries today's ring and the streak
+  flame, so they survive when the rail folds to the avatar alone.
+*/
+.avatar-panel {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  width: 100%;
+}
+/* V7 draws the level as one line, 「LV 2 · 5 / 126」; the rail has no height to spare. */
+.avatar-panel .learner-level {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+.avatar-panel__face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 7px;
+}
+.avatar-panel__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.avatar-panel__ring-track,
+.avatar-panel__ring-fill {
+  fill: none;
+  stroke-width: 5;
+}
+.avatar-panel__ring-track {
+  stroke: color-mix(in srgb, var(--game-ui-text-muted) 22%, transparent);
+}
+.avatar-panel__ring-fill {
+  stroke: var(--game-ui-accent);
+  stroke-linecap: round;
+  transition: stroke-dasharray var(--game-ui-motion-slow) var(--game-ui-ease-soft);
+}
+.avatar-panel[data-goal-met] .avatar-panel__ring-fill {
+  stroke: var(--game-ui-warning);
+}
+.avatar-panel__flame {
+  position: absolute;
+  inset-inline-end: -4px;
+  bottom: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px 1px 5px;
+  border: 2px solid var(--game-ui-surface-raised);
+  border-radius: 999px;
+  background: var(--game-ui-accent);
+  color: var(--game-ui-accent-contrast);
+  font-size: var(--game-ui-font-sm);
+  font-weight: var(--game-ui-weight-strong);
+  line-height: 1.2;
+}
+.avatar-panel__flame[data-muted] {
+  background: var(--game-ui-surface-raised);
+  color: var(--game-ui-text-muted);
+}
+.avatar-panel__flame svg {
+  width: 11px;
+  height: 13px;
+  fill: currentColor;
+}
+.avatar-panel__rank {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-weight: var(--game-ui-weight-strong);
+  font-size: var(--game-ui-font-sm);
+}
+.avatar-panel__rank-emblem {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.avatar-panel__rank-emblem img {
+  width: 100%;
+  height: 100%;
+}
+.avatar-panel__week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+  font-size: var(--game-ui-font-xs);
+  color: var(--game-ui-text-muted);
+}
+.avatar-panel__day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.avatar-panel__day i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--game-ui-text-muted) 22%, transparent);
+}
+.avatar-panel__day[data-studied] i {
+  background: var(--game-ui-accent);
+}
+.avatar-panel__day[data-rested] i {
+  background: transparent;
+  border: 2px dashed var(--game-ui-accent);
+  box-sizing: border-box;
+}
+.avatar-panel__day[data-today] span {
+  color: var(--game-ui-text);
+  font-weight: var(--game-ui-weight-strong);
+}
+.avatar-panel__today {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  font-size: var(--game-ui-font-sm);
+}
+.avatar-panel__membership {
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-xs);
+}
+/* Folded rail and phones: the face alone, ring and flame included. */
+.app-shell[data-map-shell="true"][data-map-rail-open="false"]
+  .avatar-panel
+  > :not(.avatar-panel__face) {
+  display: none;
+}

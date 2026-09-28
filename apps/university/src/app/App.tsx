@@ -40,9 +40,14 @@ import {
   activeIdForView,
   isBareView,
   learningNodeId,
+  leagueStanding,
   learningSegments,
   lessonRefKey,
   lessonsWithDueCards,
+  questsForToday,
+  studyWeek,
+  todayGoalProgress,
+  toPath,
   progressSourceOf,
   type FeedbackContext,
   type LessonRef,
@@ -103,6 +108,9 @@ import { MapGuide } from "../guide/MapGuide.js";
 import { mapGuideScope, type MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { useChestOpening } from "./use-chest-opening.js";
+import { AvatarPanel } from "@pieai/university-ui/navigation/AvatarPanel.js";
+import { leagueTierName } from "@pieai/university-ui/navigation/league-tier-name.js";
+import { EmblemImage } from "@pieai/university-world";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
@@ -1339,6 +1347,10 @@ export function App() {
       view={view}
     />
   );
+  // The avatar panel reads the record for today; the rail re-renders with it.
+  const panelNow = Date.now();
+  const standing = leagueStanding(progress, panelNow);
+  const lessonQuest = questsForToday(progress, panelNow).find((quest) => quest.id === "lesson");
   const feedbackSurface = (
     <FeedbackNote
       shell={CAMPUS_NAME}
@@ -1515,20 +1527,32 @@ export function App() {
           counters={
             shellConfig.showLearnerChrome
               ? mapMode
-                ? counters.filter((counter) => !counter.control)
+                ? // The streak sits on the avatar's face right above; twice is noise.
+                  counters.filter((counter) => !counter.control && counter.id !== "streak")
                 : counters
               : undefined
           }
           identity={
             shellConfig.showLearnerChrome ? (
-              <>
-                <RailIdentity
-                  recipe={avatarRecipe}
-                  signedIn={avatarSignedIn}
-                  onOpen={openAccount}
-                />
-                <LevelProgress totalXp={progress.totalXp} rail />
-              </>
+              <AvatarPanel
+                avatar={
+                  <RailIdentity
+                    recipe={avatarRecipe}
+                    signedIn={avatarSignedIn}
+                    onOpen={openAccount}
+                  />
+                }
+                todayProgress={todayGoalProgress(progress, panelNow)}
+                streakDays={progress.streak.days}
+                rank={{
+                  name: leagueTierName(standing.tier),
+                  emblem: <EmblemImage kind="rank" id={standing.tier.id} size={56} />,
+                }}
+                level={<LevelProgress totalXp={progress.totalXp} rail />}
+                week={studyWeek(progress, panelNow)}
+                today={{ done: lessonQuest?.done ?? 0, goal: lessonQuest?.goal ?? 1 }}
+                membership={{ href: toPath({ kind: "plans" }) }}
+              />
             ) : null
           }
           aside={shellConfig.showContextAside ? aside : undefined}

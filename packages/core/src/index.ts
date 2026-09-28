@@ -313,6 +313,7 @@ export * from "./progress/rest-days.js";
 export * from "./progress/weekly-boss.js";
 export * from "./progress/knowledge-cards.js";
 export * from "./progress/review-wisps.js";
+export * from "./progress/study-week.js";
 export * from "./billing/plans.js";
 export * from "./billing/entitlements.js";
 export * from "./billing/ai-entitlements.js";

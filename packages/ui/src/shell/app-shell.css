@@ -917,8 +917,9 @@
 }
 
 @media (max-width: 1159px) and (min-width: 768px) {
-  /* The icon rail is too narrow for readable XP copy; ProfileScreen is the fallback. */
-  .learner-level--rail {
+  /* The icon rail is too narrow for readable XP copy; ProfileScreen is the fallback.
+     The map shell's floating rail keeps its labels at these widths, so it keeps the level. */
+  .app-shell:not([data-map-shell="true"]) .learner-level--rail {
     display: none;
   }
 }
