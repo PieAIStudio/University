@@ -783,6 +783,7 @@ export function CuteCloudSea({
       };
       bag.__cloudCarrierMotion ??= {};
       bag.__cloudCarrierMotion[carrierSurface] = {
+        targetKey: carrierTravelKey ?? null,
         sequence: carrierSequence.current,
         inFlight: carrierStartedAt.current !== null,
         startedAtPerformanceMs: carrierStartedAt.current,

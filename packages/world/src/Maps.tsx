@@ -809,6 +809,7 @@ export function LearnerMarker({
         bag.__avatarMotion ??= {};
         bag.__avatarMotion[surface] = {
           owner: reportOwner.current,
+          targetKey: travelKey ?? null,
           sequence: sequence.current,
           inFlight: false,
           startedAtPerformanceMs: null,
@@ -841,6 +842,7 @@ export function LearnerMarker({
       bag.__avatarMotion ??= {};
       bag.__avatarMotion[surface] = {
         owner: reportOwner.current,
+        targetKey: travelKey ?? null,
         sequence: sequence.current,
         inFlight: startedAt.current !== null,
         startedAtPerformanceMs: startedAt.current,

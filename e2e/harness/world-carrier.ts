@@ -7,15 +7,21 @@ import { withProject } from "./project.js";
  * explicit choice it must remain outside real ground and visible labels.
  * Selected-island contact and movement are independently guarded in avatar.spec.
  */
+export function worldCarrierIsHome(): boolean {
+  const bag = window as any;
+  // A DOM selection can clear before the next rendered motion receipt. An
+  // idle receipt for the previous island is not evidence of returning home.
+  return Boolean(
+    bag.three?.scene.getObjectByName("remote-island-terrain") &&
+    bag.__avatarMotion?.world?.targetKey === null &&
+    bag.__cloudCarrierMotion?.world?.targetKey === null &&
+    bag.__avatarMotion?.world?.inFlight === false &&
+    bag.__cloudCarrierMotion?.world?.inFlight === false,
+  );
+}
+
 export async function assertWorldCarrierAboveGround(page: Page) {
-  await page.waitForFunction(() => {
-    const bag = window as any;
-    return (
-      bag.three?.scene.getObjectByName("remote-island-terrain") &&
-      bag.__avatarMotion?.world?.inFlight === false &&
-      bag.__cloudCarrierMotion?.world?.inFlight === false
-    );
-  });
+  await page.waitForFunction(worldCarrierIsHome);
   const result = await page.evaluate(
     withProject((project) => {
       const state = (window as any).three;
