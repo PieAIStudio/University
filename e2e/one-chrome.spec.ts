@@ -232,6 +232,11 @@ async function walkToLesson(page: Page, origin: string, screenshotName: string) 
   await expect(page.locator("[data-parity-control='lesson-layer-coverage']")).toBeVisible({
     timeout: 30_000,
   });
+  // Disabled while it reads the project's layers; its label says so. Compare
+  // the settled control, as the end-of-lesson block below is compared settled.
+  await expect(page.locator("[data-parity-control='lesson-layer-coverage']")).toBeEnabled({
+    timeout: 30_000,
+  });
   /*
     The end-of-lesson block, and why the snapshot waits for it.
 
