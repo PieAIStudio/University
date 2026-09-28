@@ -312,7 +312,8 @@
 .nav-rail__flyout-trigger[aria-current="page"],
 .nav-rail__flyout-item[aria-current="page"],
 .tab-bar__link[aria-current="page"] {
-  color: var(--game-ui-accent, #5ec8c0);
+  /* Accent ink, not the accent fill: orange text on its own 14% tint was 4.1:1. */
+  color: var(--game-ui-accent-ink, var(--game-ui-accent, #5ec8c0));
   background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 14%, transparent);
   border-color: var(--game-ui-accent, #5ec8c0);
 }
