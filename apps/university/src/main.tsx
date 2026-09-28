@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { NerveI18nProvider } from "@pieai/swimmer-nerve-kit/i18n/react";
 
@@ -101,6 +101,7 @@ import { applyThemePreference } from "@pieai/university-ui/theme.js";
 import { localeDemandPort, recordLocaleRequest } from "./analytics/locale-demand";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
 import { progressPort } from "./progress/store";
+import { nerveLanguage } from "./nerve-language";
 
 // Resolve the cached account preference before React paints the learner surface.
 applyThemePreference(progressPort.accountData().preferences.theme);
@@ -123,8 +124,10 @@ void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 
 function UniversityApplication() {
   const { locale } = useI18n();
+  // One expression per locale: a new value only when the language changes.
+  const nerve = useMemo(() => nerveLanguage(locale), [locale]);
   return (
-    <NerveI18nProvider locale={locale}>
+    <NerveI18nProvider value={nerve}>
       <App />
       <LiquidCtaTransitionLayer />
     </NerveI18nProvider>

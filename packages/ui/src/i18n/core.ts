@@ -10,8 +10,9 @@ export const interfaceI18n = createI18n<typeof source, MessageContracts>({
   source,
   catalogs: { en: english },
 });
+// I18nKit 0.2: `completeness` is key coverage only; a menu offers what is selectable.
 export const INTERFACE_LOCALES = ["zh-CN", "en"].filter(
-  (locale) => interfaceI18n.completeness(locale).complete,
+  (locale) => interfaceI18n.catalogStatus(locale).selectable,
 );
 export type InterfaceTranslator = ReturnType<typeof interfaceI18n.translator>;
 export type { MessageKey, MessageCatalog } from "./types.js";

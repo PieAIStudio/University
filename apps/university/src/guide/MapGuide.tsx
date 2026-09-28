@@ -363,6 +363,8 @@ export function MapGuide({
             target={shown?.target ?? null}
             message={message}
             activity={activity}
+            // The answer reads first; the place's own action or the two islands follow it.
+            activityPlacement="after-status"
             onDismissPeek={clear}
             onDismissGuide={clear}
             onBoundsChange={(rect) => {

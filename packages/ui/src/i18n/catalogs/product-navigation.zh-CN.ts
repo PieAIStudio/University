@@ -1,5 +1,5 @@
 export const messages = {
-  "avatarPanel.streak": "连续 {days} 天",
+  "avatarPanel.streak": "{days, plural, other {连续 # 天}}",
   "avatarPanel.week": "这一周",
   "avatarPanel.weekday.mon": "一",
   "avatarPanel.weekday.tue": "二",
@@ -18,7 +18,7 @@ export const messages = {
   "avatarPanel.dayStudied": "{day}，学过",
   "avatarPanel.dayRested": "{day}，休息日",
   "avatarPanel.today": "今天",
-  "avatarPanel.todayLessons": "{done} / {goal} 关",
+  "avatarPanel.todayLessons": "{done} / {goal, plural, other {# 关}}",
   "leagueTier.stone": "石阶",
   "leagueTier.bronze": "铜阶",
   "leagueTier.silver": "银阶",

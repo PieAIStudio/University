@@ -383,9 +383,9 @@ export interface MessageContracts {
   readonly "avatarPanel.dayRested": { readonly "day": string | number | bigint | boolean | null | undefined | Date; };
   readonly "avatarPanel.dayStudied": { readonly "day": string | number | bigint | boolean | null | undefined | Date; };
   readonly "avatarPanel.membership": {  };
-  readonly "avatarPanel.streak": { readonly "days": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "avatarPanel.streak": { readonly "days": number; };
   readonly "avatarPanel.today": {  };
-  readonly "avatarPanel.todayLessons": { readonly "done": string | number | bigint | boolean | null | undefined | Date; readonly "goal": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "avatarPanel.todayLessons": { readonly "done": string | number | bigint | boolean | null | undefined | Date; readonly "goal": number; };
   readonly "avatarPanel.week": {  };
   readonly "avatarPanel.weekday.fri": {  };
   readonly "avatarPanel.weekday.mon": {  };
@@ -400,9 +400,9 @@ export interface MessageContracts {
   readonly "chest.label": { readonly "number": string | number | bigint | boolean | null | undefined | Date; readonly "tier": string | number | bigint | boolean | null | undefined | Date; };
   readonly "chest.open": {  };
   readonly "chest.reward.badge": { readonly "name": string | number | bigint | boolean | null | undefined | Date; };
-  readonly "chest.reward.knowledgeCards": { readonly "count": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "chest.reward.knowledgeCards": { readonly "count": number; };
   readonly "chest.reward.level": { readonly "level": string | number | bigint | boolean | null | undefined | Date; };
-  readonly "chest.reward.reviewCards": { readonly "count": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "chest.reward.reviewCards": { readonly "count": number; };
   readonly "chest.reward.streak": { readonly "day": string | number | bigint | boolean | null | undefined | Date; };
   readonly "chest.reward.xp": { readonly "xp": string | number | bigint | boolean | null | undefined | Date; };
   readonly "chest.reward.xpDoubled": { readonly "xp": string | number | bigint | boolean | null | undefined | Date; };
@@ -3941,10 +3941,10 @@ export interface MessageContracts {
   readonly "ui.world.overview.show": {  };
   readonly "ui.world.overview.unavailable": {  };
   readonly "weeklyBoss.again": {  };
-  readonly "weeklyBoss.daysLeft": { readonly "days": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "weeklyBoss.daysLeft": { readonly "days": number; };
   readonly "weeklyBoss.fight": {  };
   readonly "weeklyBoss.flawlessHint": {  };
-  readonly "weeklyBoss.hearts": { readonly "hearts": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "weeklyBoss.hearts": { readonly "hearts": number; };
   readonly "weeklyBoss.hit": { readonly "xp": string | number | bigint | boolean | null | undefined | Date; };
   readonly "weeklyBoss.keepHint": {  };
   readonly "weeklyBoss.leave": {  };
@@ -3955,7 +3955,7 @@ export interface MessageContracts {
   readonly "weeklyBoss.open": {  };
   readonly "weeklyBoss.pitch": {  };
   readonly "weeklyBoss.reread": {  };
-  readonly "weeklyBoss.roundOver": { readonly "hearts": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "weeklyBoss.roundOver": { readonly "hearts": number; };
   readonly "weeklyBoss.submit": {  };
   readonly "workshop.connectInstructions": {  };
   readonly "workshop.swapInstructions": {  };

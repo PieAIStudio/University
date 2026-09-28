@@ -8,8 +8,11 @@ describe("request-scoped native i18n", () => {
     expect(serviceI18n.resolve("en-US")).toBe("zh-CN");
   });
   it("isolates interleaved Node requests and releases context afterward", async () => {
-    const first = serviceI18n.translator("zh-CN");
-    const second = serviceI18n.translator("zh-CN");
+    // I18nKit 0.2 reuses one translator per locale, so the two requests carry
+    // distinct copies: what is under test is the context, not translator identity.
+    expect(serviceI18n.translator("zh-CN")).toBe(serviceI18n.translator("zh-CN"));
+    const first = { ...serviceI18n.translator("zh-CN") };
+    const second = { ...serviceI18n.translator("zh-CN") };
     expect(first).not.toBe(second);
     await Promise.all(
       [first, second].map((translator) =>

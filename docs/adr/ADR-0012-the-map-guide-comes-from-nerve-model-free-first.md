@@ -152,3 +152,36 @@ published releases they were waiting for; the reasons above still hold.
   voice that this host does not offer; those are reported upstream, not patched
   here.
 
+
+## Amendment 2026-09-28: SwimmerNerveKit 0.7, UIKit 2.11, I18nKit 0.2
+
+Decisions 1 to 5 and the 2026-09-27 amendment stand; this moves them onto the
+releases the kit now requires (Nerve 0.7.0 needs UIKit ≥ 2.11) and retires the
+two local workarounds those releases replace.
+
+- **Versions.** `@pieai/swimmer-nerve-kit@0.7.0`, `@pieai/swimmer-ui-kit@2.11.0`
+  and `@pieai/swimmer-i18n-kit@0.2.0`, exact pins; UIKit the same in the app,
+  `packages/ui` and `packages/world`, I18nKit the same in the app, `packages/ui`,
+  `packages/core` and `apps/university-ai`. The app came from Nerve 0.5.0.
+- **University supplies the language; Nerve keeps its words.** 0.7 ships its
+  catalogs and no engine. `apps/university/src/nerve-language.ts` builds the
+  three readers from `nerveCatalogs` with the I18nKit engine the product already
+  runs, once, at module load; `main.tsx` passes `NerveI18nProvider value=` one
+  memoised expression per locale. No translation is copied and no second
+  language preference exists: the locale is `useI18n()`'s. University changes
+  language by reloading onto the same route, so no `key={locale}` is added to the
+  map, the scene or 涟. No headless controller that takes a `language` getter is
+  used here (no conversation, companion storage, voice or guidance walk). The
+  kit's strings are now English as well as Chinese, which closes the
+  Chinese-only note above.
+- **The answer reads first, by the kit's own contract.** `activityPlacement=
+  "after-status"` replaces the CSS `order` rules that moved the place's action
+  and the two-island comparison below the answer.
+- **The landing label steps around the panel.** UIKit 2.11 avoids the anchored
+  panel itself, so the `--game-ui-assistance-z: 94` override is removed.
+- **I18nKit 0.2's stricter contracts.** A message whose English plural uses a
+  number now declares that number in the Chinese source too (`{n, plural, other
+  {…#…}}`); the language list offers what `catalogStatus().selectable` says, not
+  key coverage alone.
+- **Still not adopted.** `createNerveOpening` (the welcome, return and wrap-up
+  cards of V7 tasks 03 and 04), conversation and voice, for the reasons above.

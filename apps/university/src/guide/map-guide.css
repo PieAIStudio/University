@@ -48,32 +48,6 @@
   transform: translateY(6px);
 }
 
-/*
-  University's part of the answer panel: the place's own action, or two
-  islands side by side. The kit puts host activity above its status line;
-  the answer reads first, so this follows it, and the kit's question panel
-  stays nearest the droplet when it is reopened.
-*/
-.swimmer-nerve-liquid__status:has(> .map-guide__go, > .map-guide__compare) {
-  order: 1;
-  flex-wrap: wrap;
-}
-.swimmer-nerve-liquid__outlet:has(.map-guide__go, .map-guide__compare) > .game-ui-liquid-reveal {
-  order: 2;
-}
-
-/*
-  The panel rises from a droplet at the bottom centre, over the band where
-  the map frames the stone to start on. UIKit stacks its anchored panel one
-  step above the flying droplet (--game-ui-assistance-z: 96 over 95); here
-  that hid the droplet's landing label under the answer it belongs to. The
-  droplet takes no pointer events, so drawing it above the panel costs no
-  control. (Reported to the kit: the label could step around the panel.)
-*/
-:root {
-  --game-ui-assistance-z: 94;
-}
-
 .map-guide__go,
 .map-guide__compare {
   display: flex;
