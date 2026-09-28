@@ -22,3 +22,13 @@ it("does not call water or unavailable ground a valid waiting place", () => {
     courseAvatarIdlePosition([{ position: new Vector3() }], 1, () => ({ y: NaN, inside: false })),
   ).toBeNull();
 });
+
+it("keeps clear of what already stands beside the stone, not only of the stones", () => {
+  const nodes = [{ position: new Vector3(0, 1, 0), state: "live" }];
+  const sample = () => ({ y: 1, inside: true });
+  const open = courseAvatarIdlePosition(nodes, 1, sample)!;
+  // A chest where the avatar used to wait: it moves on to free ground.
+  const moved = courseAvatarIdlePosition(nodes, 1, sample, [{ x: open.x, z: open.z, r: 0.5 }])!;
+  expect(Math.hypot(moved.x - open.x, moved.z - open.z)).toBeGreaterThanOrEqual(0.5 + 0.55);
+  expect(Math.hypot(moved.x, moved.z)).toBeGreaterThanOrEqual(2.5);
+});

@@ -95,6 +95,14 @@ added to what V7-01 placed; none is stored, and every word stays DOM.
   stone's monster (three stars for a gate's boss), which flees and is gone; the
   live monsters' skeletons are freed with them (their bone textures had leaked 12
   textures per return to the island).
+- **Chest sizes and where the avatar waits.** Owner, 2026-09-28: each tier is 20%
+  larger than the one below (wood 1, blue 1.2, purple 1.44, gold 1.728 of the base
+  chest), and a chest's planned ground grows with it; a purple chest on a verge too
+  crowded for that size falls back to a wood chest's ground and is drawn that small.
+  An upgrade grows the chest to its new size during the upgrade flash. With no stone
+  chosen, the avatar waits beside the live stone on ground clear of chests, trees,
+  tents, vignettes, pads and gates (`course-avatar-idle.ts`); it once kept off the
+  stones alone and stood inside the first stone's chest.
 - **Review wisps.** A glimmer wisp floats over each cleared stone whose cards are
   due, with a purple ring round the stone; one instanced draw per part and one for
   the rings.

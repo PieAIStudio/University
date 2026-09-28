@@ -146,7 +146,7 @@ import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-i
 import { projectWorldCourse } from "./world-course-projection.js";
 import { CourseOverviewContext } from "./camera/CourseOverview.js";
 import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
-import { courseAvatarIdlePosition } from "./course-avatar-idle.js";
+import { AVATAR_CLEARANCE, courseAvatarIdlePosition } from "./course-avatar-idle.js";
 import { MapTravelClockContext, mapTravelStartTime, recordMapTravel } from "./map-travel-clock.js";
 export { worldIslandCaptionTarget } from "./world-carrier.js";
 
@@ -1320,7 +1320,6 @@ export function courseSurfaceY(
 const MARKER_MAX_RAISE = 0.12;
 
 export interface CourseLessonLayout {
-  readonly idlePosition: THREE.Vector3 | null;
   readonly markers: readonly GridLessonMarker[];
   readonly footing: MedallionFooting;
   readonly inlays: MedallionInlays;
@@ -1418,12 +1417,7 @@ export function layoutCourseLessons(
       ),
       ground.index,
     );
-    const idlePosition = courseAvatarIdlePosition(
-      lessons,
-      blueprint.route.nodeRadius,
-      ground.heightAt,
-    );
-    return { markers, footing, inlays, recoveries, idlePosition };
+    return { markers, footing, inlays, recoveries };
   } finally {
     ground.dispose();
   }
@@ -1560,7 +1554,50 @@ export function CourseScene({
     () => (openingChest ? chests.filter((chest) => chest !== openingChest) : chests),
     [chests, openingChest],
   );
-  const avatarPoint = avatarAt?.position ?? layout.idlePosition ?? null;
+  const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
+  const chestFootprints = useMemo(
+    () => chestAndMonsterFootprints(lessons, allSites),
+    [lessons, allSites],
+  );
+  const vignettes = useMemo(
+    () =>
+      planCourseVignettes(
+        blueprint,
+        standing.map((o) => ({ x: o.x, z: o.z, radius: o.r })),
+        [...learningSiteExclusions(allSites), ...chestFootprints],
+      ),
+    [allSites, blueprint, chestFootprints, standing],
+  );
+  /*
+    Where the avatar waits when no stone is chosen: beside the live stone, on
+    ground clear of what stands there — chests, tents and rocks, trees, pads
+    and gates, a boss beside its gate. It once kept off the stones alone and
+    stood inside the first stone's chest (Owner, 2026-09-28).
+  */
+  const idlePosition = useMemo(() => {
+    const ground = createIslandHeightSampler(blueprint);
+    try {
+      return courseAvatarIdlePosition(lessons, blueprint.route.nodeRadius, ground.heightAt, [
+        ...standing,
+        ...chests.map((chest) => ({
+          x: chest.position.x,
+          z: chest.position.z,
+          r: CHEST_FOOTPRINT_RADIUS * chest.scale,
+        })),
+        ...chestFootprints.map((item) => ({ x: item.x, z: item.z, r: item.radius })),
+        ...vignettes.map((vignette) => ({ x: vignette.x, z: vignette.z, r: vignette.radius })),
+        ...allSites
+          .filter((site) => site.resolved)
+          .flatMap((site) => [
+            { x: site.ground.x, z: site.ground.z, r: LEARNING_PAD_RADIUS },
+            { x: site.object.x, z: site.object.z, r: LEARNING_GATE_HALF_SPAN },
+          ]),
+      ]);
+    } finally {
+      ground.dispose();
+    }
+  }, [blueprint, lessons, standing, chests, chestFootprints, vignettes, allSites]);
+  const avatarPoint = avatarAt?.position ?? idlePosition ?? null;
   const sequence = useChestSequence({ opening: staged, avatarAt: avatarPoint });
   // While a star is still to be thrown, its target keeps standing (chest-sequence.ts).
   const monsterLessons = useMemo(
@@ -1571,7 +1608,6 @@ export function CourseScene({
     const standing = courseMonsters(monsterLessons, allSites);
     return weeklyMonster && !weeklyFled ? [...standing, weeklyMonster] : standing;
   }, [monsterLessons, allSites, weeklyMonster, weeklyFled]);
-  const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
   // The close-up keeps its eye clear of what stands, gates and bosses included:
   // a crowned boss twice the learner's height fills the frame from in front.
   const closeUpObstacles = useMemo(
@@ -1589,19 +1625,6 @@ export function CourseScene({
         })),
     ],
     [standing, allSites, monsters],
-  );
-  const chestFootprints = useMemo(
-    () => chestAndMonsterFootprints(lessons, allSites),
-    [lessons, allSites],
-  );
-  const vignettes = useMemo(
-    () =>
-      planCourseVignettes(
-        blueprint,
-        standing.map((o) => ({ x: o.x, z: o.z, radius: o.r })),
-        [...learningSiteExclusions(allSites), ...chestFootprints],
-      ),
-    [allSites, blueprint, chestFootprints, standing],
   );
   const vignetteFootprints = useMemo(
     () => [...vignettes.map((v) => ({ x: v.x, z: v.z, radius: v.radius })), ...chestFootprints],
@@ -1734,8 +1757,10 @@ export function CourseScene({
         r: CHEST_FOOTPRINT_RADIUS * chest.scale,
       })),
       ...vignettes.map((vignette) => ({ x: vignette.x, z: vignette.z, r: vignette.radius })),
+      // Nor through the avatar waiting beside the live stone.
+      ...(idlePosition ? [{ x: idlePosition.x, z: idlePosition.z, r: AVATAR_CLEARANCE }] : []),
     ]);
-  }, [weeklyMonster, blueprint, standing, markers, allSites, chests, vignettes]);
+  }, [weeklyMonster, blueprint, standing, markers, allSites, chests, vignettes, idlePosition]);
   // One close-up for both: the chest being opened wins; otherwise the boss being fought.
   const closeUp =
     staged && openingChest
@@ -1835,10 +1860,10 @@ export function CourseScene({
           onTap={staged.onTap}
         />
       ) : null}
-      {closeUp && (avatarAt || layout.idlePosition) ? (
+      {closeUp && (avatarAt || idlePosition) ? (
         <CloseUpCamera
           active={closeUp.active}
-          subject={(avatarAt?.position ?? layout.idlePosition)!}
+          subject={(avatarAt?.position ?? idlePosition)!}
           other={closeUp.other}
           obstacles={closeUpObstacles}
         />
@@ -1846,7 +1871,7 @@ export function CourseScene({
       <Suspense fallback={null}>
         <MonsterField
           placements={monsterPlacements}
-          focus={avatarAt?.position ?? layout.idlePosition ?? null}
+          focus={avatarAt?.position ?? idlePosition ?? null}
           reaction={sequence.reactionFor(chased) ?? bossReaction}
           roaming={
             weeklyMonster && weeklyRoam && weeklyAnchor
@@ -1871,7 +1896,7 @@ export function CourseScene({
           key={`${openingChest.id}:${chased.monster.id}`}
           from={openingChest.position
             .clone()
-            .setY(openingChest.position.y + CHEST_WORLD_HEIGHT * 0.7)}
+            .setY(openingChest.position.y + CHEST_WORLD_HEIGHT * openingChest.scale * 0.7)}
           avatarAt={avatarPoint}
           target={starTarget(chased)}
           stars={sequence.stars}
@@ -1892,9 +1917,9 @@ export function CourseScene({
           onEvent={bossStrike.onThrow}
         />
       ) : null}
-      {avatarAt || layout.idlePosition ? (
+      {avatarAt || idlePosition ? (
         <LearnerMarker
-          position={(avatarAt?.position ?? layout.idlePosition)!}
+          position={(avatarAt?.position ?? idlePosition)!}
           recipe={avatarRecipe}
           signedIn={avatarSignedIn}
           showRing={avatarAt !== null}

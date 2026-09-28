@@ -125,6 +125,18 @@ export const WEEKLY_BOSS_SIZE = 1.2;
 
 /** Ground a chest needs around its centre, in blueprint units (a lesson stone is 0.62). */
 export const CHEST_FOOTPRINT_RADIUS = 0.48;
+/**
+ * Rarer chests are bigger, each tier 20% larger than the one below (Owner,
+ * 2026-09-28: 「好牛逼的宝箱就得大一点……按 20% 递增」). A ratio, not a step:
+ * size reads by proportion, so a ratio is what makes every step look alike.
+ * A chest's ground grows with it.
+ */
+export const CHEST_TIER_SCALE: Readonly<Record<ChestTier, number>> = {
+  wood: 1,
+  rare: 1.2,
+  epic: 1.44,
+  legendary: 1.728,
+};
 /** A chest that found no free verge is drawn this much smaller at its stone's edge. */
 export const CHEST_EDGE_SCALE = 0.62;
 /** Ground the boss needs beside its gate. */
@@ -155,6 +167,8 @@ interface Spot {
   /** Unit vector from the spot back toward what it belongs to. */
   readonly facing: { readonly x: number; readonly z: number };
   readonly scale: number;
+  /** The ground it was planned to keep; a chest's grows with its tier. */
+  readonly radius?: number;
 }
 
 interface Placement {
@@ -180,6 +194,24 @@ export function chestIdOf(owner: ChestOwner): string {
  * segment's last lesson blue, and everything else wood; the checkpoint and the
  * challenge pennant carry purple (V7 station 3).
  */
+/** Every lesson's chest tier, deriving the segments once. */
+function lessonChestTiers(
+  lessons: readonly Pick<LessonPlacement, "lessonId" | "unitId" | "unitTitle">[],
+): readonly ChestTier[] {
+  const ends = new Set(
+    segmentsFromPlacements(lessons).map(
+      (segment) => `${segment.unitId}/${segment.lessonIds.at(-1)}`,
+    ),
+  );
+  return lessons.map((lesson, index) =>
+    index === lessons.length - 1
+      ? "legendary"
+      : ends.has(`${lesson.unitId}/${lesson.lessonId}`)
+        ? "rare"
+        : "wood",
+  );
+}
+
 export function lessonChestTier(
   lessons: readonly Pick<LessonPlacement, "lessonId" | "unitId" | "unitTitle">[],
   index: number,
@@ -299,6 +331,7 @@ function placeChestsAndBosses(
             z,
             facing: { x: (anchor.x - x) / length, z: (anchor.z - z) / length },
             scale: 1,
+            radius,
           };
         }
       }
@@ -347,6 +380,22 @@ function placeChestsAndBosses(
       blueprint.route.nodeRadius + STONE_GAP + CHEST_FOOTPRINT_RADIUS,
       routeClearance + CHEST_FOOTPRINT_RADIUS + 0.05,
     );
+    const EPIC_RADIUS = CHEST_FOOTPRINT_RADIUS * CHEST_TIER_SCALE.epic;
+    /**
+     * A purple chest at its full size where the verge has room; otherwise at a
+     * wood chest's ground, drawn that small, rather than missing or overlapping.
+     */
+    const besideEpic = (
+      anchor: { readonly x: number; readonly z: number },
+      tangent: Vector3,
+      at: number,
+      seed: string,
+    ): Spot | null => {
+      const full = beside(anchor, tangent, at, EPIC_RADIUS, seed, GATE_RINGS);
+      if (full) return full;
+      const small = beside(anchor, tangent, at, CHEST_FOOTPRINT_RADIUS, seed, GATE_RINGS);
+      return small ? { ...small, scale: 1 / CHEST_TIER_SCALE.epic } : null;
+    };
 
     // Gates and pennants first: their verge is the scarcest, a lesson's chest can go either side.
     for (const site of sites) {
@@ -357,16 +406,9 @@ function placeChestsAndBosses(
           away.lengthSq() > 1e-6
             ? new Vector3(-away.z, 0, away.x).normalize()
             : new Vector3(0, 0, -1);
-        const found = beside(
-          site.ground,
-          tangent,
-          reach,
-          CHEST_FOOTPRINT_RADIUS,
-          site.id,
-          GATE_RINGS,
-        );
+        const found = besideEpic(site.ground, tangent, reach, site.id);
         if (found) {
-          taken.push({ x: found.x, z: found.z, r: CHEST_FOOTPRINT_RADIUS });
+          taken.push({ x: found.x, z: found.z, r: found.radius ?? EPIC_RADIUS });
           chests.set(chestIdOf({ kind: "challenge", siteId: site.id }), found);
         }
         continue;
@@ -406,26 +448,27 @@ function placeChestsAndBosses(
         taken.push({ x: boss.x, z: boss.z, r: BOSS_FOOTPRINT_RADIUS });
         bosses.set(site.id, boss);
       }
-      const chest = beside(
-        site.object,
-        tangent,
-        gateReach,
-        CHEST_FOOTPRINT_RADIUS,
-        site.id,
-        GATE_RINGS,
-      );
+      const chest = besideEpic(site.object, tangent, gateReach, site.id);
       if (chest) {
-        taken.push({ x: chest.x, z: chest.z, r: CHEST_FOOTPRINT_RADIUS });
+        taken.push({ x: chest.x, z: chest.z, r: chest.radius ?? EPIC_RADIUS });
         chests.set(chestIdOf({ kind: "checkpoint", siteId: site.id }), chest);
       }
     }
+    const tiers = lessonChestTiers(lessons);
     lessons.forEach((lesson, index) => {
       const tangent = tangentAt(index);
       const at = lesson.position;
-      const found = beside(at, tangent, reach, CHEST_FOOTPRINT_RADIUS, lesson.lessonId);
+      const radius = CHEST_FOOTPRINT_RADIUS * CHEST_TIER_SCALE[tiers[index] ?? "wood"];
+      const found = beside(
+        at,
+        tangent,
+        reach + radius - CHEST_FOOTPRINT_RADIUS,
+        radius,
+        lesson.lessonId,
+      );
       const id = chestIdOf({ kind: "lesson", lessonId: lesson.lessonId });
       if (found) {
-        taken.push({ x: found.x, z: found.z, r: CHEST_FOOTPRINT_RADIUS });
+        taken.push({ x: found.x, z: found.z, r: radius });
         chests.set(id, found);
         return;
       }
@@ -483,6 +526,7 @@ export function courseChests(
 ): readonly CourseChest[] {
   const placement = placeChestsAndBosses(lessons, sites);
   const chests: CourseChest[] = [];
+  const tiers = lessonChestTiers(lessons);
   lessons.forEach((lesson, index) => {
     const owner: ChestOwner = { kind: "lesson", lessonId: lesson.lessonId };
     const spot = placement.chests.get(chestIdOf(owner));
@@ -490,11 +534,11 @@ export function courseChests(
     chests.push({
       id: chestIdOf(owner),
       owner,
-      tier: lessonChestTier(lessons, index),
+      tier: tiers[index]!,
       state: lessonChestState(lesson.state),
       position: new Vector3(spot.x, spot.y, spot.z),
       yaw: yawOf(spot),
-      scale: spot.scale,
+      scale: spot.scale * CHEST_TIER_SCALE[tiers[index]!],
     });
   });
   for (const site of sites) {
@@ -511,7 +555,7 @@ export function courseChests(
       state: site.kind === "checkpoint" && segmentCleared(site, lessons) ? "open" : "closed",
       position: new Vector3(spot.x, spot.y, spot.z),
       yaw: yawOf(spot),
-      scale: spot.scale,
+      scale: spot.scale * CHEST_TIER_SCALE.epic,
     });
   }
   return chests;
@@ -653,7 +697,7 @@ export function courseWeeklyChest(boss: CourseMonster): CourseChest | null {
     state: "ready",
     position: boss.position.clone(),
     yaw: Math.atan2(facing.x, facing.z),
-    scale: 1,
+    scale: CHEST_TIER_SCALE.epic,
   };
 }
 
@@ -682,8 +726,13 @@ export function chestAndMonsterFootprints(
   const placement = placeChestsAndBosses(lessons, sites);
   return [
     ...[...placement.chests.values()]
-      .filter((spot) => spot.scale === 1)
-      .map((spot) => ({ x: spot.x, z: spot.z, radius: CHEST_FOOTPRINT_RADIUS + 0.12 })),
+      // Edge chests hang on their stone; every verge chest keeps its ground.
+      .filter((spot) => spot.scale !== CHEST_EDGE_SCALE)
+      .map((spot) => ({
+        x: spot.x,
+        z: spot.z,
+        radius: (spot.radius ?? CHEST_FOOTPRINT_RADIUS) + 0.12,
+      })),
     ...placement.shore.map((spot) => ({
       x: spot.x,
       z: spot.z,

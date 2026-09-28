@@ -7,7 +7,12 @@ import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { CHEST_COLOURS, CHEST_WIDTH } from "./chest-geometry.js";
 import { OPENING_FX, openingTimeline, type OpeningEvent } from "./chest-opening.js";
 import type { GuardedStop } from "./chest-sequence.js";
-import type { ChestOwner, ChestTier, CourseChest } from "./chests-and-monsters.js";
+import {
+  CHEST_TIER_SCALE,
+  type ChestOwner,
+  type ChestTier,
+  type CourseChest,
+} from "./chests-and-monsters.js";
 import { buildHeroChest, type HeroChest } from "./hero-chest.js";
 import { OpeningParticles, softDotTexture } from "./opening-particles.js";
 
@@ -150,6 +155,9 @@ export function ChestOpening({
     [tier, slow, reducedMotion],
   );
   const lead = upgrade && !reducedMotion ? UPGRADE_LEAD : 0;
+  // An upgrade grows the chest to its new tier's size (CHEST_TIER_SCALE); the
+  // map drew it at the old one, and `chest.scale` still carries that.
+  const grow = CHEST_TIER_SCALE[tier] / CHEST_TIER_SCALE[from];
   const clock = useRef({ idle: 0, t: 0, fired: 0, phase: "waiting" as OpeningPhase });
   const holder = useRef<THREE.Group>(null);
   const report = useRef(onPhase);
@@ -232,7 +240,7 @@ export function ChestOpening({
       // The upgrade: a pop and a flash, and the new colour takes over halfway.
       const k = t / lead;
       const pop = 1 + Math.sin(k * Math.PI) * 0.18;
-      chestObject.scale.setScalar(pop);
+      chestObject.scale.setScalar(pop * (1 + (grow - 1) * k));
       (effects.flash.material as THREE.MeshBasicMaterial).opacity = Math.sin(k * Math.PI) * 0.8;
       chestObject.rotation.z = 0;
     } else if (t < burstAt) {
@@ -242,14 +250,18 @@ export function ChestOpening({
       chestObject.rotation.y = Math.sin(t * 31) * amp * 0.6;
       shown.setLeak(k);
       const squash = 1 - 0.12 * k ** 3;
-      chestObject.scale.set(1 + (1 - squash) * 0.9, squash, 1 + (1 - squash) * 0.9);
+      chestObject.scale.set(
+        (1 + (1 - squash) * 0.9) * grow,
+        squash * grow,
+        (1 + (1 - squash) * 0.9) * grow,
+      );
       (effects.flash.material as THREE.MeshBasicMaterial).opacity = 0;
     } else {
       const since = t - burstAt;
       chestObject.rotation.set(0, 0, 0);
       shown.setLeak(0);
       shown.setOpen(reducedMotion ? 1 : easeOutBack(clamp01(since / LID_SECONDS)));
-      chestObject.scale.setScalar(1 + 0.12 * Math.sin(Math.min(1, since / 0.3) * Math.PI));
+      chestObject.scale.setScalar((1 + 0.12 * Math.sin(Math.min(1, since / 0.3) * Math.PI)) * grow);
       const waves = timeline.filter((event) => event.kind === "wave");
       const lastWave = waves.filter((event) => lead + event.at <= t).at(-1);
       const sinceWave = lastWave ? t - (lead + lastWave.at) : since;
