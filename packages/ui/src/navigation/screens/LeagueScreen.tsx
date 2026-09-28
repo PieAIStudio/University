@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameAssetIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import {
@@ -21,10 +22,13 @@ export const LEAGUE_TITLE = interfaceTranslator.t("product.growth.title");
 export function LeagueScreen({
   document: progress,
   now = Date.now(),
+  emblem,
 }: {
   readonly document: ProgressDocument;
   readonly now?: number;
   readonly signedIn?: boolean;
+  /** A rank's picture by tier id: the app passes V7's 3D emblem; this package stays free of three. */
+  readonly emblem?: (tierId: string) => ReactNode;
 }) {
   const interfaceTranslator = useI18n();
   const standing = leagueStanding(progress, now);
@@ -39,7 +43,13 @@ export function LeagueScreen({
       <GamePanel tone="strong">
         <div className="league-standing">
           <div className="league-standing__tier">
-            <GameAssetIcon icon="medal" size="lg" />
+            {emblem ? (
+              <span className="league-standing__emblem" aria-hidden="true">
+                {emblem(standing.tier.id)}
+              </span>
+            ) : (
+              <GameAssetIcon icon="medal" size="lg" />
+            )}
             <span className="league-standing__name">{standing.tier.name}</span>
             <GameBadge tone="success">
               {standing.cards}{" "}
@@ -77,6 +87,11 @@ export function LeagueScreen({
               className={`league-rung${tier.id === standing.tier.id ? " league-rung--here" : ""}`}
               aria-current={tier.id === standing.tier.id ? "true" : undefined}
             >
+              {emblem ? (
+                <span className="league-rung__emblem" aria-hidden="true">
+                  {emblem(tier.id)}
+                </span>
+              ) : null}
               <span className="league-rung__name">{tier.name}</span>
               <span className="league-rung__at">
                 {tier.at} {interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.张")}

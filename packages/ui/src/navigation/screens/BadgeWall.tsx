@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { badgesFor, type Badge, type ProgressDocument } from "@pieai/university-core";
 
 /**
- * 徽章墙 — ten badges, all rules visible, none of them a secret.
+ * 徽章墙 — seventeen badges, all rules visible, none of them a secret.
  *
  * A hidden badge is a puzzle, and this is not a game about guessing what the
  * game wants. A locked one shows its rule and how far along you are, which
@@ -14,12 +15,18 @@ export const BADGE_WALL_TITLE = interfaceTranslator.t(
   "ui.navigation.screens.badgeWall.copy.徽章墙",
 );
 
-function BadgeTile({ badge }: { badge: Badge }) {
+/** The picture on a badge's disc: the app passes V7's 3D emblem; this package stays free of three. */
+export type BadgeEmblem = (badge: Badge) => ReactNode;
+
+function BadgeTile({ badge, emblem }: { badge: Badge; emblem?: BadgeEmblem | undefined }) {
   const interfaceTranslator = useI18n();
   return (
     <li className={`badge-tile${badge.earned ? " badge-tile--earned" : ""}`}>
-      <div className="badge-tile__disc" aria-hidden="true">
-        {badge.earned ? "★︎" : "○"}
+      <div
+        className={emblem ? "badge-tile__disc badge-tile__disc--emblem" : "badge-tile__disc"}
+        aria-hidden="true"
+      >
+        {emblem ? emblem(badge) : badge.earned ? "★︎" : "○"}
       </div>
       <div className="badge-tile__body">
         <div className="badge-tile__head">
@@ -42,9 +49,11 @@ function BadgeTile({ badge }: { badge: Badge }) {
 export function BadgeWall({
   document: progress,
   coursesFinished = 0,
+  emblem,
 }: {
   readonly document: ProgressDocument;
   readonly coursesFinished?: number;
+  readonly emblem?: BadgeEmblem;
 }) {
   const interfaceTranslator = useI18n();
   const badges = badgesFor(progress, coursesFinished);
@@ -73,7 +82,7 @@ export function BadgeWall({
 
       <ul className="badge-wall">
         {badges.map((badge) => (
-          <BadgeTile key={badge.id} badge={badge} />
+          <BadgeTile key={badge.id} badge={badge} emblem={emblem} />
         ))}
       </ul>
     </section>

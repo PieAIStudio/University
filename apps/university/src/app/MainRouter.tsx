@@ -46,6 +46,7 @@ import {
   type PlanetStudyDomain,
 } from "@pieai/university-world/planet.js";
 import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
+import { EmblemImage } from "@pieai/university-world";
 import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 
 import {
@@ -507,7 +508,11 @@ export function MainRouter({
         />
       ) : null}
       {view.kind === "league" ? (
-        <LeagueScreen document={progress} signedIn={avatarSignedIn} />
+        <LeagueScreen
+          document={progress}
+          signedIn={avatarSignedIn}
+          emblem={(tierId) => <EmblemImage kind="rank" id={tierId} size={96} />}
+        />
       ) : null}
       {view.kind === "quests" ? (
         <QuestsScreen
@@ -567,7 +572,15 @@ export function MainRouter({
           }
           totalXp={progress.totalXp}
           reviewCardCount={Object.keys(progress.cards).length}
-          badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
+          badges={
+            <BadgeWall
+              document={progress}
+              coursesFinished={profileStats.coursesFinished}
+              emblem={(badge) => (
+                <EmblemImage kind="badge" id={badge.id} locked={!badge.earned} size={64} />
+              )}
+            />
+          }
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={

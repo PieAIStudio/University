@@ -748,6 +748,20 @@ a.linkish {
   color: var(--game-ui-accent, #5ec8c0);
 }
 
+/* V7: the 3D emblem as an image in its own colours, on no disc (after the
+   earned rule above, which it has to override). */
+.badge-tile__disc--emblem,
+.badge-tile--earned .badge-tile__disc--emblem {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0;
+  background: none;
+}
+.badge-tile__disc--emblem img {
+  width: 100%;
+  height: 100%;
+}
+
 .badge-tile__body {
   display: flex;
   flex-direction: column;
@@ -975,4 +989,22 @@ a.linkish {
 
 .account-panel .swimmer-auth {
   min-width: 0;
+}
+
+/* V7 station 10: rank emblems, the standing large and each rung small. */
+.league-standing__emblem {
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+}
+.league-rung__emblem {
+  display: inline-block;
+  width: 2.25rem;
+  height: 2.25rem;
+  vertical-align: middle;
+}
+.league-standing__emblem img,
+.league-rung__emblem img {
+  width: 100%;
+  height: 100%;
 }
