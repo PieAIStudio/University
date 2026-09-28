@@ -5,6 +5,7 @@ import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } f
 import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./catalogue.js";
 import { humanClick, scrollIntoView } from "./click.js";
 import { namedStep } from "./step.js";
+import { passChestOpening } from "./chest.js";
 import { enterSelectedMapObject } from "./map-actions.js";
 import { PRIMARY_DOMAIN_ID } from "./domain-catalogue.js";
 import { enterExerciseAnswer } from "./exercise-input.js";
@@ -146,6 +147,7 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
 }
 
 export async function waitForSettlementProgress(page: Page): Promise<void> {
+  await passChestOpening(page);
   await namedStep(page, "结算页进度不是 0", async () => {
     const outcome = await page.waitForFunction(
       () => {

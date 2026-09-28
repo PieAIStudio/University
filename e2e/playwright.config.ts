@@ -67,6 +67,7 @@ const actionTimeout = contended ? 45_000 : 20_000;
 /** Speed budgets measure the machine, so they must not share it. */
 const TIMING_SPECS = [
   "**/avatar.spec.ts",
+  "**/chest-timing.spec.ts",
   "**/archipelago-reference.spec.ts",
   "**/domain-planets.spec.ts",
   "**/experience.spec.ts",

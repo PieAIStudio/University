@@ -45,6 +45,7 @@ import {
   progressSourceOf,
   type FeedbackContext,
   type LessonRef,
+  type View,
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
@@ -100,6 +101,7 @@ import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-wo
 import { MapGuide } from "../guide/MapGuide.js";
 import { mapGuideScope, type MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
+import { useChestOpening } from "./use-chest-opening.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
@@ -107,6 +109,9 @@ import { useProfileStats } from "./profile-stats";
 import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
 import { useWorldMarkers, useWorldModel, type PathOverlay } from "./world-model";
+
+/** No labels: the chest's close-up keeps the island to itself. */
+const NO_MARKERS: readonly never[] = [];
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
@@ -403,6 +408,32 @@ export function App() {
     todayNode,
   } = useCourseProgress({ course, courseOf, nodes, progress, source, view });
 
+  /*
+    V7 station 4: finishing a lesson opens its chest on the island before the
+    lesson's page. The hook remembers the record as the lesson opened, so the
+    chest can only announce what the lesson added.
+  */
+  const chest = useChestOpening({
+    lessonOpen:
+      view.kind === "lesson"
+        ? {
+            studyId: view.studyId,
+            courseId: view.courseId,
+            unitId: view.unitId,
+            lessonId: view.lessonId,
+          }
+        : null,
+    lessons,
+    guardName: (role) => guardOf(role)?.name ?? "",
+  });
+  const openingOnMap = chest.active && view.kind === "settled";
+  // The island the chest opens on is the lesson's own course map: while it
+  // plays, the scene reads the settled view as the lesson it came from.
+  const sceneView: View =
+    openingOnMap && view.kind === "settled" ? { ...view, kind: "lesson" } : view;
+  /** The map's shell (rails, information) shows on map views and over the chest's island. */
+  const mapShell = mapMode || openingOnMap;
+
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
   const mapCommands = useRef<MapViewportCommands | null>(null);
@@ -499,7 +530,7 @@ export function App() {
     onCoursePick: () => setMapEntryLearned(true),
     setPathOverlay,
     setPicked,
-    view,
+    view: sceneView,
     world,
   });
 
@@ -550,7 +581,7 @@ export function App() {
       lessonId: todayLesson.lessonId,
     });
   }, [setView, todayLesson]);
-  const showMap = SHOWS_THE_MAP.has(view.kind);
+  const showMap = SHOWS_THE_MAP.has(view.kind) || openingOnMap;
   const clearPlanetPick = useCallback(() => {
     setPlanetDomainChoice(null);
     setPlanetStudyChoice(null);
@@ -668,7 +699,7 @@ export function App() {
   const { cameraFrom, lookAt } = useSceneCamera({
     learnerAt,
     lessons,
-    viewKind: view.kind,
+    viewKind: sceneView.kind,
     world,
     wide,
   });
@@ -750,7 +781,7 @@ export function App() {
     return null;
   }, [view, lessons, focusedTodayNode]);
   const companionAnchors = useMemo(() => {
-    if (view.kind === "course" || view.kind === "lesson") {
+    if (sceneView.kind === "course" || sceneView.kind === "lesson") {
       return lessons.map((lesson) => ({
         id: `lesson:${lesson.lessonId}`,
         position: lesson.position,
@@ -761,8 +792,9 @@ export function App() {
       id: `course:${entry.node.studyId}/${entry.node.courseId}`,
       position: entry.position,
     }));
-  }, [view.kind, lessons, world]);
-  const companionSurface = view.kind === "course" || view.kind === "lesson" ? "course" : "world";
+  }, [sceneView.kind, lessons, world]);
+  const companionSurface =
+    sceneView.kind === "course" || sceneView.kind === "lesson" ? "course" : "world";
 
   /*
     One stage for every scene, mounted once.
@@ -775,7 +807,7 @@ export function App() {
     The authoring shell had been on the shared component for a while; this is
     the delivery shell catching up to it.
   */
-  const inCourse = view.kind === "course" || view.kind === "lesson";
+  const inCourse = view.kind === "course" || view.kind === "lesson" || openingOnMap;
   const lookShotIsCourse = import.meta.env.DEV && (lookDebug?.shot?.startsWith("course-") ?? false);
   const lookViewport = {
     width: typeof window === "undefined" ? (wide ? 1440 : 390) : window.innerWidth,
@@ -819,7 +851,7 @@ export function App() {
       <WorldMapCanvas
         commandsRef={mapCommands}
         key={sceneAttempt}
-        hidden={!SHOWS_THE_MAP.has(view.kind)}
+        hidden={!showMap}
         paused={!showMap}
         // A course path is read at a shallower pitch than a world of islands.
         polar={view.kind === "world" ? WORLD_POLAR : COURSE_POLAR}
@@ -836,7 +868,8 @@ export function App() {
           view.kind === "world" && picked ? `${picked.studyId}/${picked.courseId}` : null
         }
         skyStudyId={focusedStudyId}
-        markers={markers}
+        // The chest's close-up is a moment of its own: no map labels over it.
+        markers={openingOnMap ? NO_MARKERS : markers}
         followId={
           view.kind === "world" && picked
             ? picked.courseId
@@ -880,7 +913,7 @@ export function App() {
                 avatarRecipe={avatarRecipe}
                 avatarSignedIn={avatarSignedIn}
                 avatarLessonId={
-                  (view.kind === "course" || view.kind === "lesson") &&
+                  (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") &&
                   courseAvatarTarget?.studyId === view.studyId &&
                   courseAvatarTarget.courseId === view.courseId
                     ? courseAvatarTarget.lessonId
@@ -924,6 +957,7 @@ export function App() {
                   });
                 }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
+                opening={openingOnMap ? chest.opening : null}
               />
             ) : null}
           </>
@@ -1131,10 +1165,13 @@ export function App() {
               kind: "none",
               description: interfaceTranslator.t("map.chooseHint"),
             }
-      : view.kind === "course" && course
-        ? pathOverlay?.kind === "node" && pathLesson && pathUnit
+      : (view.kind === "course" || openingOnMap) && course
+        ? view.kind === "course" && pathOverlay?.kind === "node" && pathLesson && pathUnit
           ? lessonInformation(pathUnit, pathLesson)
-          : courseInformation(course, viewedProgress?.done ?? 0)
+          : courseInformation(
+              course,
+              viewedProgress?.done ?? lessons.filter((lesson) => lesson.state === "done").length,
+            )
         : picked && pickedCourse
           ? courseInformation(
               pickedCourse,
@@ -1232,7 +1269,7 @@ export function App() {
   ];
   const aside = (
     <>
-      {mapMode ? <MapInformation data={mapInfo} /> : null}
+      {mapShell ? <MapInformation data={mapInfo} /> : null}
       {view.kind === "settings" ? <SettingsSubnav /> : null}
     </>
   );
@@ -1244,6 +1281,7 @@ export function App() {
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
       grewFrom={grewFrom}
+      chestOverlay={openingOnMap ? chest.overlay : null}
       avatarRecipe={avatarRecipe}
       avatarSignedIn={avatarSignedIn}
       onAvatarRecipeChange={saveAvatarRecipe}
@@ -1410,6 +1448,12 @@ export function App() {
                   unitId: view.unitId,
                   lessonId: view.lessonId,
                 });
+                chest.begin({
+                  studyId: view.studyId,
+                  courseId: view.courseId,
+                  unitId: view.unitId,
+                  lessonId: view.lessonId,
+                });
               }}
             />
           </Suspense>
@@ -1425,15 +1469,15 @@ export function App() {
         className={
           view.kind === "me" || view.kind === "auth-callback" || view.kind === "auth-reset"
             ? "app app--account"
-            : view.kind === "settled"
+            : view.kind === "settled" && !openingOnMap
               ? "app app--lesson"
               : "app"
         }
       >
         <UniversityShell
           activeId={activeIdForView(view)}
-          mapMode={mapMode}
-          asideTitle={mapMode ? mapInfo.title : undefined}
+          mapMode={mapShell}
+          asideTitle={mapShell ? mapInfo.title : undefined}
           /*
           The workbench's own way in, behind 更多 and only where there is a
           workbench. `G` compares the rail's own destinations between the two

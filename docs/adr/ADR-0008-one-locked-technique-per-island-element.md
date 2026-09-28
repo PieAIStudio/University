@@ -77,6 +77,33 @@ every monster with its own materials and shadows: 239 calls and 898,425 triangle
 If a phone loses more than a tenth of its frame rate, simplify the baked monsters
 before anything else.
 
+### V7-02, V7-06, V7-07: the opening, the wisps and the weekly boss
+
+Owner, 2026-09-27 (V7 stations 4 and 8, decisions J2, O1, P1, R1). All three are
+added to what V7-01 placed; none is stored, and every word stays DOM.
+
+- **Chest opening.** Finishing a lesson opens its chest on the island before the
+  lesson's page. One close-up chest at a time replaces that lesson's map chest: the
+  review chest's rounded, ink-outlined, clear-coated build (`hero-chest.ts`, sharing
+  `craft/toy-craft.ts` with the knowledge star and the emblems). Particles are pooled
+  instanced meshes, at most 80 pieces a wave. Measured opening lengths in the timing
+  lane, tap to settled: wood 2.50 s, blue 3.50, purple 4.51, gold 6.00 (targets
+  2.5 / 3.5 / 4.5 / 6). A tap skips to the settled chest. The camera settles beside
+  the avatar from a side-on heading turned at most 50° past tents, gates and bosses,
+  and returns on Continue; under reduced motion it does not move and the chest is
+  simply open. The knowledge star flies from the avatar's `throw` to the next
+  stone's monster (three stars for a gate's boss), which flees and is gone; the
+  live monsters' skeletons are freed with them (their bone textures had leaked 12
+  textures per return to the island).
+- **Review wisps.** A glimmer wisp floats over each cleared stone whose cards are
+  due, with a purple ring round the stone; one instanced draw per part and one for
+  the rings.
+- **Weekly boss.** Free ground at the shore is planned after every chest and boss,
+  twelve directions round the island, so nothing else moves; the week's boss stands
+  at the spot nearest the learner's stone, as large as that shore allows (1.5×,
+  1.25× or a guard's size), with a purple ring at its feet. Which island, which
+  questions and when it leaves are core rules (`weekly-boss.ts`).
+
 ### R59-02 to R59-05: every stop is the lesson stone; a gate every segment
 
 Owner, 2026-09-23 (second review): the learning nodes' gold and lavender pads were
@@ -1039,7 +1066,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
 | Course geological scenery and surface detail | R59-06: four baked Kenney Nature Kit rocks, 336 triangles/rock cluster; roadside and ground stones are Kenney compositions inside their old footprints. R58-02: four procedural hexagonal boulders, 176. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
-| Chest and monster                            | V7-01: procedural chest ≤280 triangles, two instanced draws per tier; donor monsters ≤7,200 triangles as shipped, baked still poses instanced per kind without shadows, the three nearest skinned ones live. Placed after the learning nodes on free ground; no stored state. Readable names stay DOM. |
+| Chest and monster                            | V7-01: procedural chest ≤280 triangles, two instanced draws per tier; donor monsters ≤7,200 triangles as shipped, baked still poses instanced per kind without shadows, the three nearest skinned ones live. Placed after the learning nodes on free ground; no stored state. Readable names stay DOM. V7-02/06/07: one close-up chest at a time with ≤80 particles a wave; wisps over due stones; the weekly boss on planned shore ground. |
 | Learning node                                | R59: procedural gate (rope and streamers) / pennant / notice board, ≤160/36/60 triangles, stepping stones 18 each; each stands on the lesson stone itself (ring green or red by state). Every segment: a gate and one roadside node, board and pennant in turn; instanced. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
 | Buildings/camp/bridge                        | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks.                                                                                                                                                                    |

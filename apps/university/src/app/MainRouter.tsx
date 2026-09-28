@@ -98,6 +98,8 @@ interface MainRouterProps {
   readonly focusedStudyId: string | null;
   readonly focusStudy: (studyId: string) => void;
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
+  /** The finished lesson's chest, opening on the island: the lesson's page waits for it (V7). */
+  readonly chestOverlay?: ReactNode;
   readonly reviewReminderDismissedFor: string | null;
   readonly onDismissReviewReminder: (key: string) => void;
   readonly avatarRecipe: AvatarRecipe | null;
@@ -151,6 +153,7 @@ export function MainRouter({
   focusedStudyId,
   focusStudy,
   grewFrom,
+  chestOverlay = null,
   reviewReminderDismissedFor,
   onDismissReviewReminder,
   avatarRecipe,
@@ -354,7 +357,8 @@ export function MainRouter({
         />
       ) : null}
 
-      {view.kind === "settled" && course ? (
+      {view.kind === "settled" && course && chestOverlay ? chestOverlay : null}
+      {view.kind === "settled" && course && !chestOverlay ? (
         <Suspense
           fallback={
             <RouteFallback copy={interfaceTranslator.t("app.lesson.settlement.copy.读完了")} />

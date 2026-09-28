@@ -87,6 +87,7 @@ import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-ui/navigation/location-breadcrumbs.css";
 import "@pieai/university-ui/path/map-entry-action.css";
+import "@pieai/university-ui/path/chest-rewards.css";
 import "@pieai/university-ui/shell/map-shell.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";

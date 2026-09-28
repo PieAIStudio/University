@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { CourseOpening } from "./ChestOpening.js";
-import type { ChestTier, CourseChest } from "./chests-and-monsters.js";
-
-const TIERS: readonly ChestTier[] = ["wood", "rare", "epic", "legendary"];
+import { CHEST_TIERS as TIERS, type ChestTier, type CourseChest } from "./chests-and-monsters.js";
 
 /**
  * Development only: `?v7open=<tier>` stages the opening on the chest you can
@@ -29,13 +27,18 @@ export function useDevOpening(chests: readonly CourseChest[]): CourseOpening | n
   }, []);
   useEffect(() => {
     if (!params) return;
-    const bag = globalThis as unknown as { __v7OpenStart?: () => void };
-    const throwBag = globalThis as unknown as { __v7Throw?: () => void };
-    bag.__v7OpenStart = () => setStarted(true);
-    throwBag.__v7Throw = () => setThrowing(true);
+    const bag = globalThis as unknown as DevOpeningBag;
+    // The timing lane reads when the chest was started and when each phase came.
+    bag.__v7Timeline = { started: null, phases: [] };
+    bag.__v7OpenStart = () => {
+      bag.__v7Timeline!.started = performance.now();
+      setStarted(true);
+    };
+    bag.__v7Throw = () => setThrowing(true);
     return () => {
       delete bag.__v7OpenStart;
-      delete throwBag.__v7Throw;
+      delete bag.__v7Throw;
+      delete bag.__v7Timeline;
     };
   }, [params]);
   const ready = chests.find((chest) => chest.state === "ready" && chest.owner.kind === "lesson");
@@ -58,6 +61,20 @@ export function useDevOpening(chests: readonly CourseChest[]): CourseOpening | n
     guard,
     throwing: { started: throwing },
     onTap: () => setStarted(true),
+    onPhase: (phase) =>
+      (globalThis as unknown as DevOpeningBag).__v7Timeline?.phases.push({
+        phase,
+        at: performance.now(),
+      }),
+  };
+}
+
+interface DevOpeningBag {
+  __v7OpenStart?: () => void;
+  __v7Throw?: () => void;
+  __v7Timeline?: {
+    started: number | null;
+    phases: { readonly phase: string; readonly at: number }[];
   };
 }
 

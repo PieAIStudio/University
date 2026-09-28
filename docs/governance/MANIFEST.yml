@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-27T15:03:25.234Z
+generated_at: 2026-09-28T02:33:21.176Z
 generator_version: doc-gov@0.14.2
 docs_count: 164
 docs:
@@ -200,13 +200,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-16
     pinned: false
-  - id: PLAN-V7-02-CHEST-OPENING
-    path: docs/plans/active/02-v7-chest-opening-and-star-throw.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-27
-    pinned: false
   - id: PLAN-V7-03-SPLASH-AND-FIRST-MEETING
     path: docs/plans/active/03-v7-splash-and-first-meeting.md
     type: plan
@@ -304,6 +297,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-27
+    pinned: false
+  - id: PLAN-V7-02-CHEST-OPENING
+    path: docs/plans/completed/02-v7-chest-opening-and-star-throw.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-28
     pinned: false
   - id: PLAN-AI-PRODUCT-PLAY
     path: docs/plans/completed/ai-product-play.md

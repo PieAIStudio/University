@@ -33,6 +33,8 @@ import {
  */
 
 export type ChestTier = "wood" | "rare" | "epic" | "legendary";
+/** Least to most rare. */
+export const CHEST_TIERS: readonly ChestTier[] = ["wood", "rare", "epic", "legendary"];
 /** closed: nothing to take yet. ready: the lesson you can take now. open: taken. */
 export type ChestState = "closed" | "ready" | "open";
 
@@ -567,6 +569,35 @@ export function courseMonsters(
     });
   });
   return monsters;
+}
+
+/**
+ * Whom the knowledge star from a finished lesson's chest chases away (V7
+ * station 4): the gate's boss when the lesson finished its segment, otherwise
+ * the monster that stood on the next stone — unless that stone was already
+ * done, when there is nobody to chase.
+ */
+export function openingGuard(
+  lessons: readonly LessonPlacement[],
+  index: number,
+): {
+  readonly stop: { readonly lessonId: string } | { readonly siteId: string };
+  readonly role: MonsterRole;
+} | null {
+  const lesson = lessons[index];
+  if (!lesson) return null;
+  const gate = courseLearningSites(lessons).find(
+    (site) =>
+      site.resolved &&
+      site.kind === "checkpoint" &&
+      site.segment.unitId === lesson.unitId &&
+      site.segment.lessonIds.at(-1) === lesson.lessonId,
+  );
+  if (gate) return { stop: { siteId: gate.id }, role: "boss" };
+  const next = lessons[index + 1];
+  if (!next || next.state === "done") return null;
+  const order = monsterOrder(lesson.courseId);
+  return { stop: { lessonId: next.lessonId }, role: order[(index + 1) % order.length]! };
 }
 
 /**

@@ -88,3 +88,4 @@ export type {
 export { emblemImage, useEmblemImage } from "./emblems/emblem-images.js";
 export type { EmblemImageOptions, EmblemKind } from "./emblems/emblem-images.js";
 export { EmblemCeremony } from "./emblems/EmblemCeremony.js";
+export { usePrefersReducedMotion } from "./reduced-motion.js";

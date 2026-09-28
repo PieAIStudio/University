@@ -46,6 +46,7 @@ export function ChestOpening({
   tier,
   from = tier,
   started,
+  skipped = false,
   slow = false,
   onPhase,
   onTap,
@@ -55,6 +56,8 @@ export function ChestOpening({
   readonly tier: ChestTier;
   readonly from?: ChestTier;
   readonly started: boolean;
+  /** The learner tapped again: go straight to the open, settled chest (V7: a tap jumps to the rewards). */
+  readonly skipped?: boolean;
   readonly slow?: boolean;
   readonly onPhase?: (phase: OpeningPhase) => void;
   readonly onTap?: () => void;
@@ -162,6 +165,7 @@ export function ChestOpening({
 
   const fx = OPENING_FX[tier];
   const burstAt = lead + (timeline.find((event) => event.kind === "burst")?.at ?? 0);
+  const end = lead + (timeline.at(-1)?.at ?? 0);
   useFrame(({ camera }, delta) => {
     const pair = heroes;
     const group = holder.current;
@@ -184,6 +188,12 @@ export function ChestOpening({
       return;
     }
     state.t += dt;
+    if (skipped && state.t < end) {
+      // Nothing left to spray: the waves not yet fired are dropped, not bunched.
+      state.t = end;
+      state.fired = timeline.length;
+      setPhase("settled");
+    }
     const t = state.t;
     // Fire every timeline event that has come due.
     while (state.fired < timeline.length && lead + timeline[state.fired]!.at <= t) {
@@ -307,6 +317,8 @@ export interface CourseOpening {
   readonly from: ChestTier;
   /** The learner has tapped the chest. */
   readonly started: boolean;
+  /** The learner tapped again while it played: jump to the settled chest. */
+  readonly skipped?: boolean;
   /** The camera settles beside the avatar and the chest; false sends it home. */
   readonly closeUp: boolean;
   /**

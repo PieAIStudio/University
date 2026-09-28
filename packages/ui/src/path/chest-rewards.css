@@ -1,0 +1,85 @@
+/*
+  The chest's words (V7 station 4): one card low in the middle of the map,
+  over the island the chest is opening on, never a page of its own. The scene
+  keeps the spectacle; this keeps everything a learner reads.
+*/
+.chest-rewards {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--game-ui-safe-bottom, 0px) + 1.5rem);
+  z-index: 30;
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  width: min(22rem, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 1.1rem;
+  background: var(--game-ui-surface-raised);
+  color: var(--game-ui-text);
+  box-shadow: var(--game-ui-shadow-panel);
+  text-align: center;
+}
+.chest-rewards button {
+  min-height: 44px;
+}
+.chest-rewards__title {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: var(--game-ui-weight-strong);
+  font-size: var(--game-ui-font-md);
+}
+.chest-rewards__first {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--game-ui-accent);
+  color: var(--game-ui-accent-contrast);
+  font-size: var(--game-ui-font-sm);
+}
+.chest-rewards__list {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chest-rewards__line {
+  font-size: var(--game-ui-font-md);
+  animation: chest-rewards-rise var(--game-ui-motion-base) var(--game-ui-ease-pop) both;
+}
+/* The badge is the largest moment, and it comes last. */
+.chest-rewards__line--badge {
+  font-size: var(--game-ui-font-lg);
+  font-weight: var(--game-ui-weight-strong);
+  color: var(--game-ui-accent-ink);
+}
+.chest-rewards__guard {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm);
+}
+@keyframes chest-rewards-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chest-rewards__line {
+    animation: none;
+  }
+  .chest-rewards__list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.3rem 0.8rem;
+  }
+}

@@ -101,6 +101,7 @@ import { devWeeklyBoss, devWispLessons, useDevOpening } from "./course/dev-openi
 import { WispField, type WispSpot } from "./course/WispField.js";
 import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
 import {
+  BOSS_FOOTPRINT_RADIUS,
   chestAndMonsterFootprints,
   courseChests,
   courseMonsters,
@@ -1542,15 +1543,23 @@ export function CourseScene({
     return boss ? [...standing, boss] : standing;
   }, [monsterLessons, allSites, weekly?.week]);
   const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
-  // The close-up keeps its eye clear of what stands, gates included.
+  // The close-up keeps its eye clear of what stands, gates and bosses included:
+  // a crowned boss twice the learner's height fills the frame from in front.
   const closeUpObstacles = useMemo(
     () => [
       ...standing,
       ...allSites
         .filter((site) => site.resolved && site.kind === "checkpoint")
         .map((site) => ({ x: site.object.x, z: site.object.z, r: LEARNING_GATE_HALF_SPAN })),
+      ...monsters
+        .filter((monster) => monster.boss)
+        .map((monster) => ({
+          x: monster.position.x,
+          z: monster.position.z,
+          r: BOSS_FOOTPRINT_RADIUS * (monster.size ?? 1) * 1.6,
+        })),
     ],
-    [standing, allSites],
+    [standing, allSites, monsters],
   );
   const chestFootprints = useMemo(
     () => chestAndMonsterFootprints(lessons, allSites),
@@ -1736,6 +1745,7 @@ export function CourseScene({
           tier={staged.tier}
           from={staged.from}
           started={staged.started}
+          skipped={staged.skipped ?? false}
           onPhase={staged.onPhase}
           onTap={staged.onTap}
         />

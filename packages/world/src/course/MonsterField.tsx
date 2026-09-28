@@ -435,10 +435,34 @@ function LiveMonster({
   }, [crown, rig]);
 
   const reducedMotion = usePrefersReducedMotion();
-  const crownRef = useRef<THREE.Mesh>(null);
   const bodyRef = useRef<THREE.Group>(null);
-  const world = useMemo(() => new THREE.Vector3(), []);
-  const headRest = useRef<THREE.Vector3 | null>(null);
+  /*
+    The crown rides the head bone as its child, set on the baked head top and
+    then handed to the bone, so the scene graph carries it through every idle
+    bob, turn, spin and flee. It used to be placed each frame from the head's
+    position converted into the body's frame, and under the close-up camera
+    that conversion read a stale matrix and sent the crown off by the monster's
+    own position. Keyed on the shared geometry and material, not the `crown`
+    prop, which is a new object every render: one crown per rig.
+  */
+  const crownGeometry = crown?.geometry ?? null;
+  const crownMaterial = crown?.material ?? null;
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (!crownGeometry || !crownMaterial || !rig || !head || !body) return;
+    const mesh = new THREE.Mesh(crownGeometry, crownMaterial);
+    mesh.name = "course-monster-live-crown";
+    mesh.castShadow = true;
+    mesh.raycast = () => {};
+    mesh.position.set(baked.top.x, baked.top.y - 0.04, baked.top.z);
+    mesh.scale.setScalar(CROWN_SIZE);
+    body.add(mesh);
+    body.updateWorldMatrix(true, true);
+    head.attach(mesh);
+    return () => {
+      mesh.removeFromParent();
+    };
+  }, [crownGeometry, crownMaterial, rig, head, baked]);
   const clock = useRef({ elapsed: 0, next: FIDGET_GAP[0] + hash(`${monster.id}:first`) * 4 });
   const wasAlert = useRef(alert);
   useEffect(() => {
@@ -527,17 +551,6 @@ function LiveMonster({
         }
       }
     }
-    const mesh = crownRef.current;
-    if (!mesh || !head || !mesh.parent) return;
-    // Ride the head bone: the crown sits on the baked head top and moves by
-    // however far the head has moved since, so it bobs with the flying idle.
-    head.getWorldPosition(world);
-    mesh.parent.worldToLocal(world);
-    headRest.current ??= world.clone();
-    mesh.position
-      .set(baked.top.x, baked.top.y - 0.04, baked.top.z)
-      .add(world)
-      .sub(headRest.current);
   });
 
   const height = heightOf(monster);
@@ -557,17 +570,6 @@ function LiveMonster({
           <group matrixAutoUpdate={false} matrix={baked.normalise}>
             {rig ? <primitive object={rig.model} /> : null}
           </group>
-          {crown ? (
-            <mesh
-              ref={crownRef}
-              geometry={crown.geometry}
-              material={crown.material}
-              position={[baked.top.x, baked.top.y - 0.04, baked.top.z]}
-              scale={CROWN_SIZE}
-              castShadow
-              raycast={() => {}}
-            />
-          ) : null}
         </group>
       </group>
     </group>

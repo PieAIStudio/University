@@ -2,11 +2,11 @@
 id: PLAN-V7-02-CHEST-OPENING
 title: "V7 · 02 Chest opening and the star throw"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-27
+last_reviewed: 2026-09-28
 domain: learning-experience
 tags:
   - v7
@@ -117,3 +117,37 @@ never force-push or rewrite history; gate numbers in the commit body.
 
 Gate numbers verbatim, the captures, the measured tier lengths, and anything
 noticed but not done.
+
+## 8 Delivery receipt (2026-09-28)
+
+- Finishing a lesson now shows its island: the camera settles beside the avatar
+  and the lesson's chest (`CloseUpCamera`, side-on, turned at most 50° past tents,
+  gates and bosses), one tap opens it (`ChestOpening`, the review chest's build in
+  `hero-chest.ts`, particles pooled at ≤80 a wave), a second tap skips to the settled
+  chest, and the rewards appear one at a time as DOM (`ChestRewards` in
+  `packages/ui`, zh-CN and en): XP (doubled on the day's first chest), level, cards
+  saved for review, streak day, and badges last and largest. Every number is
+  `chestReward` in core reading the record against the baseline taken when the
+  lesson opened. All-correct-first-time upgrades the chest one tier with a flash.
+- The knowledge star: the avatar's `throw`, one star (three for a gate's boss) to
+  the next stone's monster, which reacts one of three ways and flees; Continue
+  brings the camera back and the interim results page follows until task 04's
+  wrap-up card replaces it. Each stage has a deadline so the words never wait on a
+  scene that cannot report (no WebGL, a hidden tab).
+- Reduced motion: no camera move, the chest simply open, rewards together, no star
+  (the monster is simply gone), Continue at once.
+- Measured tier lengths in the timing lane, tap to settled
+  (`e2e/chest-timing.spec.ts`): wood 2.50 s, blue 3.50, purple 4.51, gold 6.00.
+- Browser specs: `e2e/chest-opening.spec.ts` (no results page first, one tap opens,
+  the XP line equals the record's gain, the star is thrown and the page follows; the
+  same under reduced motion). `waitForSettlementProgress` now passes the chest
+  (`e2e/harness/chest.ts`).
+- Fixed on the way: the live monsters' skeletons are disposed with them (a bone-
+  texture leak failed two e2e specs on the first push), and a live boss's crown now
+  rides its head bone instead of a per-frame conversion that sent it into the sky
+  under the close-up camera.
+- ADR-0008 V7-02; captures (not committed) of closed, opening, rewards, throw and
+  done on desktop and phone.
+- Not done here: the phone's floating feedback button overlaps the card's corner;
+  the wrap-up card (task 04); badge emblems in the reward line (task 05 renders them
+  as text until its wiring).

@@ -1,4 +1,4 @@
-import type { ChestTier } from "./chests-and-monsters.js";
+import { CHEST_TIERS, type ChestTier } from "./chests-and-monsters.js";
 
 /**
  * How big each chest's celebration is (V7 station 4, decision J2 as the Owner
@@ -125,6 +125,5 @@ export function openingLength(tier: ChestTier): number {
  */
 export function openedTier(tier: ChestTier, allFirstTry: boolean): ChestTier {
   if (!allFirstTry) return tier;
-  const order: readonly ChestTier[] = ["wood", "rare", "epic", "legendary"];
-  return order[Math.min(order.length - 1, order.indexOf(tier) + 1)]!;
+  return CHEST_TIERS[Math.min(CHEST_TIERS.length - 1, CHEST_TIERS.indexOf(tier) + 1)]!;
 }

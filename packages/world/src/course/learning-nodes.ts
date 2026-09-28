@@ -4,7 +4,15 @@ import { SPRITE_WINDOW } from "../labels/path-overlay.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 import { courseLearningSites, learningSiteLocked } from "./learning-sites.js";
 
-export { monsterAtStop, type MonsterRole } from "./chests-and-monsters.js";
+export {
+  lessonChestTier,
+  monsterAtStop,
+  openingGuard,
+  type ChestTier,
+  type MonsterRole,
+} from "./chests-and-monsters.js";
+export { UPGRADE_LEAD, type CourseOpening, type OpeningPhase } from "./ChestOpening.js";
+export { openedTier, openingLength } from "./chest-opening.js";
 
 const symbols = { personal: "✦", challenge: "⚡", checkpoint: "◇" } as const;
 /**

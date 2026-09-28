@@ -13,6 +13,7 @@ import {
   courseWeeklyBoss,
   lessonChestTier,
   monsterOrder,
+  openingGuard,
 } from "./chests-and-monsters.js";
 import { COURSES, placements } from "./course-placements.fixture.js";
 import {
@@ -229,6 +230,41 @@ describe("chests and monsters", () => {
       });
     });
   }
+
+  it("sends a finished lesson's star at the next stone's monster, or at the gate's boss", () => {
+    for (const [studyId, courseId, units] of COURSES) {
+      const lessons = withProgress(placements(studyId, courseId, units), 1);
+      const sites = courseLearningSites(lessons);
+      const before = withProgress(lessons, 0);
+      // Lesson 1 just finished: the monster that stood on lesson 2 is the one chased.
+      const standing = courseMonsters(before, sites).find(
+        (monster) =>
+          monster.stop.kind === "lesson" && monster.stop.lessonId === lessons[1]!.lessonId,
+      );
+      const gateAfterFirst = sites.find(
+        (site) =>
+          site.kind === "checkpoint" &&
+          site.resolved &&
+          site.segment.lessonIds.at(-1) === lessons[0]!.lessonId,
+      );
+      const guard = openingGuard(lessons, 0);
+      if (gateAfterFirst)
+        expect(guard).toEqual({ stop: { siteId: gateAfterFirst.id }, role: "boss" });
+      else
+        expect(guard).toEqual({ stop: { lessonId: lessons[1]!.lessonId }, role: standing!.role });
+      // A next stone already done has nobody on it.
+      const redone = withProgress(lessons, lessons.length);
+      const last = redone.length - 1;
+      const lastGate = sites.some(
+        (site) =>
+          site.kind === "checkpoint" &&
+          site.resolved &&
+          site.segment.lessonIds.at(-1) === redone[0]!.lessonId,
+      );
+      if (!lastGate) expect(openingGuard(redone, 0)).toBeNull();
+      expect(openingGuard(redone, last + 1)).toBeNull();
+    }
+  });
 
   it("keeps each course's fear order stable and complete", () => {
     const order = monsterOrder("understanding-ai");

@@ -7,9 +7,11 @@
   "exports": {
     "./navigation/location-breadcrumbs.css": "./src/navigation/location-breadcrumbs.css",
     "./path/map-entry-action.css": "./src/path/map-entry-action.css",
+    "./path/chest-rewards.css": "./src/path/chest-rewards.css",
     "./shell/map-shell.css": "./src/shell/map-shell.css",
     "./navigation/LocationBreadcrumbs.js": "./src/navigation/LocationBreadcrumbs.tsx",
     "./path/MapEntryAction.js": "./src/path/MapEntryAction.tsx",
+    "./path/ChestRewards.js": "./src/path/ChestRewards.tsx",
     "./play-catalog/three-games.js": "./src/play-catalog/three-games.ts",
     "./play-catalog/registry.js": "./src/play-catalog/registry.ts",
     "./game-frame/index.js": "./src/game-frame/index.ts",

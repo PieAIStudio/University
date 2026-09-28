@@ -95,7 +95,9 @@ export function useCourseProgress({
   }, [todayNode, courseProgressForNode]);
 
   const lessons: readonly LessonPlacement[] = useMemo(() => {
-    if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
+    // Settled too: the finished lesson's chest opens on this island (V7).
+    if (!course || (view.kind !== "course" && view.kind !== "lesson" && view.kind !== "settled"))
+      return [];
     // `worldCourse`, not the course itself: the scene needs ids, titles and how
     // long each lesson is, and has no business holding the prose.
     return placeCourse(view.studyId, worldCourse(course), source);
