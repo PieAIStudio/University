@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>互动组件执行规格</title>
+<style>
+:root{--bg:#f6f2ea;--paper:#fffdf8;--ink:#26302e;--ink2:#4a5654;--ink3:#7b8583;--line:#e2dbce;--soft:#f1ebe0;--green:#2f8a6b;--green-bg:#e2f2ea;--orange:#c0602f;--orange-bg:#fbeadf;--purple:#7a4fb5;--purple-bg:#f0e8fa;--blue:#2b63c8;--red:#b93a3a;--red-bg:#fbe4e1;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--font:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#191b1d;--paper:#222629;--ink:#ecebe6;--ink2:#c9ccc7;--ink3:#9aa19e;--line:#3a3f42;--soft:#2b3033;--green:#6cc8a2;--green-bg:#1f3a30;--orange:#f0a070;--orange-bg:#40291c;--purple:#c4a4f0;--purple-bg:#33294a;--blue:#8ab0ff;--red:#f08b85;--red-bg:#432422}}
+:root[data-theme="dark"]{--bg:#191b1d;--paper:#222629;--ink:#ecebe6;--ink2:#c9ccc7;--ink3:#9aa19e;--line:#3a3f42;--soft:#2b3033;--green:#6cc8a2;--green-bg:#1f3a30;--orange:#f0a070;--orange-bg:#40291c;--purple:#c4a4f0;--purple-bg:#33294a;--blue:#8ab0ff;--red:#f08b85;--red-bg:#432422}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15.5px;line-height:1.7}
+a{color:var(--blue)}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 60px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{position:static!important;max-height:none!important}}
+nav.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;font-size:14px}
+nav.toc ol{margin:0;padding-left:18px;display:grid;gap:3px}
+nav.toc a{color:var(--ink2);text-decoration:none}nav.toc a:hover{color:var(--blue)}
+header.top{grid-column:1/-1;display:grid;gap:6px}
+header.top h1{margin:0;font-size:26px;line-height:1.3}
+.meta{font-size:14px;color:var(--ink3)}
+.nav2{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+main{display:grid;gap:26px;min-width:0}
+section{display:grid;gap:10px;min-width:0}
+h2{margin:8px 0 0;font-size:21px;border-bottom:2px solid var(--line);padding-bottom:4px}
+h3{margin:6px 0 0;font-size:17px}
+p,ul,ol{margin:0}
+ul,ol{padding-left:22px;display:grid;gap:3px}
+code{font-family:var(--mono);font-size:.88em;background:var(--soft);border-radius:4px;padding:0 4px;overflow-wrap:anywhere}
+li,td{min-width:0;overflow-wrap:anywhere}
+pre{max-width:100%;font-family:var(--mono);font-size:12.8px;line-height:1.6;background:#1f2a2e;color:#e8efe9;border-radius:12px;padding:12px 14px;overflow-x:auto;margin:0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.55}
+th,td{text-align:left;vertical-align:top;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--soft);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.note{background:var(--paper);border-left:4px solid var(--blue);border-radius:10px;padding:10px 14px}
+.warn{background:var(--red-bg);border-left:4px solid var(--red);border-radius:10px;padding:10px 14px}
+.todo{background:var(--purple-bg);border-left:4px solid var(--purple);border-radius:10px;padding:10px 14px}
+.ok{background:var(--green-bg);border-left:4px solid var(--green);border-radius:10px;padding:10px 14px}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:0 8px;line-height:1.7;white-space:nowrap}
+.pill.done{background:var(--green-bg);color:var(--green)}
+.pill.wait{background:var(--purple-bg);color:var(--purple)}
+.pill.no{background:var(--red-bg);color:var(--red)}
+.check li{list-style:"☐ "}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>互动组件与 3D 舞台 · 执行规格</h1>
+  <p class="meta">给动手的人或 AI。草案，2026-09-29。和 <a href="index.html">总览</a>（给 Owner 读的讲解）是同一套内容的两面：总览讲为什么，这里写做什么、做到什么算完。标了 <span class="pill wait">待拍板</span> 的，Owner 没选之前不要做。</p>
+  <div class="nav2"><a href="index.html">总览</a><a href="first-level.html">新第一关样机</a><a href="pro-lesson.html">专业课样机</a><a href="album.html">旧组件相册</a></div>
+</header>
+<nav class="toc" aria-label="目录"><ol>
+  <li><a href="#s-read">先读这个</a></li>
+  <li><a href="#s-scope">范围与硬约束</a></li>
+  <li><a href="#s-decisions">已定与待拍板</a></li>
+  <li><a href="#s-words">名词</a></li>
+  <li><a href="#s-lesson">一关的结构</a></li>
+  <li><a href="#s-components">互动组件契约</a></li>
+  <li><a href="#s-materials">材料</a></li>
+  <li><a href="#s-real">真实世界料</a></li>
+  <li><a href="#s-stage">3D 舞台契约</a></li>
+  <li><a href="#s-island">带回岛上与游戏组件</a></li>
+  <li><a href="#s-delete">合并与删除</a></li>
+  <li><a href="#s-writer">写课流程要改的</a></li>
+  <li><a href="#s-level1">新第一关</a></li>
+  <li><a href="#s-pro">专业课样板</a></li>
+  <li><a href="#s-accept">验收</a></li>
+  <li><a href="#s-order">先后顺序</a></li>
+  <li><a href="#s-lab">这些样机怎么改</a></li>
+  <li><a href="#s-sources">出处</a></li>
+  <li><a href="#s-open">风险与未决</a></li>
+</ol></nav>
+<main>
+
+<section id="s-read"><h2>0. 先读这个</h2>
+  <ol>
+    <li>读项目路由 <code>AGENTS.md</code> 和 <code>docs/policy/best-practice-for-this-project.md</code>。本规格不覆盖它们；冲突时以它们为准，并把冲突报给 Owner。</li>
+    <li>读 <a href="index.html">总览</a> 的「你已经拍板的」和「需要你拍板的」两节，确认 Owner 已经选了什么。选择会以一行 <code>拍板：1A A1 B1 …</code> 的形式发回来。</li>
+    <li>玩一遍 <a href="first-level.html">新第一关样机</a> 和 <a href="pro-lesson.html">专业课样机</a>。样机里每一句课文，就是要落进课程的课文。</li>
+    <li>本文件夹是<b>设计稿</b>。按项目规矩「先设计后开发」，Owner 批准后，要把定下来的部分写进 <code>docs/reference/player-journey/</code> 的下一版（或给 v7 写一份修订），再开始写产品代码。</li>
+  </ol>
+  <div class="warn"><b>现在不要动产品。</b>Owner 2026-09-28：Codex 正在优化 App 的方方面面，这期间不改 <code>apps/</code>、<code>packages/</code> 和课程内容。先后顺序的第 1 步就是「等」。</div>
+</section>
+
+<section id="s-scope"><h2>1. 范围与硬约束</h2>
+  <p><b>范围：</b>课里的互动组件收敛；一关的新结构（真实世界三处、3D 舞台、3D 小回合、带回岛上）；专业课用材料扩展；删除老课和退役组件；写课流程跟着改；岛上先加两个游戏组件。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>硬约束</th><th>出处</th><th>对本规格意味着</th></tr></thead>
+    <tbody>
+      <tr><td>能读的字是 DOM，不画进 canvas</td><td>AGENTS.md「Readable text is DOM」；Web3D 基线第 7 条（组合级共享规则）</td><td>题目、回答、选项、代码、运行记录全部是 DOM。3D 里只允许很短的标签（例如「答得出」），而且也是浮在 canvas 上的 DOM。</td></tr>
+      <tr><td>一份实现</td><td>AGENTS.md University 规则 1</td><td>每种互动组件只有一个引擎、一个渲染；两种模式、三种外壳共用。样机 <code>lab/</code> 是参考，不许拷进产品。</td></tr>
+      <tr><td>渲染在 <code>packages/world</code>，<code>packages/ui</code> 零 three</td><td>AGENTS.md；SPEC-0001、SPEC-0003</td><td>课文阅读器（ui）只发事件、留一个舞台插槽；舞台（world）在 app 层接上。见 §8。</td></tr>
+      <tr><td>学习者界面两种模式一样</td><td>AGENTS.md；player-journey v5</td><td>不许写 <code>AUTHORING ? … : null</code>。3D 画不出时换静态图，是能力降级，不是模式分叉。</td></tr>
+      <tr><td>打分分三档</td><td>AGENTS.md；<code>ai-in-the-loop.md</code></td><td>「发出去」优先：录好的运行 → 固定规则 → 小模型 → 计费的大模型。自己做的检查也先走固定规则。</td></tr>
+      <tr><td>课只有一个生产者</td><td>AGENTS.md；ADR-0002</td><td>新第一关的课文由 <code>apps/local</code> 的写课流程落地，不在 app 里写死。</td></tr>
+      <tr><td>2D 界面来自 SwimmerUIKit，模型调用走 SwimmerAIProviderKit</td><td><code>brand-kit-first.md</code></td><td>按钮、卡片、开关用 UIKit 的；缺什么先改 kit 发版。</td></tr>
+      <tr><td>3D 技术和配色</td><td>ADR-0008、ADR-0009；<code>web3d-capability-alignment.md</code>；<code>donors.md</code></td><td>舞台用 <code>packages/world/src/game-kit</code> 那一套积木（庭院拦截就在那里）。先读这几份再动 3D。</td></tr>
+      <tr><td>上线条件</td><td>Owner 以前定的</td><td>第 1–3 关做成样板、写课流程能出第 3 版、所有互动组件都评过，才部署到生产。</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s-decisions"><h2>2. 已定与待拍板</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>编号</th><th>事</th><th>状态</th><th>推荐</th></tr></thead>
+    <tbody>
+      <tr><td>—</td><td>课以互动组件为主；第一关当样板 → 第二关 → 其余</td><td><span class="pill done">已定 09-28</span></td><td></td></tr>
+      <tr><td>—</td><td>3D 必须有；一个 3D 场面至少 3–5 题；课里不计时</td><td><span class="pill done">已定 09-28</span></td><td></td></tr>
+      <tr><td>—</td><td>删 v1、v2 老课和 v3 第一关现内容；长课拆 3–5 关</td><td><span class="pill done">已定 09-28</span></td><td></td></tr>
+      <tr><td>—</td><td>退役组件任何一关不许引用，只留截图</td><td><span class="pill done">已定 09-28</span></td><td></td></tr>
+      <tr><td>—</td><td>叫「互动组件」；每关连着真实世界；现在不改产品</td><td><span class="pill done">已定 09-28</span></td><td></td></tr>
+      <tr><td>—</td><td>猜的是怎么用，不猜 AI 会怎么说</td><td><span class="pill done">已定 09-20</span></td><td></td></tr>
+      <tr><td>1</td><td>第一关开场那件真事</td><td><span class="pill wait">待拍板</span></td><td>1A Be My Eyes</td></tr>
+      <tr><td>A</td><td>3D 用法</td><td><span class="pill wait">待拍板</span></td><td>A1 一关一舞台 + 平面按钮 + 小回合 + 带回岛上</td></tr>
+      <tr><td>B</td><td>点一句、点图合不合</td><td><span class="pill wait">待拍板</span></td><td>B1 合成「点一处」，8 种</td></tr>
+      <tr><td>C</td><td>真实世界放几处</td><td><span class="pill wait">待拍板</span></td><td>C1 三处</td></tr>
+      <tr><td>D</td><td>写课规矩什么时候改</td><td><span class="pill wait">待拍板</span></td><td>D1 第一关定稿后就改</td></tr>
+      <tr><td>E</td><td>新第一关课文</td><td><span class="pill wait">待拍板</span></td><td>E1 照样机当样板</td></tr>
+      <tr><td>F</td><td>专业课样板两关</td><td><span class="pill wait">待拍板</span></td><td>F1 await + 存储</td></tr>
+      <tr><td>G</td><td>删除时机</td><td><span class="pill wait">待拍板</span></td><td>G1 等 Codex 做完，一次删</td></tr>
+      <tr><td>H</td><td>小回合放错</td><td><span class="pill wait">待拍板</span></td><td>H1 改到对才过</td></tr>
+      <tr><td>I</td><td>岛上先加的两个游戏</td><td><span class="pill wait">待拍板</span></td><td>I1 连连看 + 贪吃蛇</td></tr>
+      <tr><td>J</td><td>换个思路先试哪个</td><td><span class="pill wait">待拍板</span></td><td>J1 今天就用一次</td></tr>
+    </tbody>
+  </table></div>
+  <p>下文按推荐项写。Owner 选了别的，改对应小节；每处都注了它跟哪一件走。</p>
+</section>
+
+<section id="s-words"><h2>3. 名词</h2>
+  <div class="tbl"><table><tbody>
+    <tr><th>关</th><td>一次学习单元（以前叫「节」或「课」）。8–12 屏，8–12 分钟。</td></tr>
+    <tr><th>互动组件</th><td>学习者的手在做的动作。课里只有 9 种（B1 时 8 种）。不再叫「手势」「玩法」。</td></tr>
+    <tr><th>材料</th><td>动作作用的对象：文字、照片、代码、运行记录、开关、代码小镇。可以加。</td></tr>
+    <tr><th>舞台</th><td>屏幕上方的 3D 庭院，一关一个，开场加载。</td></tr>
+    <tr><th>小回合</th><td>同一种判断 3–6 道，连在一起做，舞台里有看得见的结果。一关最多一个。</td></tr>
+    <tr><th>游戏组件</th><td>岛上计时、计分的游戏。不在课里，不算在互动组件里。题目从学过的关里取。</td></tr>
+    <tr><th>真实世界料</th><td>放在一关里的真事、真数字、研究、新闻、真项目代码、网站真在用的写法。每条有出处和复查日期。</td></tr>
+    <tr><th>带回岛上</th><td>学完后出现在岛上的一样东西（第一关是一张明信片和一把椅子），加宝箱里的复习卡。</td></tr>
+  </tbody></table></div>
+</section>
+
+<section id="s-lesson"><h2>4. 一关的结构</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>段</th><th>步数</th><th>规矩</th><th>舞台</th><th>真实世界</th></tr></thead>
+    <tbody>
+      <tr><td>开场</td><td>1 屏</td><td>标题一句；真事 1–3 句 + 出处；一句交还给学习者；练习材料说明是练习</td><td>整座庭院第一次出现，此时加载</td><td>第 1 处：开门</td></tr>
+      <tr><td>猜</td><td>1–4</td><td>猜怎么用，不猜 AI 措辞；无对错</td><td>小兔子想（头上「？」）</td><td>—</td></tr>
+      <tr><td>跑</td><td>1–4</td><td>恰好一次「发出去」</td><td>纸飞机 / 小火车开到那一行</td><td>第 2 处：等的时候（只在这一次）</td></tr>
+      <tr><td>看</td><td>1–4</td><td>小回合通常放这里</td><td>小回合：篮子、水管……</td><td>—</td></tr>
+      <tr><td>改</td><td>1–4</td><td>恰好一次「发出去」</td><td>小火车发车、拍照、开关</td><td>—</td></tr>
+      <tr><td>做</td><td>1–4</td><td>第一步是「自己做」；可跟一个自查「选一个」</td><td>工作台，作品上架</td><td>—</td></tr>
+      <tr><td>学完</td><td>1 屏</td><td>一句带走的话；你知道吗；开宝箱（复习卡）；今天就用一次（J1）</td><td>彩纸，岛上多一样东西</td><td>第 3 处：你知道吗</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>一步：标题一句，说明最多两句；老师的话在动作之后，一两句。依赖 AI 实时结果的步骤，老师的话只能说「看看它有没有……」，不能断言 AI 写了什么（现行教学合同）。</li>
+    <li>样机里的 AI 回答全部标「示例」；产品里「实时结果」「作者写的示例」「录好的回放」三种东西不能混称（教学合同 §5）。</li>
+    <li>长课拆成 3–5 关：每关一个要学的点、一个自己的真实世界料、一样带回岛上的东西。</li>
+  </ul>
+</section>
+
+<section id="s-components"><h2>5. 互动组件契约</h2>
+  <p>「现在的引擎」一列是产品里已有的 kind。有两套：第 3 版课的<b>步骤</b>（<code>packages/core/src/domain/schemas.ts</code>，现有 choose、sort、match、build、find、point、send、make）和评估面板用的<b>原生活动</b>（<code>packages/core/src/learning-play/</code>，有 connect、tune 等）。收敛后只能剩一套引擎：步骤版缺的（拧一拧）直接复用原生活动的引擎接进步骤，不另写第二份。每种都有：键盘可达、读屏可读、3D 画不出时的平面样子（本来就是平面按钮，舞台只是陪衬）。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>互动组件</th><th>现在的引擎</th><th>学习者动作</th><th>通关条件</th><th>字段（新增的加 *）</th><th>舞台反应</th><th>小兔子</th><th>吸收了</th></tr></thead>
+    <tbody>
+      <tr><td>选一个</td><td><code>choose</code></td><td>2–4 个里点一个</td><td>猜：选了就过；自查：选了就过，按选项给下一步；判断题：选对</td><td>options[id,label,requestId?,after?]；after</td><td>react(ok)</td><td>主角（走过去）</td><td>—</td></tr>
+      <tr><td>分一分</td><td><code>sort</code></td><td>每张卡放进 2–3 个格子之一</td><td>H1：每张放对才过；无答案变体：放了就过</td><td>buckets；cards[id,text,bucketId,why,whyNot*]；noAnswer*</td><td>throwBall(格子, 对错)</td><td>主角（扔）</td><td>比较、取舍、留还是丢、核对结果、v2 归类</td></tr>
+      <tr><td>连一连</td><td>步骤 <code>match</code>；原生 <code>connect</code>（二者合一）</td><td>左边点一个，右边点一个</td><td>全部连对；一对一</td><td>pairs 3–4；leftIds；rightIds；hint*</td><td>react；（水管变体：放水）</td><td>陪着</td><td>三句问法配回答、连接</td></tr>
+      <tr><td>排一排</td><td><code>build</code></td><td>点积木加入 / 点已放的拿掉；「排好了」检查</td><td>序列属于 answers 之一</td><td>pieces[id,text,why?]；answers[[…]]；context</td><td>addWagon / depart(对错)</td><td>陪着</td><td>拼一句、排版、排序</td></tr>
+      <tr><td>点一处（B1）<br>或 点一句 + 点图（B2）</td><td>步骤 <code>find</code>（文字）+ <code>point</code>（照片）</td><td>在材料上点出一处</td><td>点中 targetId；无答案变体：点了就过</td><td>material*（text|image|code|town）；文字：terms；照片：regions[x,y,w,h,label]；代码：tokens[line,text,id]*；targetId；miss；after；按钮替身 twins*</td><td>snap(对错)；代码：亮出行号标签</td><td>不出场（眼睛的活）</td><td>找句子、改一句、看图找区域</td></tr>
+      <tr><td>拧一拧</td><td>原生 <code>tune</code>（步骤版还没有，要接进来）</td><td>拖一个数或拨一个开关，再「跑一下」</td><td>达到目标条件；开关变体：两种状态都跑过</td><td>controls[slider|switch]；outcome（固定规则函数）；target</td><td>水位 / 小火车停或不停</td><td>陪着</td><td>调参、实时旋钮（研究小样）</td></tr>
+      <tr><td>发出去</td><td><code>send</code></td><td>把请求真的交出去，或让代码真的跑一遍</td><td>拿到结果</td><td>request；debriefs[requestId,text]；tier*（replay|rule|small|large）；runLog*；waitFact*</td><td>fly(去, 回) / play(运行记录)</td><td>主角（扔飞机）</td><td>—</td></tr>
+      <tr><td>自己做</td><td><code>make</code></td><td>换材料，自己写、发、改、记</td><td>通过检查清单（先固定规则）</td><td>scenario；goal；materialIds；checklist；artifactLabel；islandItem*</td><td>makeItem（作品上架）</td><td>陪着</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">注意一个老坑：字段和 kind 要同时进线上的数据校验（zod 那一层），只加渲染和引擎不够。以前 <code>sort</code> 有引擎、有渲染、有闸门，却不在校验枚举里，三节写好的课被当成了待办。</div>
+</section>
+
+<section id="s-materials"><h2>6. 材料</h2>
+  <pre>// 文字：AI 的回答、说明。实时结果按句切分，点一处的目标用 terms 描述，不写死句子。
+{ "kind": "text", "id": "…", "label": "…", "text": "…" }
+
+// 照片：沿用现有 assets（带授权、署名、alt）。
+{ "kind": "image", "id": "…", "assetId": "everyday-coffee" }
+
+// 代码：真项目、钉死提交、行号能对上。tokens 是可以点的词。
+{ "kind": "code", "id": "share-capacitor",
+  "repo": "turing-pact", "commit": "658b36ef0f55",
+  "path": "src/platform/capacitor/share.ts", "lines": [4, 11],
+  "tokens": [ { "line": 5, "text": "await", "id": "await" }, { "line": 4, "text": "async", "id": "async" } ],
+  "highlight": [5] }
+
+// 运行记录：照代码顺序写的回放，必须标「示例」或「录制于 …」，不冒充实时。
+{ "kind": "runLog", "id": "…", "label": "示例：照代码顺序写的",
+  "variants": { "with": [ { "t": "10:02:03.141", "text": "停在第 5 行，等……", "tone": "wait" } ],
+                "without": [ … ] } }
+
+// 开关：改一处，再跑一遍。每个状态对应一份运行记录。
+{ "kind": "switch", "id": "await-on", "label": "第 5 行写着 await", "states": { "on": "with", "off": "without" } }
+
+// 代码小镇：模块=房子，数据=小车，路线来自真调用路径。
+{ "kind": "town", "id": "storage",
+  "houses": [ "业务代码", "存储总台", "手机里的抽屉", "浏览器里的抽屉" ],
+  "routes": { "phone": ["业务代码","存储总台","手机里的抽屉"], "web": ["业务代码","存储总台","浏览器里的抽屉"] },
+  "code": "storage-switch" }</pre>
+  <p>代码小镇的画法固定：模块=房子；请求/数据=小车；等待=红灯；检查=关卡；存储=仓库/抽屉；出错=冒烟/红旗。真代码永远在舞台旁边（DOM）。</p>
+</section>
+
+<section id="s-real"><h2>7. 真实世界料</h2>
+  <pre>{ "id": "bemyeyes-2023",
+  "kind": "usage",            // usage | news | research | fact | repo-code | web-code
+  "placement": "door",        // door | wait | after
+  "text": "2023 年，帮盲人的手机应用 Be My Eyes 加了一个新本事……",
+  "relatesTo": "问一处",       // 必填：它扣住这一关的哪句话
+  "source": { "url": "https://www.bemyeyes.com/news/…", "publisher": "Be My Eyes",
+              "publishedOn": "2023-09-25", "accessedOn": "2026-09-28",
+              "locator": "第一段；Over the past few months…",
+              "supports": "超过 19,000 位盲人和低视力测试者……",
+              "limitation": "公司自己的公告，不是独立评测" },
+  "reviewBy": "2027-03-28" }</pre>
+  <ul>
+    <li><b>一关最多三条</b>：door、wait、after 各一条。wait 只挂在「跑」那一次发出去上（等 AI 或回放的空当），第二次发出去不挂。</li>
+    <li><b>必须 relatesTo 这一关的带走的话。</b>无关的趣闻不放（研究：跑题的有趣内容让学得更差）。</li>
+    <li><b>一手出处</b>：公司/机构原文、论文页面、官方文档。转述的二手文章不算。查不到就不放。</li>
+    <li><b>公司自己的数字</b>要在 limitation 里写「这是它自己的数字」，正文用「某某说：」开头。</li>
+    <li><b>复查日期</b>：数字、新闻 6 个月；研究 12 个月；代码钉提交号，不过期，但项目升级后要重新对行号。到期由写课流程重查，查不到就换掉。</li>
+    <li><b>不考它</b>：真实世界料里的人名、年份、机构不做成题（教学合同 F2「案例绑架」）。</li>
+    <li>数据落点：现有课的 <code>intro.connection</code> 和 <code>sources</code>/<code>evidence</code> 已经有出处结构，扩成 <code>realWorld[]</code>，每条引用一个 source。线上校验同步加。</li>
+  </ul>
+</section>
+
+<section id="s-stage"><h2>8. 3D 舞台契约（A1）</h2>
+  <ul>
+    <li><b>一关一个舞台</b>，开场屏加载；之后每屏只 <code>go(step)</code> 转镜头、摆道具，不重新加载。同一门课的几关可以共用一个舞台，换道具。</li>
+    <li><b>接口</b>（样机里的形状，产品可改名，语义不变）：<code>go(step)</code>、<code>react("ok"|"no")</code>、各互动组件的动作（<code>throwBall</code>、<code>addWagon</code>、<code>depart</code>、<code>fly</code>、<code>snap</code>、<code>makeItem</code>、<code>celebrate</code>、<code>play</code>、<code>route</code>）。动作都有完成回调，但<b>课的流程不等动画</b>：学习者的点击立即生效，动画只是跟上。</li>
+    <li><b>分层</b>：课文阅读器（<code>packages/ui</code>）发出「这一步是什么、学习者刚做了什么、对不对」的事件，并留一个舞台插槽；舞台实现在 <code>packages/world</code>；两者在 <code>apps/university</code> 接上。ui 包保持零 three。</li>
+    <li><b>字</b>：舞台里只允许 1–6 个字的标签（「答得出」「AI」），而且是 DOM。题目、回答、代码都在舞台下面。</li>
+    <li><b>画不出 3D</b>：没有 WebGL、低端机、用户关了 3D、系统「减少动态」：舞台换成该步的静态图（或只留彩色背景），课照常。减少动态时动画直接跳到结束。</li>
+    <li><b>积木</b>：用 <code>packages/world/src/game-kit</code> 庭院拦截那一套（颜色、材质、小兔子），不另起画风。样机 <code>lab/src/kit.js</code> 是照它抄的参考。</li>
+    <li><b>小兔子角色</b>：身体的活（走、扔、送）当主角；手指的活（排、接、拧）陪着；眼睛的活（读字、看照片、看代码）不出场或退到边上。</li>
+    <li><b>预算</b>（待测，先占位）：舞台首次加载在中端手机 ≤ <i>待测</i> 秒；稳定帧率 ≥ <i>待测</i>；额外下载 ≤ <i>待测</i> KB。样机整个 3D 包（含 three.js）约 0.9 MB，产品里 three 已经在，增量应远小于此。</li>
+    <li><b>闸门</b>：加载看帧时间，不看截图（项目教训）；截图只用来给人看。</li>
+  </ul>
+</section>
+
+<section id="s-island"><h2>9. 带回岛上与游戏组件</h2>
+  <ul>
+    <li>每关一个 <code>islandItem</code>：学完出现在岛上（第一关：明信片摆上小屋的架子，庭院多一把椅子）。接 V7 的宝箱与徽章，不另起一套奖励。</li>
+    <li>宝箱里是这一关的复习卡（沿用现有 cards）。</li>
+    <li>「今天就用一次」（J1）：学完页一句具体的生活任务；下次打开问「用了吗？」，用了给岛上贴纸。只算贴纸，不算成绩，因为无法验证。</li>
+    <li>游戏组件（I1）：连连看（题目来自学过关的「连一连」）、贪吃蛇（来自「排一排」）。计时、计分；分数不进成绩；用同一套积木。庭院拦截不变。</li>
+  </ul>
+</section>
+
+<section id="s-delete"><h2>10. 合并与删除（G1：等 Codex 做完再动）</h2>
+  <p>逐项去向见 <a href="album.html">旧组件相册</a>（67 种组件 + 6 个课程样例，每张卡写了面板编号）。代码在哪：</p>
+  <ul>
+    <li>评估面板和编号：<code>packages/ui/src/play-catalog/registry.ts</code>（分组 native、paths、blocks、arcade、three、history；3D 条目在 <code>three-games.ts</code>，课程样例在 <code>sample-paths.ts</code>）。</li>
+    <li>原生活动：引擎 <code>packages/core/src/learning-play/</code>，平面渲染 <code>packages/ui/src/learning-play/*Game.tsx</code> 和 <code>LearningActivity.tsx</code>。</li>
+    <li>第 3 版步骤：数据校验 <code>packages/core/src/domain/schemas.ts</code>，渲染 <code>packages/ui/src/learning-play/PrimmSteps.tsx</code>。</li>
+    <li>3D 与街机：<code>packages/world/src/toy-play/</code>；庭院拦截和积木：<code>packages/world/src/game-kit/</code>（<code>scene/Courtyard.tsx</code>、<code>InterceptScene.tsx</code>）。</li>
+  </ul>
+  <p>汇总：</p>
+  <div class="tbl"><table>
+    <thead><tr><th>动作</th><th>对象</th></tr></thead>
+    <tbody>
+      <tr><td>留</td><td>选一个、分一分、连一连、排一排、点一句、点图（B1 合成点一处）、拧一拧、发出去、自己做</td></tr>
+      <tr><td>合并（规矩一套，样子可做成材料或格子文字）</td><td>比较、取舍、留还是丢、核对结果、v2 归类 → 分一分；三句问法配回答、连接 → 连一连；拼一句、排版 → 排一排；改一句 → 点一句；看图找区域 → 点图</td></tr>
+      <tr><td>删代码，留截图</td><td>探边界、调度、编程路线、明确要求、选材料、授权与工具、设计测试、小步修补；证据接线盒、流程调度站；云端航线、分拣工厂、句子印刷机、信息切片台；三个花园版；四个平面街机；20 个短互动研究；4 个街机研究；3 个早期实验</td></tr>
+      <tr><td>不变</td><td>庭院拦截（岛上）</td></tr>
+      <tr><td>删课</td><td>v1、v2 老课；v3 第一关现内容（按新第一关重写）</td></tr>
+      <tr><td>面板课程样例（<code>paths:*</code> 6 个）</td><td>跟着老课按新格式重做；面板里改放新格式的关</td></tr>
+    </tbody>
+  </table></div>
+  <h3>删之前必须先做的</h3>
+  <ol>
+    <li><b>换测试材料。</b>浏览器测试的 harness 按内容属性从已上架的课里找角色，导入时就会抛错；删掉被它当夹具的课，整套浏览器闸加载不起来。先给 e2e 准备好不依赖将删课程的夹具。</li>
+    <li><b>真退役靠搬目录。</b>课程里 <code>archived</code>、<code>retired</code>、<code>retained</code> 这几个字段目前没有任何代码读取，改字段不会让课消失；要么真删，要么按现有做法在 <code>recovery/</code> 和 <code>locked/</code> 之间搬。</li>
+    <li><b>列引用。</b>课程目录、复习卡、岛上游戏的题目来源、陈列面板、写课流程的 activities 表。逐个改掉后再删。验收：全仓搜不到退役组件的 kind。</li>
+    <li><b>正在学的人。</b>确认线上是否有进度指向将删的课；有则迁移或给出不报错的空状态。</li>
+    <li><b>备份。</b>删之前打一个备份包（放在仓库外的约定位置），代码历史也保留。</li>
+  </ol>
+</section>
+
+<section id="s-writer"><h2>11. 写课流程要改的</h2>
+  <p>位置：<code>apps/local/.agents/skills/write-lesson/</code>（先读该模块的 AGENTS.md）。现状：第 3 版由人按样板写，生产线只会写第 2 版。</p>
+  <ul>
+    <li><code>references/activities.md</code>：只列留下的互动组件（B1 时 8 种）和材料清单；退役的整段删掉，不留「以后可加」。</li>
+    <li><code>references/teaching-contract.md</code> §2「真实案例」：从「开头 1–3 句」改成 §7 的三处规矩（door/wait/after、relatesTo、一手出处、复查日期）。§5「材料和事实」补上 runLog、code、town 三种材料的标注规矩。（D1）</li>
+    <li>§4 步骤版：加「小回合」规则（同类 3–6 道，一关最多一个）和「学完」的四样东西。</li>
+    <li>生产线学会第 3 版：以新第一关为样板，输出 §4 的结构和 §5–§7 的字段；过一遍 checklist。</li>
+    <li>它自己写的第二关不用大改就能用，才算这一步完成。</li>
+  </ul>
+</section>
+
+<section id="s-level1"><h2>12. 新第一关（E1）</h2>
+  <p><b>课文唯一出处</b>：<code>first-level.html</code> 脚本里的常量（<code>REQ</code>、<code>ANS</code>、<code>DEBRIEF</code>、<code>FOAM_ANS</code>、<code>CARDS</code>、<code>PIECES</code>、<code>BUILD_OK</code>、<code>REGIONS</code>、<code>CAT</code>）和每屏 <code>render</code> 里的中文。下面是提纲，落课时以样机为准。<code>ANS</code>、<code>FOAM_ANS</code>、<code>CAT</code> 是<b>示例回答</b>，产品里换成实时结果，课文不得引用其中的具体说法。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>段</th><th>互动组件</th><th>标题</th><th>要点</th><th>舞台</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>开场</td><td>—</td><td>想知道照片里的一处，怎么问 AI？</td><td>Be My Eyes 真事（door）；咖啡练习照片</td><td>intro</td></tr>
+      <tr><td>2</td><td>猜</td><td>选一个</td><td>你想知道勺子在杯子哪一边。哪句最能问到？</td><td>三句问法各绑 requestId</td><td>guess</td></tr>
+      <tr><td>3</td><td>跑</td><td>发出去</td><td>把照片和你选的那句，一起发给 AI</td><td>等待时 Google 智能镜头数字（wait）；按所选 debrief</td><td>send · fly</td></tr>
+      <tr><td>4</td><td>跑</td><td>点一句</td><td>点出它说勺子的那一句</td><td>terms「勺」；没提勺子时有「它没说勺子」一项</td><td>find</td></tr>
+      <tr><td>5</td><td>看</td><td>连一连</td><td>三句问法，各得到哪个回答？</td><td>三对；after「问整张图……」</td><td>match</td></tr>
+      <tr><td>6</td><td>看</td><td>分一分（小回合）</td><td>光看照片，答得出来吗？</td><td>6 张，每张 why + whyNot；改到对</td><td>round · throwBall</td></tr>
+      <tr><td>7</td><td>改</td><td>排一排</td><td>现在想知道：杯子里有没有泡沫。拼一句，只问这一处</td><td>两块干扰项各有 why</td><td>build · addWagon/depart</td></tr>
+      <tr><td>8</td><td>改</td><td>发出去</td><td>发出去看看</td><td>不挂等待料</td><td>send · fly</td></tr>
+      <tr><td>9</td><td>改</td><td>点图</td><td>在照片上点出泡沫</td><td>四个区域 + 按钮替身</td><td>point · snap</td></tr>
+      <tr><td>10</td><td>做</td><td>自己做</td><td>换张猫照片。你想知道它哪一处？</td><td>固定规则先拦「问整张图」；备注上架</td><td>make · makeItem</td></tr>
+      <tr><td>11</td><td>做</td><td>选一个（自查）</td><td>它答的，照片里看得到吗？</td><td>三项都给下一步</td><td>make</td></tr>
+      <tr><td>12</td><td>学完</td><td>—</td><td>学完了</td><td>带走的话；看图测试研究（after）；宝箱两张复习卡；今天就用一次</td><td>done · celebrate</td></tr>
+    </tbody>
+  </table></div>
+  <p>修掉现有学完页露出的英文「Revised independent work」（作品区的一行说明，应是中文或不显示）。</p>
+  <p><b>英文版：</b>现有课的每一句都有 <code>locales.en</code>。样机只写了中文；落课时英文由写课流程按现有做法补齐，真实世界料的 supports/limitation 也要有英文。英文版里每一步仍须可判定（可判定性按语言分别检查）。</p>
+</section>
+
+<section id="s-pro"><h2>13. 专业课样板（F1）</h2>
+  <h3>「写了 await 的那一行，程序会停下来等吗？」（改写现有「等待与失败」第 1 关）</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>段</th><th>互动组件</th><th>材料</th><th>要点</th></tr></thead>
+    <tbody>
+      <tr><td>开场</td><td>—</td><td>代码 <code>src/platform/capacitor/share.ts:4-11</code></td><td>先说这段代码管手机上的「分享」按钮（door：真项目代码）</td></tr>
+      <tr><td>猜</td><td>选一个</td><td>—</td><td>立刻往下 / 停下等 / 整个 App 卡住</td></tr>
+      <tr><td>跑</td><td>发出去（跑一下，tier=replay）</td><td>运行记录（示例）</td><td>wait：MDN——Windows 弹窗一打开就兑现，Android 数据交给目标后才兑现</td></tr>
+      <tr><td>看</td><td>排一排</td><td>四件事</td><td>点 → 弹窗 → 选好 → 函数结束</td></tr>
+      <tr><td>看</td><td>点一处</td><td>代码 tokens：export / async / await / Share.share</td><td>每个词一句解释；目标 await</td></tr>
+      <tr><td>改</td><td>拧一拧（开关）</td><td>开关 + 两份运行记录；<code>src/platform/index.ts:18-24</code></td><td>拿掉 await：函数先结束，调用方以为「分享好了」</td></tr>
+      <tr><td>做</td><td>自己做</td><td>代码 <code>src/platform/storage.ts:53-57</code></td><td>点出 await，写一句它在等什么；固定规则检查</td></tr>
+      <tr><td>学完</td><td>—</td><td>TC39 已完成提案；<code>src/platform/web/share.ts:28</code> + MDN</td><td>after：async/await 2017 年进标准；网页版用浏览器给所有网站的分享功能，用户取消时以 AbortError 结束</td></tr>
+    </tbody>
+  </table></div>
+  <h3>「存一条记录，去了哪？」（对应现有「平台能力 › 存储降级」第 1 关）</h3>
+  <ul>
+    <li>材料：代码 <code>src/platform/storage.ts:92-96</code>；代码小镇（业务代码 → 存储总台 → 手机抽屉 / 浏览器抽屉）。</li>
+    <li>分一分 3 张：手机 App → 手机抽屉；网页 → 浏览器抽屉；电脑桌面版（Electron）→ 浏览器抽屉（第 92 行 <code>!isElectron</code>）。每放对一张，小车沿真路线跑一趟。</li>
+    <li>这正是现有那一关「先猜一下」的问题；新版把它从一句问话变成了三张卡加一张地图。</li>
+  </ul>
+  <p>仓库：TuringPact，checkout <code>git-658b36ef0f55</code>（<code>apps/local/studies/turing-pact/source/checkouts/</code>）。行号都在这个提交上核对过。</p>
+</section>
+
+<section id="s-accept"><h2>14. 验收</h2>
+  <h3>互动组件</h3>
+  <ul class="check">
+    <li>全仓搜不到退役组件的 kind；每种留下的互动组件只有一个引擎和一个渲染。</li>
+    <li>线上校验（zod）接受 §5 的新字段，拒绝退役 kind。</li>
+    <li>每种互动组件：键盘能完成；读屏能读出题目、选项、结果；没有 WebGL 时照样能完成。</li>
+  </ul>
+  <h3>一关</h3>
+  <ul class="check">
+    <li>结构符合 §4；跑、改各恰好一次发出去；做以自己做开头。</li>
+    <li>真实世界料 ≤ 3 条，每条有 relatesTo、一手出处、accessedOn、reviewBy；wait 只挂在跑的那次。</li>
+    <li>示例、回放、实时三种结果标注清楚，不混称。</li>
+    <li>学完：带走的话、你知道吗、宝箱复习卡、岛上多一样东西。</li>
+  </ul>
+  <h3>3D 舞台</h3>
+  <ul class="check">
+    <li>一关只加载一次；换步不重新加载。</li>
+    <li>canvas 里没有题目、回答、代码；舞台标签是 DOM。</li>
+    <li>关掉 WebGL、打开「减少动态」各从头上完一关，无报错。</li>
+    <li>中端真手机上测过加载时间和帧时间，数字填进 §8 的占位。</li>
+    <li><code>packages/ui</code> 仍然零 three（现有模块边界检查通过）。</li>
+  </ul>
+  <h3>整体</h3>
+  <ul class="check">
+    <li><code>pnpm verify</code> 通过；浏览器测试（e2e）通过；有浏览器真跑的截图。</li>
+    <li>Owner 在自己手机上玩过新第一关，认可为样板；两三位真人试过（记录他们卡在哪）。</li>
+  </ul>
+</section>
+
+<section id="s-order"><h2>15. 先后顺序</h2>
+  <ol>
+    <li><b>等</b>：Codex 这一轮合进主线、检查全绿。期间只改文档。</li>
+    <li><b>删</b>：按 §10 先挡坑，再删课和退役组件。一个任务一次提交。</li>
+    <li><b>合</b>：互动组件收成一套（§5）；加材料（§6）和真实世界料（§7）的字段与校验。</li>
+    <li><b>搭舞台</b>：按 §8 在产品里做第一关的舞台；真机测预算。</li>
+    <li><b>写第一关</b>：写课流程按 §12 落地新第一关。Owner 验收。</li>
+    <li><b>教写课流程</b>：按 §11 改规矩，让它能出第 3 版。</li>
+    <li><b>样板</b>：第 2、3 关；专业课两关（§13）。第 1–3 关成样板后才谈上线。</li>
+    <li><b>上岛</b>：连连看、贪吃蛇（§9）。</li>
+  </ol>
+  <p>每一步照项目的主线队列走：一个任务、一次提交、一次推送；推送时跑 e2e。设计变更先写进 player-journey。</p>
+</section>
+
+<section id="s-lab"><h2>16. 这些样机怎么改</h2>
+  <ul>
+    <li>三个页面都是纯静态文件，双击打开，不联网。3D 是一个经典脚本 <code>lab/toy3d.js</code>（<code>window.Toy = { mount, SCENES, TOY }</code>）；不用 ES 模块，是因为 <code>file://</code> 下浏览器不让加载模块。</li>
+    <li>源码：<code>lab/src/kit.js</code>（积木、渲染、DOM 标签、按钮替身）、<code>lab/src/scenes.js</code>（全部场景，含 <code>world-lesson1</code>、<code>world-await</code>、<code>world-town</code>）、<code>lab/src/media.js</code>（咖啡照片内联成 data URI，因为 <code>file://</code> 下图片不能当 WebGL 贴图）。</li>
+    <li>改完源码重新打包：<pre>node docs/reference/interaction-components/lab/src/build.mjs</pre>它用仓库里已装的 rolldown 和 <code>packages/world</code> 的 three（0.185.1），输出 <code>lab/toy3d.js</code>。</li>
+    <li>两个课样机共用 <code>lab/lesson.css</code> 和 <code>lab/lesson.js</code>（DOM 小工具、出处折叠、步骤机）。课文在各自页面的脚本里。</li>
+    <li>无头浏览器里测 3D：Chromium 加 <code>--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist</code>；软件渲染很慢，动画时间要放宽。</li>
+    <li>总览页 <code>index.html</code> 按 design-before-build 技能的讲解旅程格式写，改完用它的 <code>check_walkthrough.py --allow "University,组件"</code> 检查。</li>
+    <li>本文件夹只有 HTML 和图片，不进文档治理的 MANIFEST（和 player-journey v7 的做法一样）。</li>
+  </ul>
+</section>
+
+<section id="s-sources"><h2>17. 出处（2026-09-28 核对）</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>用在</th><th>出处</th><th>支持的事</th><th>局限</th></tr></thead>
+    <tbody>
+      <tr><td>第一关 door</td><td><a href="https://www.bemyeyes.com/news/announcing-be-my-ai-soon-available-for-hundreds-of-thousands-of-be-my-eyes-users">Be My Eyes，2023-09-25</a></td><td>19,000+ 盲人/低视力测试者；早餐新品、睡前关灯的用法；拍照后可追问；可找志愿者核对</td><td>厂商公告</td></tr>
+      <tr><td>第一关 wait</td><td><a href="https://blog.google/products/ads-commerce/google-lens-ai-overviews-ads-marketers">Google 博客，2024-10-03</a></td><td>Lens 每月近 200 亿次视觉搜索</td><td>Google 自报；次数不是人数</td></tr>
+      <tr><td>第一关 after</td><td><a href="https://vlmsareblind.github.io/">Vision language models are blind，ACCV 2024</a></td><td>4 个模型 7 种简单看图任务平均 58.57%</td><td>2024 年的模型</td></tr>
+      <tr><td>专业课 wait / after</td><td><a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share">MDN Navigator.share()</a>（最后修改 2026-07-16）</td><td>Windows/Android 兑现时机；取消时 AbortError；须用户动作触发</td><td>浏览器支持有限</td></tr>
+      <tr><td>专业课 after</td><td><a href="https://github.com/tc39/proposals/blob/main/finished-proposals.md">TC39 已完成提案</a></td><td>Async functions，2017</td><td>标准年份，不是浏览器支持时间</td></tr>
+      <tr><td>总览·道理</td><td>Rey 2012；Sundar &amp; Adesope 2020（Educational Psychology Review）</td><td>跑题的有趣内容降低学习</td><td>元分析，效应因任务而异</td></tr>
+      <tr><td>总览·道理</td><td>Sung &amp; Mayer 2012（Computers in Human Behavior）</td><td>装饰性图片提高喜爱度，不一定提高学习</td><td></td></tr>
+      <tr><td>总览·道理</td><td>Um, Plass, Hayward, Homer 2012（J. Educ. Psych. 104(2):485–498）</td><td>情感化设计（暖色、圆润）改善情绪与理解</td><td></td></tr>
+      <tr><td>总览·道理</td><td>Habgood &amp; Ainsworth 2011（J. Learning Sciences）</td><td>玩法即学习内容时学得更好、玩得更久</td><td>项目 ADR-0011 已引用</td></tr>
+      <tr><td>换个思路一</td><td>Chase, Chin, Oppezzo, Schwartz 2009（J. Sci. Educ. Technol. 18(4):334–352）</td><td>为教一个角色而学，更用心、学得更好；对后进学生最明显</td><td>八年级、五年级生物；场景不同</td></tr>
+      <tr><td>换个思路四</td><td><a href="https://blog.duolingo.com/world-character-visemes">多邻国官方博客</a></td><td>角色按答对答错切到不同反应；数据比发小视频少得多</td><td></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s-open"><h2>18. 风险与未决</h2>
+  <ul>
+    <li><b>手机性能没测。</b>一关一个舞台在中端安卓上是否流畅，是 A1 成立的前提。测不过就启用「换个思路四」（课里只留会动的平面小兔子）。</li>
+    <li><b>实时回答不可控。</b>点一句 / 连一连依赖 AI 实时结果，课文只能用条件句；要有「它没提到」的出口（样机第 4 屏已示范）。</li>
+    <li><b>真实世界料会过期。</b>复查日期要有人（或流程）真去查，否则规矩只是写着。</li>
+    <li><b>删课的连锁反应。</b>§10 的五条没做完不许删。</li>
+    <li><b>英文版。</b>新第一关只有中文样机；英文课文、英文真实世界料要在第 5 步一起做，不能等上线前再补。</li>
+    <li><b>和 V7 的衔接。</b>「带回岛上」接 V7 宝箱与徽章；V7 app 侧的接线还在进行，先对齐再做。</li>
+    <li><b>设计入账。</b>批准后写进 player-journey 的下一版（或 v7 修订）；本文件夹保留为设计稿。</li>
+  </ul>
+</section>
+</main>
+</div>
+</body>
+</html>

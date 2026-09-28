@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新第一关样机</title>
+<link rel="stylesheet" href="lab/toy.css">
+<link rel="stylesheet" href="lab/lesson.css">
+</head>
+<body>
+<header class="top">
+  <h1>新第一关 · 可以玩的样机<small>「想知道照片里的一处，怎么问 AI？」课文全写，3D 舞台真的会动。双击打开就能玩，不联网，不调用 AI。</small></h1>
+  <nav aria-label="同一套文档"><a href="index.html">← 总览：互动组件与 3D 舞台</a><a href="pro-lesson.html">专业课样机</a><a href="spec.html">执行规格</a><a href="album.html">旧组件相册</a></nav>
+</header>
+<main class="wrap">
+  <section class="dev" aria-label="新第一关样机">
+    <div class="dev-top"><div class="phases" id="phases" aria-label="这一关的五段"></div><span class="count" id="count"></span></div>
+    <div class="toy" id="stage" role="img" aria-label="3D 舞台：小兔子的庭院"></div>
+    <div class="card" id="card" aria-live="polite"></div>
+  </section>
+  <aside class="notes">
+    <div class="warnbar">样机里的 AI 回答都是写好的<b>示例</b>，真课里是 AI 现场回答。3D 舞台如果这台电脑画不出来，会自动换成静态图，课照样能上完。</div>
+    <div class="nbox" id="notes" aria-live="polite"></div>
+    <div class="nbox">
+      <h2>整关一览（点一下直接跳过去）</h2>
+      <ul class="jump" id="jump"></ul>
+      <p class="legend">一关 = 开场 + 猜、跑、看、改、做五段 + 学完。每段 1 到 4 步，每步只用一种互动组件。3D 舞台一关只载入一次，在开场时加载。</p>
+    </div>
+  </aside>
+</main>
+<noscript><p style="max-width:640px;margin:0 auto;padding:16px">这个样机需要打开 JavaScript 才能玩。</p></noscript>
+<script src="lab/toy3d.js"></script>
+<script src="lab/lesson.js"></script>
+<script>
+(function(){
+"use strict";
+// ───────── the world: one 3D stage for the whole lesson, or a still picture when WebGL is missing
+var stageEl = document.getElementById("stage");
+var W = null, still = null;
+function stillFor(preset){
+  if(!still){ still=document.createElement("img"); still.className="stage-img"; still.alt="舞台的静态画面"; stageEl.appendChild(still); }
+  still.src="assets/views/w-"+({match:"point",find:"point"}[preset]||preset)+".jpg";
+}
+try{
+  if(!window.Toy) throw new Error("no bundle");
+  var probe=document.createElement("canvas");
+  if(!(probe.getContext("webgl2")||probe.getContext("webgl"))) throw new Error("no webgl");
+  W = Toy.mount(stageEl, Toy.SCENES["world-lesson1"]).scene;
+}catch(e){ W=null; stageEl.innerHTML=""; stillFor("intro"); }
+function later(fn,ms){ setTimeout(function(){ fn && fn(); }, ms); }
+var world = {
+  go:function(p){ W ? W.go(p) : stillFor(p); },
+  react:function(k){ W && W.react(k); },
+  fly:function(back,done){ W ? W.fly(back,done) : later(done,1600); },
+  throwBall:function(i,ok,done){ W ? W.throwBall(i,ok,done) : later(done,500); },
+  addWagon:function(c){ W && W.addWagon(c); },
+  clearWagons:function(){ W && W.clearWagons(); },
+  depart:function(ok,done){ W ? W.depart(ok,done) : later(done,600); },
+  snap:function(ok){ W && W.snap(ok); },
+  makeItem:function(done){ W ? W.makeItem(done) : later(done,800); },
+  celebrate:function(){ W && W.celebrate(); }
+};
+
+var h=Lesson.h, src=Lesson.src, app=null;
+function next(){ app.next(); }
+function goTo(i){ app.goTo(i); }
+
+// ───────── lesson content (the new first level, full text)
+var REQ = [
+  {id:"starter", text:"说说这张照片里有什么。"},
+  {id:"ask-spoon", text:"勺子在杯子的哪一边？"},
+  {id:"ask-look", text:"帮我看看这张照片。"}
+];
+var ANS = {
+  "starter":"这是一张木桌上的照片。桌上有一个红棕色的杯子，放在同样颜色的碟子上。杯子里是咖啡，表面有一层浅棕色的泡沫。碟子上还放着一把银色的小勺子。",
+  "ask-spoon":"勺子在杯子的右边。它斜放在碟子上，勺柄靠着杯子，朝右上方伸出去。",
+  "ask-look":"这是一杯看起来很香的咖啡，放在木桌上，让人感觉很温暖。很适合在早上慢慢喝。"
+};
+var DEBRIEF = {
+  "starter":"你问的是整张照片。看看它有没有说勺子在哪边。",
+  "ask-spoon":"你只问了勺子。看看它是不是直接答了。",
+  "ask-look":"你只说了「看看」，它只能自己决定说什么。"
+};
+var FOAM_ANS = "有。杯子里的咖啡表面有一层浅棕色的泡沫，几乎盖满了整个杯口。";
+var CARDS = [
+  {t:"杯子是什么颜色？", b:0, why:"颜色看得到。", not:"杯子就在照片正中间，颜色一眼看得到。"},
+  {t:"咖啡甜不甜？", b:1, why:"味道看不到。", not:"照片只能看，不能尝。甜不甜，看不出来。"},
+  {t:"勺子在哪一边？", b:0, why:"勺子看得到。", not:"勺子就在照片里，看得到它在哪边。"},
+  {t:"这是哪家店？", b:1, why:"照片里没有店名。", not:"照片里没有招牌，也没有店名。看不出是哪家。"},
+  {t:"碟子是什么颜色？", b:0, why:"碟子看得到。", not:"碟子就在杯子下面，颜色看得到。"},
+  {t:"咖啡多少钱？", b:1, why:"照片里没有价钱。", not:"照片里没有价签。多少钱，看不出来。"}
+];
+var PIECES = [
+  {id:"p-look", text:"看这张照片，", color:"#f2c963"},
+  {id:"p-cup", text:"杯子里", color:"#8fd0b8"},
+  {id:"p-foam", text:"有没有泡沫？", color:"#a9c9ec"},
+  {id:"p-all", text:"说说整张照片", color:"#f3a58a", why:"这块又变成问整张图了。"},
+  {id:"p-long", text:"写得越长越好", color:"#f1b8c8", why:"这块会让它说一大段。"}
+];
+var BUILD_OK = [["p-look","p-cup","p-foam"],["p-cup","p-foam"]];
+var REGIONS = [
+  {id:"foam", label:"杯子中间", x:.36, y:.22, w:.25, h:.25},
+  {id:"spoon", label:"杯子右下", x:.53, y:.56, w:.17, h:.26},
+  {id:"saucer", label:"碟子左边", x:.14, y:.46, w:.18, h:.34},
+  {id:"table", label:"右上角", x:.74, y:.02, w:.24, h:.30}
+];
+var CAT = [
+  {k:["名字","叫什么","几岁","年龄","多大","公的","母的","品种"], a:"从这张照片里，看不出它叫什么、几岁。照片里只有它的脸。"},
+  {k:["眼"], a:"它的眼睛是黄绿色的，中间的瞳孔是黑色的。"},
+  {k:["鼻"], a:"它的鼻头是粉橙色的，小小的。"},
+  {k:["胡"], a:"它有白色的长胡须，从嘴边往两边伸出去。"},
+  {k:["耳"], a:"照片最上面只露出耳朵的一小部分，颜色和脸上的毛差不多。"},
+  {k:["毛","颜色","花纹","条纹"], a:"它的毛是浅棕色的，额头上有深色的条纹。"}
+];
+
+var S = { i:0, choice:null, built:[], catQ:"", catA:"", catNote:"" };
+
+// ───────── screens
+var SCREENS = [
+ { key:"intro", title:"真实世界之门", label:"开场", preset:"intro",
+   notes:{comp:"没有互动组件：开场只讲一件真事，再说这一关学什么。", stage:"整座庭院第一次出现。灯塔上写着 AI。整关的 3D 就在这时加载，后面不再等。", real:"第 1 处「开门」：Be My Eyes 的真事。和这一关要学的是同一件事：想知道哪一处，就问哪一处。", text:"改写。原来只有一句「真实用法」，现在讲清楚真的人用它做了什么。"},
+   render:function(c){
+     c.append(h("div",{class:"eyebrow",text:"开场"}),
+       h("h2",{text:"想知道照片里的一处，怎么问 AI？"}),
+       h("div",{class:"real"},
+         h("span",{class:"tag",text:"真实世界里的事"}),
+         h("p",{text:"2023 年，帮盲人的手机应用 Be My Eyes 加了一个新本事：拍一张照片，AI 就把照片里有什么说给你听，你还能接着追问。一万九千多位看不见或看不清的人先试用了它：早上用它看新买的早餐怎么吃，睡前用它确认灯关了没有。"}),
+         src("Be My Eyes 官方新闻","Announcing ‘Be My AI’","https://www.bemyeyes.com/news/announcing-be-my-ai-soon-available-for-hundreds-of-thousands-of-be-my-eyes-users","2023-09-25","超过 19,000 位盲人和低视力测试者参与了 Be My AI 的设计；测试者用它看早餐新品怎么用、睡前确认灯关了。拍照后可以继续追问。","这是公司自己的公告，不是独立评测；也不代表今天的功能完全一样。")),
+       h("p",{text:"他们每天都在做同一件事：想知道照片里的某一处，就问那一处。今天你也学这一招。"}),
+       h("p",{class:"sub",text:"先拿一张你看得清的咖啡照片练手。AI 答得对不对，你自己能判断。"}),
+       h("div",{class:"photo"},h("img",{src:"assets/coffee.jpg",alt:"木桌上一个红棕色的杯子和碟子，杯里是咖啡，碟子右边放着一把银色小勺子。"}),h("span",{class:"cap",text:"练习照片 · Rachel Michetti / Pikolo Espresso Bar · CC0"})),
+       h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"开始")));
+   }},
+ { key:"guess", title:"选一个：哪句最能问到", label:"猜", phase:"猜", preset:"guess",
+   notes:{comp:"选一个。", stage:"小兔子走到桌边，头上冒出「？」。猜没有对错，所以选完小兔子只点点头。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     var fb=h("p",{class:"fb",hidden:true,text:"记住你选的这句。马上发出去试试。"});
+     var go=h("button",{class:"btn go",type:"button",disabled:true,onclick:next},"发出去试试");
+     var opts=h("div",{class:"opts"});
+     REQ.forEach(function(r){
+       var b=h("button",{class:"opt"+(S.choice===r.id?" picked":""),type:"button",onclick:function(){
+         S.choice=r.id; [].forEach.call(opts.children,function(x){x.classList.remove("picked");}); b.classList.add("picked");
+         fb.hidden=false; go.disabled=false; world.react("ok");
+       }},r.text);
+       opts.append(b);
+     });
+     if(S.choice){ fb.hidden=false; go.disabled=false; }
+     c.append(h("div",{class:"eyebrow",text:"猜 · 选一个"}),
+       h("h2",{text:"你想知道勺子在杯子哪一边。哪句最能问到？"}),
+       h("p",{class:"sub",text:"随便猜，猜错不扣分。"}), opts, fb, h("div",{class:"row"},go));
+   }},
+ { key:"send1", title:"发出去 + 等待小知识", label:"跑 1", phase:"跑", preset:"send",
+   notes:{comp:"发出去。整个「跑」这一段只发这一次。", stage:"小兔子把纸飞机扔向灯塔（AI），回信飞回来。飞的这几秒，就是等 AI 的几秒。", real:"第 2 处「等的时候」：Google 智能镜头的真数字。只在等回答的空当出现，不占学习的时间。", text:"沿用原课，加一条等待小知识。"},
+   render:function(c){
+     var req=REQ.find(function(r){return r.id===S.choice;})||REQ[1]; S.choice=req.id;
+     var area=h("div",{class:"opts"});
+     var send=h("button",{class:"btn go",type:"button",onclick:function(){
+       send.disabled=true; send.textContent="发出去了";
+       var wait=h("div",{class:"wait"},h("span",{class:"dots"},h("i"),h("i"),h("i")),"纸飞机在飞，AI 在看照片……");
+       var fact=h("div",{class:"real"},h("span",{class:"tag",text:"等回信的时候"}),
+         h("p",{text:"2024 年 10 月，Google 说：人们每个月用 Google 智能镜头拍照搜索，将近 200 亿次。拍照问 AI，已经是很多人每天都在做的事。"}),
+         src("Google 官方博客","New ways for marketers to reach customers with AI Overviews and Lens","https://blog.google/products/ads-commerce/google-lens-ai-overviews-ads-marketers","2024-10-03","每个月，人们用 Lens 做将近 200 亿次视觉搜索。","这是 Google 自己的数字，算的是搜索次数，不是人数。"));
+       area.append(wait,fact);
+       world.fly(true,function(){
+         wait.remove();
+         area.append(h("div",{class:"answer"},h("span",{class:"who"},"AI 的回答",h("span",{class:"demo",text:"示例：真课里是 AI 现场写的"})),h("p",{text:ANS[req.id]})),
+           h("p",{class:"fb",text:DEBRIEF[req.id]}),
+           h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"继续")));
+       });
+     }},"发出去");
+     c.append(h("div",{class:"eyebrow",text:"跑 · 发出去"}),
+       h("h2",{text:"把照片和你选的那句，一起发给 AI"}),
+       h("div",{class:"composer"},h("div",{class:"att"},h("img",{src:"assets/coffee.jpg",alt:""}),"咖啡照片"),h("div",{class:"msg",text:req.text}),h("div",{class:"row"},send)),
+       area);
+   }},
+ { key:"find", title:"点一句：它说勺子的那句", label:"跑 2", phase:"跑", preset:"find",
+   notes:{comp:"点一句（如果你选合并，就是「点一处」，材料是文字）。", stage:"镜头转向公告栏，回信贴在上面。回答的字是真的字，不画进 3D。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     var sents=ANS[S.choice||"ask-spoon"].split(/(?<=。)/).filter(Boolean);
+     var has=sents.some(function(s){return s.indexOf("勺")>=0;});
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var list=h("div",{class:"sents"});
+     sents.forEach(function(s){
+       var b=h("button",{class:"sent",type:"button",onclick:function(){
+         if(s.indexOf("勺")>=0){ b.className="sent hit"; fb.className="fb ok"; fb.textContent="找到了。这句说没说是哪一边？"; fb.hidden=false; nx.hidden=false; world.react("ok"); }
+         else { b.className="sent miss"; fb.className="fb no"; fb.textContent="这句没提勺子。再找找。"; fb.hidden=false; world.react("no"); }
+       }},s);
+       list.append(b);
+     });
+     c.append(h("div",{class:"eyebrow",text:"跑 · 点一句"}),h("h2",{text:"点出它说勺子的那一句"}),list);
+     if(!has){
+       c.append(h("button",{class:"opt",type:"button",onclick:function(){ fb.className="fb ok"; fb.textContent="对。这次它没提勺子。你想知道的，它没答。"; fb.hidden=false; nx.hidden=false; world.react("ok"); }},"它没说勺子"));
+     }
+     c.append(fb,nx);
+   }},
+ { key:"match", title:"连一连：问法配回答", label:"看 1", phase:"看", preset:"match",
+   notes:{comp:"连一连。先点一句问法，再点它换来的回答。", stage:"公告栏上三张便签。连对了小兔子欢呼，连错了挠头。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     var order=["ask-look","starter","ask-spoon"], sel=null, done={}, n=0;
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var asks=h("div",{class:"pairs"},h("h3",{text:"三句问法"}));
+     var answers=h("div",{class:"pairs"},h("h3",{text:"三个回答"}));
+     var askBtns={};
+     REQ.forEach(function(r,i){
+       var b=h("button",{class:"pair",type:"button",onclick:function(){
+         if(done[r.id]) return; sel=r.id; Object.keys(askBtns).forEach(function(k){askBtns[k].classList.toggle("sel",k===sel);});
+       }},h("span",{class:"n",text:String(i+1)}),h("span",{text:r.text}));
+       askBtns[r.id]=b; asks.append(b);
+     });
+     order.forEach(function(id){
+       var num=h("span",{class:"n",text:"?"});
+       var b=h("button",{class:"pair",type:"button",onclick:function(){
+         if(b.classList.contains("done")) return;
+         if(!sel){ fb.className="fb"; fb.textContent="先点上面的一句问法。"; fb.hidden=false; return; }
+         if(sel===id){
+           done[id]=true; n++; b.className="pair done"; num.textContent=String(REQ.findIndex(function(r){return r.id===id;})+1);
+           askBtns[id].className="pair done"; sel=null; world.react("ok");
+           fb.className="fb ok"; fb.textContent= n<3 ? "连上了。" : "问整张图，它就说整张图。问一处，它就答那一处。"; fb.hidden=false;
+           if(n===3) nx.hidden=false;
+         } else {
+           b.classList.add("bad"); setTimeout(function(){b.classList.remove("bad");},700); world.react("no");
+           fb.className="fb no"; fb.textContent="不是这个。看看这个回答：它说的是整张图，还是一处？"; fb.hidden=false;
+         }
+       }},num,h("span",{text:ANS[id]}));
+       answers.append(b);
+     });
+     c.append(h("div",{class:"eyebrow",text:"看 · 连一连"}),h("h2",{text:"三句问法，各得到哪个回答？"}),asks,answers,fb,nx);
+   }},
+ { key:"round", title:"分一分：3D 小回合", label:"看 2", phase:"看", preset:"round",
+   notes:{comp:"分一分，做成一个 3D 小回合：6 张卡，一张一张来。", stage:"两个篮子写着「答得出」「答不出」。点按钮，小兔子把球扔进去；放错了球弹出来，告诉你为什么，这张卡要改到对才过。不计时。", real:"这一步不放。", text:"沿用原课的 6 张卡；每张新写了「放错时说什么」。"},
+   render:function(c){
+     var i=0;
+     var pips=h("div",{class:"pips","aria-hidden":"true"}); CARDS.forEach(function(){pips.append(h("i"));});
+     var card=h("div",{class:"roundcard"});
+     var fb=h("p",{class:"fb",hidden:true});
+     var nextCard=h("button",{class:"btn",type:"button",hidden:true,onclick:function(){ i++; show(); }},"下一张");
+     var done=h("div",{hidden:true},h("p",{class:"fb ok",text:"看得见的，才问得准。看不见的，它只能说不知道，或者猜。"}),h("div",{class:"row",style:"margin-top:10px"},h("button",{class:"btn go",type:"button",onclick:next},"继续")));
+     var bins=h("div",{class:"bins"});
+     ["答得出","答不出"].forEach(function(name,bi){
+       bins.append(h("button",{class:"btn "+(bi?"no":"yes"),type:"button",onclick:function(){
+         if(i>=CARDS.length) return; var k=CARDS[i], ok=k.b===bi;
+         world.throwBall(bi,ok);
+         if(ok){ fb.className="fb ok"; fb.textContent="对。"+k.why; fb.hidden=false; pips.children[i].className="ok"; bins.hidden=true; if(i===CARDS.length-1){ done.hidden=false; } else nextCard.hidden=false; }
+         else { fb.className="fb no"; fb.textContent=k.not+" 再放一次。"; fb.hidden=false; }
+       }},name));
+     });
+     function show(){
+       nextCard.hidden=true; fb.hidden=true; bins.hidden=false;
+       [].forEach.call(pips.children,function(p,j){ if(j===i) p.className="now"; });
+       card.textContent=CARDS[i].t;
+       c.querySelector(".cnt").textContent="第 "+(i+1)+" 张，共 "+CARDS.length+" 张";
+     }
+     c.append(h("div",{class:"eyebrow",text:"看 · 分一分（3D 小回合）"}),h("h2",{text:"光看照片，答得出来吗？"}),
+       h("p",{class:"sub cnt"}),pips,card,bins,fb,h("div",{class:"row"},nextCard),done);
+     show();
+   }},
+ { key:"build", title:"排一排：拼一句（小火车）", label:"改 1", phase:"改", preset:"build",
+   notes:{comp:"排一排。每块积木是一节车厢。", stage:"点一块，就挂上一节车厢；拼好了按「发车」。拼对了火车开出去，拼错了火车晃一下停住，告诉你哪块不对。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     S.built=[]; world.clearWagons();
+     var sentence=h("div",{class:"sentence","aria-label":"你拼的句子"});
+     var tray=h("div",{class:"tray"});
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"发出去看看"));
+     function paint(){
+       sentence.innerHTML="";
+       S.built.forEach(function(id,k){
+         var p=PIECES.find(function(x){return x.id===id;});
+         sentence.append(h("button",{class:"chip",type:"button",style:"background:"+p.color,title:"点一下拿掉",onclick:function(){ S.built.splice(k,1); world.clearWagons(); S.built.forEach(function(j){ world.addWagon(parseInt(PIECES.find(function(x){return x.id===j;}).color.slice(1),16)); }); paint(); }},p.text));
+       });
+       [].forEach.call(tray.children,function(b){ b.disabled=S.built.indexOf(b.dataset.id)>=0; });
+     }
+     PIECES.forEach(function(p){
+       tray.append(h("button",{class:"chip",type:"button","data-id":p.id,style:"background:"+p.color,onclick:function(){
+         if(S.built.indexOf(p.id)>=0||S.built.length>=4) return; S.built.push(p.id); world.addWagon(parseInt(p.color.slice(1),16)); paint(); fb.hidden=true;
+       }},p.text));
+     });
+     var goBtn=h("button",{class:"btn go",type:"button",onclick:function(){
+       if(!S.built.length){ fb.className="fb"; fb.textContent="先点几块积木。"; fb.hidden=false; return; }
+       var bad=S.built.map(function(id){return PIECES.find(function(x){return x.id===id;});}).find(function(p){return p.why;});
+       var ok=BUILD_OK.some(function(a){return a.join()===S.built.join();});
+       goBtn.disabled=true;
+       world.depart(ok,function(){ goBtn.disabled=false; });
+       if(ok){ fb.className="fb ok"; fb.textContent="这次只问一处。"; nx.hidden=false; tray.hidden=true; goBtn.hidden=true; }
+       else if(bad){ fb.className="fb no"; fb.textContent="「"+bad.text+"」："+bad.why+" 点它一下拿掉。"; }
+       else { fb.className="fb no"; fb.textContent="还差一点：先说「杯子里」，再问「有没有泡沫？」。"; }
+       fb.hidden=false;
+     }},"拼好了，发车");
+     c.append(h("div",{class:"eyebrow",text:"改 · 排一排"}),h("h2",{text:"现在想知道：杯子里有没有泡沫。拼一句，只问这一处"}),
+       h("p",{class:"context",text:"原来那句：说说这张照片里有什么。"}),sentence,tray,h("div",{class:"row"},goBtn),fb,nx);
+     paint();
+   }},
+ { key:"send2", title:"发出去：只问泡沫", label:"改 2", phase:"改", preset:"send",
+   notes:{comp:"发出去。整个「改」这一段只发这一次。", stage:"又扔一次纸飞机。", real:"这一步不放。一关只放一条等待小知识，免得抢了要学的东西。", text:"沿用原课。"},
+   render:function(c){
+     var text=(S.built.length?S.built:BUILD_OK[0]).map(function(id){return PIECES.find(function(x){return x.id===id;}).text;}).join("");
+     var area=h("div",{class:"opts"});
+     var send=h("button",{class:"btn go",type:"button",onclick:function(){
+       send.disabled=true; send.textContent="发出去了";
+       var wait=h("div",{class:"wait"},h("span",{class:"dots"},h("i"),h("i"),h("i")),"纸飞机在飞……"); area.append(wait);
+       world.fly(true,function(){
+         wait.remove();
+         area.append(h("div",{class:"answer"},h("span",{class:"who"},"AI 的回答",h("span",{class:"demo",text:"示例：真课里是 AI 现场写的"})),h("p",{text:FOAM_ANS})),
+           h("p",{class:"fb",text:"去照片上亲眼对一对。"}),h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"去照片上找")));
+       });
+     }},"发出去");
+     c.append(h("div",{class:"eyebrow",text:"改 · 发出去"}),h("h2",{text:"发出去看看"}),
+       h("div",{class:"composer"},h("div",{class:"att"},h("img",{src:"assets/coffee.jpg",alt:""}),"咖啡照片"),h("div",{class:"msg",text:text}),h("div",{class:"row"},send)),area);
+   }},
+ { key:"point", title:"点图：亲眼找泡沫", label:"改 3", phase:"改", preset:"point",
+   notes:{comp:"点图（如果你选合并，就是「点一处」，材料是照片）。", stage:"镜头对着画架上的照片和一台小相机。点对了「咔嚓」一闪。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var img=h("img",{src:"assets/coffee.jpg",alt:"咖啡照片。点照片上你看到泡沫的地方。"});
+     var ph=h("div",{class:"photo",style:"cursor:crosshair"},img);
+     var solved=false;
+     function hit(x,y){
+       if(solved) return;
+       var r=REGIONS.find(function(g){return x>=g.x&&x<=g.x+g.w&&y>=g.y&&y<=g.y+g.h;});
+       ph.querySelectorAll(".ring").forEach(function(n){n.remove();});
+       ph.append(h("span",{class:"ring"+(r&&r.id==="foam"?"":" miss"),style:"left:"+(x*100)+"%;top:"+(y*100)+"%"}));
+       if(r&&r.id==="foam"){ solved=true; world.snap(true); fb.className="fb ok"; fb.textContent="就是这里。这是你亲眼看到的。以后它说什么，都这样对一对。"; nx.hidden=false; }
+       else { world.react("no"); fb.className="fb no"; fb.textContent=(r?"这里是"+r.label+"，":"这里")+"不是泡沫。再看看杯子里面。"; }
+       fb.hidden=false;
+     }
+     ph.addEventListener("click",function(e){ var b=img.getBoundingClientRect(); hit((e.clientX-b.left)/b.width,(e.clientY-b.top)/b.height); });
+     var twins=h("div",{class:"regions"},h("span",{class:"context",text:"也可以用按钮点："}));
+     REGIONS.forEach(function(g){ twins.append(h("button",{class:"region",type:"button",onclick:function(){ hit(g.x+g.w/2,g.y+g.h/2); }},g.label)); });
+     c.append(h("div",{class:"eyebrow",text:"改 · 点图"}),h("h2",{text:"在照片上点出泡沫"}),ph,twins,fb,nx);
+   }},
+ { key:"make", title:"自己做：猫照片", label:"做 1", phase:"做", preset:"make",
+   notes:{comp:"自己做：换一张照片，自己写、自己发、自己记。", stage:"工作台上的小锤子敲一敲，你记下的备注变成一张明信片，摆上架子。", real:"这一步不放。", text:"沿用原课。样机里「只问一处」的检查是固定规则（不花钱的第一档），真课里这一步会发给 AI。"},
+   render:function(c){
+     var q=h("textarea",{rows:"2",placeholder:"写一句，只问一处","aria-label":"你想问的一句"}); q.value=S.catQ;
+     var fb=h("p",{class:"fb",hidden:true});
+     var area=h("div",{class:"opts"});
+     var send=h("button",{class:"btn go",type:"button",onclick:function(){
+       var v=q.value.trim(); S.catQ=v;
+       if(!v){ fb.className="fb"; fb.textContent="先写一句。比如问它的眼睛、鼻子或毛色。"; fb.hidden=false; return; }
+       if(/整张|有什么|看看|说说/.test(v)){ fb.className="fb no"; fb.textContent="这句又在问整张图了。挑一处：眼睛、鼻子，还是毛色？"; fb.hidden=false; return; }
+       fb.hidden=true; send.disabled=true; area.innerHTML="";
+       var wait=h("div",{class:"wait"},h("span",{class:"dots"},h("i"),h("i"),h("i")),"纸飞机在飞……"); area.append(wait);
+       world.go("send");
+       world.fly(true,function(){
+         world.go("make"); wait.remove(); send.disabled=false;
+         var hitA=CAT.find(function(x){return x.k.some(function(k){return v.indexOf(k)>=0;});});
+         S.catA=hitA?hitA.a:"（样机不连 AI。真课里，AI 会只答你问的那一处。试试问眼睛、鼻子或毛色。）";
+         var note=h("input",{type:"text",placeholder:"把答案记成一句备注","aria-label":"一句备注",value:S.catNote});
+         var fb2=h("p",{class:"fb",hidden:true});
+         var save=h("button",{class:"btn go",type:"button",onclick:function(){
+           if(!note.value.trim()){ fb2.className="fb"; fb2.textContent="写一句自己以后看得懂的备注。"; fb2.hidden=false; return; }
+           S.catNote=note.value.trim(); save.disabled=true;
+           world.makeItem(function(){ fb2.className="fb ok"; fb2.textContent="做好了。你的备注变成一张明信片，摆上了架子。"; fb2.hidden=false; area.append(h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"继续"))); });
+         }},"做好了");
+         area.append(h("div",{class:"answer"},h("span",{class:"who"},"AI 的回答",h("span",{class:"demo",text:"示例"})),h("p",{text:S.catA})),note,h("div",{class:"row"},save),fb2);
+       });
+     }},"发出去");
+     c.append(h("div",{class:"eyebrow",text:"做 · 自己做"}),h("h2",{text:"换张猫照片。你想知道它哪一处？"}),
+       h("p",{class:"sub",text:"只问一处，把答案记成一句备注。"}),
+       h("div",{class:"photo"},h("img",{src:"assets/cat.jpg",alt:"一只浅棕色虎斑猫的脸部特写，黄绿色眼睛，粉橙色鼻头，白色胡须。"}),h("span",{class:"cap",text:"练习照片 · Stefan van der Walt · CC0"})),
+       q,h("ul",{class:"check"},h("li",{text:"只问猫的一处，比如眼睛、鼻子或毛色。"}),h("li",{text:"备注里的话，对着照片看得到；没有编名字、年龄。"}),h("li",{text:"留下一句自己以后看得懂的备注。"})),
+       h("div",{class:"row"},send),fb,area);
+   }},
+ { key:"check", title:"选一个：自查", label:"做 2", phase:"做", preset:"make",
+   notes:{comp:"选一个（自查）。三个选项都不算错，每个都告诉你下一步。", stage:"小兔子站在架子旁边，看着你的明信片。", real:"这一步不放。", text:"沿用原课。"},
+   render:function(c){
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"学完了"));
+     var opts=h("div",{class:"opts"});
+     [["看得到，对上了","好。问得准，你还亲眼对过。"],["和照片不一样，或者照片里没有","那就先别当真。换个看得见的地方再问，或者问知道的人。"],["它说看不出来","这是老实话。照片里没有的，AI 也看不出。"]].forEach(function(o){
+       var b=h("button",{class:"opt",type:"button",onclick:function(){ [].forEach.call(opts.children,function(x){x.classList.remove("picked");}); b.classList.add("picked"); fb.className="fb ok"; fb.textContent=o[1]; fb.hidden=false; nx.hidden=false; world.react("ok"); }},o[0]);
+       opts.append(b);
+     });
+     c.append(h("div",{class:"eyebrow",text:"做 · 选一个"}),h("h2",{text:"它答的，照片里看得到吗？"}),
+       S.catA?h("div",{class:"answer"},h("span",{class:"who",text:"它刚才答的"}),h("p",{text:S.catA})):null,opts,fb,nx);
+   }},
+ { key:"done", title:"你知道吗 + 带回岛上", label:"学完", preset:"done", last:true,
+   notes:{comp:"没有互动组件：收尾。", stage:"彩纸落下，庭院里多了一把椅子。岛就这样一关一关长出东西来。", real:"第 3 处「你知道吗」：2024 年的看图测试。它正好说明今天第二句话为什么要紧：它答完，对着照片看一眼。", text:"新写「你知道吗」和「带回岛上」。「今天就用一次」沿用原课的收尾句。"},
+   render:function(c){
+     world.celebrate();
+     var chest=h("div",{class:"chest",hidden:true},
+       h("p",{html:"<b>带回岛上：</b>你做的「猫照片的一句备注」变成一张明信片，放进了你岛上的小屋；庭院里多了一把椅子。"}),
+       h("p",{class:"sub",text:"两张复习卡，明天会再来找你。点一下翻面："}),
+       h("div",{class:"review"},flip("照片里没有店名，AI 能知道是哪家店吗？","不能只靠这张照片确定。看得见的才问得准；看不见的，它只能说不知道，或者猜。"),flip("想知道照片里的一处，该怎么问？","直接问那一处，比如「勺子在杯子的哪一边？」。它答完，对着照片看一眼。")));
+     var open=h("button",{class:"btn go",type:"button",onclick:function(){ open.hidden=true; chest.hidden=false; world.react("ok"); }},"开宝箱");
+     c.append(h("div",{class:"eyebrow",text:"学完了"}),
+       h("p",{class:"take",text:"想知道哪一处，就直接问那一处。它答完，对着照片看一眼。"}),
+       h("div",{class:"real"},h("span",{class:"tag",text:"你知道吗"}),
+         h("p",{text:"2024 年，几位研究者给当时最先进的四个会看图的 AI 出了 7 种很简单的看图题，比如「两个圆圈有没有叠在一起」「红圈圈住的是哪个字母」。这些题对人来说一眼就能看出来，这四个 AI 平均只答对了不到六成。"}),
+         h("p",{text:"连 Be My Eyes 自己也提醒用户：AI 偶尔会答错，想核对时，还可以找真人志愿者帮忙看。"}),
+         src("ACCV 2024 论文","Vision language models are blind（Rahmanzadehgervi 等）","https://vlmsareblind.github.io/","2024","GPT-4o、Gemini-1.5 Pro、Sonnet-3、Sonnet-3.5 在 7 种简单看图题上平均准确率 58.57%，最好的约 74%；人预期是 100%。","测的是 2024 年的模型，新模型可能更好。拿它说明「要自己看一眼」，不拿它说「AI 看不清」。")),
+       h("div",{class:"row"},open),chest,
+       h("p",{class:"fb",html:"<b>今天就用一次：</b>下次看不清菜单、路牌上的小字，拍下来，只问你想知道的那一处。"}),
+       h("div",{class:"row"},h("button",{class:"btn ghost",type:"button",onclick:function(){ S.choice=null; S.built=[]; S.catQ=S.catA=S.catNote=""; goTo(0); }},"从头再玩一遍"),h("a",{href:"index.html"},"回到总览")));
+   }}
+];
+function flip(front,back){
+  var b=h("button",{class:"rc",type:"button","aria-pressed":"false"},h("b",{text:"复习卡 · 正面"}),front);
+  var on=false;
+  b.addEventListener("click",function(){ on=!on; b.setAttribute("aria-pressed",String(on)); b.innerHTML=""; b.append(h("b",{text:on?"复习卡 · 背面":"复习卡 · 正面"}),on?back:front); });
+  return b;
+}
+
+app=Lesson.run({screens:SCREENS, world:world});
+window.__lesson={goTo:goTo,S:S,has3D:!!W};
+goTo(0);
+})();
+</script>
+</body>
+</html>

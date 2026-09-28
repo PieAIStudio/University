@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>专业课样机</title>
+<link rel="stylesheet" href="lab/toy.css">
+<link rel="stylesheet" href="lab/lesson.css">
+</head>
+<body>
+<header class="top">
+  <h1>专业课样机 · 真仓库里的代码也能用这几种互动组件学<small>同一套 3D 舞台和互动组件，换上「代码」「运行记录」「开关」「代码小镇」这些材料。代码一个字没改，来自 TuringPact 项目仓库。</small></h1>
+  <nav aria-label="同一套文档"><a href="index.html">← 总览</a><a href="first-level.html">新第一关样机</a><a href="spec.html">执行规格</a><a href="album.html">旧组件相册</a></nav>
+</header>
+<main class="wrap">
+  <section class="dev" aria-label="专业课样机">
+    <div class="dev-top" style="flex-wrap:wrap">
+      <div class="tabs" role="tablist" aria-label="选一个样机">
+        <button type="button" role="tab" id="tab-await" aria-selected="true">一关：await</button>
+        <button type="button" role="tab" id="tab-town" aria-selected="false">架构小样：代码小镇</button>
+      </div>
+    </div>
+    <div class="dev-top" style="padding-top:0"><div class="phases" id="phases" aria-label="这一关的五段"></div><span class="count" id="count"></span></div>
+    <div class="toy" id="stage" role="img" aria-label="3D 舞台"></div>
+    <div class="card" id="card" aria-live="polite"></div>
+  </section>
+  <aside class="notes">
+    <div class="warnbar">运行记录是<b>照代码顺序写的示例</b>，不是真机日志；样机不连 AI、不连仓库。代码行号和提交号是真的，可以去仓库里对。</div>
+    <div class="nbox" id="notes" aria-live="polite"></div>
+    <div class="nbox">
+      <h2>整关一览（点一下直接跳过去）</h2>
+      <ul class="jump" id="jump"></ul>
+      <p class="legend">专业课没有新的互动组件，只多了几种材料：代码（能点里面的词）、运行记录（按顺序亮起来的几行）、开关（改一处再跑一遍）、代码小镇（模块是房子，数据是小车）。</p>
+    </div>
+  </aside>
+</main>
+<noscript><p style="max-width:640px;margin:0 auto;padding:16px">这个样机需要打开 JavaScript 才能玩。</p></noscript>
+<script src="lab/toy3d.js"></script>
+<script src="lab/lesson.js"></script>
+<script>
+(function(){
+"use strict";
+var h=Lesson.h, src=Lesson.src, app=null;
+function next(){ app.next(); }
+var stageEl=document.getElementById("stage");
+var mounted=null, W=null;
+function mount(scene, still){
+  if(mounted){ try{ mounted.dispose(); }catch(e){} mounted=null; }
+  stageEl.innerHTML=""; W=null;
+  try{
+    if(!window.Toy) throw new Error("no bundle");
+    var probe=document.createElement("canvas");
+    if(!(probe.getContext("webgl2")||probe.getContext("webgl"))) throw new Error("no webgl");
+    mounted=Toy.mount(stageEl, Toy.SCENES[scene]); W=mounted.scene;
+  }catch(e){ stageEl.append(h("img",{class:"stage-img",src:still,alt:"舞台的静态画面"})); }
+}
+function later(fn,ms){ setTimeout(function(){ fn&&fn(); },ms); }
+
+// ───────── materials: code with pointable words, and a replayed run log
+var REPO="TuringPact 仓库 · 提交 658b36ef0f55";
+function code(path, lines, onTok, hl){
+  var box=h("div",{class:"code",role:"group","aria-label":"代码："+path},h("div",{class:"path",text:path+" · "+REPO}));
+  lines.forEach(function(l){
+    var row=h("div",{class:"ln"+((hl||[]).indexOf(l[0])>=0?" hl":"")},h("span",{class:"no",text:String(l[0])}));
+    var body=h("span");
+    l.slice(1).forEach(function(seg){
+      if(typeof seg==="string") body.append(seg);
+      else { var b=h("button",{class:"tok",type:"button",onclick:function(){ onTok&&onTok(seg.id,b); }},seg.t); body.append(b); }
+    });
+    row.append(body); box.append(row);
+  });
+  return box;
+}
+var SHARE=[
+  [4,{t:"export",id:"export"}," ",{t:"async",id:"async"}," function shareOnCapacitor(payload: SharePayload): Promise<void> {"],
+  [5,"  ",{t:"await",id:"await"}," ",{t:"Share.share",id:"share"},"({"],
+  [6,"    title: payload.title,"],
+  [7,"    text: payload.text,"],
+  [8,"    url: payload.url,"],
+  [9,"    dialogTitle: payload.title,"],
+  [10,"  });"],
+  [11,"}"]
+];
+var LOG_WITH=[["10:02:03.110","你点了「分享」按钮",""],["10:02:03.140","第 5 行：弹出分享窗口",""],["10:02:03.141","停在第 5 行，等……","red"],["10:02:07.920","你在窗口里选好了，分享完成","green"],["10:02:07.921","第 11 行：函数结束，回到按按钮的地方",""]];
+var LOG_WITHOUT=[["10:02:03.110","你点了「分享」按钮",""],["10:02:03.140","第 5 行：弹出分享窗口",""],["10:02:03.141","没有停，直接往下走","red"],["10:02:03.142","第 11 行：函数结束了，分享窗口还开着","red"],["10:02:03.143","按按钮的地方收到：「分享好了」（其实你还没选）","red"]];
+function runLog(withAwait, logEl, onDone){
+  var L=withAwait?LOG_WITH:LOG_WITHOUT; logEl.innerHTML="";
+  function line(i){ var r=L[i]; if(!r) return; logEl.append(h("div",null,h("span",{class:"t",text:r[0]}),h("span",{class:r[2],text:r[1]}))); }
+  if(W){ W.play(function(i){ if(withAwait){ line(i); } else { if(i<=1) line(i); if(i===4){ line(2); line(3); line(4); } } }, withAwait, onDone); }
+  else { L.forEach(function(r,i){ later(function(){ line(i); if(i===L.length-1) onDone&&onDone(); }, 500*i); }); }
+}
+
+// ───────── level: await
+var A={guess:null};
+var AWAIT=[
+ { key:"a-intro", label:"开场", title:"真实世界之门：真仓库的代码", preset:null,
+   notes:{comp:"没有互动组件：开场。", stage:"一段铁轨、一盏红绿灯、一块写着「分享窗口」的牌子。小火车就是「程序正在跑到哪一行」。", real:"第 1 处「开门」：真实项目仓库里的 8 行代码，行号和提交号都是真的。", text:"新写。老课的开头直接摆代码，现在先说这段代码在手机上管什么。"},
+   render:function(c){
+     c.append(h("div",{class:"eyebrow",text:"开场 · 等待与失败 · 第 1 关"}),
+       h("h2",{text:"写了 await 的那一行，程序会停下来等吗？"}),
+       h("div",{class:"real"},h("span",{class:"tag",text:"真实世界里的代码"}),
+         h("p",{text:"你在手机 App 里点「分享」，屏幕上会弹出一个分享窗口，等你选好发给谁。下面这 8 行，就是一个真实项目里管这个按钮的代码，一个字没改。"})),
+       code("src/platform/capacitor/share.ts 第 4–11 行",SHARE,null,[5]),
+       h("p",{text:"函数只有一次调用，前面多了一个词：await。今天只学这一个词。"}),
+       h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"开始")));
+   }},
+ { key:"a-guess", label:"猜", phase:"猜", title:"选一个：跑到第 5 行会怎样",
+   notes:{comp:"选一个。", stage:"小火车停在起点，绿灯亮着。", real:"这一步不放。", text:"改写自老课「先猜一下」，把一个是非题换成三个具体的样子。"},
+   render:function(c){
+     var fb=h("p",{class:"fb",hidden:true,text:"记住你选的。马上让它真的跑一遍。"});
+     var go=h("button",{class:"btn go",type:"button",disabled:!A.guess,onclick:next},"跑一遍看看");
+     var opts=h("div",{class:"opts"});
+     [["go","立刻往下走，不管分享窗口"],["wait","停在这一行，等分享窗口有了结果，再往下走"],["freeze","整个 App 卡住，别的都动不了"]].forEach(function(o){
+       var b=h("button",{class:"opt"+(A.guess===o[0]?" picked":""),type:"button",onclick:function(){ A.guess=o[0]; [].forEach.call(opts.children,function(x){x.classList.remove("picked");}); b.classList.add("picked"); fb.hidden=false; go.disabled=false; W&&W.react("ok"); }},o[1]);
+       opts.append(b);
+     });
+     if(A.guess) fb.hidden=false;
+     c.append(h("div",{class:"eyebrow",text:"猜 · 选一个"}),h("h2",{text:"程序跑到第 5 行 await Share.share(…) 时，会怎样？"}),h("p",{class:"sub",text:"随便猜，猜错不扣分。"}),opts,fb,h("div",{class:"row"},go));
+   }},
+ { key:"a-run", label:"跑", phase:"跑", title:"跑一下：看运行记录一行行亮",
+   notes:{comp:"发出去（在专业课里叫「跑一下」）。这里用的是「放一段录好的运行」，不花钱，也不会每次不一样。", stage:"小火车开到第 5 行，红灯亮起，牌子变成「分享窗口：开着」；你选好了，绿灯亮，火车开走。", real:"第 2 处「等的时候」：网页开发文档 MDN 上的一条真事，正好说明「等的是什么」。", text:"新写。老课只用文字讲「会停下来」，现在让人亲眼看它停。"},
+   render:function(c){
+     var log=h("div",{class:"log","aria-label":"运行记录"});
+     var after=h("div",{class:"opts",hidden:true});
+     var DEB={go:"你猜它不等。看记录：第 5 行停了四秒多，红灯一直亮着，直到你选好。",wait:"你猜对了：停在第 5 行，等分享窗口有了结果，才往下走。",freeze:"停下来等的，只是这一个函数。App 别的地方照样在动，比如动画、计时。"};
+     var btn=h("button",{class:"btn go",type:"button",onclick:function(){
+       btn.disabled=true; btn.textContent="正在跑……";
+       var fact=h("div",{class:"real"},h("span",{class:"tag",text:"等的时候"}),
+         h("p",{text:"同一个「等」，在不同系统上等到的时刻不一样。网页开发文档 MDN 写着：浏览器里的分享，在 Windows 上，分享窗口一弹出来就算好了；在 Android 上，要等内容真的交给你选的那个应用，才算好。"}),
+         src("MDN 网页开发文档","Navigator: share() method","https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share","页面最后修改 2026-07-16","share() 返回一个承诺：在 Windows 上，分享弹窗一打开就兑现；在 Android 上，数据成功交给分享目标后才兑现。用户取消时以 AbortError 结束。","说的是浏览器里的 navigator.share；上面这段代码用的是手机应用里的 Share.share，道理相同，细节以各自文档为准。"));
+       c.insertBefore(fact,after);
+       runLog(true,log,function(){ btn.hidden=true; after.hidden=false; });
+     }},"跑一下");
+     after.append(h("p",{class:"fb "+(A.guess==="wait"?"ok":"no"),text:DEB[A.guess||"wait"]}),h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"继续")));
+     c.append(h("div",{class:"eyebrow",text:"跑 · 跑一下"}),h("h2",{text:"按「跑一下」，看这段代码真的跑一遍"}),
+       h("p",{class:"sub"},"运行记录 ",h("span",{class:"demo",text:"示例：照代码顺序写的，不是真机日志"})),log,h("div",{class:"row"},btn),after);
+   }},
+ { key:"a-order", label:"看 1", phase:"看", title:"排一排：四件事的先后",
+   notes:{comp:"排一排。", stage:"排对了，小火车照你排的顺序再跑一遍；排错了，小兔子挠头。", real:"这一步不放。", text:"新写。"},
+   render:function(c){
+     var EV=[["tap","你点了「分享」"],["open","分享窗口弹出来"],["pick","你在窗口里选好了"],["end","函数往下走，结束"]], RIGHT="tap,open,pick,end";
+     var shown=[EV[1],EV[3],EV[0],EV[2]], built=[];
+     var line=h("div",{class:"sentence","aria-label":"你排的顺序"}), tray=h("div",{class:"tray"}), fb=h("p",{class:"fb",hidden:true});
+     var log=h("div",{class:"log",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var COL=["#f2c963","#8fd0b8","#a9c9ec","#f1b8c8"];
+     function paint(){
+       line.innerHTML="";
+       built.forEach(function(id,k){ var e=EV.find(function(x){return x[0]===id;}); line.append(h("button",{class:"chip",type:"button",style:"background:"+COL[k],title:"点一下拿掉",onclick:function(){ built.splice(k,1); paint(); }},(k+1)+". "+e[1])); });
+       [].forEach.call(tray.children,function(b){ b.disabled=built.indexOf(b.dataset.id)>=0; });
+     }
+     shown.forEach(function(e){ tray.append(h("button",{class:"chip",type:"button","data-id":e[0],style:"background:var(--soft);color:var(--ink)",onclick:function(){ if(built.indexOf(e[0])<0){ built.push(e[0]); paint(); } }},e[1])); });
+     var check=h("button",{class:"btn go",type:"button",onclick:function(){
+       if(built.length<4){ fb.className="fb"; fb.textContent="四件事都排上，再检查。"; fb.hidden=false; return; }
+       if(built.join()===RIGHT){ fb.className="fb ok"; fb.textContent="对。点了，窗口才弹；你选好了，函数才往下走。第 5 行的 await，就卡在第 2 件和第 3 件中间。"; fb.hidden=false; check.hidden=true; tray.hidden=true; log.hidden=false; runLog(true,log,function(){ nx.hidden=false; }); }
+       else { W&&W.react("no"); fb.className="fb no"; fb.textContent= built.indexOf("end")<built.indexOf("pick") ? "函数排在「你选好了」前面了。有 await 的时候，它会先等你选好。" : "再想想：总得先点按钮，窗口才会弹出来。"; fb.hidden=false; }
+     }},"排好了");
+     c.append(h("div",{class:"eyebrow",text:"看 · 排一排"}),h("h2",{text:"把这四件事，按真的发生的先后排好"}),line,tray,h("div",{class:"row"},check),fb,log,nx);
+     paint();
+   }},
+ { key:"a-point", label:"看 2", phase:"看", title:"点一处：让程序等的那个词",
+   notes:{comp:"点一处（材料是代码）。如果不合并，就叫「点一句」，只是这次点的是代码里的词。", stage:"点对了，红绿灯上方亮出「第 5 行：await」。", real:"这一步不放。", text:"改写自老课的「为什么是这样」：原来是一段讲解，现在让人自己在代码里点出来，讲解变成点完以后的一句话。"},
+   render:function(c){
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var SAY={await:"就是它。await 的意思是：在这一行等它有了结果，再往下走。",async:"async 是「开门」的词：写了它，这个函数里才可以用 await。真正停下来等的，是另一个词。",share:"这是「去弹分享窗口」的那一下。等它的，是它前面那个词。",export:"export 是说：别的文件可以用这个函数。和等不等没关系。"};
+     var box=code("src/platform/capacitor/share.ts 第 4–11 行",SHARE,function(id,b){
+       box.querySelectorAll(".tok").forEach(function(t){ t.classList.remove("hit","miss"); });
+       var ok=id==="await"; b.classList.add(ok?"hit":"miss");
+       fb.className="fb "+(ok?"ok":"no"); fb.textContent=SAY[id]; fb.hidden=false;
+       if(ok){ nx.hidden=false; W&&W.showLine(true); W&&W.react("ok"); } else W&&W.react("no");
+     },[5]);
+     c.append(h("div",{class:"eyebrow",text:"看 · 点一处"}),h("h2",{text:"在代码里，点出让程序停下来等的那个词"}),h("p",{class:"sub",text:"带虚线的词都能点。"}),box,fb,nx);
+     W&&W.showLine(false);
+   }},
+ { key:"a-toggle", label:"改", phase:"改", title:"拧一拧：拿掉 await 再跑",
+   notes:{comp:"拧一拧（材料是一个开关）。改一处，再跑一遍，前后对比。", stage:"关掉 await 再跑：小火车不停，一路开走，牌子还写着「分享窗口：开着」，小兔子挠头。", real:"这一步不放。", text:"新写。老课没有「改」这一段。结果来自真代码：按按钮的地方（index.ts 第 20–21 行）等完就会说「分享好了」。"},
+   render:function(c){
+     var on=true, ran={true:false,false:false};
+     var log=h("div",{class:"log"});
+     var fb=h("p",{class:"fb",hidden:true});
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var sw=h("button",{type:"button",role:"switch","aria-checked":"true","aria-label":"第 5 行写着 await",onclick:function(){ on=!on; sw.setAttribute("aria-checked",String(on)); lab.textContent=on?"第 5 行写着 await":"第 5 行的 await 拿掉了"; log.innerHTML=""; fb.hidden=true; }});
+     var lab=h("span",{text:"第 5 行写着 await"});
+     var run=h("button",{class:"btn go",type:"button",onclick:function(){
+       run.disabled=true;
+       runLog(on,log,function(){
+         run.disabled=false; ran[on]=true;
+         fb.className="fb "+(on?"ok":"no");
+         fb.textContent= on ? "有 await：等你选好，才往下走。" : "没有 await：函数不等窗口就结束了。按按钮的地方马上以为「分享好了」，可你还没选。";
+         if(ran[true]&&ran[false]){ fb.textContent+=" 两次都看过了：await 管的，就是「等不等」。"; nx.hidden=false; }
+         fb.hidden=false;
+       });
+     }},"跑一下");
+     c.append(h("div",{class:"eyebrow",text:"改 · 拧一拧"}),h("h2",{text:"如果把第 5 行的 await 拿掉，会怎样？"}),
+       h("p",{class:"sub",text:"先跑一次有 await 的，再关掉开关跑一次，比一比。"}),
+       h("div",{class:"switch"},sw,lab),h("div",{class:"row"},run),log,fb,
+       code("src/platform/index.ts 第 18–24 行（按按钮的地方）",[[18,"  if (runtime.isNativePlatform) {"],[19,"    try {"],[20,"      await shareOnCapacitor(payload);"],[21,"      return 'shared';"],[22,"    } catch {"],[23,"      return shareOnWeb(payload);"],[24,"    }"]],null,[20,21]),nx);
+   }},
+ { key:"a-make", label:"做 1", phase:"做", title:"自己做：换一段真代码",
+   notes:{comp:"自己做：换一段没见过的真代码，自己点、自己写一句。", stage:"小火车回到起点。", real:"这一步不放。", text:"新写。老课的练习在别的文件里；这里直接用同一个仓库的另一行。检查先用固定规则（不花钱）。"},
+   render:function(c){
+     var found=false;
+     var fb=h("p",{class:"fb",hidden:true});
+     var box=code("src/platform/storage.ts 第 53–57 行",[[53,"  return {"],[54,"    ",{t:"async",id:"async"}," getItem(key: string) {"],[55,"      const { value } = ",{t:"await",id:"await"}," ",{t:"preferences.get",id:"get"},"({ key });"],[56,"      return value;"],[57,"    },"]],function(id,b){
+       box.querySelectorAll(".tok").forEach(function(t){ t.classList.remove("hit","miss"); });
+       found=id==="await"; b.classList.add(found?"hit":"miss");
+       fb.className="fb "+(found?"ok":"no"); fb.textContent=found?"对，第 55 行会停下来等。它在等什么？写一句。":"这个词不会让它停下来。再找找。"; fb.hidden=false; W&&W.react(found?"ok":"no");
+     },[55]);
+     var ta=h("textarea",{rows:"2",placeholder:"它在等什么？用一句话写","aria-label":"它在等什么"});
+     var fb2=h("p",{class:"fb",hidden:true});
+     var area=h("div",{class:"opts"});
+     var send=h("button",{class:"btn go",type:"button",onclick:function(){
+       var v=ta.value.trim();
+       if(!found){ fb2.className="fb"; fb2.textContent="先在代码里点出让它等的那个词。"; fb2.hidden=false; return; }
+       if(v.length<4){ fb2.className="fb"; fb2.textContent="写一句完整的话。"; fb2.hidden=false; return; }
+       var ok=/读|取|拿|查|找|get|记录|存/.test(v);
+       fb2.className="fb "+(ok?"ok":"no"); fb2.textContent= ok ? "说到点子上了。" : "再想想：preferences.get 是去手机里「拿」什么？"; fb2.hidden=false;
+       if(ok){ area.innerHTML=""; area.append(h("div",{class:"answer"},h("span",{class:"who",text:"一种写法（参考，不是标准答案）"}),h("p",{text:"它停在第 55 行，等手机把 key 对应的那条记录读出来，拿到以后才把它交回去。"})),h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"学完了"))); W&&W.react("ok"); }
+     }},"检查");
+     c.append(h("div",{class:"eyebrow",text:"做 · 自己做"}),h("h2",{text:"换一段没见过的真代码：它会停下来等吗？等什么？"}),
+       h("p",{class:"sub",text:"这是同一个项目里「从手机里取一条记录」的代码。先点出让它等的词，再写一句它在等什么。"}),box,fb,ta,
+       h("ul",{class:"check"},h("li",{text:"说出是哪个词让它等。"}),h("li",{text:"说出它在等什么。"}),h("li",{text:"不用写代码，一句话就行。"})),
+       h("div",{class:"row"},send),fb2,area);
+     W&&W.reset&&W.reset();
+   }},
+ { key:"a-done", label:"学完", title:"你知道吗 + 带回岛上", last:true,
+   notes:{comp:"没有互动组件：收尾。", stage:"小兔子欢呼。", real:"第 3 处「你知道吗」：await 是哪一年进 JavaScript 标准的；同一个项目的网页版，用的是浏览器给所有网站的分享功能。", text:"新写。"},
+   render:function(c){
+     W&&W.react("ok");
+     c.append(h("div",{class:"eyebrow",text:"学完了"}),
+       h("p",{class:"take",text:"await 就是：在这一行等它有了结果，再往下走。等的只是这个函数，App 别的地方照样在动。"}),
+       h("div",{class:"real"},h("span",{class:"tag",text:"你知道吗"}),
+         h("p",{text:"async 和 await 是 2017 年才正式写进 JavaScript 标准的（ECMAScript 2017）。"}),
+         src("TC39（制定 JavaScript 标准的委员会）","Finished Proposals：Async functions","https://github.com/tc39/proposals/blob/main/finished-proposals.md","列表持续更新","「Async functions」一行的预计发布年份是 2017。","这是标准委员会的提案列表；浏览器实际支持的时间各不一样。"),
+         h("p",{text:"同一个项目的网页版，分享那一行写的是 await navigator.share(shareData)（src/platform/web/share.ts 第 28 行）。navigator.share 是浏览器给所有网站用的分享功能，你关掉分享窗口时，这个「等」会以「用户取消了」结束。"}),
+         src("MDN 网页开发文档","Navigator: share() method","https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share","页面最后修改 2026-07-16","用户取消分享时，承诺以 AbortError 结束；必须由点击之类的用户动作触发。","不同浏览器支持程度不一样，页面上标着「Limited availability」。")),
+       h("p",{class:"fb",html:"<b>带回岛上：</b>你的代码小镇多了一盏红绿灯。以后在代码里看到 await，就想起它。"}),
+       h("div",{class:"row"},h("button",{class:"btn ghost",type:"button",onclick:function(){ A.guess=null; app.goTo(0); }},"从头再玩一遍"),h("button",{class:"btn",type:"button",onclick:function(){ show("town"); }},"去看架构小样")));
+   }}
+];
+
+// ───────── architecture demo: where does a saved record go?
+var T={done:{}};
+var STORE=[
+  [92,"  if (",{t:"isNativePlatform",id:"native"}," && ",{t:"!isElectron",id:"electron"},") {"],
+  [93,"    return createNativeStorage(preferences);"],
+  [94,"  }"],
+  [95,""],
+  [96,"  return createWebStorage(webStorage);"]
+];
+var TOWN=[
+ { key:"t-intro", label:"开场", title:"真代码：存东西的总台",
+   notes:{comp:"没有互动组件：开场。", stage:"代码小镇：「业务代码」是一座房子，「存储总台」是中间的大房子，两边是「手机里的抽屉」和「浏览器里的抽屉」。小车就是一条要存的记录。", real:"真实项目的 5 行代码，决定记录存到哪。", text:"新写，用来说明架构课也能用这几种互动组件。"},
+   render:function(c){
+     c.append(h("div",{class:"eyebrow",text:"架构小样 · 开场"}),h("h2",{text:"存一条记录，它去了哪？"}),
+       h("div",{class:"real"},h("span",{class:"tag",text:"真实世界里的代码"}),
+         h("p",{text:"同一套代码，要在手机 App、网页、电脑桌面版上跑。可三个地方放东西的「抽屉」不一样。下面 5 行，就是这个项目的「存储总台」：它看一眼你在哪，再决定用哪个抽屉。"})),
+       code("src/platform/storage.ts 第 92–96 行",STORE,null,[92]),
+       h("div",{class:"row"},h("button",{class:"btn go",type:"button",onclick:next},"开始")));
+   }},
+ { key:"t-sort", label:"看", phase:"看", title:"分一分：三个地方，两个抽屉",
+   notes:{comp:"分一分：3 张卡，两个格子。每放一张，小车就沿着真的路线跑一趟。", stage:"放对了，小车从「业务代码」出发，经过「存储总台」，开进你选的抽屉。", real:"这一步不放。", text:"新写。最后一张卡（电脑桌面版）是这段代码里最容易看错的地方。"},
+   render:function(c){
+     var CARDS=[{id:"phone",t:"手机 App（苹果、安卓）",b:"phone",why:"isNativePlatform 是真，又不是 Electron：走第 93 行，用手机里的抽屉。"},{id:"web",t:"在浏览器里打开的网页",b:"web",why:"不是手机 App：跳过 92–94 行，走第 96 行，用浏览器里的抽屉。"},{id:"desk",t:"电脑桌面版（Electron）",b:"web",why:"第 92 行写着 !isElectron：桌面版不走手机抽屉，也走第 96 行，用浏览器里的抽屉。"}];
+     var i=0, fb=h("p",{class:"fb",hidden:true}), card=h("div",{class:"roundcard"});
+     var nextCard=h("button",{class:"btn",type:"button",hidden:true,onclick:function(){ i++; paint(); }},"下一张");
+     var nx=h("div",{class:"row",hidden:true},h("button",{class:"btn go",type:"button",onclick:next},"继续"));
+     var bins=h("div",{class:"bins"});
+     [["phone","手机里的抽屉"],["web","浏览器里的抽屉"]].forEach(function(bn,bi){
+       bins.append(h("button",{class:"btn "+(bi?"no":"yes"),type:"button",onclick:function(){
+         var k=CARDS[i], ok=k.b===bn[0];
+         if(ok){ W&&W.route(bn[0]); fb.className="fb ok"; fb.textContent="对。"+k.why; bins.hidden=true; if(i<CARDS.length-1) nextCard.hidden=false; else nx.hidden=false; }
+         else { W&&W.react("no"); fb.className="fb no"; fb.textContent= k.id==="desk" ? "看第 92 行最后那半句：!isElectron 是什么意思？" : "再看一眼第 92 行：什么时候才走手机里的抽屉？"; }
+         fb.hidden=false;
+       }},bn[1]));
+     });
+     function paint(){ card.textContent=CARDS[i].t; fb.hidden=true; bins.hidden=false; nextCard.hidden=true; cnt.textContent="第 "+(i+1)+" 张，共 3 张"; W&&W.reset&&W.reset(); }
+     var cnt=h("p",{class:"sub"});
+     c.append(h("div",{class:"eyebrow",text:"看 · 分一分"}),h("h2",{text:"在这三个地方运行时，记录会放进哪个抽屉？"}),code("src/platform/storage.ts 第 92–96 行",STORE,null,[92]),cnt,card,bins,fb,h("div",{class:"row"},nextCard),nx);
+     paint();
+   }},
+ { key:"t-done", label:"学完", title:"这说明了什么", last:true,
+   notes:{comp:"没有互动组件：收尾。", stage:"小兔子欢呼。", real:"", text:"写给你看的说明，不是课文。"},
+   render:function(c){
+     W&&W.react("ok");
+     c.append(h("div",{class:"eyebrow",text:"架构小样 · 说明"}),
+       h("p",{class:"take",text:"架构课也不需要新的互动组件：模块画成房子，数据画成小车，用的还是「分一分」。"}),
+       h("p",{text:"换的只是材料：一段真代码、一张代码小镇。以后讲「请求从哪来、到哪去」，就让小车沿着真的调用路线跑；讲「哪一步会等」，就在那条路上放一盏红绿灯；讲「哪里会出错」，就让那座房子冒烟。"}),
+       h("div",{class:"row"},h("button",{class:"btn ghost",type:"button",onclick:function(){ app.goTo(0); }},"再看一遍"),h("a",{href:"index.html#pro"},"回到总览的专业课那一站")));
+   }}
+];
+
+// ───────── tabs
+var tabs={await:document.getElementById("tab-await"),town:document.getElementById("tab-town")};
+function show(which){
+  Object.keys(tabs).forEach(function(k){ tabs[k].setAttribute("aria-selected",String(k===which)); });
+  if(which==="await"){ mount("world-await","assets/views/stage-await.jpg"); app=Lesson.run({screens:AWAIT, noScroll:true}); }
+  else { mount("world-town","assets/views/stage-town.jpg"); app=Lesson.run({screens:TOWN, noScroll:true}); }
+  app.goTo(0);
+  try{ history.replaceState(null,"",which==="town"?"#town":"#await"); }catch(e){}
+}
+tabs.await.addEventListener("click",function(){ show("await"); });
+tabs.town.addEventListener("click",function(){ show("town"); });
+window.__pro={show:show,get app(){return app;},get has3D(){return !!W;}};
+show(location.hash==="#town"?"town":"await");
+})();
+</script>
+</body>
+</html>

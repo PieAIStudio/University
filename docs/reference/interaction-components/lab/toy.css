@@ -1,0 +1,33 @@
+/* Shared look of the toy dioramas: the canvas, labels floating above it and the plain button twins. */
+.toy{position:relative;width:100%;aspect-ratio:16/10;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#bfe4ec 0%,#dff1f0 58%,#eef7ef 100%);isolation:isolate;font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif}
+.toy-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toy-labels{position:absolute;inset:0;pointer-events:none}
+.toy-label{position:absolute;left:0;top:0;white-space:nowrap;font-size:13px;line-height:1.35;font-weight:700;color:#2d3a3e;background:#fffdf7;border-radius:10px;padding:3px 9px;box-shadow:0 2px 0 rgba(56,84,90,.18),0 4px 12px rgba(56,84,90,.14);border:0;font-family:inherit}
+.toy-label.hit{pointer-events:auto;cursor:pointer}
+.toy-label.hit:hover,.toy-label.hit:focus-visible{outline:2px solid #e98f73;outline-offset:1px}
+.toy-label.sign{white-space:normal;width:max-content;max-width:132px;text-align:center;font-size:12.5px;background:#fffaf0;padding:4px 8px}
+.toy-label.tag{font-size:12.5px}
+.toy-label.tag.big{font-size:15px;padding:4px 12px}
+.toy-label.mini{font-size:11.5px;padding:1px 6px;background:rgba(255,253,247,.94);box-shadow:none}
+.toy-label.card{font-size:15px;padding:7px 14px;background:#fff;border:2px solid #f2c963}
+.toy-label.bubble{font-size:13px;background:#fff;border:2px solid #e99073}
+.toy-label.car{font-size:12px;padding:2px 7px}
+.toy-label.line{font-size:13.5px;font-weight:500;white-space:normal;width:290px;text-align:left;background:transparent;box-shadow:none;padding:2px 6px;border-radius:6px;color:#2d3a3e}
+.toy-label.line.on{background:rgba(242,201,99,.5)}
+.toy-label.dim{color:#9aa4a6;font-weight:500}
+.toy-label.screen{background:transparent;color:#fff5d6;box-shadow:none;font-size:15px}
+.toy-label.viewfinder{width:74px;height:54px;padding:0;background:transparent;box-shadow:none;border:3px solid #fff;border-radius:8px;outline:2px solid rgba(0,0,0,.25)}
+.toy-ask{position:absolute;left:12px;right:12px;top:10px;margin:0 auto;width:max-content;max-width:calc(100% - 24px);background:rgba(44,58,62,.86);color:#fff;border-radius:12px;padding:6px 12px;font-size:14px;font-weight:700;text-align:center;line-height:1.45}
+.toy-say{position:absolute;left:12px;right:12px;bottom:56px;margin:0 auto;width:max-content;max-width:calc(100% - 24px);background:#fffdf7;color:#2d3a3e;border-radius:12px;padding:6px 12px;font-size:13.5px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.14);text-align:center}
+.toy-say.ok{border:2px solid #73b6a1}
+.toy-say.no{border:2px solid #e99073}
+.toy-bar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.toy-btn{font:700 13px/1.2 inherit;font-family:inherit;border:0;border-radius:999px;padding:8px 13px;background:#fffdf7;color:#2d3a3e;box-shadow:0 2px 0 rgba(56,84,90,.25);cursor:pointer}
+.toy-btn.go{background:#e97a4f;color:#fff}
+.toy-btn.ghost{background:rgba(255,253,247,.7)}
+.toy-btn:focus-visible{outline:2px solid #2b63c8;outline-offset:2px}
+.toy-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.toy-flash.go{animation:toyflash .45s ease-out}
+@keyframes toyflash{0%{opacity:.85}100%{opacity:0}}
+@media (max-width:560px){.toy{aspect-ratio:4/5}.toy-label{font-size:11.5px}.toy-label.sign{max-width:104px;font-size:11px}.toy-label.line{width:200px;font-size:12px}.toy-ask{font-size:12.5px}.toy-say{font-size:12.5px;bottom:92px}}
+@media (prefers-reduced-motion:reduce){.toy-flash.go{animation:none}}

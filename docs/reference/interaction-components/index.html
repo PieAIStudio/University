@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>互动组件与 3D 舞台</title>
+<link rel="stylesheet" href="lab/toy.css">
+<style>
+:root{
+  --bg:#F4F4F1; --paper:#FFFFFF; --ink:#1C1D21; --ink2:#4E525B; --ink3:#80858F;
+  --line:#DCDDD8; --soft:#F7F7F4;
+  --orange:#D9621E; --orange-bg:#FCEBDD;
+  --green:#12835A; --green-bg:#E0F3EA;
+  --blue:#2B63C8; --blue-bg:#E6EEFB;
+  --purple:#5A43C8; --purple-bg:#ECE8FB;
+  --gone:#9B9FA7;
+  --wire:#8F959F; --wfill:#F8F8F6; --wdot:#E4E4E0; --wdark:#2A2D33;
+  --shadow:0 1px 2px rgba(25,25,20,.05),0 8px 28px rgba(25,25,20,.06);
+  --sans:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --orange:#F0894B; --orange-bg:#3A2519; --green:#3DC48D; --green-bg:#16332A;
+  --blue:#76A2F2; --blue-bg:#1C2843; --purple:#A18EF4; --purple-bg:#282247; --gone:#6E737C;
+  --wire:#7D838E; --wfill:#202328; --wdot:#2B2E34; --wdark:#DADCE0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --orange:#F0894B; --orange-bg:#3A2519; --green:#3DC48D; --green-bg:#16332A;
+  --blue:#76A2F2; --blue-bg:#1C2843; --purple:#A18EF4; --purple-bg:#282247; --gone:#6E737C;
+  --wire:#7D838E; --wfill:#202328; --wdot:#2B2E34; --wdark:#DADCE0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.85;padding-inline:16px;padding-block:0 80px}
+.page{max-width:1000px;margin:0 auto}
+.col{max-width:720px;margin-inline:auto}
+h1,h2,h3{text-wrap:balance;line-height:1.3;margin:0}
+p{margin:0}
+b{font-weight:700}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.stack-lg{display:grid;gap:28px}
+
+/* cover */
+.cover{padding-block:56px 24px;display:grid;gap:18px}
+.kicker{font-size:13px;letter-spacing:.14em;color:var(--ink3);font-weight:500}
+.cover h1{font-size:clamp(32px,6vw,52px);font-weight:900;letter-spacing:-.01em}
+.cover .sub{font-size:19px;color:var(--ink2)}
+.howto{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:22px 24px;display:grid;gap:12px}
+.howto h2{font-size:17px}
+.howto ol{margin:0;padding-left:1.3em;display:grid;gap:4px;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;color:var(--ink2)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+.lg-new{background:var(--green-bg);border:2px solid var(--green)}
+.lg-chg{background:var(--orange-bg);border:2px solid var(--orange)}
+.lg-gone{border:2px dashed var(--gone)}
+.lg-chal{background:var(--purple-bg);border:2px solid var(--purple)}
+
+/* persona */
+.persona{display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:center;background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:18px 20px}
+.face{width:64px;height:64px;border-radius:50%;background:var(--orange-bg);display:grid;place-items:center;font-weight:900;font-size:24px;color:var(--orange);border:2px solid var(--orange)}
+.persona p{color:var(--ink2);font-size:16px}
+.persona b{color:var(--ink)}
+
+/* route */
+.route{list-style:none;margin:0;padding:0;display:grid;gap:0;position:relative}
+.route li{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:start;padding-bottom:14px;position:relative}
+.route li::before{content:"";position:absolute;left:19px;top:34px;bottom:0;border-left:2px dashed var(--line)}
+.route li:last-child::before{display:none}
+.route .dot{width:40px;height:40px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:grid;place-items:center;font-weight:900;font-size:16px}
+.route li.hot .dot{background:var(--orange);border-color:var(--orange);color:#fff}
+.route a{color:var(--ink);text-decoration:none;font-weight:700}
+.route a:hover{text-decoration:underline}
+.route span{display:block;color:var(--ink3);font-size:15px;line-height:1.5}
+
+/* section headers */
+.part{padding-top:72px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px;scroll-margin-top:24px}
+.part-h{display:grid;gap:8px}
+.part-h .no{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--paper);font-weight:900;font-size:20px}
+.part-h h2{font-size:clamp(26px,4.2vw,36px);font-weight:900}
+.part-h .lead{font-size:18px;color:var(--ink2)}
+.guide{font-size:17px;color:var(--ink2);border-left:3px solid var(--line);padding-left:14px}
+
+/* step labels */
+.step{display:grid;gap:10px}
+.label{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;letter-spacing:.06em;color:var(--ink3)}
+.label::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink3)}
+.label.now::before{background:var(--gone)}
+.label.think::before{background:var(--orange)}
+.label.prob::before{background:#C23B3B}
+.label.fix::before{background:var(--green)}
+.label.why::before{background:var(--blue)}
+.label.you::before{background:var(--purple)}
+
+/* screenshots with callouts */
+figure{margin:0}
+.annot{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--paper);box-shadow:var(--shadow)}
+.annot img{display:block;width:100%}
+.annot.phone{max-width:300px;margin-inline:auto;border-radius:26px}
+.co{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:#C23B3B;color:#fff;font-weight:900;font-size:15px;display:grid;place-items:center;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 2px 6px rgba(0,0,0,.3)}
+.cap{font-size:14px;color:var(--ink3);margin-top:8px}
+.keys{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.keys li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:16px}
+.keys li i{width:24px;height:24px;border-radius:50%;background:#C23B3B;color:#fff;font-style:normal;font-weight:900;font-size:13px;display:grid;place-items:center;margin-top:3px}
+.keys.fix li i{background:var(--green)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.two-shots{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+
+/* bubble */
+.bubble{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:start}
+.bubble .face{width:44px;height:44px;font-size:16px}
+.bubble .say{position:relative;background:var(--paper);border:2px solid var(--orange);border-radius:18px;padding:12px 16px;font-size:17px;box-shadow:var(--shadow)}
+.bubble .say::before{content:"";position:absolute;left:-10px;top:14px;border:8px solid transparent;border-right-color:var(--orange);border-left:0}
+.bubble .say p+p{margin-top:6px}
+
+/* boxes */
+.box{border-radius:16px;padding:16px 18px;display:grid;gap:8px}
+.box h4{margin:0;font-size:14px;letter-spacing:.08em;font-weight:900}
+.box.analogy{background:var(--blue-bg)}
+.box.analogy h4{color:var(--blue)}
+.box.principle{background:var(--soft);border:1px solid var(--line)}
+.box.principle h4{color:var(--ink2)}
+.box.owner{background:var(--purple-bg)}
+.box.owner h4{color:var(--purple)}
+.box p{font-size:16.5px}
+.problem{font-size:18px;font-weight:700}
+
+details.small{border-top:1px dashed var(--line);padding-top:10px}
+details.small summary{cursor:pointer;color:var(--ink3);font-size:15px}
+details.small .in{padding-top:10px;display:grid;gap:8px;font-size:15.5px;color:var(--ink2)}
+
+/* wireframes */
+.frame{position:relative;border:1.5px solid var(--wire);background-color:var(--wfill);background-image:radial-gradient(var(--wdot) 1px,transparent 1px);background-size:12px 12px;overflow:hidden;font-size:11px;line-height:1.4;color:var(--ink2)}
+.frame.desk{aspect-ratio:16/10;border-radius:12px;width:100%}
+.frame.phone{aspect-ratio:9/19;border-radius:26px;width:100%;max-width:240px;margin:0 auto}
+.w{position:relative;border:1.2px solid var(--wire);border-radius:7px;background:var(--paper);padding:5px 8px}
+.w.new{border:1.8px solid var(--green);background:var(--green-bg);color:var(--green)}
+.w.chg{border:1.8px solid var(--orange);background:var(--orange-bg);color:var(--orange)}
+.w.gone{border:1.5px dashed var(--gone);background:transparent;color:var(--gone);text-decoration:line-through}
+.btn{border-radius:999px;text-align:center;font-weight:700;padding:6px 8px}
+.btn.pri{background:var(--wdark);color:var(--paper);border-color:var(--wdark)}
+.btn.pri.new{background:var(--green);color:#fff;border-color:var(--green)}
+.ln{height:5px;border-radius:3px;background:var(--line);margin:3px 0}
+.img{background:repeating-linear-gradient(45deg,var(--line) 0 2px,transparent 2px 7px);border:1.2px solid var(--wire);border-radius:6px}
+.isl{position:absolute;border-radius:48% 52% 40% 45%/55% 50% 45% 40%;background:color-mix(in srgb,var(--green) 22%,var(--wfill));border:1.2px solid var(--wire)}
+.av{position:absolute;width:15px;height:15px;border-radius:50%;background:var(--orange-bg);border:1.2px solid var(--orange)}
+.pos{position:absolute}
+.fcol{display:flex;flex-direction:column;gap:6px}
+.frow{display:flex;gap:6px;align-items:center}
+.grow{flex:1}
+.tiny{font-size:9.5px;color:var(--ink3)}
+.bold{font-weight:700;color:var(--ink)}
+.rail{position:absolute;left:2%;top:3%;bottom:3%;width:17%;padding:6px}
+.rail .it{padding:3px 6px;border-radius:5px;margin-bottom:3px}
+.rail .it.on{background:var(--orange-bg);color:var(--orange)}
+.rrail{position:absolute;right:2%;top:3%;bottom:3%;width:19%;padding:6px}
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:6px 4px 10px;background:var(--paper);border-top:1.2px solid var(--wire)}
+.tabbar .tb{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:9.5px}
+.tabbar .tb i{width:13px;height:13px;border-radius:3px;background:var(--line);display:block}
+.tabbar .tb.on{color:var(--orange);font-weight:700}
+.tabbar .tb.on i{background:var(--orange)}
+.tabbar.new{border-top:1.8px solid var(--green);background:var(--green-bg)}
+.topbar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;padding:9px 10px 6px}
+.mk{position:absolute;z-index:3;left:-8px;top:-8px;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:900;font-style:normal;text-decoration:none;box-shadow:0 0 0 2px var(--paper)}
+.nw{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-cap{font-size:14px;color:var(--ink3);text-align:center;margin-top:8px}
+
+/* floor plan */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.plan{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:18px;display:grid;gap:12px;align-content:start}
+.plan h3{font-size:17px}
+.rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.room{border:2px solid var(--ink);border-radius:10px;padding:10px 8px;min-height:74px;display:grid;align-content:start;gap:4px;font-size:15px;font-weight:700;position:relative;background:var(--soft)}
+.room small{font-weight:400;font-size:12.5px;color:var(--ink3);line-height:1.45}
+.room.big{grid-column:span 2}
+.room.closet{grid-column:span 4;border-style:dashed;background:transparent}
+.room.closet .inner{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.room.closet .inner span{border:1.5px solid var(--ink3);border-radius:8px;padding:2px 8px;font-size:13.5px;font-weight:500}
+.today{position:absolute;right:6px;top:-9px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:0 6px;line-height:18px}
+.inner .today{position:static;margin-left:4px}
+.room small.today{color:#fff;font-weight:700;font-size:11px}
+.room.after{border-color:var(--green);background:var(--green-bg)}
+.strip{grid-column:span 4;border:2px solid var(--green);border-radius:10px;padding:6px 10px;font-size:14px;background:var(--green-bg);color:var(--green);font-weight:700}
+.rooms5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.rooms5 .strip{grid-column:span 5}
+
+/* loops */
+.loops{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.loopcard{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:16px;display:grid;gap:8px;justify-items:center}
+.loopcard h3{font-size:16px}
+.loopcard svg{width:100%;max-width:320px;height:auto}
+.loopcard p{font-size:15px;color:var(--ink2);text-align:center}
+
+/* comic */
+.comic{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.panel{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:14px;display:grid;gap:8px;align-content:start}
+.panel .t{font-size:13px;color:var(--ink3);font-weight:700}
+.panel .scene{height:92px;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;font-size:14px;color:var(--ink2);text-align:center;padding:6px}
+.panel p{font-size:15px}
+
+/* decisions */
+.q{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:20px;display:grid;gap:12px}
+.q h3{font-size:19px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.q h3 .qid{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--purple);color:#fff;font-size:15px}
+.q .ctx{color:var(--ink2);font-size:16px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;border:2px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;align-content:start;background:var(--soft);color:var(--ink)}
+.opt:hover{border-color:var(--wire)}
+.opt:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.opt b{font-size:16px}
+.opt .d{color:var(--ink2);font-size:14.5px;line-height:1.65}
+.opt .rec{justify-self:start;background:var(--green-bg);color:var(--green);font-size:12.5px;border-radius:999px;padding:1px 9px;font-weight:700}
+.opt[aria-pressed="true"]{border-color:var(--purple);background:var(--purple-bg)}
+.opt[aria-pressed="true"] b::after{content:"  ✓ 你选的";color:var(--purple);font-size:13px}
+.picks{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--purple-bg);color:var(--purple);border-radius:16px;padding:14px 18px;font-size:16px}
+.picks code{font-family:ui-monospace,Menlo,monospace;background:var(--paper);color:var(--ink);padding:3px 9px;border-radius:7px;font-size:14px}
+.picks button{all:unset;cursor:pointer;background:var(--purple);color:#fff;border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px}
+.picks button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* lists */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:15px}
+.chip.x{text-decoration:line-through;color:var(--ink3);border-style:dashed;background:transparent}
+.card{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.minus{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.minus li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.minus li i{font-style:normal;font-weight:900;font-size:20px;line-height:1.4}
+.minus li i.m{color:#C23B3B}
+.minus li i.p{color:var(--green)}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:16px 18px;display:grid;grid-template-columns:56px 1fr;gap:14px}
+.steps .n{font-weight:900;font-size:15px;color:var(--orange);line-height:1.5}
+.steps .n small{display:block;color:var(--ink3);font-weight:500;font-size:13px}
+.steps p{font-size:16px}
+.steps .ok{font-size:14.5px;color:var(--ink3);margin-top:6px}
+
+.tblwrap{overflow-x:auto;background:var(--paper);border-radius:14px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px;line-height:1.6}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--ink3);font-weight:500}
+tr:last-child td{border-bottom:0}
+
+/* prototype */
+.proto{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start}
+.device{width:300px;height:620px;border-radius:40px;border:10px solid var(--wdark);background:var(--paper);position:relative;overflow:hidden;box-shadow:var(--shadow);font-size:13.5px;line-height:1.6}
+.device .scr{position:absolute;inset:0;display:flex;flex-direction:column;padding:26px 16px 70px;gap:10px;overflow:auto}
+.device .pbtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;text-align:center;border-radius:999px;padding:11px 14px;font-weight:700;background:var(--orange);color:#fff;font-size:14.5px}
+.device .pbtn.sec{background:transparent;color:var(--ink2);border:1.5px solid var(--line)}
+.device .pbtn.ghost{background:transparent;color:var(--ink3);padding:6px;font-weight:500}
+.device .pbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.device h4{font-size:20px;font-weight:900;margin:0;line-height:1.3}
+.device .sm{font-size:12.5px;color:var(--ink2)}
+.device .bx{border:1.5px solid var(--line);border-radius:14px;padding:11px;display:grid;gap:5px;background:var(--soft)}
+.device .bx.sel{border-color:var(--orange);background:var(--orange-bg)}
+.device .ptab{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:8px 4px 12px;border-top:1px solid var(--line);background:var(--paper)}
+.device .ptab button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink3);padding:2px 6px;border-radius:8px}
+.device .ptab button i{width:18px;height:18px;border-radius:5px;background:var(--line);display:block}
+.device .ptab button[aria-current="page"]{color:var(--orange);font-weight:700}
+.device .ptab button[aria-current="page"] i{background:var(--orange)}
+.device .ptop{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.device .ptop .sp{flex:1}
+.device .mapbox{flex:1;min-height:260px;border-radius:16px;position:relative;background:linear-gradient(#cfe3f5,#9dbfe6);overflow:hidden}
+.device .mapbox .isl{border-color:#6f8fb0}
+.device .pill{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);white-space:nowrap}
+.device .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.device .tiles div{border:1.5px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;background:var(--soft)}
+.device .tiles div.lock{opacity:.45;border-style:dashed}
+.device .week{display:flex;gap:4px}
+.device .week span{flex:1;height:26px;border-radius:6px;background:var(--line);display:grid;place-items:center;font-size:10px;color:var(--ink3)}
+.device .week span.on{background:var(--orange);color:#fff}
+.proto-side{display:grid;gap:12px;align-content:start}
+.proto-side ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink2);font-size:16px}
+.proto-side ol li.cur{color:var(--ink);font-weight:700}
+.toast{position:absolute;left:12px;right:12px;bottom:78px;background:var(--wdark);color:var(--paper);border-radius:12px;padding:10px 12px;font-size:12.5px}
+
+.handoff{font-size:17px;color:var(--ink2);display:flex;gap:10px;align-items:flex-start;padding-top:6px}
+.handoff::before{content:"→";font-weight:900;color:var(--orange)}
+.minute{background:var(--ink);color:var(--paper);border-radius:18px;padding:22px 24px;display:grid;gap:10px}
+.minute h2{font-size:18px}
+.minute ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.minute p{opacity:.8;font-size:15px}
+.recap{background:var(--paper);border:2px dashed var(--orange);border-radius:18px;padding:20px 22px;display:grid;gap:10px}
+.recap h3{font-size:19px}
+.faq{display:grid;gap:12px}
+.faq .card{display:grid;gap:6px}
+.faq .card b{font-size:17px}
+.faq .card p{color:var(--ink2);font-size:16px}
+.signs{display:flex;justify-content:center}
+.signs svg{width:100%;max-width:420px;height:auto}
+footer{margin-top:72px;color:var(--ink3);font-size:14px;border-top:1px solid var(--line);padding-top:18px;display:grid;gap:6px}
+
+@media (max-width:760px){
+  body{font-size:16.5px}
+  .two-shots,.plans,.loops{grid-template-columns:1fr}
+  .comic{grid-template-columns:1fr 1fr}
+  .rooms5{grid-template-columns:repeat(3,1fr)}
+  .rooms5 .strip{grid-column:span 3}
+  .proto{grid-template-columns:1fr}
+  .device{margin:0 auto;width:min(300px,100%)}
+  .co{width:22px;height:22px;font-size:12px}
+  .trio{grid-template-columns:repeat(3,190px);overflow-x:auto;padding-bottom:6px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .device .scr:not([hidden]){animation:fade .25s ease}
+  @keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+
+.files{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.files a{display:grid;gap:4px;background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;text-decoration:none;color:var(--ink)}
+.files a b{font-size:16px;color:var(--blue)}
+.files a span{font-size:14px;color:var(--ink2);line-height:1.55}
+.echo{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.echo li{display:grid;grid-template-columns:30px 1fr;gap:10px;background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px}
+.echo li>i{font-style:normal;font-weight:900;color:var(--purple);font-size:16px}
+.echo .where{display:block;font-size:14px;color:var(--ink3)}
+.ruled{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ruled li{display:grid;grid-template-columns:92px 1fr;gap:10px;background:var(--paper);border-radius:12px;box-shadow:var(--shadow);padding:10px 14px;font-size:15.5px}
+.ruled li b{color:var(--purple)}
+.nine{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.nine .w{font-size:13px;text-align:center;padding:8px 6px;line-height:1.45}
+.nine .w b{display:block;font-size:15px}
+.nine .w.merge{border-style:dashed}
+.sidebyside{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sidebyside .card{display:grid;gap:8px;align-content:start}
+.sidebyside h4{margin:0;font-size:17px}
+.mats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.mats div{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14px;line-height:1.55}
+.mats b{display:block;font-size:15px}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:start}
+.shots figure{display:grid;gap:6px;margin:0}
+.shots img{width:100%;border-radius:14px;border:1px solid var(--line);display:block;background:var(--soft)}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.three .card{display:grid;gap:6px;align-content:start}
+.three .card h4{margin:0;font-size:16px}
+.three .card .tag{justify-self:start;font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;background:var(--orange-bg);color:var(--orange)}
+.realq{background:var(--paper);border-left:4px solid #E7B94A;border-radius:12px;padding:10px 14px;display:grid;gap:4px;font-size:15px}
+.realq small{color:var(--ink3);font-size:13px}
+.town{width:100%;border-collapse:collapse}
+.alt{display:grid;gap:12px}
+.alt .card{display:grid;gap:8px}
+.alt .card h3{margin:0;font-size:18px}
+.alt .pc{font-size:15px;color:var(--ink2)}
+.alt .pc b{color:var(--ink)}
+.stage3d{display:grid;gap:8px}
+.stage3d .toy{box-shadow:var(--shadow)}
+.stage3d .bar{display:flex;flex-wrap:wrap;gap:6px}
+.stage3d .bar button{font:inherit;font-size:14px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.stage3d .bar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.stage3d .bar button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.stage3d .hint{font-size:14px;color:var(--ink3)}
+.stage3d .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gal9{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.gal9 .card{padding:0;overflow:hidden;display:grid}
+.gal9 img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.gal9 .card div{padding:8px 12px 12px;display:grid;gap:4px;font-size:14px;line-height:1.55}
+.gal9 .card b{font-size:15.5px}
+.gal9 .play{all:unset;cursor:pointer;justify-self:start;background:var(--green);color:#fff;border-radius:999px;padding:4px 12px;font-weight:700;font-size:13.5px}
+.gal9 .play:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.open3d{all:unset;cursor:pointer;background:var(--green);color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;font-size:15px}
+.open3d:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.layers{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:18px;align-items:center}
+.qmini .opts{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media (max-width:760px){.sidebyside,.three,.layers{grid-template-columns:1fr}.nine{grid-template-columns:repeat(2,minmax(0,1fr))}.ruled li{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="cover col">
+  <div class="kicker">University · 互动组件与 3D 舞台 · 合订本 · 2026 年 9 月 29 日 · 草案，等你拍板</div>
+  <h1>跟着小林，把一关从头走到尾</h1>
+  <p class="sub">这一份把前两份（「互动组件收敛」和「组件搬进庭院」）、我们后来几次的讨论，还有你新提的要求合成一本：每一关都要连着真实世界。它放在项目文件夹里，双击就能打开，3D 不联网也能玩；也可以直接交给别的 AI 照着做。</p>
+
+  <div class="howto">
+    <h2>这份报告怎么读</h2>
+    <p>还是那位虚构的新学员「小林」。这次，小林从头到尾上一遍<b>新的第一关</b>；后面换一位学写 App 的「小周」，上两关专业课。</p>
+    <p>每一站都按同样的五步来讲：</p>
+    <ol>
+      <li><b>现在是什么样</b>：真实截图，红色数字告诉你看哪儿。</li>
+      <li><b>小林会怎么想</b>：一个新手的第一反应。</li>
+      <li><b>问题出在哪</b>：一句话说清。</li>
+      <li><b>建议改成这样</b>：新样子的截图或草图，绿色是新加的。</li>
+      <li><b>为什么</b>：打个比方，再讲背后的道理。</li>
+    </ol>
+    <p>最后有 10 件事要你拍板，点一下就行，底部会生成一行字，复制发给我。</p>
+    <div class="legend" aria-label="颜色说明">
+      <span><i class="lg-new"></i>新加的、推荐的</span><span><i class="lg-chg"></i>改过的、要注意的</span><span><i class="lg-gone"></i>拿掉的</span><span><i class="lg-chal"></i>你说过的话、要你决定的</span>
+    </div>
+    <h2 style="margin-top:14px">这一套一共 5 页，都在同一个文件夹里</h2>
+    <div class="files">
+      <a href="index.html"><b>总览（就是这一页）</b><span>给你读的。讲来龙去脉、给建议、等你拍板。</span></a>
+      <a href="first-level.html"><b>新第一关：能玩</b><span>课文全写好了，3D 舞台真的会动。从开场点到学完，大约 8 分钟。</span></a>
+      <a href="pro-lesson.html"><b>专业课：能玩</b><span>一关讲「等一下再往下走」，一个小样讲「存一条记录去了哪」，都用真项目的代码。</span></a>
+      <a href="spec.html"><b>执行规格</b><span>给动手的人或 AI 看的。每条规矩、每种互动组件、每项验收都写在这里。</span></a>
+      <a href="album.html"><b>旧组件相册</b><span>收成 9 种之前的 67 种，每种一张截图，写明去了哪。</span></a>
+    </div>
+  </div>
+
+  <div class="persona">
+    <div class="face" aria-hidden="true">林</div>
+    <p><b>小林（虚构）。</b>35 岁，在公司做行政，想学会用 AI 干活。怕问错、怕被笑。每天通勤路上有 10 分钟，主要用手机。小时候玩过小霸王、诺基亚上的贪吃蛇，也在 QQ 上玩过连连看。</p>
+  </div>
+
+  <div class="minute">
+    <h2>如果你只有一分钟</h2>
+    <ol>
+      <li><b>叫法统一：</b>小林手上做的动作，统一叫「互动组件」。课里只用 9 种：选一个、分一分、连一连、排一排、点一句、点图、拧一拧、发出去、自己做。「点一句」和「点图」要不要合成「点一处」，两种写法并排放在第 0 站，等你定。</li>
+      <li><b>一关由五样东西组成：</b>一件真事开场；猜、跑、看、改、做五段；一个 3D 舞台；一个 3 到 6 道题的 3D 小回合；学完带一样东西回岛上。</li>
+      <li><b>真实世界放三处：</b>开场讲一件真事；等 AI 回答的几秒放一个真数字；学完放一条「你知道吗」。每条都查过出处，写明哪天查的。代码课用真项目的代码，和网站真在用的写法。</li>
+      <li><b>3D 是舞台，字和按钮是平的：</b>一关只载入一次；答题还是点平面按钮，舞台跟着起反应；手机画不出 3D 就换成静态图，课照样上完。</li>
+      <li><b>新第一关连课文都写好了，能玩。</b>专业课也做了能玩的样子，说明这 9 种够用：专业课要加的是「材料」（代码、运行记录、开关、代码小镇），不用加新的互动组件。</li>
+      <li><b>现在不改产品。</b>Codex 正在优化整个 App。等它做完，照「先后顺序」一步一步来：先删旧课旧组件，再做第一关。</li>
+    </ol>
+    <p>从头读完大约 30 分钟。只想先玩：打开<a href="first-level.html">新第一关</a>。</p>
+  </div>
+</header>
+
+<section class="part col" id="echo">
+  <div class="part-h">
+    <h2>先对一遍：你最近说的，我是这样听懂的</h2>
+    <p class="lead">都是你 9 月 28 日说的。左边是我理解的意思，灰字是它落在这份文档的哪里。听错了，告诉我第几条就行。</p>
+  </div>
+  <ul class="echo">
+    <li><i>1</i><span>「舞台加平面按钮、3D 小回合、带回岛上」这个方向，<b>起码给了你信心</b>。<span class="where">这份按它写到底。要你正式点头的是第 A 件。</span></span></li>
+    <li><i>2</i><span><b>现在不能动产品</b>：Codex 在优化 App 的方方面面。<span class="where">这一轮只写文档和样机，产品代码一行没碰。先后顺序的第 1 步就是「等 Codex 做完」。</span></span></li>
+    <li><i>3</i><span>叫「九种互动组件」，不叫「手势」，<b>问我的看法</b>。<span class="where">我同意，还建议再配两个词，各管一件事，见下面「三个词」。</span></span></li>
+    <li><i>4</i><span>课要<b>连着真实世界</b>：现在的第一关缺真实的案例和用法，要加上，放在哪一段可以商量。<span class="where">第 1 站专门讲，第一关样机里放了三处。</span></span></li>
+    <li><i>5</i><span>代码课用<b>真仓库的代码、真网站的代码</b>。<span class="where">第 5、6 站；专业课样机里的代码一个字没改，行号能对上。</span></span></li>
+    <li><i>6</i><span>AI 应用课用<b>真实用法、相关新闻、前沿的事，甚至有趣的小知识</b>，增加可信度和兴趣。<span class="where">第 1 站的四类料、三个位置；每条都核对了出处。</span></span></li>
+    <li><i>7</i><span>把两份方案和最近的讨论<b>合成一份</b>，放在本机的项目里；云端下载下来 3D 用不了。<span class="where">就是这个文件夹。3D 打包成了一个不用联网的文件，双击页面就能玩。</span></span></li>
+    <li><i>8</i><span>决定过的事都记进去；<b>跳出框架，给另一种办法</b>；写完再改两遍。<span class="where">「你已经拍板的」「换个思路」两节；附录写了两遍各改了什么。</span></span></li>
+    <li><i>9</i><span>开工前有不懂的先问。<span class="where">我问了四件，你答：只提交这个文件夹、先不推送；第一关连课文一起写；真实案例每条都核对出处；「点一处」两种写法都写进来，你看了再定。</span></span></li>
+  </ul>
+  <div class="box owner"><h4>三个词（回答第 3 条）</h4>
+    <p><b>互动组件</b>：小林的手在做的动作，比如「分一分」。一共 9 种，固定不变。</p>
+    <p><b>材料</b>：动作作用在什么东西上，比如一张照片、一段代码、一份运行记录。材料可以一直加。</p>
+    <p><b>舞台</b>：屏幕上面那块 3D 的庭院，一关一个。</p>
+    <p>岛上那些计时、计分的，另外叫<b>游戏组件</b>，不算在 9 种里。「手势」这个词不再用：它听起来像在屏幕上划的方向，容易让人以为要做滑动识别。</p>
+  </div>
+</section>
+
+<section class="part col" id="ruled">
+  <div class="part-h">
+    <h2>你已经拍板的（这份都照着做，不再重新讨论）</h2>
+    <p class="lead">带日期的是你的原意；「以前就有的」是项目里早就定好的规矩。</p>
+  </div>
+  <ul class="ruled">
+    <li><b>9 月 27 日</b><span>批准第 7 版学习旅程：岛会跟着学的东西长大，有宝箱和徽章。这份的「带回岛上」接着它往下做。</span></li>
+    <li><b>9 月 28 日</b><span>课以互动组件为主。第一关当样板，然后第二关，再其余的。</span></li>
+    <li><b>9 月 28 日</b><span>每个互动组件都要有 3D 的样子，要有庭院感、可爱，借经典游戏的亲切感，而且真能学到东西。</span></li>
+    <li><b>9 月 28 日</b><span>3D 一定要有，但一个 3D 场面至少装 3 到 5 道题，否则不值得等它加载；课里不是游戏，不计时。</span></li>
+    <li><b>9 月 28 日</b><span>第 1、2 版的老课，连同第 3 版第一关现在的内容，都可以整个删掉，按新格式重做；长的课拆成 3 到 5 关。</span></li>
+    <li><b>9 月 28 日</b><span>收成 9 种以后，退下来的组件任何一关都不许再用，最多留截图参考；让写课的 AI 一眼看清能用什么。</span></li>
+    <li><b>9 月 28 日</b><span>现在不改产品；叫「互动组件」；每一关要连着真实世界。</span></li>
+    <li><b>9 月 20 日</b><span>「猜」猜的是怎么用，不是猜 AI 会怎么说。新第一关和专业课的「猜」都照这个写。</span></li>
+    <li><b>9 月 23 日</b><span>否决过「飞机当主角」的玩法。这份里纸飞机只是道具，小兔子扔它。</span></li>
+    <li><b>以前就有的</b><span>能读的字永远是真的字，不画进 3D（全公司的规矩）；打分分三档：先用固定规则，再用小模型，最后才用大模型，而且要计费；正式上线要等第 1 到 3 关做成样板。</span></li>
+  </ul>
+  <p class="handoff">规矩对齐了。出发之前，先把工具箱理一遍。</p>
+</section>
+
+<section class="part col" id="route">
+  <div class="part-h">
+    <h2>我们要走的路线</h2>
+    <p class="lead">先理工具箱，再跟着小林走完第一关的四站，然后换小周上两关专业课，最后回到岛上。橙色的两站最要紧，时间紧先看它们。</p>
+  </div>
+  <ol class="route">
+    <li><span class="dot">0</span><div><a href="#s0">先理工具箱：67 种收成 9 种</a><span>种类太多，学的人和写课的 AI 都挑花眼</span></div></li>
+    <li class="hot"><span class="dot">1</span><div><a href="#s1">开场：真实世界之门</a><span>整关只有一句「真实用法」</span></div></li>
+    <li class="hot"><span class="dot">2</span><div><a href="#s2">猜和跑：一关一个 3D 舞台</a><span>全是平的卡片；等 AI 的几秒只能干等</span></div></li>
+    <li><span class="dot">3</span><div><a href="#s3">看：3D 小回合</a><span>6 张卡一口气做完，却看不见结果</span></div></li>
+    <li><span class="dot">4</span><div><a href="#s4">改和做：带东西回岛上</a><span>学完，作品就不见了</span></div></li>
+    <li><span class="dot">5</span><div><a href="#pro">专业课·代码：真项目、真网站</a><span>「会停下来等」只讲不看</span></div></li>
+    <li><span class="dot">6</span><div><a href="#s6">专业课·架构：代码小镇</a><span>架构是一张图，课文只能一段段讲</span></div></li>
+    <li><span class="dot">7</span><div><a href="#s7">回到岛上：游戏组件</a><span>岛上只有一种游戏</span></div></li>
+  </ol>
+  <p class="guide">走完以后是：改完的样子（能玩）、删什么留什么、换个思路、拍板、先后顺序、你可能会问、一个都没丢的对照表。</p>
+</section>
+
+<!-- ───────────────────────── station 0 ───────────────────────── -->
+<section class="part col" id="s0">
+  <div class="part-h">
+    <span class="no">0</span>
+    <h2>先理工具箱：67 种收成 9 种</h2>
+    <p class="lead">一关里小林手上能做的动作，就是互动组件。动手改课之前，先看看现在的工具箱里有多少种。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot">
+        <img src="assets/views/catalog-overview.jpg" alt="互动玩法总览：左边是分类和列表，右边是一个组件的试玩">
+        <span class="co" style="left:38.8%;top:27.9%">1</span>
+        <span class="co" style="left:44.5%;top:49%">2</span>
+        <span class="co" style="left:49.5%;top:62.5%">3</span>
+      </div>
+      <figcaption class="cap">评估面板「互动玩法总览」（9 月 28 日拍的）。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>面板里有 60 种。</b>加上课里另外写的几份，一共 67 种，每种都在「旧组件相册」里有一张截图。</span></li>
+      <li><i>2</i><span><b>分了好几类：</b>原生、连续课程、短互动研究、游戏研究、3D、早期实验。同一件事常常有好几种做法。</span></li>
+      <li><i>3</i><span><b>每一种还分入门、进阶、挑战几档。</b>「把东西分成两堆」这一件事，就有 5 种长得不一样、规矩也不一样的写法。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>上一关是拖卡片，这一关又变成盖章……每次都要重新学怎么玩，我到底是在学 AI，还是在学玩法？</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">种类太多。小林每一关都要重新适应玩法，力气花在了玩法上；写课的 AI 也会挑花眼，同一件事这次用这个、下次用那个。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：课里只留 9 种，变的是材料</span>
+    <div class="plan">
+      <h3>课里只用这 9 种（和你上一轮看过的一样）</h3>
+      <div class="nine">
+        <div class="w new"><b>选一个</b>在两到四句里点一句</div>
+        <div class="w new"><b>分一分</b>把每样东西放进对的格子</div>
+        <div class="w new"><b>连一连</b>把两边配成对</div>
+        <div class="w new"><b>排一排</b>把几块按顺序排好</div>
+        <div class="w new merge"><b>点一句</b>在一段字里点出那一句</div>
+        <div class="w new merge"><b>点图</b>在照片上点中一块</div>
+        <div class="w new"><b>拧一拧</b>拖一个数、拨一个开关，看结果变</div>
+        <div class="w new"><b>发出去</b>真的交给 AI，或让代码真的跑一遍</div>
+        <div class="w new"><b>自己做</b>换一件事，自己写、自己查</div>
+      </div>
+      <h3>「点一句」和「点图」：两种写法，等你定（第 B 件）</h3>
+      <div class="sidebyside">
+        <div class="card"><h4>写法一：分开，9 种</h4><p>一种点字，一种点照片。名字一听就懂。</p><p class="guide">担心：专业课里还要「在代码里点出一个词」「在小镇图上点出一座房子」。到时候要么再加第 10 种，要么硬塞进这两种里。</p></div>
+        <div class="card" style="border:2px solid var(--green)"><h4>写法二：合成「点一处」，8 种（我推荐）</h4><p>手上的动作都是「在材料上点出一处」。点的是字、照片、代码还是小镇图，由材料决定。</p><p class="guide">好处：专业课不用加新的；写课的 AI 只记一条规矩。第一关里还是一次点字、一次点照片，小林看不出区别。</p></div>
+      </div>
+      <h3>组件少，材料多</h3>
+      <div class="mats">
+        <div><b>文字</b>AI 的回答、一段说明</div>
+        <div><b>照片</b>练习照片、截图</div>
+        <div><b>代码</b>真项目里的几行，能点里面的词</div>
+        <div><b>运行记录</b>按先后亮起来的几行</div>
+        <div><b>开关</b>改一处，再跑一遍</div>
+        <div><b>代码小镇</b>模块是房子，数据是小车</div>
+      </div>
+      <p class="guide">67 种里其余的去向：合进这 9 种的，样子可以留，规矩只剩一套；其余的删掉代码，只留截图在<a href="album.html">旧组件相册</a>里当参考，任何一关都不许再用。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>好厨师常用的刀就三四把。今天切土豆，明天切鱼，换的是菜，刀不换。刀用熟了，心思才都在菜上。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>动作的种类少，人才能把力气花在要学的东西上。变的是材料，不变的是动作。</p></div>
+  </div>
+  <p class="handoff">工具箱理好了。周一早上，小林打开新的第一关，第一眼看到的是一件真事。</p>
+</section>
+
+<!-- ───────────────────────── station 1 ───────────────────────── -->
+<section class="part col" id="s1">
+  <div class="part-h">
+    <span class="no">1</span>
+    <h2>开场：真实世界之门</h2>
+    <p class="lead">你说现在的第一关缺少真实世界的东西。这一站讲三件事：放在哪、放什么、怎么保证是真的。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/l1-1-guess-how.jpg" alt="第一关现在的第一屏：猜一猜，三句问法">
+        <span class="co" style="left:38%;top:24.9%">1</span>
+        <span class="co" style="left:50%;top:40.5%">2</span>
+      </div>
+      <figcaption class="cap">第一关现在的第一屏（9 月 27 日的自动测试截图）。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>一打开就是「猜」。</b>整关提到真实世界的，只有课文开头一句：「真实用法：Be My Eyes 让看不清的人拍张照片，请 AI 说给他听。」进了练习以后，一次也没再提。</span></li>
+      <li><i>2</i><span><b>练手用的是一张咖啡照片。</b>谁在真的这么用，这一屏没说；学完那一屏只有一句「下次看不清菜单、路牌上的小字，就这样问」。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>问 AI 照片里的勺子在哪边……谁会真的这么用？学这个有什么用？</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">小林不知道谁真的在用。学完也没带走一件「原来真有人这么干」的事，回头跟同事也说不出什么。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：一关三处真实世界，每条都查过出处</span>
+    <div class="plan">
+      <div class="three">
+        <div class="card"><span class="tag">开场</span><h4>开门：一件真事</h4><p>一两句话，讲真的人用这件本事做了什么。和这一关要学的是同一件事。</p></div>
+        <div class="card"><span class="tag">等的时候</span><h4>一个真数字</h4><p>放在等 AI 回答的几秒里。本来就是空着的时间，不抢学习的时间。</p></div>
+        <div class="card"><span class="tag">学完</span><h4>你知道吗</h4><p>一条研究或新闻，正好说明今天学的那句话为什么要紧。</p></div>
+      </div>
+      <div class="shots">
+        <figure><img src="assets/views/new-intro.jpg" alt="新第一关的开场：黄色框里是 Be My Eyes 的真事"><figcaption class="cap">开门：Be My Eyes 的真事。</figcaption></figure>
+        <figure><img src="assets/views/new-wait.jpg" alt="发出去以后，等回答时出现 Google 智能镜头的真数字"><figcaption class="cap">等的时候：Google 智能镜头的数字。</figcaption></figure>
+        <figure><img src="assets/views/new-done.jpg" alt="学完页：你知道吗，2024 年的看图测试"><figcaption class="cap">学完：2024 年的看图测试。</figcaption></figure>
+      </div>
+      <h3>新第一关里的三条，原话是这样的</h3>
+      <div class="realq"><span>「2023 年，帮盲人的手机应用 Be My Eyes 加了一个新本事：拍一张照片，AI 就把照片里有什么说给你听……一万九千多位看不见或看不清的人先试用了它：早上用它看新买的早餐怎么吃，睡前用它确认灯关了没有。」</span><small>出处：Be My Eyes 官方新闻，2023 年 9 月 25 日。9 月 28 日核对过。</small></div>
+      <div class="realq"><span>「2024 年 10 月，Google 说：人们每个月用 Google 智能镜头拍照搜索，将近 200 亿次。」</span><small>出处：Google 官方博客，2024 年 10 月 3 日。是 Google 自己的数字，算的是次数，不是人数。</small></div>
+      <div class="realq"><span>「2024 年，几位研究者给当时最先进的四个会看图的 AI 出了 7 种很简单的看图题……这些题对人来说一眼就能看出来，这四个 AI 平均只答对了不到六成。」</span><small>出处：一篇 2024 年亚洲计算机视觉会议上的论文。测的是当年的模型，拿它说明「要自己看一眼」，不拿它说「AI 看不清」。</small></div>
+      <h3>料从哪来：四类，外加代码课的两类</h3>
+      <div class="mats">
+        <div><b>真实用法</b>真的人、真的产品在用</div>
+        <div><b>新闻</b>最近发生的、有日期的事</div>
+        <div><b>前沿研究</b>论文、公开测试</div>
+        <div><b>有趣的事实</b>让人想转给朋友的一句</div>
+        <div><b>真项目的代码</b>一个字不改，行号能对上</div>
+        <div><b>网站真在用的写法</b>浏览器给所有网站的功能、公开文档里的例子</div>
+      </div>
+      <h3>四条规矩</h3>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>必须和这一关要学的那句话有关。</b>好玩但无关的，不放。</span></li>
+        <li><i>2</i><span><b>每条都写出处、哪天查的、到哪天要再查。</b>数字写清楚是谁说的；公司自己说的，就写「这是它自己的数字」。</span></li>
+        <li><i>3</i><span><b>一关最多三条，</b>第二次「发出去」不再放，免得抢戏。</span></li>
+        <li><i>4</i><span><b>查不到一手出处的，不放。</b>宁可少一条，不放一条讲不清来源的。</span></li>
+      </ol>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>驾校教练教倒车入库，先说一句「上周有个学员在商场停车场蹭了柱子」。一件真事，比十句道理更让人想好好学。可要是教练讲起他去年钓了多大的鱼，你就走神了。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>真事让人知道「学这个有用」。可有趣但和要学的无关的东西，会把注意力抢走：一份汇总了 58 个研究、七千五百多名学生的分析发现，加了这类「好玩但跑题」的内容，学得反而更差。所以每条真事都要扣住这一关的那句话。</p></div>
+  </div>
+  <div class="q qmini" data-q="1"><h3><span class="qid">1</span>第一关开场那件真事，你觉得够不够打动人？</h3><div class="opts">
+    <button class="opt" data-v="1A"><b>A. 够，就用 Be My Eyes</b><span class="d">和「问一处」扣得最紧</span><span class="rec">推荐</span></button>
+    <button class="opt" data-v="1B"><b>B. 换一件更日常的</b><span class="d">比如拍菜单、拍说明书</span></button>
+    <button class="opt" data-v="1C"><b>C. 两件都放</b><span class="d">开场会长一点</span></button>
+  </div></div>
+  <p class="handoff">真事讲完，小林点「开始」。这时候，整座庭院已经加载好了。</p>
+</section>
+
+<!-- ───────────────────────── station 2 ───────────────────────── -->
+<section class="part col" id="s2">
+  <div class="part-h">
+    <span class="no">2</span>
+    <h2>猜和跑：一关一个 3D 舞台</h2>
+    <p class="lead">你担心 3D 在手机上字小、加载慢，又觉得有了 3D，课就完全不一样。这一站讲怎么两头都顾到。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/l1-2-send-choice.jpg" alt="第一关现在的跑一跑：照片和问法发出去，下面是回答">
+        <span class="co" style="left:33%;top:25.6%">1</span>
+        <span class="co" style="left:52%;top:66.4%">2</span>
+      </div>
+      <figcaption class="cap">第一关现在的「跑」。截图里的回答是自动测试用的假话，真用时是 AI 的真回答。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>整屏都是平的：</b>一张卡片、一段字、一个按钮。和别家的学习 App 看不出区别。</span></li>
+      <li><i>2</i><span><b>AI 回答要等几秒。</b>这几秒里，按钮上写着「AI 正在回答…」，旁边能取消；除了等，没有别的可看（照着代码看的，截图拍的是等完以后）。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>发出去了……怎么还没好？是不是卡住了？</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">课长得和别人一样，记不住；等 AI 的几秒只能干等，容易以为卡住，或者走神去刷别的。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：上面一块 3D 舞台，下面还是平的字和按钮</span>
+    <div class="layers">
+      <div class="frame phone" role="img" aria-label="手机上的一屏：上面是 3D 舞台，下面是题目和按钮">
+        <div class="pos fcol" style="left:7%;right:7%;top:4%">
+          <div class="w new" style="height:112px;display:grid;place-items:center;text-align:center"><i class="mk">1</i>3D 舞台：庭院<br>（小兔子扔纸飞机）</div>
+          <div class="w chg"><i class="mk">2</i><span class="bold">题目和回答：真的字</span><div class="ln" style="width:80%"></div></div>
+          <div class="w new" style="background:var(--orange-bg);border-color:var(--orange);color:var(--orange)"><i class="mk">3</i>等的时候：一个真数字</div>
+          <div class="w btn">发出去</div>
+        </div>
+      </div>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>一关只有一个舞台，开场时加载一次。</b>换一步，镜头转过去，不重新加载。</span></li>
+        <li><i>2</i><span><b>字和按钮永远是平的。</b>能放大，读屏软件能读，中文输入法照常用。答题还是点按钮，舞台跟着起反应。</span></li>
+        <li><i>3</i><span><b>等 AI 的几秒，纸飞机在飞，下面放一个真数字。</b>回答回来，飞机也飞回来。</span></li>
+      </ol>
+    </div>
+    <div class="shots" style="margin-top:12px">
+      <figure><img src="assets/views/w-guess.jpg" alt="舞台：小兔子站在桌边，头上有问号"><figcaption class="cap">猜：小兔子在桌边想。</figcaption></figure>
+      <figure><img src="assets/views/w-send.jpg" alt="舞台：纸飞机飞向写着 AI 的灯塔"><figcaption class="cap">跑：纸飞机飞向灯塔（AI）。</figcaption></figure>
+      <figure><img src="assets/views/r-roles.jpg" alt="小兔子的三种角色：主角、陪着、不出场"><figcaption class="cap">小兔子三种角色：身体的活当主角，手指的活陪着，眼睛的活不出场。</figcaption></figure>
+    </div>
+    <p class="guide">手机画不出 3D 时，舞台换成一张静态图，课照样能上完（样机里已经这样做了）。</p>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>电视台的演播厅：布景搭一次，一晚上几个节目轮着录；字幕永远印在画面最上层，布景再花哨，也不挡字。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>加载一次、用一整关，手机才吃得消。画面光是好看，研究发现会让人更喜欢，却不一定学得更好；要让画面跟着你的每一次作答起反应，它才和学习连在一起。多邻国的角色就是这么做的：你答对答错，它当场有反应。</p></div>
+  </div>
+  <p class="handoff">回答回来了。第三段「看」，小林要连着判断 6 张卡，正好够做一个 3D 小回合。</p>
+</section>
+
+<!-- ───────────────────────── station 3 ───────────────────────── -->
+<section class="part col" id="s3">
+  <div class="part-h">
+    <span class="no">3</span>
+    <h2>看：3D 小回合</h2>
+    <p class="lead">你说过：一个 3D 场面至少装 3 到 5 道题，不然不值得等它加载；而且这不是游戏，不计时。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/l1-5-can-photo-answer.jpg" alt="第一关现在的看一看：光看照片答得出来吗，连对 6">
+        <span class="co" style="left:62%;top:46.8%">1</span>
+        <span class="co" style="left:74%;top:69%">2</span>
+      </div>
+      <figcaption class="cap">第一关现在的「看」，6 张全放对以后。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>已经会数「连对 6」。</b>有一点游戏的味道了。</span></li>
+      <li><i>2</i><span><b>放对放错，只是一行字和按钮颜色变一下。</b>6 张卡做完，眼前什么都没留下。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>挺好懂的。就是……有点像在做卷子。</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">6 张同类的卡，正好是一组；可它和别的步骤长得一样，放对放错没有看得见的结果，也看不出和岛上的游戏有什么关系。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：同类题 3 到 6 道，做成一个 3D 小回合</span>
+    <div class="plan">
+      <div class="shots">
+        <figure><img src="assets/views/new-round.jpg" alt="新样子：两个篮子写着答得出和答不出，下面是题目卡和两个按钮"><figcaption class="cap">新第一关的小回合：放错了，球弹出来，告诉你为什么。</figcaption></figure>
+        <figure><img src="assets/views/w-round.jpg" alt="舞台：小兔子把球扔进篮子"><figcaption class="cap">放对了，球留在篮子里。</figcaption></figure>
+      </div>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>什么时候做成回合：</b>同一种判断，3 到 6 道。一关最多一个回合，通常放在「看」。</span></li>
+        <li><i>2</i><span><b>怎么答：</b>点平面按钮，小兔子替你扔。不计时，不掉心。</span></li>
+        <li><i>3</i><span><b>放错了：</b>球弹出来，下面说为什么；这张卡改到对才算过（第 H 件要你定）。</span></li>
+        <li><i>4</i><span><b>和岛上的关系：</b>还是这两个篮子。到了岛上的庭院拦截，同一类题限时来，小林一眼认得。</span></li>
+      </ol>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>游乐园的投篮机：一局投好几个球才过瘾，只让投一个球，没人会去排队。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>同一种判断连着做几次，手感才出来；球进篮子，人才知道自己对不对。3D 场面等一次，用好几道题，也对得起加载的那几秒。</p></div>
+  </div>
+  <p class="handoff">分完了。第四段「改」，小林要自己拼一句新的问法；拼对了，最后还要带点东西回岛上。</p>
+</section>
+
+<!-- ───────────────────────── station 4 ───────────────────────── -->
+<section class="part col" id="s4">
+  <div class="part-h">
+    <span class="no">4</span>
+    <h2>改和做：带东西回岛上</h2>
+    <p class="lead">一关学完，东西去哪了？这一站讲让学过的东西「留下来」。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/l1-finish.jpg" alt="第一关现在的学完页：一句话、作品标题和一行英文">
+        <span class="co" style="left:84%;top:58.8%">1</span>
+        <span class="co" style="left:88%;top:63.7%">2</span>
+      </div>
+      <figcaption class="cap">第一关现在的学完页。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>作品只剩一行标题</b>「猫照片的一句备注」，下面一个复制按钮。</span></li>
+      <li><i>2</i><span><b>一路上的小毛病：</b>这里露出一行英文，中文页面上不该有。改课时顺手修掉。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>做完了……然后呢？我写的那句备注去哪了？</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">学完就结束了，作品没地方放；回到岛上，看不出这一关学过什么。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：做出来的东西摆上架子，学完开宝箱，庭院多一样东西</span>
+    <div class="plan">
+      <div class="shots">
+        <figure><img src="assets/views/new-build.jpg" alt="排一排：每块是一节车厢"><figcaption class="cap">改：拼一句，每块是一节车厢，拼好了发车。</figcaption></figure>
+        <figure><img src="assets/views/w-make.jpg" alt="工作台：备注变成明信片摆上架子"><figcaption class="cap">做：备注变成一张明信片，摆上架子。</figcaption></figure>
+        <figure><img src="assets/views/w-done.jpg" alt="学完：庭院里多了一把椅子"><figcaption class="cap">学完：庭院里多了一把椅子。</figcaption></figure>
+      </div>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>作品变成岛上的一样东西。</b>第一关是明信片；以后每关一样，岛就这样长大（接你 9 月 27 日批准的第 7 版旅程）。</span></li>
+        <li><i>2</i><span><b>开宝箱，拿两张复习卡。</b>明天再来找你，卡上的话和课文一样。</span></li>
+        <li><i>3</i><span><b>最后一句「今天就用一次」。</b>下次看不清菜单、路牌上的小字，拍下来，只问那一处。</span></li>
+      </ol>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>小时候集贴纸：每做完一件事，往本子上贴一张。翻本子的时候，就想起自己做过什么。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>看得见的积累会让人愿意回来。东西摆在岛上，比一行「已完成」更像是自己的。</p></div>
+  </div>
+  <p class="handoff">第一关走完了。停一下，先看看走过的路。</p>
+</section>
+
+<section class="recap col" id="recap">
+  <h3>走到一半，小结一下</h3>
+  <p><b>一关由五样东西组成：</b>一件真事开场；猜、跑、看、改、做五段；一个 3D 舞台；一个 3D 小回合；学完带一样东西回岛上。</p>
+  <p><b>三条不变的规矩：</b>字和按钮是平的、真的；每个 3D 动作都有一个普通按钮能做同样的事；课里不计时，比快的只上岛。</p>
+  <p><b>真实世界放三处：</b>开门、等的时候、学完的「你知道吗」。每条扣住这一关的那句话，每条都有出处和日期。</p>
+  <p>后半程换一个人，看看这套办法能不能教真项目里的代码和架构。</p>
+</section>
+
+<!-- ───────────────────────── station 5 ───────────────────────── -->
+<section class="part col" id="pro">
+  <div class="part-h">
+    <span class="no">5</span>
+    <h2>专业课·代码：真项目、真网站</h2>
+    <p class="lead">换一个人：小周（也是虚构的），25 岁，刚开始学写 App。他在学「等待与失败」的第一关：写了「等一下」的那一行，程序会停下来吗？</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/await-lesson-now.jpg" alt="现在的课文：现象、一段代码、先猜一下、答案、为什么">
+        <span class="co" style="left:22%;top:11.3%">1</span>
+        <span class="co" style="left:34%;top:48.2%">2</span>
+        <span class="co" style="left:38%;top:72%">3</span>
+      </div>
+      <figcaption class="cap">这一关现在的课文，照原文排版（评估用的网页那天没开，没法截真屏）。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>一开场就是文件名和 8 行代码。</b>代码是真项目里的，这点很好。</span></li>
+      <li><i>2</i><span><b>课文里「先猜一下」只是一句问话，</b>下一段就是答案。</span></li>
+      <li><i>3</i><span><b>「为什么」是一大段字，</b>讲「会停在这一行等」。小周没亲眼看它停过。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小周会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">周</div><div class="say"><p>代码我看得懂一半……「停下来等」到底长什么样？我想亲眼看它停一下。</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">「会停下来等」只讲不看；猜完马上看到答案，没有一步是小周自己动手的。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：同样 9 种互动组件，换上代码的材料</span>
+    <div class="plan">
+      <div class="shots">
+        <figure><img src="assets/views/new-await-run.jpg" alt="跑一下：小火车停在红灯前，运行记录一行行亮起"><figcaption class="cap">跑一下：小火车开到那一行，红灯亮，停住；运行记录一行行亮。</figcaption></figure>
+        <figure><img src="assets/views/new-await-point.jpg" alt="点一处：在代码里点出让程序停下来等的词"><figcaption class="cap">点一处：在真代码里点出那个词。</figcaption></figure>
+      </div>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>开场：</b>「你在 App 里点分享，会弹出一个窗口等你选。下面 8 行就是管这个按钮的代码，一个字没改。」</span></li>
+        <li><i>2</i><span><b>猜（选一个）→ 跑（跑一下）：</b>放一段录好的运行，不花钱，每次都一样。</span></li>
+        <li><i>3</i><span><b>看（排一排、点一处）：</b>把四件事排好先后；在代码里点出让它等的词。</span></li>
+        <li><i>4</i><span><b>改（拧一拧）：</b>拨一个开关，把「等」拿掉，再跑一遍：火车不停，按按钮的地方以为「分享好了」，其实你还没选。这个后果来自真代码。</span></li>
+        <li><i>5</i><span><b>做（自己做）：</b>换同一个项目里另一段没见过的真代码：它会不会停？在等什么？</span></li>
+        <li><i>6</i><span><b>真网站的写法：</b>同一个项目的网页版，用的是浏览器给所有网站的分享功能；它在不同系统上「等到」的时刻不一样，公开的网页开发文档写着。学完页告诉小周：「等一下」这个写法是 2017 年才正式进 JavaScript 标准的。</span></li>
+      </ol>
+      <p class="guide">能玩：<a href="pro-lesson.html">专业课样机</a>的第一个标签。</p>
+      <details class="small"><summary>代码在仓库里的位置（给动手的人）</summary><div class="in">
+        <p>分享：<code>src/platform/capacitor/share.ts</code> 第 4–11 行；按按钮的地方：<code>src/platform/index.ts</code> 第 18–24 行；自己做用的：<code>src/platform/storage.ts</code> 第 53–57 行；网页版：<code>src/platform/web/share.ts</code> 第 28 行。仓库是 TuringPact，提交 <code>658b36ef0f55</code>。</p>
+      </div></details>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>学开车，看教练踩十次刹车，不如自己踩一脚。代码也一样：亲手把「等」拿掉跑一遍，比读三段解释记得牢。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>专业课要加的是材料，不是新的互动组件。小周的手在做的（找出那个词、拿掉它、看后果），正好是要学的那件事。研究发现，玩法本身就是要学的内容时，人学得更好，也更愿意玩下去。</p></div>
+  </div>
+  <p class="handoff">一行代码讲清楚了。可是一个项目有几百个文件，架构怎么教？</p>
+</section>
+
+<!-- ───────────────────────── station 6 ───────────────────────── -->
+<section class="part col" id="s6">
+  <div class="part-h">
+    <span class="no">6</span>
+    <h2>专业课·架构：代码小镇</h2>
+    <p class="lead">架构讲的是「谁连着谁、数据往哪走」。小周正在学的另一关，问的是：同一句「存一条记录」，在手机和电脑上为什么存到不同的地方？</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/storage-lesson-now.jpg" alt="现在的课文：两个东西，两大段代码，先猜一下">
+        <span class="co" style="left:30%;top:11.3%">1</span>
+        <span class="co" style="left:30%;top:88.3%">2</span>
+      </div>
+      <figcaption class="cap">这一关现在的课文，照原文排版。</figcaption>
+    </figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>开头是两大段代码，</b>一段管网页，一段管手机。</span></li>
+      <li><i>2</i><span><b>猜的是「电脑桌面版走哪条路」。</b>问得很好，可小周得先在脑子里把三条路画出来。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小周会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">周</div><div class="say"><p>手机、网页、桌面……我脑子里要同时装三条路，有点绕。</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">架构本来是一张图，课文却只能一段一段讲，小周得自己在脑子里画地图。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：把架构画成一座小镇，真代码放在旁边</span>
+    <div class="plan">
+      <div class="shots">
+        <figure><img src="assets/views/new-town.jpg" alt="代码小镇：业务代码、存储总台、手机里的抽屉、浏览器里的抽屉"><figcaption class="cap">分一分：三个地方、两个抽屉；每放一张，小车沿真路线跑一趟。</figcaption></figure>
+        <figure><img src="assets/views/3d-pro-lesson.jpg" alt="专业课的 3D 舞台草图"><figcaption class="cap">上一轮的草图：代码永远在舞台旁边。</figcaption></figure>
+      </div>
+      <h3>代码小镇的画法（每门专业课都用这一套）</h3>
+      <div class="mats">
+        <div><b>一个模块</b>一座房子</div>
+        <div><b>一次请求、一条数据</b>一辆小车</div>
+        <div><b>在等</b>路上一盏红灯</div>
+        <div><b>检查</b>路上一道关卡</div>
+        <div><b>存东西</b>一间仓库、一个抽屉</div>
+        <div><b>出错</b>房子冒烟、插一面红旗</div>
+      </div>
+      <p>最后一张卡「电脑桌面版」最容易看错：代码写着「是手机、而且不是桌面版」才走手机抽屉，所以桌面版走的是浏览器抽屉。小周把卡放错，小车不会动，下面提示他去看那半句。</p>
+      <p class="guide">能玩：<a href="pro-lesson.html#town">专业课样机</a>的第二个标签。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>地铁线路图：没人记得住地铁在地底下怎么拐弯，可看一眼线路图，就知道在哪换乘。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>结构用画的，细节用读的。房子和小车帮人记住「谁连着谁」，旁边的真代码保证它不是编的。</p></div>
+  </div>
+  <p class="handoff">课里的都走完了。周末，小林回到岛上。</p>
+</section>
+
+<!-- ───────────────────────── station 7 ───────────────────────── -->
+<section class="part col" id="s7">
+  <div class="part-h">
+    <span class="no">7</span>
+    <h2>回到岛上：游戏组件</h2>
+    <p class="lead">游戏组件和课里的互动组件分开：它们计时、计分，放在岛上，题目从课里来。你提过的小蜜蜂、贪吃蛇、俄罗斯方块，都放在这里。</p>
+  </div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure>
+      <div class="annot phone">
+        <img src="assets/views/c-three_courtyard_play3000.jpg" alt="庭院拦截：池塘、鸟居、小兔子和两个篮子">
+        <span class="co" style="left:8%;top:62%">1</span>
+      </div>
+      <figcaption class="cap">岛上现在唯一的游戏：庭院拦截（9 月 28 日拍的）。</figcaption>
+    </figure>
+    <ol class="keys"><li><i>1</i><span><b>每次都是扔球进篮子。</b>它只练「分一分」这一种判断。</span></li></ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span>
+    <div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>每次都是扔球……玩几次就腻了。</p></div></div>
+  </div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">岛上只有一种游戏，只练一种判断；「连一连」「排一排」学过的东西，岛上没地方练。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：先加连连看和贪吃蛇（第 I 件）</span>
+    <div class="plan">
+      <div class="shots">
+        <figure><img src="assets/views/r-connect-onet.jpg" alt="连连看：把配对的两块连起来消掉"><figcaption class="cap">连连看：练「连一连」学过的配对。</figcaption></figure>
+        <figure><img src="assets/views/r-fast-snake.jpg" alt="贪吃蛇：按顺序吃掉步骤"><figcaption class="cap">贪吃蛇：按顺序吃，练「排一排」。</figcaption></figure>
+        <figure><img src="assets/views/r-fast-tetris.jpg" alt="俄罗斯方块：把卡片落进对的列"><figcaption class="cap">俄罗斯方块：以后练「分一分」的第二种。</figcaption></figure>
+      </div>
+      <p>题目都从学过的关里来，不另外编；分数不算成绩。一局要十几分钟的长游戏（值班室、塔防），等课多了再说。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>学钢琴：先慢慢弹，每个音弹对；熟了，再开节拍器加速。没人第一次看谱就开最快的节拍器。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>第一次学的时候一快，就只能猜；学过的东西拿到岛上限时玩，才是在练。课里慢，岛上快，用的是同一套玩具，小林一眼认得。</p></div>
+  </div>
+</section>
+
+<!-- ───────────────────────── after ───────────────────────── -->
+<section class="part col" id="after">
+  <div class="part-h">
+    <h2>改完以后：整关的舞台，亲手转一圈</h2>
+    <p class="lead">下面是新第一关的 3D 舞台，和样机里是同一个。点按钮，镜头会像上课时一样转过去。它不联网，也不调用 AI。</p>
+  </div>
+  <div class="stage3d" id="tour">
+    <div class="toy" style="position:relative"><img class="still" src="assets/views/w-intro.jpg" alt="新第一关的整座庭院"></div>
+    <div><button type="button" class="open3d" data-open>打开 3D 舞台</button></div>
+    <div class="bar" hidden>
+      <button type="button" data-go="intro" aria-pressed="false">开场</button>
+      <button type="button" data-go="guess" aria-pressed="false">猜</button>
+      <button type="button" data-go="send" aria-pressed="false">跑：发出去</button>
+      <button type="button" data-go="round" aria-pressed="false">看：小回合</button>
+      <button type="button" data-go="build" aria-pressed="false">改：排一排</button>
+      <button type="button" data-go="point" aria-pressed="false">改：点图</button>
+      <button type="button" data-go="make" aria-pressed="false">做</button>
+      <button type="button" data-go="done" aria-pressed="false">学完</button>
+    </div>
+    <p class="hint">要上一整关，打开<a href="first-level.html">新第一关样机</a>。</p>
+  </div>
+  <h3 style="margin-top:20px">9 种互动组件，各自在庭院里的样子</h3>
+  <p class="guide">这是上一份「组件搬进庭院」里每种推荐的那个样子。新第一关的舞台就是用它们拼起来的。点「玩一下」，在下面打开。</p>
+  <div class="gal9">
+    <div class="card"><img src="assets/views/r-choose-fork.jpg" alt="岔路口"><div><b>选一个 · 岔路口</b><span>小兔子走哪条路，就是选了哪句。</span><button type="button" class="play" data-scene="choose-fork" data-name="岔路口">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-send-plane.jpg" alt="纸飞机"><div><b>发出去 · 纸飞机</b><span>等 AI 的几秒，飞机在飞。</span><button type="button" class="play" data-scene="send-plane" data-name="纸飞机">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-find-board.jpg" alt="公告栏"><div><b>点一句 · 公告栏</b><span>字是真的字，放大镜框出那一句。</span><button type="button" class="play" data-scene="find-board" data-name="公告栏">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-sort-throw.jpg" alt="投篮"><div><b>分一分 · 投篮</b><span>和岛上的庭院拦截同一套篮子。</span><button type="button" class="play" data-scene="sort-throw" data-name="投篮">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-connect-pipes.jpg" alt="接水管"><div><b>连一连 · 接水管</b><span>水往哪流，就是回答从哪来。</span><button type="button" class="play" data-scene="connect-pipes" data-name="接水管">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-order-train.jpg" alt="小火车"><div><b>排一排 · 小火车</b><span>一块一节车厢，拼好了发车。</span><button type="button" class="play" data-scene="order-train" data-name="小火车">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-point-camera.jpg" alt="拍照"><div><b>点图 · 拍照</b><span>点对了「咔嚓」一闪。</span><button type="button" class="play" data-scene="point-camera" data-name="拍照">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-tune-tanks.jpg" alt="水箱"><div><b>拧一拧 · 水箱</b><span>拧阀门，水位跟着变，超了就溢。</span><button type="button" class="play" data-scene="tune-tanks" data-name="水箱">玩一下</button></div></div>
+    <div class="card"><img src="assets/views/r-make-bench.jpg" alt="工作台"><div><b>自己做 · 工作台</b><span>做好的东西摆上架子。</span><button type="button" class="play" data-scene="make-bench" data-name="工作台">玩一下</button></div></div>
+  </div>
+  <div class="stage3d" id="gal-stage" hidden></div>
+</section>
+
+<section class="part col" id="delete">
+  <div class="part-h">
+    <h2>删掉什么、留下什么（等 Codex 做完再动手）</h2>
+    <p class="lead">照你 9 月 28 日说的：老课和退下来的组件整个删掉，用新格式重做。下面是删的范围，和删之前要先挡住的三个坑。</p>
+  </div>
+  <div class="three">
+    <div class="card"><span class="tag">删</span><h4>老课</h4><p>第 1、2 版的老课，和第 3 版第一关现在的内容。长的课拆成 3 到 5 关，用新格式重写。</p></div>
+    <div class="card"><span class="tag">删</span><h4>退下来的组件</h4><p>不在 9 种里的，代码删掉。截图和一句说明留在旧组件相册里当参考。任何一关都不许再引用它们。</p></div>
+    <div class="card"><span class="tag">留</span><h4>找得回来</h4><p>删之前打一个备份包；代码历史里也一直在。以后真要用某个旧点子，照 9 种之一重做，不把旧代码救回来。</p></div>
+  </div>
+  <h3 style="margin-top:14px">删之前要先挡住的三个坑</h3>
+  <ol class="keys">
+    <li><i>1</i><span><b>自动测试拿上架的课当测试材料。</b>直接删课，整套浏览器测试会跑不起来（以前真出过）。先给测试换好材料，再删课。</span></li>
+    <li><i>2</i><span><b>别的地方还在引用。</b>课程目录、复习卡、岛上的游戏题目都从课里取。删之前先列出「谁在用这一关」，一个个改掉。</span></li>
+    <li><i>3</i><span><b>正在学的人。</b>删之前确认线上有没有人学到一半。有的话，他的进度要能接到新课上，或者至少不报错。</span></li>
+  </ol>
+  <p class="guide">写课的 AI 同时要改：它的说明书里只列 9 种互动组件和材料清单；真实世界三处、每条出处核对，写进它的规矩。细节在<a href="spec.html">执行规格</a>。</p>
+</section>
+
+<section class="part col" id="alt">
+  <div class="part-h">
+    <h2>换个思路：另外几种办法</h2>
+    <p class="lead">你让我跳出框架想一想。下面四种，都能和上面的方案一起用，也可以单独试。我最推荐先加第二种，因为最省事。</p>
+  </div>
+  <div class="alt">
+    <div class="card"><h3>一、教会小兔子</h3>
+      <p>「看」那一段，换个角色：小兔子来问 AI，问得不好；小林帮它改。小林从「被考的人」变成「教别人的人」。</p>
+      <p class="pc"><b>凭什么：</b>2009 年斯坦福的一项研究让学生教一个电脑里的角色，学生为它学得比为自己学更用心，花的时间更多，学得也更好；成绩原本靠后的学生，差别最明显。研究者管这叫「教别人效应」。</p>
+      <p class="pc"><b>担心：</b>要给小兔子写「犯错的样子」，写课的活多一点。适合先在第二关试。</p>
+    </div>
+    <div class="card"><h3>二、今天就用一次（推荐先加）</h3>
+      <p>每关最后给一张小任务卡：今天在真生活里用一次。下次打开 App，先问一句「用了吗？」，用了，岛上多一张贴纸。</p>
+      <p class="pc"><b>凭什么：</b>真实世界不只在课里讲，也在小林自己的生活里发生；新第一关的最后一句已经是这张卡的样子。</p>
+      <p class="pc"><b>担心：</b>「用了吗」只能靠小林自己说，不能查。所以它只给贴纸，不算成绩。</p>
+    </div>
+    <div class="card"><h3>三、代码小镇就是课程岛</h3>
+      <p>专业课的岛，直接画成那个项目的地图：每学一关，点亮一座房子、修通一条路。学完一门课，岛就是整个项目的架构图。</p>
+      <p class="pc"><b>凭什么：</b>第 7 版旅程已经定了「岛跟着学的东西长大」；专业课的岛长出来的，正好是要学的架构。</p>
+      <p class="pc"><b>担心：</b>每门专业课要画一张自己的地图，前期工作量大。先用一门课试。</p>
+    </div>
+    <div class="card"><h3>四、课里不用 3D，只用会动的小兔子</h3>
+      <p>如果手机上 3D 最后跑不顺：课里只留一只会动的平面小兔子，对你每次作答做反应；3D 只放在岛上和地图上。</p>
+      <p class="pc"><b>凭什么：</b>多邻国就是这么做的：他们在官方博客里说，角色会按你答对答错切到不同的反应，传的数据比发一段小视频少得多。</p>
+      <p class="pc"><b>担心：</b>和你「3D 必须要」的决定不一样，只当后备：如果真机测下来 3D 太卡，再拿出来。</p>
+    </div>
+  </div>
+  <div class="card stack" style="margin-top:12px">
+    <p><b>故意不做的：</b></p>
+    <div class="chips"><span class="chip x">把字画进 3D 里</span><span class="chip x">课里加倒计时、掉心</span><span class="chip x">小兔子每一步都当主角</span><span class="chip x">为了像游戏，加和学习无关的操作</span><span class="chip x">和要学的无关的趣闻</span></div>
+  </div>
+</section>
+
+<section class="part col" id="decide">
+  <div class="part-h">
+    <h2>需要你拍板的 10 件事</h2>
+    <p class="lead">第 1 站里还有一个小问题。点选以后，最下面会生成一行字，复制发给我就行。每件只标了一个推荐。</p>
+  </div>
+  <div class="stack" id="decisions">
+    <div class="q" data-q="A"><h3><span class="qid">A</span>3D 怎么用？</h3>
+      <div class="opts">
+        <button class="opt" data-v="A1"><b>一关一个舞台，答题用平面按钮，3 到 6 道题做一个小回合，学完带东西回岛上</b><span class="d">新第一关就是这样。加载一次，手机吃得消。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="A2"><b>每种互动组件一个独立的 3D 小场景</b><span class="d">上一份的样子。每一步都要重新加载，画风也容易散。</span></button>
+        <button class="opt" data-v="A3"><b>只在小回合和岛上用 3D，其余平面</b><span class="d">最省事，课的样子和现在差不多。</span></button>
+      </div></div>
+    <div class="q" data-q="B"><h3><span class="qid">B</span>「点一句」和「点图」合不合？</h3>
+      <div class="opts">
+        <button class="opt" data-v="B1"><b>合成「点一处」，一共 8 种</b><span class="d">点字、点照片、点代码、点小镇图，都是这一种。专业课不用加新的。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="B2"><b>分开，一共 9 种</b><span class="d">名字更直白。以后点代码、点小镇图时，再看要不要加。</span></button>
+      </div></div>
+    <div class="q" data-q="C"><h3><span class="qid">C</span>真实世界放几处？</h3>
+      <div class="opts">
+        <button class="opt" data-v="C1"><b>三处：开门、等的时候、学完的「你知道吗」</b><span class="d">都扣住这一关的那句话。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="C2"><b>只放开场一处</b><span class="d">现在的写课规矩就是这样，最省事。</span></button>
+        <button class="opt" data-v="C3"><b>每一步都放一点</b><span class="d">最热闹，但容易抢走注意力。</span></button>
+      </div></div>
+    <div class="q" data-q="D"><h3><span class="qid">D</span>写课的规矩什么时候改？</h3>
+      <div class="opts">
+        <button class="opt" data-v="D1"><b>第一关定稿后就改：三处真实世界、每条出处核对、到期再查</b><span class="d">第二关起，写课的 AI 自动照做。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="D2"><b>先手工做完第 1 到 3 关，再改规矩</b><span class="d">多看几个样板再定，慢一点。</span></button>
+      </div></div>
+    <div class="q" data-q="E"><h3><span class="qid">E</span>新第一关的课文</h3>
+      <div class="opts">
+        <button class="opt" data-v="E1"><b>照这一版当样板</b><span class="d">样机里的每一句，就是要写进课里的话。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="E2"><b>先改几处再定</b><span class="d">复制时在后面写上哪几处。</span></button>
+        <button class="opt" data-v="E3"><b>重写</b><span class="d">告诉我哪里方向不对。</span></button>
+      </div></div>
+    <div class="q" data-q="F"><h3><span class="qid">F</span>专业课先做哪两关当样板？</h3>
+      <div class="opts">
+        <button class="opt" data-v="F1"><b>「等一下再往下走」和「存一条记录去了哪」</b><span class="d">都有真代码、真网站的料，也都有老课可以对比。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="F2"><b>换别的两关</b><span class="d">复制时写上名字。</span></button>
+      </div></div>
+    <div class="q" data-q="G"><h3><span class="qid">G</span>删老课、删旧组件，什么时候动手？</h3>
+      <div class="opts">
+        <button class="opt" data-v="G1"><b>等 Codex 这轮做完，先挡住三个坑，一次删干净</b><span class="d">不和 Codex 抢同一批文件。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="G2"><b>现在就删</b><span class="d">会和 Codex 正在改的地方打架。</span></button>
+        <button class="opt" data-v="G3"><b>分批删，边删边重做</b><span class="d">每次动得少，但新旧会并存一阵子。</span></button>
+      </div></div>
+    <div class="q" data-q="H"><h3><span class="qid">H</span>小回合里放错了，怎么办？</h3>
+      <div class="opts">
+        <button class="opt" data-v="H1"><b>告诉你为什么，这张改到对才算过</b><span class="d">每张卡都亲手放对一次。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="H2"><b>放错也往下走，最后告诉你错了几张</b><span class="d">快一点，但错的那张可能就这么过去了。</span></button>
+      </div></div>
+    <div class="q" data-q="I"><h3><span class="qid">I</span>岛上先加哪两个游戏？</h3>
+      <div class="opts">
+        <button class="opt" data-v="I1"><b>连连看和贪吃蛇</b><span class="d">亲切，正好对上「连一连」「排一排」。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="I2"><b>俄罗斯方块和小蜜蜂</b><span class="d">也很经典，但练的还是「分一分」，和庭院拦截重了。</span></button>
+        <button class="opt" data-v="I3"><b>先不加，等课做完</b><span class="d">岛上暂时只有庭院拦截。</span></button>
+      </div></div>
+    <div class="q" data-q="J"><h3><span class="qid">J</span>「换个思路」先试哪一个？</h3>
+      <div class="opts">
+        <button class="opt" data-v="J1"><b>先加「今天就用一次」</b><span class="d">最省事，第一关的最后一句已经是它的样子。</span><span class="rec">推荐</span></button>
+        <button class="opt" data-v="J2"><b>先试「教会小兔子」</b><span class="d">有研究撑腰，写课的活多一点。</span></button>
+        <button class="opt" data-v="J3"><b>都先不加</b><span class="d">先把主线做完。</span></button>
+      </div></div>
+    <div class="picks" aria-live="polite"><span>你的选择：</span><code id="picks-code">还没选</code><button type="button" id="copy-picks">复制给我</button><span id="copy-msg"></span></div>
+  </div>
+</section>
+
+<section class="part col" id="order">
+  <div class="part-h">
+    <h2>先做什么，后做什么</h2>
+    <p class="lead">按「先小试，再铺开」排。每一步写了做到什么样才算好。</p>
+  </div>
+  <ol class="steps">
+    <li><div class="n">第 1 步<small>等</small></div><div><p>等 Codex 这一轮优化做完、合进主线。这期间只改文档。</p><p class="ok">做到这样算好：Codex 那边说做完了，主线的检查全绿。</p></div></li>
+    <li><div class="n">第 2 步<small>删</small></div><div><p>先挡住三个坑（测试材料、引用、正在学的人），再删老课和退下来的组件。打一个备份包。</p><p class="ok">做到这样算好：搜遍代码，找不到任何一关引用 9 种以外的组件；整套检查照样全绿。</p></div></li>
+    <li><div class="n">第 3 步<small>合</small></div><div><p>把 9 种（或 8 种）互动组件各收成一套规矩；加上材料：照片、文字、代码、运行记录、开关、代码小镇。</p><p class="ok">做到这样算好：每种互动组件只有一份写法，写课的 AI 的说明书里只列这几种。</p></div></li>
+    <li><div class="n">第 4 步<small>搭舞台</small></div><div><p>在产品里搭第一关的 3D 舞台，用庭院拦截那一套积木；字和按钮是平的，画不出 3D 就换静态图。</p><p class="ok">做到这样算好：你在自己手机上从头玩到尾，不卡；关掉 3D 也能上完。</p></div></li>
+    <li><div class="n">第 5 步<small>写第一关</small></div><div><p>照样机的课文把第一关写进课里，三处真实世界带出处。</p><p class="ok">做到这样算好：你玩过觉得是样板；找两三个真人试，他们学会了，也愿意往下点。</p></div></li>
+    <li><div class="n">第 6 步<small>教写课的 AI</small></div><div><p>把新格式、9 种互动组件、真实世界的规矩写进写课的流程。</p><p class="ok">做到这样算好：它自己写出的第二关，不用大改就能用。</p></div></li>
+    <li><div class="n">第 7 步<small>样板</small></div><div><p>写第 2、3 关，和专业课的两关样板。第 1 到 3 关成了样板，才能正式上线（你以前定的）。</p><p class="ok">做到这样算好：五关都过了你这一关。</p></div></li>
+    <li><div class="n">第 8 步<small>上岛</small></div><div><p>用同一套积木做连连看和贪吃蛇，题目从学过的关里来。</p><p class="ok">做到这样算好：岛上有三种游戏，练三种不同的判断。</p></div></li>
+  </ol>
+</section>
+
+<section class="part col" id="faq">
+  <div class="part-h"><h2>你可能会问</h2></div>
+  <div class="faq">
+    <div class="card"><b>手机上 3D 会不会卡、耗电？</b><p>一关只载入一次；画面全是简单的形状和颜色，没有贴图；画不出来时换静态图。这份样机的 3D 程序连同整个 3D 工具一共约 0.9 MB。真手机上的速度还没测，第 4 步要测。</p></div>
+    <div class="card"><b>真实世界的数字过期了怎么办？</b><p>每条写「哪天查的、到哪天要再查」。到期由写课的流程重新核对，查不到一手出处就换掉。</p></div>
+    <div class="card"><b>为什么不把字也做进 3D？</b><p>字在 3D 里会糊、不能放大，读屏软件读不出来，中文输入法也用不了。这是全公司定的规矩，改它要先去公司的规矩那边提。</p></div>
+    <div class="card"><b>小兔子会不会太幼稚，成年人不喜欢？</b><p>有研究发现，暖色和圆润的画面让人心情更好，也学得更好。专业课里小兔子少出场，主要陪着；要更收敛，可以只在答对答错时露面。</p></div>
+    <div class="card"><b>为什么现在不动手？</b><p>Codex 正在改整个 App。两边同时改同一批文件会打架，改完还要互相对。等它做完再动，最省事。</p></div>
+    <div class="card"><b>这份交给别的 AI，它知道从哪开始吗？</b><p>让它先读<a href="spec.html">执行规格</a>那一页。那里写了要做的每一件事、做到什么算完、哪些事等你拍板。</p></div>
+    <div class="card"><b>删掉的组件以后想用怎么办？</b><p>截图和一句说明在相册里，代码在历史记录里。要用，就照 9 种之一重做，不把旧代码救回来。</p></div>
+    <div class="card"><b>AI 的回答每次不一样，课文怎么写？</b><p>老师的话只说「看看它有没有说……」，不替 AI 说它答了什么。样机里的回答标着「示例」，就是这个原因。</p></div>
+  </div>
+</section>
+
+<section class="part col" id="ledger">
+  <div class="part-h">
+    <h2>一个都没丢：原来的东西去了哪</h2>
+    <p class="lead">67 种组件每一种的截图和去向，在<a href="album.html">旧组件相册</a>里。下面是按类合起来的总表。</p>
+  </div>
+  <div class="tblwrap"><table>
+    <thead><tr><th>原来的</th><th>现在在哪</th><th>改完以后</th></tr></thead>
+    <tbody>
+      <tr><td>选一个、分一分、连一连、排一排、点一句、点图、拧一拧、发出去、自己做</td><td>第一关和老课</td><td>留下：课里的 9 种互动组件（点一句、点图可能合成点一处）</td></tr>
+      <tr><td>比较、取舍、留还是丢、核对结果、第 2 版课里的归类</td><td>老课、第 2 版课</td><td>合进「分一分」：格子上写的字不一样，规矩一套</td></tr>
+      <tr><td>三句问法配回答、连接</td><td>第一关、老课</td><td>合进「连一连」</td></tr>
+      <tr><td>拼一句、排版</td><td>第一关、第 2 版课</td><td>合进「排一排」</td></tr>
+      <tr><td>改一句、看图找区域</td><td>第 2 版课</td><td>合进「点一句」「点图」（或「点一处」）</td></tr>
+      <tr><td>探边界、调度、编程路线、明确要求、选材料、授权与工具、设计测试、小步修补</td><td>面板；老课各一两节</td><td>删代码，留截图；专业课需要时，用 9 种加新材料重做</td></tr>
+      <tr><td>庭院拦截</td><td>岛上</td><td>不变</td></tr>
+      <tr><td>证据接线盒、流程调度站</td><td>面板里的 3D</td><td>换成连连看、贪吃蛇（第 I 件）</td></tr>
+      <tr><td>云端航线、分拣工厂、句子印刷机、信息切片台，三个花园版，四个平面街机</td><td>面板里的 3D 和街机</td><td>删代码，留截图</td></tr>
+      <tr><td>20 个短互动研究、4 个街机研究、3 个早期实验</td><td>面板</td><td>删代码，留截图；5 个好点子已收进 9 种</td></tr>
+      <tr><td>第 1、2 版老课，第 3 版第一关现在的内容</td><td>课程里</td><td>删掉，按新格式重做；长课拆成 3 到 5 关</td></tr>
+      <tr><td>面板里的 6 个课程样例（整节课）</td><td>面板「连续课程」</td><td>跟着老课按新格式重做；面板改放新格式的关</td></tr>
+      <tr><td>第一关的两张复习卡</td><td>学完以后</td><td>不变，放进学完的宝箱</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="part col" id="appendix">
+  <div class="part-h"><h2>附录</h2></div>
+  <details class="small"><summary>真实世界的出处（都在 2026 年 9 月 28 日核对过）</summary><div class="in">
+    <p>Be My Eyes：<a href="https://www.bemyeyes.com/news/announcing-be-my-ai-soon-available-for-hundreds-of-thousands-of-be-my-eyes-users">Announcing ‘Be My AI’</a>，2023-09-25。超过 19,000 位盲人和低视力测试者；早餐新品、睡前确认关灯的例子；也提醒可能答错，可以找真人志愿者核对。</p>
+    <p>Google 智能镜头：<a href="https://blog.google/products/ads-commerce/google-lens-ai-overviews-ads-marketers">Google 官方博客</a>，2024-10-03。每月将近 200 亿次视觉搜索，是 Google 自己的数字。</p>
+    <p>看图测试：Rahmanzadehgervi、Bolton、Taesiri、Nguyen，<a href="https://vlmsareblind.github.io/">Vision language models are blind</a>，ACCV 2024。四个模型在 7 种简单任务上平均 58.57%。</p>
+    <p>网页分享：<a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share">MDN · Navigator.share()</a>，页面最后修改 2026-07-16。Windows 上弹窗打开就兑现，Android 上数据交给目标后兑现；用户取消以 AbortError 结束。</p>
+    <p>JavaScript 标准：<a href="https://github.com/tc39/proposals/blob/main/finished-proposals.md">TC39 已完成提案表</a>，Async functions 一行，发布年份 2017。</p>
+  </div></details>
+  <details class="small"><summary>研究出处</summary><div class="in">
+    <p>跑题的趣闻：Rey 2012，Educational Research Review 的元分析；Sundar &amp; Adesope 2020，Educational Psychology Review（58 个研究、7,500 多名学生）。</p>
+    <p>好看不等于学得好：Sung &amp; Mayer 2012，Computers in Human Behavior。</p>
+    <p>暖色圆润的画面：Um、Plass、Hayward、Homer 2012，Journal of Educational Psychology 104(2):485–498。</p>
+    <p>玩法就是学习内容：Habgood &amp; Ainsworth 2011，Journal of the Learning Sciences。</p>
+    <p>教别人效应：Chase、Chin、Oppezzo、Schwartz 2009，Journal of Science Education and Technology 18(4):334–352。</p>
+    <p>多邻国的角色：<a href="https://blog.duolingo.com/world-character-visemes">How Duolingo Animates Its World Characters</a>（多邻国官方博客）。</p>
+  </div></details>
+  <details class="small"><summary>这一套是怎么做出来的、验证了什么</summary><div class="in">
+    <p><b>3D：</b>和产品同一个 3D 工具（three.js 0.185.1）搭的小样，颜色、材质照庭院拦截的积木。打包成一个不用联网的脚本 <code>lab/toy3d.js</code>，源码在 <code>lab/src/</code>，重新打包的命令写在执行规格里。</p>
+    <p><b>自动验证过：</b>新第一关、专业课两个样机，在手机宽度下用浏览器从第一屏点到最后一屏，没有脚本报错，没有横向溢出；页面都是本地文件直接打开。</p>
+    <p><b>没有验证：</b>没有真人试玩；没在真手机上测速度和耗电；没有做完整的键盘和读屏检查；「更好玩、学得更好」是根据研究做的判断，不是这次测出来的。样机里的 AI 回答是写好的示例，运行记录是照代码顺序写的。</p>
+    <p><b>现在是什么样的截图：</b>第一关来自 9 月 27 日的自动测试（测试里的 AI 回答是假话）；面板和庭院拦截是 9 月 28 日拍的；两关专业课那天没法截真屏，照课文原文排的版。</p>
+  </div></details>
+  <details class="small"><summary>两遍修改，各改了什么</summary><div class="in" id="revisions">
+    <p><b>第一遍：当完全不懂的新手读。</b>「等 AI 时屏幕上只有一个空框」没核实，照代码改成按钮上写着「AI 正在回答…」、能取消；「人几乎都能答对」论文里没测过，改成「这些题对人来说一眼就能看出来」；「当时最强」改成「当时最先进」；「学完那一屏也没说为什么值得学」不准，学完页其实有一句「下次看不清菜单、路牌上的小字，就这样问」，照实写；补上你 9 月 20 日「猜的是怎么用」那条；日期统一；手机上第 2 站的草图挤成一列竖字，改成上下排。</p>
+    <p><b>第二遍：当接手动手的 AI 读执行规格。</b>它不知道旧组件的代码在哪：补了评估面板、原生活动、第 3 版步骤、3D 和街机各自的位置；相册每张卡加上面板编号；原来写的「现在的引擎」和真实代码对不上（拧一拧、连一连在第 3 版步骤里还没有），照代码改正；漏了英文版，补进第一关和风险；面板里 6 个课程样例原来没交代去向，补进相册、对照表和规格。</p>
+    <p><b>样机自己的问题，也在这两遍里修掉了：</b>篮子里的球放大成一大团（缩放算错）；学完时篮子还挡在画面边上；排一排和自己做两屏小兔子挡住了火车和工作台；专业课一开场就露出「第 5 行」的标签；3D 画不出来时的静态图还是上一版的画面。</p>
+  </div></details>
+</section>
+
+<footer class="col">
+  <span>University · 互动组件与 3D 舞台（草案）· 你拍板之前，产品照现在的样子用</span>
+  <span>「小林」「小周」是为了讲清楚而虚构的学员；3D 画面是样机，不是产品里的画面</span>
+</footer>
+</div>
+
+<script src="lab/toy3d.js"></script>
+<script>
+/* 讲解旅程页面脚本：小样机 + 拍板选择。任何零件缺了都跳过，不让一处出错拖垮整页。 */
+(function(){
+  var dev=document.getElementById('device');
+  if(dev){
+    var screens=[].slice.call(dev.querySelectorAll('.scr'));
+    var tab=document.getElementById('ptab');
+    var toast=document.getElementById('toast');
+    var steps=[].slice.call(document.querySelectorAll('#steps li'));
+    var tabbed={};screens.forEach(function(s){if(s.hasAttribute('data-tabbed'))tabbed[s.getAttribute('data-s')]=1;});
+    var tt;
+    var show=function(id){
+      if(!screens.some(function(s){return s.getAttribute('data-s')===id;}))return;
+      screens.forEach(function(s){s.hidden=s.getAttribute('data-s')!==id;});
+      if(tab){
+        tab.hidden=!tabbed[id];
+        [].forEach.call(tab.querySelectorAll('button'),function(b){
+          if(b.getAttribute('data-go')===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+        });
+      }
+      steps.forEach(function(li){li.classList.toggle('cur',li.getAttribute('data-for')===id);});
+    };
+    var say=function(msg){if(!toast)return;toast.textContent=msg;toast.hidden=false;clearTimeout(tt);tt=setTimeout(function(){toast.hidden=true;},2600);};
+    dev.addEventListener('click',function(e){
+      var b=e.target.closest('[data-go],[data-toast]');if(!b)return;
+      if(b.hasAttribute('data-toast'))say(b.getAttribute('data-toast'));
+      if(b.hasAttribute('data-go'))show(b.getAttribute('data-go'));
+    });
+    var restart=document.getElementById('restart');
+    if(restart&&screens[0])restart.addEventListener('click',function(){show(screens[0].getAttribute('data-s'));});
+    if(screens[0])show(screens[0].getAttribute('data-s'));
+  }
+
+  var box=document.getElementById('decisions');
+  var code=document.getElementById('picks-code');
+  if(box&&code){
+    var KEY='walkthrough-picks:'+document.title;
+    var picks={};
+    try{picks=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(err){picks={};}
+    var ORDER=[].map.call(document.querySelectorAll('.q'),function(q){return q.getAttribute('data-q');});
+    var render=function(){
+      [].forEach.call(document.querySelectorAll('.q'),function(q){
+        var k=q.getAttribute('data-q');
+        [].forEach.call(q.querySelectorAll('.opt'),function(o){o.setAttribute('aria-pressed',picks[k]===o.getAttribute('data-v')?'true':'false');});
+      });
+      var keys=ORDER.filter(function(k){return picks[k];});
+      code.textContent=keys.length?(document.body.getAttribute('data-picks-prefix')||'拍板：')+keys.map(function(k){return picks[k];}).join(' '):'还没选';
+    };
+    document.addEventListener('click',function(e){
+      var o=e.target.closest('.opt');if(!o)return;
+      var k=o.closest('.q').getAttribute('data-q');
+      picks[k]=picks[k]===o.getAttribute('data-v')?undefined:o.getAttribute('data-v');
+      try{localStorage.setItem(KEY,JSON.stringify(picks));}catch(err){}
+      render();
+    });
+    var copy=document.getElementById('copy-picks'),msg=document.getElementById('copy-msg');
+    if(copy)copy.addEventListener('click',function(){
+      var text=code.textContent;
+      var note=function(t){if(msg)msg.textContent=t;};
+      var fallback=function(){var r=document.createRange();r.selectNodeContents(code);var s=getSelection();s.removeAllRanges();s.addRange(r);note('已选中，按 ⌘C 复制');};
+      try{navigator.clipboard.writeText(text).then(function(){note('已复制');},fallback);}catch(err){fallback();}
+    });
+    render();
+  }
+})();
+
+(function(){
+  function has3D(){ try{ var c=document.createElement('canvas'); return !!(window.Toy && (c.getContext('webgl2')||c.getContext('webgl'))); }catch(e){ return false; } }
+  // the whole first level in one stage: buttons move the camera like the lesson does
+  var tour=document.getElementById('tour');
+  if(tour){
+    var host=tour.querySelector('.toy'), hint=tour.querySelector('.hint'), world=null, still=null;
+    var open=tour.querySelector('[data-open]');
+    var btns=[].slice.call(tour.querySelectorAll('[data-go]'));
+    function stillFor(p){ if(!still){ still=document.createElement('img'); still.className='still'; still.alt='舞台的静态画面'; host.appendChild(still);} still.src='assets/views/w-'+p+'.jpg'; }
+    open.addEventListener('click',function(){
+      open.hidden=true; tour.querySelector('.bar').hidden=false;
+      host.innerHTML='';
+      if(has3D()){ try{ world=Toy.mount(host,Toy.SCENES['world-lesson1']).scene; hint.textContent='这是真的 3D：点下面的按钮，镜头会像上课时一样转过去。不连 AI，也不连网。'; }catch(e){ world=null; } }
+      if(!world){ stillFor('intro'); hint.textContent='这台电脑画不出 3D，下面换成了静态图。'; }
+    });
+    btns.forEach(function(b){ b.addEventListener('click',function(){
+      btns.forEach(function(x){ x.setAttribute('aria-pressed',String(x===b)); });
+      var p=b.getAttribute('data-go');
+      if(!world){ stillFor(p); return; }
+      world.go(p);
+      if(p==='send') setTimeout(function(){ world.fly(true); },900);
+      if(p==='round') setTimeout(function(){ world.throwBall(0,true); setTimeout(function(){ world.throwBall(1,false); },900); },900);
+      if(p==='build') setTimeout(function(){ world.clearWagons(); [0xf2c963,0x8fd0b8,0xa9c9ec].forEach(function(c,i){ setTimeout(function(){ world.addWagon(c); },i*300); }); setTimeout(function(){ world.depart(true); },1200); },900);
+      if(p==='point') setTimeout(function(){ world.snap(true); },1000);
+      if(p==='make') setTimeout(function(){ world.makeItem(); },900);
+      if(p==='done') setTimeout(function(){ world.celebrate(); },900);
+    }); });
+  }
+  // each of the nine in the courtyard: one shared stage, opened on demand
+  var cur=null;
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.play'); if(!b) return;
+    var wrap=document.getElementById('gal-stage'); var id=b.getAttribute('data-scene');
+    if(cur){ try{ cur.dispose(); }catch(err){} cur=null; }
+    wrap.hidden=false;
+    wrap.innerHTML='<div class="toy"></div><p class="hint"></p>';
+    var host=wrap.querySelector('.toy'), hint=wrap.querySelector('.hint');
+    if(has3D()){ try{ cur=Toy.mount(host,Toy.SCENES[id]); hint.textContent='「'+b.getAttribute('data-name')+'」：可以点画面里的东西，也可以点下面的按钮。'; }catch(err){ cur=null; } }
+    if(!cur){ host.innerHTML='<img class="still" alt="静态画面" src="assets/views/r-'+id+'.jpg">'; hint.textContent='这台电脑画不出 3D，换成了静态图。'; }
+    wrap.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+})();
+</script>
+</body>
+</html>
