@@ -14,6 +14,7 @@ export * from "./map-nodes/checkpoint.js";
 export * from "./map-nodes/challenge.js";
 export * from "./game-content/rounds.js";
 export * from "./game-content/links.js";
+export * from "./game-content/sequences.js";
 export * from "./map-nodes/personal.js";
 export { localizeLearnerContent } from "./content/localization.js";
 export {
