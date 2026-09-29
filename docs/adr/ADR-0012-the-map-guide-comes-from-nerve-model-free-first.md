@@ -279,3 +279,10 @@ shortcut sentence and its obsolete picked-once state are removed; on-demand
 questions, comparison and keyboard commands remain. On phones the same avatar
 panel opens in UIKit's modal and shows the core rest-ticket balance; its account
 action still opens the shared account page. No renderer or cosmetic store is added.
+
+Removing the static sentence also removes its accidental sideways displacement
+of the droplet in short landscapes. Keep 涟's normal touch-sized body centred;
+the ordinary island-name component uses its existing compact-caption treatment
+below 400px height. Full text remains in DOM/selection, and the same bounded
+label slots and leader retain island identity. No scenery or camera is moved
+to make room, and no collision or accessibility threshold is relaxed.

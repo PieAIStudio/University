@@ -53,6 +53,25 @@ it("uses a free half-step strip without covering scenery or the short-screen hin
 
 const VIEW = { width: 800, height: 600 } as const;
 
+it("keeps a compact landscape caption beside the normal centre guide and both rails", () => {
+  const reserved = [
+    { left: 16, top: 16, right: 224, bottom: 270 },
+    { left: 648, top: 16, right: 856, bottom: 270 },
+    { left: 398, top: 206, right: 474, bottom: 282 },
+    { left: 380, top: 72, right: 470, bottom: 174 },
+    { left: 0, top: 16, right: 872, bottom: 60 },
+  ];
+  const [placement] = placeLabels(
+    [{ id: "current", x: 448, y: 149, z: 0, width: 140, height: 48, anchor: "island", weight: 4 }],
+    { width: 872, height: 286 },
+    { gap: 6, reserved },
+  );
+  expect(placement?.visible).toBe(true);
+  expect(Math.abs(placement!.x - 448)).toBeLessThanOrEqual(140);
+  for (const box of reserved)
+    expect(boxesOverlap(labelBox(placement!, 140, 48), box, 6)).toBe(false);
+});
+
 function candidate(partial: Partial<LabelCandidate> & Pick<LabelCandidate, "id">): LabelCandidate {
   return {
     x: 200,

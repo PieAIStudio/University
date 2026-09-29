@@ -6,7 +6,13 @@ import { humanClick, waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { installCourseLabelFixture } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
-import { openOnline, selectGameRoute, waitForMapReady } from "./harness/online-learner.js";
+import {
+  FIRST_COURSE_ROUTE,
+  openOnline,
+  selectGameRoute,
+  waitForMapReady,
+} from "./harness/online-learner.js";
+import { navigateMapBreadcrumb } from "./harness/map-actions.js";
 import { namedStep } from "./harness/step.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 import { withProject } from "./harness/project.js";
@@ -461,7 +467,14 @@ test.describe("F 点岛出现对象旁进入动作 · 跟岛走", () => {
   test("本地端：同一套卡片，跟岛走", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await namedStep(page, "打开本地端世界地图", async () => {
-      await page.goto(`${LOCAL_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+      // This case measures the archipelago, not the root return invitation.
+      // The author's real legacy progress may legitimately resume a course.
+      // Reach the world through its actual breadcrumb without erasing data.
+      await page.goto(`${LOCAL_ORIGIN}${FIRST_COURSE_ROUTE}`, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("button.label--lesson.is-visible").first()).toBeVisible({
+        timeout: 90_000,
+      });
+      await navigateMapBreadcrumb(page, "/");
       await expect(page.getByText("第一项学习还没有准备好。")).toHaveCount(0, { timeout: 30_000 });
       await expect(page.getByText(/正在打开校园档案/)).toHaveCount(0, { timeout: 30_000 });
       await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });

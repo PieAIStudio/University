@@ -166,3 +166,32 @@ the queue until that gate and the push succeed. Its receipt is retained as
 `journey-push.log`; do not infer success from this document or a running wrapper.
 Keep the owner reference directories untracked. No production, backend, course
 or package release is part of this delivery.
+
+### Full-gate correction before delivery
+
+The first push of `a8b615a0` stopped with `3 failed`, `425 passed (20.5m)` and
+`PUSH_EXIT=1`; the timing group did not run. A one-worker reproduction retained
+all three failures, so they were not dismissed as contention.
+
+At 872×286 the removal of the old sentence beside 涟 correctly centred the
+droplet, but left no legal slot for a 203px course caption between the droplet,
+scenery and both rails. Short landscapes now reuse the existing compact-caption
+treatment at 140px maximum width. The full title remains in the DOM and selected
+course panel, while font, status row, touch floor, collision gaps, scenery and
+the existing bounded placement/leader algorithm remain unchanged. Shrinking 涟
+instead was tested and rejected because it still did not leave a usable slot.
+The corrected complete domain round trips report `2 passed (1.2m)` in
+`journey-short-label-browser.log`; the placement unit file reports `33 passed`.
+The ordinary success captures are under `.devspace-visual/astra-r40/domains-default/`
+with `short-world-caption.png`, including both modes.
+
+The authoring island-pick test also relied on a root visit staying on the world
+map, despite the author's real legacy progress. V7 now legitimately resumes that
+visit inside a course. The world-specific test reaches the same archipelago via
+its real course breadcrumb without erasing learner data; all original pick,
+cancel, carrier and geometry assertions remain. That case passed alone in
+`journey-push-repro-fixed.log`. Its two remaining reds preceded the caption fix.
+
+These are a follow-up correction commit, not rewritten history. Final validation
+is recorded in `journey-gate-fix-verify.log`, and the subsequent unchanged push
+gate in `journey-push-r2.log`. A running or failed receipt is never delivery.

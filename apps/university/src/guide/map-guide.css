@@ -1,7 +1,6 @@
 /*
-  涟 owns the bottom centre of the map (V5 #map-guide). Its first sentence —
-  the entry hint — sits directly above it as its own speech; the gesture
-  hints moved to the top of the map so that nothing else stacks here.
+  涟 owns the bottom centre of the map (V5 #map-guide). V7 replaces the
+  persistent entry hint with scoped invitations; gesture help stays above.
   The column never takes pointer events; only the droplet does, so the
   island underneath stays clickable around it. The droplet, its questions and
   its answer panel are SwimmerNerveKit's NerveLiquidInteraction drawn by
@@ -29,23 +28,6 @@
 .map-guide__seat {
   display: flex;
   pointer-events: auto;
-}
-
-/*
-  The opening line is the map's old entry hint, now said by 涟. It stays
-  narrower than the gap between the corner pills (the feedback pill floats at
-  the bottom right of a phone), so it wraps rather than running under one.
-*/
-.map-guide .map-guide__opening {
-  position: static;
-  transform: none;
-  max-width: min(22rem, calc(100vw - 220px));
-  white-space: normal;
-  text-align: center;
-  pointer-events: none;
-}
-.map-guide .map-guide__opening.hint--dismissed {
-  transform: translateY(6px);
 }
 
 .map-guide__go,
@@ -87,9 +69,8 @@
 }
 
 /*
-  A short landscape (a phone on its side, 286px tall) cannot give the guide
-  two stacked rows: the map's own course names would have nowhere to go. The
-  opening line sits beside the droplet, as low as the entry hint used to.
+  A short landscape keeps its normal-sized, touchable centre entry low.
+  The world's existing compact captions fit beside it rather than on it.
 */
 @media (max-height: 400px) {
   .map-guide {

@@ -129,6 +129,16 @@
   }
 }
 
+/* A phone-height landscape has two rails and a centre guide. The ordinary
+   220px caption cannot fit beside the guide at all. Reuse the same compact
+   label treatment as portrait phones; full titles stay in DOM and the
+   selection panel. Font, two-row status, hit size and collision gaps stay. */
+@media (max-height: 400px) {
+  .stagewrap .label--course {
+    max-width: min(140px, calc(50vw - 24px));
+  }
+}
+
 .label--quiet {
   opacity: 0;
 }

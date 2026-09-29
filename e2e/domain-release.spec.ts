@@ -30,6 +30,38 @@ const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
 const PRIMARY_COURSE = CATALOGUE_ROLES.settlement.course;
 
 test.describe("P 正式领域目录与未发布星球", () => {
+  test.afterEach(async ({ page }, info) => {
+    if (info.status === info.expectedStatus) return;
+    await page.screenshot({ path: info.outputPath("domain-failure.png") });
+    const layout = await page.evaluate(() => {
+      const selectors = [
+        ".map-tools",
+        ".map-guide",
+        ".map-guide__seat",
+        ".map-viewport",
+        ".app-shell__aside",
+        ".nav-rail",
+        ".map-breadcrumbs",
+        "button.label--course",
+      ];
+      return selectors.flatMap((selector) =>
+        [...document.querySelectorAll<HTMLElement>(selector)].map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            selector,
+            text: element.textContent?.slice(0, 120),
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            display: getComputedStyle(element).display,
+            opacity: getComputedStyle(element).opacity,
+          };
+        }),
+      );
+    });
+    writeFileSync(info.outputPath("domain-failure.json"), JSON.stringify(layout, null, 2));
+  });
   for (const [mode, origin] of [
     ["delivery", ONLINE_ORIGIN],
     ["authoring", LOCAL_ORIGIN],
@@ -73,6 +105,10 @@ test.describe("P 正式领域目录与未发布星球", () => {
             page.locator(".map-tools button:visible, .map-framing-tools button:visible"),
           ).toHaveCount(1);
           await expect(page.locator(".map-tools .map-guide__seat button")).toBeVisible();
+          const guide = await page.locator(".map-tools .map-guide__seat button").boundingBox();
+          expect(guide!.width).toBeGreaterThanOrEqual(44);
+          expect(guide!.height).toBeGreaterThanOrEqual(44);
+          await page.screenshot({ path: join(folder, "short-world-caption.png") });
         }
         await navigateMapBreadcrumb(page, "/planet");
         await expect(page.locator("button[data-domain-id]")).toHaveCount(4);
