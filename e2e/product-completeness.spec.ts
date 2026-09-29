@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
+import { enterOpening } from "./harness/opening.js";
 import { CATALOGUE_ROLES, SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
 import { enterExerciseAnswer, expectExerciseAnswer } from "./harness/exercise-input.js";
 
@@ -25,8 +26,9 @@ for (const viewport of [
       page,
     }) => {
       await page.goto(ONLINE_ORIGIN, { waitUntil: "domcontentloaded" });
-      const welcome = page.locator("[data-welcome]");
-      const start = page.locator("[data-welcome-start]");
+      await enterOpening(page);
+      const welcome = page.locator('[data-welcome-page="1"]');
+      const start = page.locator('[data-welcome-start="ai-literacy"]');
       await expect(welcome).toBeVisible();
       await expect(start).toBeEnabled();
       const box = await start.boundingBox();
@@ -34,9 +36,12 @@ for (const viewport of [
       expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
       expect(box!.height).toBeGreaterThanOrEqual(44);
       await humanClick(page, start, "first real lesson");
+      await expect(page.locator('[data-welcome-page="3"]')).toBeVisible({ timeout: 90_000 });
+      await expect(page.locator("dialog[open]")).toHaveCount(0);
+      await humanClick(page, page.locator("[data-welcome-enter]"), "enter the real first stone");
       await expect(page.locator(".lesson-reader")).toBeVisible();
       /*
-        The welcome leads wherever Today points, and that opening is now a PRIMM
+        V7 chooses the real AI-literacy route, whose first opening is a PRIMM
         lesson with its own reader and no shared exercise panel. The draft and
         determined-feedback contract below belongs to the deterministic exercise
         this test already takes its answer from, so walk to that lesson by its
@@ -177,13 +182,15 @@ test.describe("T accessibility and recovery", () => {
   });
   test("T4 keyboard skip is usable with reduced motion and is remembered", async ({ page }) => {
     await page.goto(ONLINE_ORIGIN, { waitUntil: "domcontentloaded" });
-    const close = page.getByRole("button", { name: "关闭欢迎，先看地图", exact: true });
+    await enterOpening(page, true);
+    const close = page.locator('[data-opening-topic="welcome"] .swimmer-nerve-opening__close');
     await expect(close).toBeVisible();
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await close.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator("[data-welcome]")).toHaveCount(0);
     await page.reload({ waitUntil: "domcontentloaded" });
+    await enterOpening(page, true);
     await expect(page.locator("[data-welcome]")).toHaveCount(0);
     await expect(page.locator("button.label--course.is-visible").first()).toBeVisible();
     await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);

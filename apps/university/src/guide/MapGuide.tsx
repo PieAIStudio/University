@@ -44,6 +44,8 @@ import {
   type RegisteredTarget,
 } from "./map-targets.js";
 import "./map-guide.css";
+import { useFirstMeeting, useGuideOpening } from "./use-first-meeting.js";
+import type { FirstStoneInvitation, WelcomeInvitation } from "./first-meeting.js";
 
 /**
  * 涟 on the map (ADR-0012, phase one; V5 #map-guide). The droplet sits at the
@@ -62,6 +64,8 @@ import "./map-guide.css";
  */
 export function MapGuide({
   map,
+  invitation = null,
+  firstStone = null,
   ready,
   opening,
   openingVisible,
@@ -69,6 +73,8 @@ export function MapGuide({
   onOpenDetails,
 }: {
   readonly map: MapGuideMap;
+  readonly invitation?: WelcomeInvitation | null;
+  readonly firstStone?: FirstStoneInvitation | null;
   /**
    * The map has drawn a frame. Until then there is nothing to answer from,
    * and the kit's entry is not mounted: its document-wide pointer listener
@@ -86,6 +92,16 @@ export function MapGuide({
 }) {
   const interfaceTranslator = useI18n();
   const registry = useMemo(() => createTargetRegistry(), []);
+  const openingController = useGuideOpening(map.scope);
+  const meeting = useFirstMeeting({
+    scope: map.scope,
+    ready,
+    targets: registry,
+    invitation,
+    firstStone,
+    afterLayout,
+    controller: openingController,
+  });
   const registered = useRef(new Map<string, RegisteredTarget>());
   const root = useRef<HTMLDivElement>(null);
   const seat = useRef<HTMLDivElement>(null);
@@ -147,6 +163,12 @@ export function MapGuide({
           id: markerTargetId(marker.id),
           element,
           ...markerDescriptor(marker, map),
+          // The introductory destination is a level, not a second copy of its
+          // long question. Keep the same real marker registration and full
+          // description, with a short truthful landing label beside the stone.
+          ...(firstStone?.lessonId === marker.id
+            ? { label: interfaceTranslator.t("map.stop.lesson", { number: 1 }) }
+            : {}),
           available: placedByEngine,
         });
     }
@@ -163,7 +185,7 @@ export function MapGuide({
     // selection sees it on refresh and expires the comparison.
     const selection = compareRef.current?.selection;
     if (selection?.getSnapshot().items.some((item) => changed.has(item.id))) selection.refresh();
-  }, [map, registry]);
+  }, [map, registry, firstStone?.lessonId]);
   useEffect(() => {
     const current = registered.current;
     return () => releaseTargets(current);
@@ -211,6 +233,7 @@ export function MapGuide({
   }, [compare, comparable, registry]);
 
   function ask(id: string): void | false {
+    meeting.dismissGuide();
     const question = id as MapGuideQuestion;
     const answer = answers.get(question);
     if (!answer) return false;
@@ -277,6 +300,7 @@ export function MapGuide({
   }
 
   function clear() {
+    meeting.dismissGuide();
     setShown(null);
     setCompare(null);
   }
@@ -346,9 +370,10 @@ export function MapGuide({
 
   return (
     <div ref={root} className="map-guide" data-map-guide={outletOpen ? "open" : "closed"}>
-      {outletOpen ? null : (
+      {outletOpen || invitation || firstStone ? null : (
         <p
           className={`hint hint--entry map-guide__opening${openingVisible ? "" : " hint--dismissed"}`}
+          aria-hidden={!openingVisible}
           data-game-ui-tone="glass"
         >
           {opening}
@@ -358,11 +383,14 @@ export function MapGuide({
         {ready ? (
           <NerveLiquidInteraction
             renderers={renderers}
+            // An idle optional controller still mounts a status outlet in
+            // Nerve. Supply it only for a real host invitation, not every map.
+            opening={invitation ? (openingController ?? undefined) : undefined}
             questions={questions}
             onQuestion={ask}
-            target={shown?.target ?? null}
-            message={message}
-            activity={activity}
+            target={meeting.target ?? shown?.target ?? null}
+            message={meeting.message ?? message}
+            activity={meeting.activity ?? activity}
             // The answer reads first; the place's own action or the two islands follow it.
             activityPlacement="after-status"
             onDismissPeek={clear}

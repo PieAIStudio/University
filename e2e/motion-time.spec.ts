@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { FAST_TRAVEL_UPPER_BOUND_MS } from "../packages/world/src/avatar/hop.js";
 import { armPointerPress, landingTiming } from "./harness/motion-time.js";
 

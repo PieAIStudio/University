@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 
 import { LOCAL_ORIGIN } from "./ports.js";
 import { assertImagesStayInViewport, assertVisibleText } from "./harness/assert.js";

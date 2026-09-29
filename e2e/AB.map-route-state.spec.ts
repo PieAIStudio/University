@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import { openMapQuickActions } from "./harness/map-actions.js";

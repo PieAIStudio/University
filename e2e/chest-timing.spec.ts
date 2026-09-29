@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./harness/learner-test.js";
 
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";

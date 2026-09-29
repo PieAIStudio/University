@@ -14,6 +14,19 @@ const IN_SECONDS = 1.1;
 const OUT_SECONDS = 0.9;
 const LOOK_HEIGHT = 0.75;
 
+/** Perspective fit for the first-meeting pair, including the avatar/chest
+ * silhouettes. Use actual FOV and aspect, not a separate phone camera. */
+export function introductoryCameraReach(
+  separation: number,
+  fovDegrees: number,
+  aspect: number,
+): number {
+  const halfFov = THREE.MathUtils.degToRad(Math.max(10, Math.min(120, fovDegrees))) / 2;
+  const halfWidth = Math.max(0, separation) / 2 + 1.6;
+  const availableTangent = Math.tan(halfFov) * Math.min(1, Math.max(0.1, aspect)) * 0.8;
+  return Math.max(CLOSE_UP_DISTANCE, halfWidth / availableTangent + separation / 2);
+}
+
 const ease = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
 
 /**
@@ -28,6 +41,7 @@ export function CloseUpCamera({
   other,
   obstacles = [],
   onSettled,
+  fitIntroduction = false,
 }: {
   readonly active: boolean;
   /** The avatar: kept in frame on the near side. */
@@ -37,6 +51,8 @@ export function CloseUpCamera({
   /** What stands on the island, so the eye is not put behind a tent (close-up-heading.ts). */
   readonly obstacles?: readonly Footprint[];
   readonly onSettled?: () => void;
+  /** Keep the first lesson's avatar and unopened chest inside a narrow viewport. */
+  readonly fitIntroduction?: boolean;
 }) {
   const { camera, scene } = useThree();
   const reducedMotion = usePrefersReducedMotion();
@@ -61,15 +77,23 @@ export function CloseUpCamera({
   settled.current = onSettled;
 
   const framing = () => {
+    // A portrait screen needs breathing room under the pair for 涟's short
+    // DOM card. Looking a little lower raises both subjects together without
+    // changing their world positions or the ordinary chest ceremony.
+    const portraitClearance =
+      fitIntroduction && camera instanceof THREE.PerspectiveCamera
+        ? Math.max(0, 1 - camera.aspect) * 1.6
+        : 0;
     const look = subject
       .clone()
-      .lerp(other, 0.62)
-      .setY(Math.max(subject.y, other.y) + LOOK_HEIGHT);
+      .lerp(other, fitIntroduction ? 0.5 : 0.62)
+      .setY(Math.max(subject.y, other.y) + LOOK_HEIGHT - portraitClearance);
     // Far enough back to keep both in frame however far apart they stand.
-    const reach = Math.max(
-      CLOSE_UP_DISTANCE,
-      Math.hypot(other.x - subject.x, other.z - subject.z) * 1.7 + 3,
-    );
+    const separation = Math.hypot(other.x - subject.x, other.z - subject.z);
+    const reach =
+      fitIntroduction && camera instanceof THREE.PerspectiveCamera
+        ? introductoryCameraReach(separation, camera.fov, camera.aspect)
+        : Math.max(CLOSE_UP_DISTANCE, separation * 1.7 + 3);
     return { look, reach };
   };
   /** Turn off the map's heading only as far as it takes to see past what stands. */

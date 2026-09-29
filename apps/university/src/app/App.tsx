@@ -53,7 +53,7 @@ import {
   type LessonRef,
   type View,
 } from "@pieai/university-core";
-import { LoadingTrivia, useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
+import { useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { RecoveryState, type RecoveryReason } from "@pieai/university-ui/loading/RecoveryState.js";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
@@ -153,7 +153,9 @@ import { readNavigationFocus } from "./navigation-focus.js";
 import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
 import { useTodaySectionData } from "./today-section-data";
 import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
-import { WelcomeExperience } from "@pieai/university-ui/onboarding/WelcomeExperience.js";
+import { OpeningSplash, useOpeningAdmission } from "./OpeningSplash.js";
+import { splashProgress } from "./splash-policy.js";
+import { welcomeDestinations, type WelcomeDestination } from "../guide/first-meeting.js";
 import { useWelcome } from "./use-welcome.js";
 
 type FeedbackContextSeed = Pick<
@@ -184,6 +186,14 @@ export function App() {
   const { shelf, studyNames, shelfError, retryShelf, studies, nodes, courseOf } = useShelf();
   const { view: routeView, setView } = useRoute();
   const welcome = useWelcome(routeView, progress, identityStatus.kind);
+  const admission = useOpeningAdmission(routeView);
+  const [firstMeeting, setFirstMeeting] = useState<{
+    owner: string;
+    destination: WelcomeDestination;
+    /** A restored canvas must frame the pair again before the guide points. */
+    framedAttempt: number | null;
+  } | null>(null);
+  const welcomePaths = useMemo(() => welcomeDestinations(studies), [studies]);
   const wide = useMinWidth(768);
   // The look judge is a DEV-only URL input. A seed identifies the course whose
   // existing blueprint should be measured; it never creates a second course or
@@ -194,7 +204,7 @@ export function App() {
   const mapMode = view.kind === "planet" || view.kind === "world" || view.kind === "course";
   const mapRouteKey =
     view.kind === "course" ? `${view.kind}:${view.studyId}/${view.courseId}` : view.kind;
-  const shortcuts = useMapShortcuts(mapMode && !welcome.visible, mapRouteKey);
+  const shortcuts = useMapShortcuts(mapMode && !welcome.visible && !admission.pending, mapRouteKey);
   /**
    * The learner's tab-local navigation choice. `undefined` means "not chosen
    * yet" — fall back to the learner's next course so the name, the sky and the
@@ -210,6 +220,8 @@ export function App() {
     mapInteracted,
     sceneReady,
     sceneFailure,
+    sceneProgress,
+    onSceneProgress,
     sceneAttempt,
     onSceneReady,
     onSceneBusy,
@@ -218,7 +230,7 @@ export function App() {
     onRendererUnavailable,
     retryScene: retrySceneState,
     onMapInteract,
-  } = useSceneInteraction();
+  } = useSceneInteraction(mapRouteKey);
   const retryScene = useCallback(() => {
     resetWebGLContextProbe();
     retrySceneState();
@@ -548,6 +560,30 @@ export function App() {
     identityStatus.kind === "signed_in" || identityStatus.kind === "anonymous"
       ? identityStatus.user.id
       : "guest";
+  const firstMeetingHere =
+    firstMeeting?.owner === guideUser &&
+    view.kind === "course" &&
+    view.studyId === firstMeeting.destination.lesson.studyId &&
+    view.courseId === firstMeeting.destination.lesson.courseId
+      ? firstMeeting.destination
+      : null;
+  useEffect(() => {
+    if (firstMeeting && !firstMeetingHere) setFirstMeeting(null);
+  }, [firstMeeting, firstMeetingHere]);
+  const chooseWelcomePath = (destination: WelcomeDestination, assessment: boolean) => {
+    // Re-resolve the real shelf identity, not an object retained from an older opening.
+    const current = welcomePaths.find((path) => path.id === destination.id);
+    if (!current || !welcome.visible) return;
+    welcome.dismiss("lesson");
+    setNavigationFocus(current.lesson.studyId);
+    setFirstMeeting(
+      assessment ? null : { owner: guideUser, destination: current, framedAttempt: null },
+    );
+    setView({ kind: "course", studyId: current.lesson.studyId, courseId: current.lesson.courseId });
+    setPathOverlay(
+      assessment ? { kind: "unit", unitId: current.lesson.unitId, returnFocusTo: null } : null,
+    );
+  };
   const guideMap = useMemo<MapGuideMap | null>(
     () =>
       view.kind === "world" || view.kind === "course"
@@ -682,15 +718,39 @@ export function App() {
   // Suspense reports the models; this reports the JSON they stand on. Either
   // one alone still paints an empty sea, which is the same broken-page read.
   const waitingForData =
+    (view.kind === "planet" && shelf === null) ||
     (view.kind === "world" && !world) ||
-    ((view.kind === "course" || view.kind === "lesson") && lessons.length === 0);
+    ((view.kind === "course" || view.kind === "lesson" || openingOnMap) && lessons.length === 0);
   const { cover: mapCover, timedOut: mapTimedOut } = useMapCoverState(
-    showMap && (!sceneReady || waitingForData),
+    (mapMode || openingOnMap) && (!sceneReady || waitingForData),
     sceneAttempt,
   );
-  const mapRecoveryReason: RecoveryReason | null = showMap
-    ? (sceneFailure ?? (mapTimedOut ? "scene-timeout" : null))
-    : null;
+  const mapRecoveryReason: RecoveryReason | null =
+    mapMode || openingOnMap ? (sceneFailure ?? (mapTimedOut ? "scene-timeout" : null)) : null;
+  const splashReady = sceneReady && !waitingForData;
+  const loadProgress = splashProgress(
+    !waitingForData,
+    sceneProgress.loaded,
+    sceneProgress.total,
+    sceneReady,
+  );
+  const showOpeningSplash = admission.pending && mapMode && !mapRecoveryReason;
+  const framedFirstStone = useRef<string | null>(null);
+  useEffect(() => {
+    if (!firstMeetingHere) {
+      framedFirstStone.current = null;
+      return;
+    }
+    const key = `${guideUser}:${sceneAttempt}:${lessonRefKey(firstMeetingHere.lesson)}`;
+    if (!splashReady || framedFirstStone.current === key) return;
+    const stone = lessons.find((lesson) => lesson.lessonId === firstMeetingHere.lesson.lessonId);
+    if (!stone || !mapCommands.current) return;
+    // The learner explicitly chose this route. Frame that real stone once,
+    // rather than the ordinary road's look-ahead point: its chest then stays
+    // above the guide's bottom card even on a narrow phone. No scenery moves.
+    framedFirstStone.current = key;
+    mapCommands.current.focus(stone.position.toArray());
+  }, [firstMeetingHere, guideUser, sceneAttempt, splashReady, lessons]);
   const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
@@ -738,10 +798,20 @@ export function App() {
     onOpenLesson: openCourseLesson,
     onChest: chest.beginWeekly,
   });
-  const labelMarkers = useMemo(
-    () => (weekly.marker ? [...markers, weekly.marker] : markers),
-    [markers, weekly.marker],
-  );
+  const labelMarkers = useMemo(() => {
+    if (firstMeetingHere) {
+      // One named place in this one-step tour. Other normal map labels return
+      // on dismissal; their competing kind icons do not cover this close-up.
+      return markers
+        .filter((marker) => marker.id === firstMeetingHere.lesson.lessonId)
+        .map((marker) => ({
+          ...marker,
+          text: interfaceTranslator.t("map.stop.lesson", { number: 1 }),
+          position: marker.position.clone().setY(marker.position.y + 1.3),
+        }));
+    }
+    return weekly.marker ? [...markers, weekly.marker] : markers;
+  }, [markers, weekly.marker, firstMeetingHere, interfaceTranslator]);
   const { markUnitProven, provenLessonKeys, unmetFor } = useSkipTest({
     nodes,
     progress,
@@ -886,6 +956,7 @@ export function App() {
     view.kind === "avatar-lab" || view.kind === "play-lab" || studioMap ? null : (
       <WorldMapCanvas
         commandsRef={mapCommands}
+        dataReady={!waitingForData}
         key={sceneAttempt}
         hidden={!showMap}
         paused={!showMap}
@@ -926,8 +997,9 @@ export function App() {
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}
-        onSceneReady={onSceneReady}
-        onSceneBusy={onSceneBusy}
+        onSceneReady={view.kind === "planet" ? undefined : onSceneReady}
+        onSceneBusy={view.kind === "planet" ? undefined : onSceneBusy}
+        onSceneProgress={view.kind === "planet" ? undefined : onSceneProgress}
         onContextLost={onContextLost}
         onContextRestored={onContextRestored}
         onRendererUnavailable={onRendererUnavailable}
@@ -949,11 +1021,12 @@ export function App() {
                 avatarRecipe={avatarRecipe}
                 avatarSignedIn={avatarSignedIn}
                 avatarLessonId={
-                  (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") &&
+                  firstMeetingHere?.lesson.lessonId ??
+                  ((view.kind === "course" || view.kind === "lesson" || view.kind === "settled") &&
                   courseAvatarTarget?.studyId === view.studyId &&
                   courseAvatarTarget.courseId === view.courseId
                     ? courseAvatarTarget.lessonId
-                    : null
+                    : null)
                 }
                 avatarNodeId={
                   view.kind === "course" &&
@@ -994,6 +1067,18 @@ export function App() {
                 }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
                 opening={openingOnMap || chest.weekly ? chest.opening : null}
+                introductoryLessonId={firstMeetingHere?.lesson.lessonId ?? null}
+                onIntroductionReady={(lessonId) => {
+                  setFirstMeeting((current) =>
+                    current &&
+                    current.framedAttempt !== sceneAttempt &&
+                    current.owner === guideUser &&
+                    current.destination === firstMeetingHere &&
+                    current.destination.lesson.lessonId === lessonId
+                      ? { ...current, framedAttempt: sceneAttempt }
+                      : current,
+                  );
+                }}
                 reviewDue={reviewDue}
                 weeklyBoss={weekly.scene}
                 onPickWeeklyBoss={weekly.open}
@@ -1085,7 +1170,38 @@ export function App() {
           guideMap ? (
             <MapGuide
               map={guideMap}
-              ready={sceneReady}
+              ready={splashReady && !admission.pending && !mapCover}
+              invitation={
+                welcome.visible && welcomePaths.length > 0
+                  ? {
+                      choices: welcomePaths,
+                      onChoose: chooseWelcomePath,
+                      onBrowse: () => {
+                        welcome.dismiss("map");
+                        setView({ kind: "planet" });
+                      },
+                      onSignIn: () => {
+                        welcome.dismiss("account");
+                        openAccount();
+                      },
+                      onDismiss: () => welcome.dismiss("map"),
+                    }
+                  : null
+              }
+              firstStone={
+                firstMeetingHere
+                  ? {
+                      id: `${guideUser}:${firstMeetingHere.lesson.studyId}:${firstMeetingHere.lesson.courseId}:${firstMeetingHere.lesson.lessonId}`,
+                      lessonId: firstMeetingHere.lesson.lessonId,
+                      ready: firstMeeting?.framedAttempt === sceneAttempt,
+                      onDismiss: () => setFirstMeeting(null),
+                      onEnter: () => {
+                        setFirstMeeting(null);
+                        setView({ kind: "lesson", ...firstMeetingHere.lesson });
+                      },
+                    }
+                  : null
+              }
               opening={
                 <span>
                   {interfaceTranslator.t("map.chooseHint")}{" "}
@@ -1106,8 +1222,8 @@ export function App() {
               onContinue={todayLesson ? continueToTodayLesson : undefined}
               overlay
             />
-          ) : mapCover ? (
-            <LoadingTrivia />
+          ) : mapCover && !showOpeningSplash ? (
+            <OpeningSplash mode="transition" progress={loadProgress} ready={splashReady} />
           ) : null
         }
       />
@@ -1318,6 +1434,16 @@ export function App() {
   const main = (
     <MainRouter
       contentPort={contentPort}
+      sceneAttempt={sceneAttempt}
+      planetReadiness={{
+        dataReady: !waitingForData,
+        onSceneReady,
+        onSceneBusy,
+        onSceneProgress,
+        onContextLost,
+        onContextRestored,
+        onRendererUnavailable,
+      }}
       course={course}
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
@@ -1511,6 +1637,7 @@ export function App() {
   return (
     <>
       <div
+        inert={showOpeningSplash || undefined}
         className={
           view.kind === "me" || view.kind === "auth-callback" || view.kind === "auth-reset"
             ? "app app--account"
@@ -1619,40 +1746,21 @@ export function App() {
           }
         />
       ) : null}
-      {feedbackSurface}
-      {welcome.visible ? (
-        <WelcomeExperience
-          choices={studies.filter((study) =>
-            study.courses.some((entry) => entry.units.some((unit) => unit.lessons.length > 0)),
-          )}
-          selectedId={focusedStudyId}
-          lesson={
-            todayLesson
-              ? {
-                  title: todayLesson.lessonTitle,
-                  exerciseCount:
-                    courseOf(todayLesson.studyId, todayLesson.courseId)
-                      ?.units.find((unit) => unit.id === todayLesson.unitId)
-                      ?.lessons.find((lesson) => lesson.id === todayLesson.lessonId)
-                      ?.exerciseCount ?? 0,
-                }
-              : null
-          }
-          onSelect={focusStudy}
-          onStart={() => {
-            welcome.dismiss("lesson");
-            continueToTodayLesson();
+      {showOpeningSplash ? null : feedbackSurface}
+      {showOpeningSplash ? (
+        <OpeningSplash progress={loadProgress} ready={splashReady} onStart={admission.enter} />
+      ) : view.kind === "planet" && mapRecoveryReason ? (
+        <RecoveryState
+          reason={mapRecoveryReason}
+          onRetry={retryScene}
+          onContinue={() => {
+            admission.enter();
+            setView({ kind: "catalog" });
           }}
-          onBrowse={() => {
-            welcome.dismiss("map");
-            setView({ kind: "planet" });
-          }}
-          onDismiss={() => welcome.dismiss("map")}
-          onSignIn={() => {
-            welcome.dismiss("account");
-            openAccount();
-          }}
+          overlay
         />
+      ) : view.kind === "planet" && mapCover ? (
+        <OpeningSplash mode="transition" progress={loadProgress} ready={splashReady} />
       ) : null}
     </>
   );

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./harness/learner-test.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";

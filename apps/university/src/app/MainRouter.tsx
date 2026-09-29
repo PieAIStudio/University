@@ -1,7 +1,14 @@
 import { accountClosurePort, ACCOUNT_CLOSURE_CONFIRMATION } from "../account/account-closure.js";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
-import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import {
+  lazy,
+  Suspense,
+  type ComponentProps,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import {
   LIBRARY_VIEW_TAB,
   libraryTabOf,
@@ -94,6 +101,8 @@ const ProfileAvatar = lazy(() =>
 );
 
 interface MainRouterProps {
+  readonly planetReadiness?: ComponentProps<typeof PlanetStage>["readiness"];
+  readonly sceneAttempt?: number;
   readonly contentPort: ContentPort;
   readonly course: CourseView | null;
   readonly focusedStudyId: string | null;
@@ -149,6 +158,8 @@ interface MainRouterProps {
 }
 
 export function MainRouter({
+  planetReadiness,
+  sceneAttempt,
   contentPort,
   course,
   focusedStudyId,
@@ -468,6 +479,8 @@ export function MainRouter({
         <div className="planet-page__globe" data-planet-globe="true">
           <PlanetStage
             studies={planetStudies}
+            key={sceneAttempt}
+            readiness={planetReadiness}
             domainCatalog={planetDomainCatalog}
             explicitSelection
             selectedId={selectedPlanetStudyId ?? null}

@@ -46,6 +46,24 @@ manifest. The importer still checks shrinkage against that current baseline;
 old evidence receipts beside the cache are not removed. `harness/catalogue.ts`
 remains the only E2E role selector for published courses.
 
+## Opening and returning learners
+
+Ordinary route specs import `test` from `harness/learner-test.ts`. A returning
+web visitor still presses the real launch button: the fixture waits for actual
+scene readiness (or the product's recovery screen) and clicks that button. It
+does not remove the overlay, seed progress, or mark the renderer ready. Its
+polling must still observe recovery when a test deliberately stops animation
+frames.
+
+First-arrival specs use the base Playwright `test` instead and explicitly call
+`enterOpening` from `harness/opening.ts`. Screenshots of a liquid opening wait
+for its real painted entrance; a guide waits for the actual camera to settle.
+The authoring first-arrival fixture removes only legacy progress from isolated
+HTTP responses, not the owner's SQLite database or the real lesson contents.
+`v7-opening-timing.spec.ts` belongs to the single-worker timing lane: held model
+responses test readiness, and the slow/fast transition checks keep their original
+two-second threshold. No product readiness flag is injected.
+
 ## Island look judge
 
 The fixed-pressure visual ruler runs separately from the default e2e project:

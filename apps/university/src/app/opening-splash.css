@@ -1,0 +1,11 @@
+/* Placement only; GameSplash owns typography, colour, progress and motion. */
+.university-splash--opening {
+  position: fixed;
+  inset: 0;
+  z-index: var(--game-ui-z-overlay, 60);
+  min-height: 100dvh;
+}
+.university-splash.loading-trivia {
+  position: absolute;
+  inset: 0;
+}

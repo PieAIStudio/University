@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";

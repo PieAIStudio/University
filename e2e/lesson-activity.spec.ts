@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { humanClick, scrollIntoView } from "./harness/click.js";

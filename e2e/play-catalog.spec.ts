@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { readFileSync } from "node:fs";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { humanClick, scrollIntoView } from "./harness/click.js";

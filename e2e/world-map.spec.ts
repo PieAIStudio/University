@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { assertPanelIsPainted } from "./harness/assert.js";

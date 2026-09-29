@@ -1,4 +1,54 @@
 export const messages = {
+  "product.value.whyAi":
+    "Ask AI directly and you get an answer. Here, you learn how to ask, how to judge the answer, and how to remember.",
+  "product.splash.prepared": "No time spent coaching AI. Everything is ready for you.",
+  "product.splash.example": "Every level connects to a real example.",
+  "product.splash.memory":
+    "Review with the memory curve. Come back and practise before you forget.",
+  "product.splash.play": "Enjoy learning, and keep going.",
+  "product.splash.time": "Spend less time figuring things out. Enjoy the learning.",
+  "product.splash.highlight.why": "how to ask, how to judge",
+  "product.splash.highlight.prepared": "No time spent coaching AI",
+  "product.splash.highlight.example": "a real example",
+  "product.splash.highlight.memory": "memory curve",
+  "product.splash.highlight.play": "Enjoy learning",
+  "product.splash.highlight.time": "Enjoy the learning",
+  "product.splash.progress": "Preparing your island · {percent}%",
+  "product.splash.start": "Tap to begin",
+  "product.welcome.greeting":
+    "Hi, I’m Ripple. I’ll learn alongside you on these islands. Which path shall we take?",
+  "product.welcome.path.basics": "Get to know AI",
+  "product.welcome.path.build": "Build a small app with AI",
+  "product.welcome.path.basics.detail": "No experience needed · Start here",
+  "product.welcome.path.build.detail": "Turn an idea into something you can use",
+  "product.welcome.path.start": "Start here",
+  "product.welcome.path.first": "Level 1: {title}",
+  "product.welcome.path.sourcePreview": "Level 1’s preview is currently in Chinese.",
+  "product.welcome.path.count": "{count, plural, one {# level} other {# levels}}",
+  "product.welcome.help": "Not sure? Help me choose",
+  "product.welcome.assess": "I’ve used AI. Let me try a test",
+  "product.welcome.assess.choose":
+    "Pick a path and test what you already know. Then decide where to start.",
+  "product.welcome.assess.start": "Try this path’s test",
+  "product.welcome.help.message": "Two small questions will help us choose.",
+  "product.welcome.help.experience": "How often do you use AI?",
+  "product.welcome.help.never": "Almost never",
+  "product.welcome.help.sometimes": "Sometimes",
+  "product.welcome.help.often": "Often",
+  "product.welcome.help.goal": "What would you most like to do?",
+  "product.welcome.help.work": "Write things for work",
+  "product.welcome.help.build": "Build a small app",
+  "product.welcome.help.browse": "Look around",
+  "product.welcome.help.recommend": "Try “{title}”.",
+  "product.welcome.help.start": "Start at level 1",
+  "product.welcome.back": "Choose a different path",
+  "product.welcome.firstStone":
+    "This is your first level. Finish it and the wooden chest beside it is yours.",
+  "product.welcome.enter": "Take a look inside",
+  "product.welcome.retryTarget": "Find level 1 again",
+  "product.welcome.targetUnavailable":
+    "Level 1 is not visible right now. You can still enter it, or find it again.",
+
   "product.welcome.heading": "Make sense of AI.",
   "product.welcome.headingNext": "Bring your ideas to life.",
   "product.welcome.invitation":
@@ -14,6 +64,6 @@ export const messages = {
   "product.welcome.dismiss": "Close the welcome and explore the map",
   "product.welcome.start": "Start learning",
   "product.welcome.browse": "Browse courses",
-  "product.welcome.signIn": "Already a member? Sign in",
+  "product.welcome.signIn": "Have an account? Sign in",
   "product.welcome.reassurance": "Free lessons · No registration needed",
 } as const;

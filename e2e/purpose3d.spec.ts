@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CLAIMS } from "../packages/world/src/toy-play/arcade-content.js";
 import { WIRING_ROUNDS } from "../packages/world/src/toy-play/workshop-engine.js";

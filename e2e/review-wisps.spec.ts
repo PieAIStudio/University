@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import { makeDroppedCardsDue, walkFirstOnlineLesson } from "./harness/online-learner.js";

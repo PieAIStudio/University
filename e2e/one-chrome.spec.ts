@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./harness/learner-test.js";
 
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";

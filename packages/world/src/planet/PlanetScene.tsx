@@ -8,9 +8,11 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type ComponentProps,
 } from "react";
 import * as THREE from "three";
 import { Stage } from "../Stage.js";
+import { ScenePending } from "../scene-readiness.js";
 import type { AvatarRecipe } from "../avatar/index.js";
 import { HOP_DURATION_MS } from "../avatar/hop.js";
 import { MapLighting } from "../sky/lighting.js";
@@ -277,6 +279,7 @@ function DomainPlanet({
         representativeLimit,
       }}
     >
+      {resources ? null : <ScenePending />}
       <group ref={body}>
         <mesh
           geometry={globe}
@@ -489,10 +492,22 @@ export function PlanetScene({
     </>
   );
 }
+export type PlanetReadiness = Pick<
+  ComponentProps<typeof Stage>,
+  | "onSceneReady"
+  | "onSceneBusy"
+  | "onSceneProgress"
+  | "onContextLost"
+  | "onContextRestored"
+  | "onRendererUnavailable"
+  | "dataReady"
+>;
+
 export function PlanetStage({
   children,
+  readiness,
   ...props
-}: PlanetSceneProps & { readonly children?: ReactNode }) {
+}: PlanetSceneProps & { readonly children?: ReactNode; readonly readiness?: PlanetReadiness }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pointer = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
@@ -537,6 +552,8 @@ export function PlanetStage({
     >
       <Stage
         cameraFrom={[0, 0, 44]}
+        {...readiness}
+        sceneKey={`planet:${domainIds.join(":")}:${retry}`}
         lookAt={[0, 0, 0]}
         ambientOcclusion={false}
         onPointerMissed={() => {

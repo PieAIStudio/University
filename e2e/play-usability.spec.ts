@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 
 const ROOT = resolve("SCRATCH/play-usability/browser");

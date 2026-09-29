@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { walkFirstOnlineLesson } from "./harness/online-learner.js";
 for (const theme of ["浅色", "深色"])

@@ -1,4 +1,4 @@
-import { expect, test, type Locator } from "@playwright/test";
+import { expect, test, type Locator } from "./harness/learner-test.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { catalogueStudyOf, lessonPathOf } from "./harness/catalogue.js";
 

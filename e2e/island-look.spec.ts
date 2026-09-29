@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "./harness/learner-test.js";
 
 import { contrastRatio } from "../scripts/check-contrast.mjs";
 import { ISLAND_LOOK_SHOT_IDS } from "../packages/world/src/island/island-look.js";

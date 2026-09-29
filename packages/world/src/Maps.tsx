@@ -49,6 +49,7 @@ import {
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
 import { IslandRender } from "./island/island-render.js";
+import { ScenePending } from "./scene-readiness.js";
 import {
   islandLookFrozen,
   islandLookSeedForCourse,
@@ -1451,6 +1452,8 @@ export function CourseScene({
   assetRevision = 0,
   opening = null,
   reviewDue = null,
+  introductoryLessonId = null,
+  onIntroductionReady,
   weeklyBoss = null,
   onPickWeeklyBoss,
 }: {
@@ -1469,6 +1472,9 @@ export function CourseScene({
   assetRevision?: number;
   /** A lesson's chest being opened after it was finished (V7 station 4). */
   opening?: CourseOpening | null;
+  /** The explicit first-meeting choice: frame the existing learner and chest, without opening it. */
+  introductoryLessonId?: string | null;
+  onIntroductionReady?: (lessonId: string) => void;
   /** Finished lessons whose review cards are due: a wisp comes back to each (V7 decision O1). */
   reviewDue?: readonly string[] | null;
   /** This week's boss, when it stands on this island and has not been beaten (V7 mechanic 8). */
@@ -1763,13 +1769,21 @@ export function CourseScene({
       ...(idlePosition ? [{ x: idlePosition.x, z: idlePosition.z, r: AVATAR_CLEARANCE }] : []),
     ]);
   }, [weeklyMonster, blueprint, standing, markers, allSites, chests, vignettes, idlePosition]);
-  // One close-up for both: the chest being opened wins; otherwise the boss being fought.
+  const introductoryChest = introductoryLessonId
+    ? chests.find(
+        (chest) => chest.owner.kind === "lesson" && chest.owner.lessonId === introductoryLessonId,
+      )
+    : null;
+  // One camera owner for these views of the same world. The first meeting
+  // uses the existing obstacle-aware framing, not a second camera or stage.
   const closeUp =
     staged && openingChest
       ? { active: staged.closeUp, other: throwing ? chased.at : openingChest.position }
-      : weekly && weeklyAnchor
-        ? { active: weekly.fighting === true, other: weeklyAnchor.at }
-        : null;
+      : introductoryChest
+        ? { active: true, other: introductoryChest.position }
+        : weekly && weeklyAnchor
+          ? { active: weekly.fighting === true, other: weeklyAnchor.at }
+          : null;
   const pickOwner = (owner: CourseChest["owner"] | CourseMonster["stop"]) => {
     if (owner.kind === "lesson") {
       const lesson = lessons.find((entry) => entry.lessonId === owner.lessonId);
@@ -1821,7 +1835,7 @@ export function CourseScene({
         includeDistantGround
       />
       <IslandRender blueprint={blueprint} detail="course" />
-      <Suspense fallback={null}>
+      <Suspense fallback={<ScenePending />}>
         <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
       <CourseVignettes vignettes={vignettes} />
@@ -1866,11 +1880,17 @@ export function CourseScene({
         <CloseUpCamera
           active={closeUp.active}
           subject={(avatarAt?.position ?? idlePosition)!}
+          fitIntroduction={Boolean(introductoryChest) && !staged}
+          onSettled={
+            introductoryLessonId && !staged
+              ? () => onIntroductionReady?.(introductoryLessonId)
+              : undefined
+          }
           other={closeUp.other}
           obstacles={closeUpObstacles}
         />
       ) : null}
-      <Suspense fallback={null}>
+      <Suspense fallback={<ScenePending />}>
         <MonsterField
           placements={monsterPlacements}
           focus={avatarAt?.position ?? idlePosition ?? null}
@@ -1889,7 +1909,7 @@ export function CourseScene({
         />
       </Suspense>
       {wisps.length ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ScenePending />}>
           <WispField spots={wisps} />
         </Suspense>
       ) : null}

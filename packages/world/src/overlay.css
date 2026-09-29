@@ -382,16 +382,18 @@ button.label:focus-visible {
 }
 
 @media (max-width: 400px) {
-  /* Between the two folded rails a long cue scrolls rather than wraps. */
+  /* This caption cannot take pointer events: do not make its missing words
+     reachable only by scrolling. Wrap between the two folded rails instead. */
   .hint {
     width: max-content;
     max-width: calc(100vw - 160px);
-    overflow-x: auto;
-    scrollbar-width: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
-  .hint::-webkit-scrollbar {
-    display: none;
+  .hint__row {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 

@@ -53,6 +53,12 @@ import { renderTier } from "./sky/tier";
 import { hasWebGLContext } from "./webgl-capability.js";
 import { usePageVisibility } from "./page-visibility.js";
 import { WorldAppearance } from "./appearance/WorldAppearance.js";
+import {
+  ScenePending,
+  ScenePresence,
+  SceneReadinessContext,
+  type SceneLoadProgress,
+} from "./scene-readiness.js";
 
 export { hasWebGLContext, resetWebGLContextProbe } from "./webgl-capability.js";
 
@@ -366,35 +372,11 @@ function sample(gl: THREE.WebGLRenderer, target: THREE.WebGLRenderTarget) {
   };
 }
 
-/**
- * Fires when the kit models inside Suspense have committed, and again when
- * they suspend. The fallback stays `null` on purpose: a word inside the
- * canvas is geometry, and readable text is DOM. The overlay that uses these
- * callbacks lives next to the canvas, not in it.
- */
-function ScenePresence({
-  onReady,
-  onBusy,
-}: {
-  readonly onReady?: () => void;
-  readonly onBusy?: () => void;
-}) {
-  const reported = useRef(false);
-  useLayoutEffect(() => {
-    reported.current = false;
-    return () => onBusy?.();
-  }, [onReady, onBusy]);
-  // Pipeline owns priority 1. Ready means an actual completed frame, not just
-  // a React commit while the browser's frame scheduler may still be stalled.
-  useFrame(() => {
-    if (reported.current) return;
-    reported.current = true;
-    onReady?.();
-  }, 2);
-  return null;
-}
-
+/** One renderer, with actual scene readiness reported to the adjacent DOM. */
 interface StageProps {
+  readonly sceneKey?: string;
+  readonly dataReady?: boolean;
+  readonly onSceneProgress?: (progress: SceneLoadProgress) => void;
   readonly children: ReactNode;
   readonly cameraFrom: readonly [number, number, number];
   readonly cameraFar?: number;
@@ -460,6 +442,9 @@ interface StageProps {
 }
 
 export function Stage({
+  sceneKey = "scene",
+  dataReady = true,
+  onSceneProgress,
   children,
   cameraFrom,
   lookAt = [0, 0, 0],
@@ -477,6 +462,7 @@ export function Stage({
   fixedCamera = null,
 }: StageProps) {
   const tier = renderTier();
+  const pending = useMemo(() => new Set<symbol>(), []);
   const frozenLook = import.meta.env.DEV && lookSource !== null && islandLookFrozen();
   const rendererAvailable = useMemo(() => hasWebGLContext(), []);
   const pageVisible = usePageVisibility();
@@ -574,10 +560,16 @@ export function Stage({
           boundary the first `useGLTF` would throw the whole canvas away. The
           fallback is still `null` — a sentence drawn here would be geometry.
         */}
-        <Suspense fallback={null}>
-          <ScenePresence onReady={onSceneReady} onBusy={onSceneBusy} />
-          {children}
-        </Suspense>
+        <SceneReadinessContext.Provider value={pending}>
+          <ScenePresence
+            sceneKey={sceneKey}
+            dataReady={dataReady}
+            onReady={onSceneReady}
+            onBusy={onSceneBusy}
+            onProgress={onSceneProgress}
+          />
+          <Suspense fallback={<ScenePending />}>{children}</Suspense>
+        </SceneReadinessContext.Provider>
       </WorldEnvironment>
     </Canvas>
   );

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { makeDroppedCardsDue } from "./harness/online-learner.js";
 

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 /** How long a later suspend may last before the overlay is allowed back. */
-export const MAP_COVER_REOPEN_MS = 200;
+export const MAP_COVER_REOPEN_MS = 2_000;
+/** Once a slow transition is covered, do not flash it for a single frame. */
+export const MAP_COVER_MIN_VISIBLE_MS = 800;
 
 /**
  * A stuck overlay is worse than a black canvas. If the scene never reports
@@ -19,14 +21,15 @@ export interface MapCoverState {
  *
  * First busy: cover immediately, because the first frame of the canvas is
  * what reads as a broken page. Later busy (a course scene suspending after
- * the world has already painted): wait a beat, so a cached GLTF does not
- * flash the overlay for one frame. Hide the instant busy ends. Unmount, do
+ * the world has already painted): wait two seconds. A shown transition stays
+ * for at least 800ms; initial readiness never incurs that hold. Unmount, do
  * not opacity-0 — an invisible overlay still steals clicks.
  */
 export function useMapCoverState(busy: boolean, attempt = 0): MapCoverState {
   const [state, setState] = useState<MapCoverState>({ cover: busy, timedOut: false });
   const seenReady = useRef(false);
   const previousAttempt = useRef(attempt);
+  const shownAt = useRef<number | null>(null);
 
   useEffect(() => {
     const restarted = previousAttempt.current !== attempt;
@@ -34,12 +37,25 @@ export function useMapCoverState(busy: boolean, attempt = 0): MapCoverState {
 
     if (!busy) {
       seenReady.current = true;
-      setState({ cover: false, timedOut: false });
-      return;
+      const remaining =
+        shownAt.current === null
+          ? 0
+          : Math.max(0, MAP_COVER_MIN_VISIBLE_MS - (Date.now() - shownAt.current));
+      const hide = () => {
+        shownAt.current = null;
+        setState({ cover: false, timedOut: false });
+      };
+      if (remaining === 0) {
+        hide();
+        return;
+      }
+      const hold = window.setTimeout(hide, remaining);
+      return () => window.clearTimeout(hold);
     }
 
     const coverImmediately = !seenReady.current || restarted;
-    setState({ cover: coverImmediately, timedOut: false });
+    if (coverImmediately) shownAt.current = null;
+    setState({ cover: coverImmediately || shownAt.current !== null, timedOut: false });
 
     if (coverImmediately) {
       // The cover gives way to RecoveryState at this boundary, not to a blank
@@ -52,10 +68,10 @@ export function useMapCoverState(busy: boolean, attempt = 0): MapCoverState {
       return () => window.clearTimeout(giveUp);
     }
 
-    const showLater = window.setTimeout(
-      () => setState((current) => ({ ...current, cover: true })),
-      MAP_COVER_REOPEN_MS,
-    );
+    const showLater = window.setTimeout(() => {
+      shownAt.current ??= Date.now();
+      setState((current) => ({ ...current, cover: true }));
+    }, MAP_COVER_REOPEN_MS);
     const giveUp = window.setTimeout(
       () => setState({ cover: false, timedOut: true }),
       MAP_COVER_GIVE_UP_MS,

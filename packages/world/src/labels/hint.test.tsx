@@ -144,9 +144,22 @@ describe("overlay.css .hint", () => {
     expect(CSS).toMatch(/\.hint--dismissed\s*\{[\s\S]*?opacity:\s*0/);
   });
 
-  it("keeps a phone hint on one horizontal line while allowing a narrow viewport to scroll it", () => {
-    expect(CSS).toMatch(/\.hint\s*\{[\s\S]*?white-space:\s*nowrap/);
-    expect(CSS).toMatch(/@media \(max-width: 400px\)[\s\S]*?\.hint\s*\{[\s\S]*?overflow-x:\s*auto/);
+  it("keeps a narrow caption inside the rail gap without requiring an unreachable scroll action", () => {
+    // V7's English first-meeting check exposed that this non-hit-testable
+    // caption could overflow but could not be scrolled. Preserve its rail
+    // clearance and click-through role; wrap the complete sentence instead.
+    // The earlier 400px block owns the label budget, not the caption.
+    const narrow = ruleBlock(
+      CSS.slice(CSS.lastIndexOf("@media (max-width: 400px)")),
+      "@media (max-width: 400px)",
+    );
+    const hint = ruleBlock(narrow, ".hint");
+    expect(hint).toMatch(/max-width:\s*calc\(100vw - 160px\)/);
+    expect(hint).toMatch(/white-space:\s*normal/);
+    expect(hint).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(hint).not.toMatch(/overflow-x:\s*auto/);
+    expect(ruleBlock(CSS, ".hint")).toMatch(/pointer-events:\s*none/);
+    expect(ruleBlock(narrow, ".hint__row")).toMatch(/flex-wrap:\s*wrap/);
   });
 
   it("tapers the shared map label budget at narrow breakpoints", () => {

@@ -18,6 +18,8 @@ import type { AvatarRecipe } from "./avatar/index.js";
 import type { CourseNode } from "./course/course.js";
 import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
 import { Stage } from "./Stage.js";
+import type { SceneLoadProgress } from "./scene-readiness.js";
+export type { SceneLoadProgress } from "./scene-readiness.js";
 import { CourseOverviewContext, CourseOverviewProbe } from "./camera/CourseOverview.js";
 import type { CourseOverviewFrame } from "./camera/course-overview.js";
 import { MapTravelClockContext, recordMapTravel, type MapTravelClock } from "./map-travel-clock.js";
@@ -45,6 +47,7 @@ export interface MapViewportCommands {
  */
 export function WorldMapCanvas({
   commandsRef,
+  dataReady = true,
   world,
   cameraFrom,
   lookAt,
@@ -63,6 +66,7 @@ export function WorldMapCanvas({
   onInteract,
   onSceneReady,
   onSceneBusy,
+  onSceneProgress,
   onContextLost,
   onContextRestored,
   onRendererUnavailable,
@@ -85,6 +89,7 @@ export function WorldMapCanvas({
   courseViewKey = null,
 }: {
   readonly className?: string;
+  readonly dataReady?: boolean;
   readonly commandsRef?: RefObject<MapViewportCommands | null>;
   readonly world: WorldMap | null;
   readonly cameraFrom: readonly [number, number, number];
@@ -105,6 +110,7 @@ export function WorldMapCanvas({
   readonly onInteract?: () => void;
   readonly onSceneReady?: () => void;
   readonly onSceneBusy?: () => void;
+  readonly onSceneProgress?: (progress: SceneLoadProgress) => void;
   readonly onContextLost?: () => void;
   readonly onContextRestored?: () => void;
   readonly onRendererUnavailable?: () => void;
@@ -290,6 +296,9 @@ export function WorldMapCanvas({
       <div className="map-viewport">
         <Stage
           cameraFrom={framedFrom}
+          sceneKey={courseViewKey ?? `world:${skyStudyId ?? "none"}`}
+          onSceneProgress={onSceneProgress}
+          dataReady={dataReady}
           cameraFar={activeOverview?.far}
           lookAt={framedLook}
           onSceneReady={onSceneReady}
@@ -490,6 +499,7 @@ export function WorldMapCanvas({
         {controlsHint !== null && controlsHint !== undefined ? (
           <p
             className={`hint hint--controls${controlsHintVisible ? "" : " hint--dismissed"}`}
+            aria-hidden={!controlsHintVisible}
             data-game-ui-tone="glass"
           >
             {controlsHint}

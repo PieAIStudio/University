@@ -38,7 +38,7 @@ export function writeWelcomeAcknowledged(
 export function isWelcomeEntry(url: URL): boolean {
   if (url.pathname !== "/" || (url.hash !== "" && url.hash !== "#/")) return false;
   // Shared lesson links, auth callbacks and renderer diagnostics own their destination.
-  return [...url.searchParams.keys()].every((key) => key.startsWith("utm_"));
+  return [...url.searchParams.keys()].every((key) => key === "lang" || key.startsWith("utm_"));
 }
 
 export function shouldShowWelcome(options: {

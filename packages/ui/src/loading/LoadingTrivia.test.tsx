@@ -13,6 +13,7 @@ import { resetLoadingVisitForTests } from "./loading-visit.js";
 import {
   MAP_COVER_GIVE_UP_MS,
   MAP_COVER_REOPEN_MS,
+  MAP_COVER_MIN_VISIBLE_MS,
   useMapCover,
   useMapCoverState,
 } from "./use-map-cover.js";
@@ -165,6 +166,42 @@ describe("useMapCover", () => {
       vi.advanceTimersByTime(1);
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("yes");
+  });
+
+  it("holds a shown transition for 800ms, but does not delay an initial ready screen", async () => {
+    const render = async (busy: boolean) => {
+      await act(async () => root.render(withInterfaceLocale(<CoverProbe busy={busy} />)));
+    };
+    const covered = () => container.querySelector("[data-cover]")?.getAttribute("data-cover");
+    await render(true);
+    await render(false);
+    expect(covered()).toBe("no");
+    await render(true);
+    await act(async () => vi.advanceTimersByTime(MAP_COVER_REOPEN_MS));
+    expect(covered()).toBe("yes");
+    await act(async () => vi.advanceTimersByTime(100));
+    await render(false);
+    await act(async () => vi.advanceTimersByTime(MAP_COVER_MIN_VISIBLE_MS - 101));
+    expect(covered()).toBe("yes");
+    await act(async () => vi.advanceTimersByTime(1));
+    expect(covered()).toBe("no");
+  });
+
+  it("a new pending scene cancels the previous hide timer without flashing the visible cover", async () => {
+    const render = async (busy: boolean) => {
+      await act(async () => root.render(withInterfaceLocale(<CoverProbe busy={busy} />)));
+    };
+    const covered = () => container.querySelector("[data-cover]")?.getAttribute("data-cover");
+    await render(false);
+    await render(true);
+    await act(async () => vi.advanceTimersByTime(MAP_COVER_REOPEN_MS));
+    await render(false);
+    await act(async () => vi.advanceTimersByTime(200));
+    await render(true);
+    await act(async () => vi.advanceTimersByTime(MAP_COVER_MIN_VISIBLE_MS));
+    expect(covered()).toBe("yes");
+    await render(false);
+    expect(covered()).toBe("no");
   });
 
   it("gives up rather than staying up forever", async () => {

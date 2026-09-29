@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./harness/learner-test.js";
 import AxeBuilder from "@axe-core/playwright";
 import { localizeActivity, type InteractionPathActivity } from "../packages/core/dist/index.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";

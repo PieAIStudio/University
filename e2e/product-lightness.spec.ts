@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { enterOpening } from "./harness/opening.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 
@@ -43,15 +44,23 @@ for (const width of [390, 320, 1440]) {
       await expect(cta).toBeEnabled();
     });
 
-    test("U2 welcome is short and its first action never waits for animation", async ({ page }) => {
+    test("U2 welcome asks one thing and reaches the real first lesson in three taps", async ({
+      page,
+    }) => {
       await page.goto(ONLINE_ORIGIN);
-      const welcome = page.locator("[data-welcome]");
+      await enterOpening(page);
+      const welcome = page.locator('[data-welcome-page="1"]');
       await expect(welcome).toBeVisible();
-      const text = (await welcome.innerText()).replace(/\s/g, "");
-      expect(text.length).toBeLessThan(115);
-      const start = welcome.locator("[data-welcome-start]");
+      // V7 replaces the one-screen word cap with two real path cards. The two
+      // optional questions stay absent until the learner asks for help.
+      await expect(welcome.locator("[data-welcome-choice]")).toHaveCount(2);
+      await expect(page.locator('[data-welcome-page="2"]')).toHaveCount(0);
+      await expect(page.locator("dialog[open]")).toHaveCount(0);
+      const start = welcome.locator('[data-welcome-start="ai-literacy"]');
       await expect(start).toBeEnabled();
       await start.click();
+      await expect(page.locator('[data-welcome-page="3"]')).toBeVisible({ timeout: 90_000 });
+      await page.locator("[data-welcome-enter]").click();
       await expect(page.locator(".lesson-reader")).toBeVisible();
     });
 

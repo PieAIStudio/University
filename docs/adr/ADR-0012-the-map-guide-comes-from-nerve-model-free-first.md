@@ -183,5 +183,68 @@ two local workarounds those releases replace.
   number now declares that number in the Chinese source too (`{n, plural, other
   {…#…}}`); the language list offers what `catalogStatus().selectable` says, not
   key coverage alone.
-- **Still not adopted.** `createNerveOpening` (the welcome, return and wrap-up
-  cards of V7 tasks 03 and 04), conversation and voice, for the reasons above.
+- **Not adopted at that release-adoption step.** `createNerveOpening` (the
+  welcome, return and wrap-up cards of V7 tasks 03 and 04), conversation and
+  voice. The first-meeting follow-up below adopts the welcome and guided walk;
+  the other boundaries remain.
+
+## V7 first-meeting follow-up (2026-09-28)
+
+The approved V7 stations 1–2 replace the white welcome modal with the same 涟
+already living on the map. `OpeningSplash` uses the published UIKit `GameSplash`;
+University owns only truthful selling lines, launch admission and measured work.
+A browser map launch or reload requires the real enter button, while a same-origin
+navigation is a scene transition. Lesson/auth deep links retain their explicit
+destination. `autoStart` is an explicit native-host input to the shared wrapper,
+not a guessed user-agent exemption; no native wrapper or physical device was
+validated by this browser implementation.
+
+`ScenePresence` reads the existing loader store in Stage's existing post-output
+frame callback, not through a React subscription that a sibling's `useGLTF`
+could update during rendering. Nested required loading boundaries register
+`ScenePending`; actual content, geometry, dressing, monsters, the built avatar
+and a completed output frame must be present before admission reaches 100%.
+Planet worker preparation participates in the same boundary. No new renderer,
+height field, model loader or animation loop is introduced. Later pending scenes
+wait two seconds before showing the shared transition screen; a shown transition
+stays at least 800ms. The existing 20-second recovery and context-loss paths stay.
+
+`use-first-meeting` owns one effect-created opening controller per account/page
+scope, safe under React's setup/cleanup rehearsal. Product `WelcomeCards` supplies
+two real shelf paths, optional fixed-question help and the existing assessment,
+login and browsing exits. Page changes use `opening.update` on the same key;
+closing acknowledges the existing welcome record, not course progress. Only an
+eligible invitation binds the optional opening surface: binding an idle controller
+would reserve an empty status outlet and suppress the map's normal hint.
+
+After the welcome is removed and the new map has committed, the first meeting
+uses the existing obstacle-aware `CloseUpCamera` to frame the avatar on the
+chosen first stone with its still-closed chest. The pair fits the actual camera
+FOV/aspect; portrait framing leaves room below it for the short guide card. Only
+this one-step introduction suppresses other map labels, restoring them unchanged
+on dismissal. The first stone retains its real label registration, with the
+short 第 1 关 / Level 1 landing label rather than a duplicate question.
+
+The camera's actual `onSettled` signal, followed by the existing post-layout
+rendezvous, admits the one-step `createGuidanceWalk` with
+`language: () => nerveLanguage(currentLocale)`. Three early layout frames alone
+could measure the stone while the camera was still travelling and wrongly
+announce it unavailable; no guessed extra timeout replaces that signal. The full
+lesson description remains on the registered object. Scene geometry, chest state,
+lesson completion and the ordinary chest/boss camera behavior do not change.
+Missing/covered destinations remain unavailable rather than being guessed. Scope
+and captured-object checks reject late callbacks and previous-account actions.
+No model, voice, authentication submission, grade or learning write is performed.
+
+The framing receipt belongs to the current canvas attempt, not just its lesson.
+A context restore invalidates it even when the learner and destination have not
+changed. Cancelling a post-layout callback also invalidates that callback itself:
+the same destination becoming ready again cannot revive an earlier measurement.
+The lifecycle unit test and browser restore case both retain the corresponding
+regressions; neither recovery path writes learning progress.
+
+The English welcome never invents an English lesson preview when the real shelf
+still supplies a Chinese title; it names that limitation in English and preserves
+the course entry. Translation of the course itself remains the authoring lane.
+The full acceptance evidence and remaining product boundaries belong to task 03,
+not a second verification checklist in this ADR.

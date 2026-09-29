@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./harness/learner-test.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 const origin = process.env.ACCOUNT_FLOW_ORIGIN ?? ONLINE_ORIGIN;
 
