@@ -2,11 +2,11 @@
 id: PLAN-V7-04-RETURN-REASONS
 title: "V7 · 04 Wrap-up card, 涟's continue, and the avatar panel"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-27
+last_reviewed: 2026-09-28
 domain: learning-experience
 tags:
   - v7
@@ -113,3 +113,56 @@ rewrite history.
 
 Gate numbers verbatim, UIKit version, captures, and anything noticed but not
 done.
+
+## 8 Implementation receipt
+
+The installed UIKit avatar primitives and Nerve 0.7 opening already cover this
+task; no new kit release was needed. Product rules live in `progress/journey`;
+the current owner, route and actual completion are enforced by `useJourney`.
+The existing chest callback now hands off to 涟 on the island rather than a
+second results page. A root return offers the next real lesson in one press,
+keeps its ordinary chest glow after dismissal, and does not commandeer deep links.
+The phone avatar opens the existing panel in a shared modal, including rest-day
+balance/rules and the seven-day strip. Both modes share all of these components.
+
+`reviewEmail` records only the explicit choice and timezone; the same preference
+can be revoked in settings. Its timestamped merge is opt-out-safe and account
+isolated. K1 continues through the existing password/verification account flow;
+the small boundary copy states that fact before navigation. No email sender or
+trial purchase is implied: live services remain gated under tasks 09 and the
+existing reminder-backend gap. The member line describes only the current
+membership boundary, not an unavailable seven-day charge/trial promise.
+
+Evidence under `SCRATCH/v7-execution/` and `SCRATCH/e2e/v7-journey/`:
+
+- Core invitation/rest rules: `19 passed`; controller/card/owner actions:
+  `12 passed`; shared avatar panel: `6 passed`.
+- Browser revisions retained their failures: the synthetic page initially
+  bypassed Vite's HTML transform; the corrected fixture uses the existing
+  `e2e-fixtures` lane. A member's empty optional card is intentionally unpainted;
+  the visible opening sentence, rather than a fabricated spacer, is asserted.
+- The full focused run showed `19 passed (5.0m)` with seven fixture/assertion
+  failures. Six passed in `journey-regression-r3.log`; the remaining review
+  clock case passed separately (`1 passed (55.3s)`). Installing the test clock
+  before a live renderer, not halfway through a frame, prevents a fabricated
+  negative avatar delta. Avatar return passed (`1 passed (42.7s)`) with its
+  unchanged real target comparison.
+- Guest completion, save-only, resume, phone-panel and all three account-card
+  layouts have actual browser captures. Email/member fixtures use the real
+  components but explicitly synthetic identity/entitlement/save facts; they
+  are not live cloud, email or paid-membership acceptance. Real guest paths run
+  the published lesson and grading, with external account traffic isolated.
+- The old A/B/C completion helper now verifies the real stored revision,
+  read confirmation, completed timestamp and displayed scheduled-card count.
+  O1 tests the removal of persistent computer-speak while preserving on-demand
+  help; recap remains accessible behind its explicit optional action. No old
+  test is removed or skipped and no timing/visual threshold is relaxed.
+
+Full source validation is retained in `journey-verify-r3.log` (`VERIFY_EXIT=0`),
+including type checking, lint, all unit tests, builds, content and documentation
+checks. The unchanged pre-push default/timing browser gate is the delivery
+boundary: this locally completed candidate may not leave the machine or advance
+the queue until that gate and the push succeed. Its receipt is retained as
+`journey-push.log`; do not infer success from this document or a running wrapper.
+Keep the owner reference directories untracked. No production, backend, course
+or package release is part of this delivery.

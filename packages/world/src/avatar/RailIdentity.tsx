@@ -36,12 +36,14 @@ export function RailIdentity({
   recipe,
   signedIn = false,
   onOpen,
+  label,
 }: {
   /** A signed-in learner wears their own recipe; a guest wears the stable default. */
   readonly recipe?: AvatarRecipe | null;
   readonly signedIn?: boolean;
   /** Where "me" is. The one thing a shell is allowed to answer differently. */
   readonly onOpen: () => void;
+  readonly label?: string;
 }) {
   return (
     // Suspense because the avatar drags in the kit's geometry builder, and the
@@ -52,6 +54,7 @@ export function RailIdentity({
         signedIn={signedIn}
         size={RAIL_IDENTITY_SIZE}
         onClick={onOpen}
+        label={label}
       />
     </Suspense>
   );

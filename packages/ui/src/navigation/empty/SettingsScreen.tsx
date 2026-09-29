@@ -29,6 +29,7 @@ import {
   THEME_PREFERENCE_OPTIONS,
 } from "../../theme.js";
 import { ReviewReminderSettings } from "./ReviewReminderSettings.js";
+import { ReviewEmailPreference } from "./ReviewEmailPreference.js";
 import { WorldStyleControl } from "../../world-style.js";
 
 const NO_SYSTEM_SUBSCRIPTION = () => () => undefined;
@@ -80,6 +81,7 @@ export function SettingsScreen({
       </section>
       {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
       {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
+      {progress ? <ReviewEmailPreference progress={progress} /> : null}
       {guide ? (
         <section id="map-guide" className="settings-screen__block" aria-labelledby="settings-guide">
           <h2 id="settings-guide" className="settings-screen__heading">

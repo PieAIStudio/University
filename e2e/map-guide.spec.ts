@@ -61,9 +61,8 @@ for (const viewport of [
     expect(viewport.height - (seat.y + seat.height)).toBeLessThan(48);
     const controls = (await page.locator(".hint--controls").boundingBox())!;
     expect(controls.y + controls.height).toBeLessThan(viewport.height / 4);
-    // The map's first sentence is the guide's, directly above it.
-    const opening = (await page.locator(".map-guide__opening").boundingBox())!;
-    expect(opening.y + opening.height).toBeLessThanOrEqual(seat.y);
+    // V7 replaces the persistent shortcut sentence with on-demand help.
+    await expect(page.locator(".map-guide__opening")).toHaveCount(0);
 
     // No model is connected: no free-text box pretends otherwise.
     await humanClick(page, body(page), "涟");

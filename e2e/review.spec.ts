@@ -15,6 +15,10 @@ test.describe("B 同一个人回来复习", () => {
 
   test("/review → 写下答案 → 揭示 → 四档评分 → 空态", async ({ page }) => {
     const consoleErrors = watchConsole(page);
+    // Install the test clock before a renderer exists. Installing it for the
+    // first time on V7's live wrap-up island can reset the sampled frame clock
+    // between two avatar frames; later date-only changes keep that clock intact.
+    await page.clock.setFixedTime(Date.now());
     await walkFirstOnlineLesson(page);
 
     let dropped = 0;

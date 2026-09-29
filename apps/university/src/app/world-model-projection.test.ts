@@ -24,7 +24,6 @@ describe("the planet's pointer path", () => {
     const world = worldMaps.placeStudyArchipelago([node], () => 0, node.studyId);
     const original = world.placements[0]!.position.clone();
     const picked = vi.fn();
-    const onCoursePick = vi.fn();
     const container = document.createElement("div");
     const root = createRoot(container);
     let markers: ReturnType<typeof useWorldMarkers> = [];
@@ -36,7 +35,6 @@ describe("the planet's pointer path", () => {
         labelNodes: { current: new Map() },
         setPathOverlay: vi.fn(),
         setPicked: picked,
-        onCoursePick,
       });
       return null;
     }
@@ -54,7 +52,6 @@ describe("the planet's pointer path", () => {
       expect(world.placements[0]!.position).toEqual(original);
       markers[0]?.activate?.();
       expect(picked).toHaveBeenCalledExactlyOnceWith(node);
-      expect(onCoursePick).toHaveBeenCalledOnce();
     } finally {
       await act(async () => root.unmount());
     }
@@ -149,7 +146,6 @@ describe("a course whose prerequisites are not met", () => {
         labelNodes: { current: new Map() },
         setPathOverlay: vi.fn(),
         setPicked: vi.fn(),
-        onCoursePick: vi.fn(),
       });
       return null;
     }

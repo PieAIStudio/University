@@ -27,6 +27,7 @@
  * claimed there was exactly one until somebody counted.
  */
 import { useI18n } from "@pieai/university-ui/i18n.js";
+import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import {
   Suspense,
   useCallback,
@@ -49,6 +50,7 @@ import {
   todayGoalProgress,
   toPath,
   progressSourceOf,
+  restTicketBalance,
   type FeedbackContext,
   type LessonRef,
   type View,
@@ -108,6 +110,7 @@ import { MapGuide } from "../guide/MapGuide.js";
 import { mapGuideScope, type MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { useChestOpening } from "./use-chest-opening.js";
+import { useJourney } from "./use-journey.js";
 import { useWeeklyBoss } from "./use-weekly-boss.js";
 import { AvatarPanel } from "@pieai/university-ui/navigation/AvatarPanel.js";
 import { leagueTierName } from "@pieai/university-ui/navigation/league-tier-name.js";
@@ -157,6 +160,7 @@ import { OpeningSplash, useOpeningAdmission } from "./OpeningSplash.js";
 import { splashProgress } from "./splash-policy.js";
 import { welcomeDestinations, type WelcomeDestination } from "../guide/first-meeting.js";
 import { useWelcome } from "./use-welcome.js";
+import { isWelcomeEntry } from "./welcome-policy.js";
 
 type FeedbackContextSeed = Pick<
   FeedbackContext,
@@ -194,6 +198,10 @@ export function App() {
     framedAttempt: number | null;
   } | null>(null);
   const welcomePaths = useMemo(() => welcomeDestinations(studies), [studies]);
+  const [avatarPanelOpen, setAvatarPanelOpen] = useState<string | null>(null);
+  const returnEntry = useRef(
+    typeof location !== "undefined" && isWelcomeEntry(new URL(location.href)),
+  );
   const wide = useMinWidth(768);
   // The look judge is a DEV-only URL input. A seed identifies the course whose
   // existing blueprint should be measured; it never creates a second course or
@@ -215,7 +223,6 @@ export function App() {
     useState<LearnerNavigationFocus>(readNavigationFocus);
   const [hovered, setHovered] = useState<string | null>(null);
   /** The island-entry action stays discoverable until the learner picks once. */
-  const [mapEntryLearned, setMapEntryLearned] = useState(false);
   const {
     mapInteracted,
     sceneReady,
@@ -246,7 +253,6 @@ export function App() {
     readonly nodeId: string | null;
   } | null>(null);
   const rememberCourseAvatarTarget = useCallback((lesson: LessonPlacement) => {
-    setMapEntryLearned(true);
     setCourseAvatarTarget({
       studyId: lesson.studyId,
       courseId: lesson.courseId,
@@ -303,7 +309,6 @@ export function App() {
   const rememberCourseAvatarNode = useCallback(
     (nodeId: string) => {
       if (view.kind !== "course") return;
-      setMapEntryLearned(true);
       setCourseAvatarTarget({
         studyId: view.studyId,
         courseId: view.courseId,
@@ -435,6 +440,23 @@ export function App() {
     lesson's page. The hook remembers the record as the lesson opened, so the
     chest can only announce what the lesson added.
   */
+  const journey = useJourney({
+    view,
+    identity: identityStatus,
+    progress: progressPort,
+    document: progress,
+    payment: paymentPort,
+    courseOf,
+    onMap: (locator) => {
+      setPathOverlay(null);
+      setNavigationFocus(locator.studyId);
+      setView({ kind: "course", studyId: locator.studyId, courseId: locator.courseId });
+    },
+    onLesson: (locator) => setView({ kind: "lesson", ...locator }),
+    onAccount: openAccount,
+    onMember: () => setView({ kind: "plans" }),
+    onReview: () => setView({ kind: "practice" }),
+  });
   const chest = useChestOpening({
     lessonOpen:
       view.kind === "lesson"
@@ -447,6 +469,7 @@ export function App() {
         : null,
     lessons,
     guardName: (role) => guardOf(role)?.name ?? "",
+    onLessonDone: journey.afterLesson,
   });
   const openingOnMap = chest.active && view.kind === "settled";
   // The island the chest opens on is the lesson's own course map: while it
@@ -549,7 +572,6 @@ export function App() {
     lessons,
     setCourseAvatarTarget: rememberCourseAvatarTarget,
     setCourseAvatarNode: rememberCourseAvatarNode,
-    onCoursePick: () => setMapEntryLearned(true),
     setPathOverlay,
     setPicked,
     view: sceneView,
@@ -560,6 +582,7 @@ export function App() {
     identityStatus.kind === "signed_in" || identityStatus.kind === "anonymous"
       ? identityStatus.user.id
       : "guest";
+  useEffect(() => setAvatarPanelOpen(null), [guideUser, view.kind]);
   const firstMeetingHere =
     firstMeeting?.owner === guideUser &&
     view.kind === "course" &&
@@ -728,6 +751,45 @@ export function App() {
   const mapRecoveryReason: RecoveryReason | null =
     mapMode || openingOnMap ? (sceneFailure ?? (mapTimedOut ? "scene-timeout" : null)) : null;
   const splashReady = sceneReady && !waitingForData;
+  useEffect(() => {
+    if (!returnEntry.current) return;
+    if (view.kind !== "world") {
+      returnEntry.current = false;
+      return;
+    }
+    if (admission.pending || !splashReady || identityStatus.kind === "pending") return;
+    const owner =
+      identityStatus.kind === "signed_in" || identityStatus.kind === "anonymous"
+        ? identityStatus.user.id
+        : null;
+    if (progressPort.syncState().userId !== owner) return;
+    if (progressPort.syncState().status === "syncing") return;
+    returnEntry.current = false;
+    if (welcome.visible || !todayLesson || Object.keys(progress.lessons).length === 0) return;
+    journey.continueAt(todayLesson);
+  }, [
+    view.kind,
+    admission.pending,
+    splashReady,
+    identityStatus,
+    welcome.visible,
+    todayLesson,
+    progress,
+    journey.continueAt,
+  ]);
+  const framedJourney = useRef<string | null>(null);
+  useEffect(() => {
+    if (!journey.target) {
+      framedJourney.current = null;
+      return;
+    }
+    const key = `${guideUser}:${sceneAttempt}:${lessonRefKey(journey.target)}`;
+    if (!splashReady || framedJourney.current === key) return;
+    const target = lessons.find((lesson) => lesson.lessonId === journey.target?.lessonId);
+    if (!target || !mapCommands.current) return;
+    framedJourney.current = key;
+    mapCommands.current.focus(target.position.toArray());
+  }, [journey.target, guideUser, sceneAttempt, splashReady, lessons]);
   const loadProgress = splashProgress(
     !waitingForData,
     sceneProgress.loaded,
@@ -991,10 +1053,7 @@ export function App() {
                 : null
         }
         followNode={pickCardRef}
-        onPick={(node) => {
-          setMapEntryLearned(true);
-          setPicked(node);
-        }}
+        onPick={setPicked}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}
         onSceneReady={view.kind === "planet" ? undefined : onSceneReady}
@@ -1202,13 +1261,7 @@ export function App() {
                     }
                   : null
               }
-              opening={
-                <span>
-                  {interfaceTranslator.t("map.chooseHint")}{" "}
-                  {interfaceTranslator.t("map.shortcutHint")}
-                </span>
-              }
-              openingVisible={!mapEntryLearned}
+              journey={journey.opening}
               onShortcuts={shortcuts.show}
               onOpenDetails={() => setView({ kind: "settings" })}
             />
@@ -1431,6 +1484,38 @@ export function App() {
     </>
   );
 
+  const renderAvatarPanel = (inDialog = false) => (
+    <AvatarPanel
+      avatar={
+        <RailIdentity
+          recipe={avatarRecipe}
+          signedIn={avatarSignedIn}
+          label={!wide && !inDialog ? interfaceTranslator.t("journey.avatar.open") : undefined}
+          onOpen={() => {
+            if (!wide && !inDialog) setAvatarPanelOpen(guideUser);
+            else {
+              setAvatarPanelOpen(null);
+              openAccount();
+            }
+          }}
+        />
+      }
+      todayProgress={todayGoalProgress(progress, panelNow)}
+      streakDays={progress.streak.days}
+      rank={{
+        name: leagueTierName(standing.tier),
+        emblem: <EmblemImage kind="rank" id={standing.tier.id} size={56} />,
+      }}
+      level={<LevelProgress totalXp={progress.totalXp} rail />}
+      week={studyWeek(progress, panelNow)}
+      today={{ done: lessonQuest?.done ?? 0, goal: lessonQuest?.goal ?? 1 }}
+      rest={{
+        balance: restTicketBalance(progress.streak),
+        covered: progress.streak.rest?.covered.length ?? 0,
+      }}
+      membership={{ href: toPath({ kind: "plans" }) }}
+    />
+  );
   const main = (
     <MainRouter
       contentPort={contentPort}
@@ -1678,29 +1763,7 @@ export function App() {
                 : counters
               : undefined
           }
-          identity={
-            shellConfig.showLearnerChrome ? (
-              <AvatarPanel
-                avatar={
-                  <RailIdentity
-                    recipe={avatarRecipe}
-                    signedIn={avatarSignedIn}
-                    onOpen={openAccount}
-                  />
-                }
-                todayProgress={todayGoalProgress(progress, panelNow)}
-                streakDays={progress.streak.days}
-                rank={{
-                  name: leagueTierName(standing.tier),
-                  emblem: <EmblemImage kind="rank" id={standing.tier.id} size={56} />,
-                }}
-                level={<LevelProgress totalXp={progress.totalXp} rail />}
-                week={studyWeek(progress, panelNow)}
-                today={{ done: lessonQuest?.done ?? 0, goal: lessonQuest?.goal ?? 1 }}
-                membership={{ href: toPath({ kind: "plans" }) }}
-              />
-            ) : null
-          }
+          identity={shellConfig.showLearnerChrome ? renderAvatarPanel() : null}
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={
             mapMode
@@ -1745,6 +1808,30 @@ export function App() {
             ) : undefined
           }
         />
+      ) : null}
+      {avatarPanelOpen === guideUser && shellConfig.showLearnerChrome ? (
+        <GameModal
+          open
+          className="journey-avatar-modal"
+          size="sm"
+          title={interfaceTranslator.t("journey.avatar.title")}
+          closeLabel={interfaceTranslator.t("journey.avatar.close")}
+          onClose={() => setAvatarPanelOpen(null)}
+          footer={
+            <GameButton
+              variant="secondary"
+              static
+              onClick={() => {
+                setAvatarPanelOpen(null);
+                openAccount();
+              }}
+            >
+              {interfaceTranslator.t("product.account.open")}
+            </GameButton>
+          }
+        >
+          {renderAvatarPanel(true)}
+        </GameModal>
       ) : null}
       {showOpeningSplash ? null : feedbackSurface}
       {showOpeningSplash ? (

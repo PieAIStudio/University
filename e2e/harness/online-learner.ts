@@ -148,11 +148,11 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
 
 export async function waitForSettlementProgress(page: Page): Promise<void> {
   await passChestOpening(page);
-  await namedStep(page, "结算页进度不是 0", async () => {
+  await namedStep(page, "涟的收尾对应真实完成记录和复习卡，不再另开结算页", async () => {
     const outcome = await page.waitForFunction(
       () => {
         if (document.querySelector(".loading-trivia")) return "trivia";
-        if ((document.body.innerText ?? "").includes("读完了")) return "done";
+        if (document.querySelector('[data-opening-topic="wrap-up"]')) return "done";
         return false;
       },
       undefined,
@@ -160,16 +160,37 @@ export async function waitForSettlementProgress(page: Page): Promise<void> {
     );
     const value = await outcome.jsonValue();
     if (value !== "done") {
-      throw new Error("读完一节后先闪了一张加载词条。结算不该再出现概念卡。");
+      throw new Error("开箱后不应再闪一张加载词条，收尾应留在同一座岛上。");
     }
-    await expect(page.getByText("读完了。")).toBeVisible({ timeout: 20_000 });
-    // The bar animates from the old value. Reading too early catches "0 / 41 关".
-    await expect(page.getByText(SETTLEMENT_PROGRESS)).toBeVisible({ timeout: 15_000 });
-    await expect(
-      page.getByText(new RegExp(`0\\s*/\\s*${SETTLEMENT_LESSON_COUNT}\\s*关`)),
-    ).toHaveCount(0);
-    await page.waitForTimeout(700);
-    await expect(page.getByText(SETTLEMENT_PROGRESS)).toBeVisible();
+    await expect(page.locator('[data-opening-topic="wrap-up"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(".settle")).toHaveCount(0);
+    await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`);
+    const stored = await page.evaluate(
+      ({ studyId, courseId, lessonId }) => {
+        const prefix = "university.progress.v2";
+        const lessonKey = `${studyId}/${courseId}/${lessonId}`;
+        const records = Object.keys(localStorage)
+          .filter((name) => name === prefix || name.startsWith(`${prefix}.account.`))
+          .map((name) => JSON.parse(localStorage.getItem(name) ?? "null"))
+          .filter((record) => record?.lessons?.[lessonKey]?.progress === 1);
+        if (records.length !== 1)
+          throw new Error("Expected one learner with the finished lesson, not a guessed account");
+        const record = records[0];
+        return {
+          lesson: record.lessons[lessonKey],
+          cards: Object.keys(record.cards).filter((key) => key.startsWith(`${lessonKey}/`)).length,
+        };
+      },
+      { studyId: FIRST_STUDY_ID, courseId: FIRST_COURSE_ID, lessonId: FIRST_LESSON_ID },
+    );
+    expect(stored.lesson.readConfirmed).toBe(true);
+    expect(stored.lesson.readConfirmedRevision).toBe(SETTLEMENT.lesson.shelfLesson.contentRevision);
+    expect(stored.lesson.completedAt).toBeGreaterThan(0);
+    expect(stored.cards).toBeGreaterThan(0);
+    await expect(page.locator("[data-wrap-up]")).toHaveAttribute(
+      "data-wrap-up-card-count",
+      String(stored.cards),
+    );
     await assertImagesStayInViewport(page);
   });
 }
@@ -213,6 +234,8 @@ export async function walkFirstOnlineLesson(page: Page): Promise<void> {
 /**
  * Same fresh-context learner, next morning. Advance the browser's date, not
  * the cards' FSRS schedules. Date-only emulation leaves UI timers running.
+ * The caller installs its clock before its first navigation; this helper
+ * changes only that clock's wall date while the current map is alive.
  *
  * The value event may already have adopted guest progress into an anonymous
  * account and cleared the guest cache. Reading only the old guest key races

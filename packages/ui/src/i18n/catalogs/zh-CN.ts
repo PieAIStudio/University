@@ -11,6 +11,7 @@ import { messages as interactionPath } from "./interaction-path.zh-CN.js";
 import { messages as worldNavigation } from "./world-navigation.zh-CN.js";
 import { messages as readingSettings } from "./reading-settings.zh-CN.js";
 import { messages as productWelcome } from "./product-welcome.zh-CN.js";
+import { messages as journeyReturn } from "./journey-return.zh-CN.js";
 import { messages as realitySources } from "./reality-sources.zh-CN.js";
 import { messages as accountFailures } from "./account-failures.zh-CN.js";
 import { messages as productNavigation } from "./product-navigation.zh-CN.js";
@@ -58,6 +59,7 @@ export const messages = {
   "product.worldStyle.clay": "彩色黏土",
   ...realitySources,
   ...productWelcome,
+  ...journeyReturn,
   ...productNavigation,
   ...productBilling,
   ...productSave,

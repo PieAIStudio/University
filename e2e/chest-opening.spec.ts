@@ -77,7 +77,8 @@ test.describe("V7 chest opening", () => {
       await expect(done).toBeVisible({ timeout: 20_000 });
       await humanClick(page, done, "继续");
       await expect(card).toHaveCount(0, { timeout: 10_000 });
-      await expect(page.getByText("读完了。")).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator('[data-opening-topic="wrap-up"]')).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator(".settle")).toHaveCount(0);
     });
     consoleErrors.assertClean();
   });
@@ -98,6 +99,7 @@ test.describe("V7 chest opening", () => {
     await expect(page.locator('[data-chest-action="throw"]')).toHaveCount(0);
     await humanClick(page, page.locator('[data-chest-action="continue"]'), "继续");
     await expect(card).toHaveCount(0, { timeout: 10_000 });
-    await expect(page.getByText("读完了。")).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('[data-opening-topic="wrap-up"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(".settle")).toHaveCount(0);
   });
 });

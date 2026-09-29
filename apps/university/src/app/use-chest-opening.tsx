@@ -52,6 +52,7 @@ interface Flow {
   readonly guard: ReturnType<typeof openingGuard>;
   readonly stage: ChestRewardStage | "leaving";
   readonly skipped: boolean;
+  readonly onLeave?: () => void;
 }
 
 /**
@@ -65,11 +66,13 @@ export function useChestOpening({
   lessonOpen,
   lessons,
   guardName,
+  onLessonDone,
 }: {
   /** The lesson being read now, or null. The baseline is taken when it changes. */
   readonly lessonOpen: LessonRef | null;
   readonly lessons: readonly LessonPlacement[];
   readonly guardName: (role: MonsterRole) => string;
+  readonly onLessonDone?: (locator: LessonRef) => void;
 }): {
   readonly active: boolean;
   /** The chest open now is the weekly boss's, on the course island rather than after a lesson. */
@@ -176,7 +179,7 @@ export function useChestOpening({
 
   useEffect(() => {
     if (flow?.stage !== "leaving") return;
-    const done = flow.source.kind === "weekly" ? flow.source.onDone : undefined;
+    const done = flow.source.kind === "weekly" ? flow.source.onDone : flow.onLeave;
     const timer = window.setTimeout(
       () => {
         setFlow(null);
@@ -240,7 +243,16 @@ export function useChestOpening({
         onOpen={() => update({ stage: "opening" })}
         onSkip={() => update({ skipped: true })}
         onThrow={() => update({ stage: "throwing" })}
-        onContinue={() => update({ stage: "leaving" })}
+        onContinue={() => {
+          // Capture this learner's callback on the actual Continue press,
+          // not a mutable callback belonging to a later account/render.
+          const done = onLessonDone;
+          const source = flow.source;
+          update({
+            stage: "leaving",
+            ...(source.kind === "lesson" && done ? { onLeave: () => done(source.locator) } : {}),
+          });
+        }}
       />
     ) : null;
 

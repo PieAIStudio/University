@@ -60,4 +60,12 @@ describe("AvatarPanel", () => {
     expect(panel()).toContain('href="/plans"');
     expect(panel({ membership: undefined })).not.toContain("avatar-panel__membership");
   });
+
+  it("shows the real rest-day balance and protection history without a spend button", () => {
+    const html = panel({ rest: { balance: 2, covered: 3 } });
+    expect(html).toContain('data-rest-tickets="2"');
+    expect(html).toContain("已经保护了 3 个休息日");
+    expect(panel({ rest: { balance: 0, covered: 0 } })).toContain('data-rest-tickets="0"');
+    expect(panel()).not.toContain("data-rest-tickets");
+  });
 });

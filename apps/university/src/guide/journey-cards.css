@@ -1,0 +1,36 @@
+.journey-card,
+.journey-card__save {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.journey-card p {
+  margin: 0;
+}
+.journey-card button {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+}
+.journey-card__note {
+  color: inherit;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.journey-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.journey-card__links > button {
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+}
+.journey-card .recap-prompt {
+  max-height: 45dvh;
+  overflow: auto;
+}
+.journey-avatar-modal .avatar-panel {
+  max-width: 320px;
+  margin-inline: auto;
+}

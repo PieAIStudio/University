@@ -248,3 +248,34 @@ still supplies a Chinese title; it names that limitation in English and preserve
 the course entry. Translation of the course itself remains the authoring lane.
 The full acceptance evidence and remaining product boundaries belong to task 03,
 not a second verification checklist in this ADR.
+
+## V7-04: return and wrap-up are openings, not another results page
+
+The existing chest ceremony hands its completed lesson to `useJourney` only
+after leaving its close-up. The host rechecks the current lesson revision,
+reading confirmation, exercises, account owner and route before offering a
+wrap-up on the same island. Late buttons and late ceremony callbacks cannot
+write consent or navigate another learner. Scheduled card counts and local/cloud
+save claims come from the current progress port, not the reward animation.
+
+The same `createNerveOpening` owns return and wrap-up presentation. Its real
+bounded topic policy, visibility, courtesy pauses and four-second member timeout
+are retained. A changed save receipt updates the current page without replacing
+an unfinished recap. Only a shown invitation records its product frequency cap;
+the first email-save invitation and the day-three follow-up, plus the weekly
+member line, merge within the existing account preferences and offline outbox.
+
+K1 is an explicit reminder/save-only choice followed by the existing account
+flow. University does not create an email-only authentication protocol: that flow
+still needs a password and email verification. Reminder intent stores the IANA
+timezone and `cards-due` schedule, not an email address or a sending receipt.
+Tied preference updates prefer opt-out. Settings can revoke that intent. Actual
+email delivery and live purchases remain unavailable and are described as such.
+
+A returning root visit offers the real next lesson once, after account/data/scene
+readiness, and frames it using the existing map command. Dismissal leaves the
+ordinary ready-chest glow and the map's selection/navigation intact. The static
+shortcut sentence and its obsolete picked-once state are removed; on-demand
+questions, comparison and keyboard commands remain. On phones the same avatar
+panel opens in UIKit's modal and shows the core rest-ticket balance; its account
+action still opens the shared account page. No renderer or cosmetic store is added.

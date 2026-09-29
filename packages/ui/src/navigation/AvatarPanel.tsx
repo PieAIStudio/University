@@ -34,6 +34,7 @@ export function AvatarPanel({
   week,
   today,
   membership,
+  rest,
 }: {
   readonly avatar: ReactNode;
   /** 0 to 1: today's goal; the ring turns gold at 1. */
@@ -44,6 +45,7 @@ export function AvatarPanel({
   readonly week: readonly StudyWeekDay[];
   readonly today: { readonly done: number; readonly goal: number };
   readonly membership?: { readonly href: string };
+  readonly rest?: { readonly balance: number; readonly covered: number };
 }) {
   const interfaceTranslator = useI18n();
   const t = interfaceTranslator.t;
@@ -115,6 +117,13 @@ export function AvatarPanel({
         <span>{t("avatarPanel.today")}</span>
         <b>{t("avatarPanel.todayLessons", { done: today.done, goal: today.goal })}</b>
       </p>
+      {rest ? (
+        <details className="avatar-panel__rest" data-rest-tickets={rest.balance}>
+          <summary>{t("journey.rest.balance", { count: rest.balance })}</summary>
+          <p>{t("journey.rest.rules")}</p>
+          <p>{t("journey.rest.covered", { count: rest.covered })}</p>
+        </details>
+      ) : null}
       {membership ? (
         <a className="avatar-panel__membership" href={membership.href}>
           {t("avatarPanel.membership")}

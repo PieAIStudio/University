@@ -68,37 +68,29 @@ async function dragMap(page: Page): Promise<void> {
 
 test.describe("O 导航 · 提示槽位与课程位置", () => {
   for (const viewport of EXPERIENCE_VIEWPORTS) {
-    test(`O1 ${viewport.id}：拖动地图后仍看得到「点岛进入」，首次选岛后才退场`, async ({
-      page,
-    }) => {
+    test(`O1 ${viewport.id}：地图不再常驻电脑话，拖动后仍能从涟找去处`, async ({ page }) => {
       await openExperienceRoute(page, WORLD_ROUTE, viewport);
       await waitForMapReady(page);
 
       const entryHint = page.locator(".hint--entry");
       const controlsHint = page.locator(".hint--controls");
-      await assertVisibleAndHittableAtFivePoints(
-        page,
-        entryHint,
-        `${viewport.id} / 初始点岛进入提示`,
-        { hitTest: "pass-through" },
-      );
+      await expect(entryHint).toHaveCount(0);
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-before-drag.png` });
 
       await dragMap(page);
       await expect(controlsHint).toHaveClass(/hint--dismissed/);
-      await expect(entryHint).not.toHaveClass(/hint--dismissed/);
-      await assertVisibleAndHittableAtFivePoints(
-        page,
-        entryHint,
-        `${viewport.id} / 拖动后点岛进入提示`,
-        { hitTest: "pass-through" },
-      );
+      await expect(entryHint).toHaveCount(0);
+      const guide = page.locator(".map-guide__seat button").first();
+      await assertVisibleAndHittableAtFivePoints(page, guide, `${viewport.id} / 地图帮助仍可达`);
+      await humanClick(page, guide, "涟的地图帮助");
+      await expect(page.locator(".swimmer-nerve-liquid__questions > button")).toHaveCount(3);
+      await page.keyboard.press("Escape");
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-after-drag.png` });
 
       const label = page.locator("button.label.label--course.is-visible").first();
       await expect(label, `${viewport.id} 没有可选课程岛`).toBeVisible({ timeout: 30_000 });
       await humanClick(page, label, `${viewport.id} / 选择课程岛`);
-      await expect(entryHint).toHaveClass(/hint--dismissed/);
+      await expect(entryHint).toHaveCount(0);
     });
   }
 

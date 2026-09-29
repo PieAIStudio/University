@@ -241,7 +241,6 @@ interface WorldMarkersOptions {
   readonly setCourseAvatarTarget?: (lesson: LessonPlacement) => void;
   /** The avatar hops to a learning node the same way it hops to a lesson. */
   readonly setCourseAvatarNode?: (nodeId: string) => void;
-  readonly onCoursePick: () => void;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
   readonly view: View;
@@ -255,7 +254,6 @@ export function useWorldMarkers({
   lessons,
   setCourseAvatarTarget,
   setCourseAvatarNode,
-  onCoursePick,
   setPathOverlay,
   setPicked,
   view,
@@ -363,7 +361,6 @@ export function useWorldMarkers({
       activate: () => {
         // Picking opens the course card. It must not retarget the catalogue
         // origin — that rebuilds every island under the pointer.
-        onCoursePick();
         setPicked(entry.node);
       },
     }));
@@ -373,7 +370,6 @@ export function useWorldMarkers({
     world,
     lessons,
     view,
-    onCoursePick,
     setPicked,
     setPathOverlay,
     setCourseAvatarTarget,

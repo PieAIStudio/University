@@ -1143,6 +1143,19 @@ a.linkish {
   color: var(--game-ui-text-muted);
   font-size: var(--game-ui-font-xs);
 }
+.avatar-panel__rest {
+  font-size: var(--game-ui-font-sm);
+  line-height: 1.5;
+}
+.avatar-panel__rest summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.avatar-panel__rest p {
+  margin: 6px 0;
+}
 /* Folded rail and phones: the face alone, ring and flame included. */
 .app-shell[data-map-shell="true"][data-map-rail-open="false"]
   .avatar-panel

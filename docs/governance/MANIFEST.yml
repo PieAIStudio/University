@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-29T05:33:39.273Z
+generated_at: 2026-09-29T08:43:20.622Z
 generator_version: doc-gov@0.14.2
 docs_count: 164
 docs:
@@ -200,13 +200,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-16
     pinned: false
-  - id: PLAN-V7-04-RETURN-REASONS
-    path: docs/plans/active/04-v7-wrap-up-continue-and-avatar-panel.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-27
-    pinned: false
   - id: PLAN-V7-05-BADGES-AND-CARDS
     path: docs/plans/active/05-v7-badges-ranks-and-knowledge-cards.md
     type: plan
@@ -293,6 +286,13 @@ docs:
     pinned: false
   - id: PLAN-V7-03-SPLASH-AND-FIRST-MEETING
     path: docs/plans/completed/03-v7-splash-and-first-meeting.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-28
+    pinned: false
+  - id: PLAN-V7-04-RETURN-REASONS
+    path: docs/plans/completed/04-v7-wrap-up-continue-and-avatar-panel.md
     type: plan
     status: completed
     canonical: true

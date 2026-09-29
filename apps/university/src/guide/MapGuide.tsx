@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type ReactNode,
   type RefObject,
 } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
@@ -45,6 +44,7 @@ import {
 } from "./map-targets.js";
 import "./map-guide.css";
 import { useFirstMeeting, useGuideOpening } from "./use-first-meeting.js";
+import { useJourneyOpening, type JourneyOpening } from "./use-journey-opening.js";
 import type { FirstStoneInvitation, WelcomeInvitation } from "./first-meeting.js";
 
 /**
@@ -66,15 +66,15 @@ export function MapGuide({
   map,
   invitation = null,
   firstStone = null,
+  journey = null,
   ready,
-  opening,
-  openingVisible,
   onShortcuts,
   onOpenDetails,
 }: {
   readonly map: MapGuideMap;
   readonly invitation?: WelcomeInvitation | null;
   readonly firstStone?: FirstStoneInvitation | null;
+  readonly journey?: JourneyOpening | null;
   /**
    * The map has drawn a frame. Until then there is nothing to answer from,
    * and the kit's entry is not mounted: its document-wide pointer listener
@@ -83,9 +83,7 @@ export function MapGuide({
    * breadcrumb while a course was still loading after its lesson.
    */
   readonly ready: boolean;
-  /** The map's first sentence, said until the learner has picked once. */
-  readonly opening: ReactNode;
-  readonly openingVisible: boolean;
+  /** On-demand navigation help; never a persistent computer-instruction banner. */
   readonly onShortcuts: () => void;
   /** Where 涟's capabilities, cost and privacy are explained: Settings. */
   readonly onOpenDetails?: () => void;
@@ -93,6 +91,7 @@ export function MapGuide({
   const interfaceTranslator = useI18n();
   const registry = useMemo(() => createTargetRegistry(), []);
   const openingController = useGuideOpening(map.scope);
+  useJourneyOpening(openingController, invitation || firstStone ? null : journey, ready);
   const meeting = useFirstMeeting({
     scope: map.scope,
     ready,
@@ -234,6 +233,7 @@ export function MapGuide({
 
   function ask(id: string): void | false {
     meeting.dismissGuide();
+    journey?.onClose();
     const question = id as MapGuideQuestion;
     const answer = answers.get(question);
     if (!answer) return false;
@@ -301,6 +301,7 @@ export function MapGuide({
 
   function clear() {
     meeting.dismissGuide();
+    journey?.onClose();
     setShown(null);
     setCompare(null);
   }
@@ -370,22 +371,13 @@ export function MapGuide({
 
   return (
     <div ref={root} className="map-guide" data-map-guide={outletOpen ? "open" : "closed"}>
-      {outletOpen || invitation || firstStone ? null : (
-        <p
-          className={`hint hint--entry map-guide__opening${openingVisible ? "" : " hint--dismissed"}`}
-          aria-hidden={!openingVisible}
-          data-game-ui-tone="glass"
-        >
-          {opening}
-        </p>
-      )}
       <div ref={seat} className="map-guide__seat">
         {ready ? (
           <NerveLiquidInteraction
             renderers={renderers}
             // An idle optional controller still mounts a status outlet in
             // Nerve. Supply it only for a real host invitation, not every map.
-            opening={invitation ? (openingController ?? undefined) : undefined}
+            opening={invitation || journey ? (openingController ?? undefined) : undefined}
             questions={questions}
             onQuestion={ask}
             target={meeting.target ?? shown?.target ?? null}

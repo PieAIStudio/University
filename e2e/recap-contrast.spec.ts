@@ -7,6 +7,7 @@ for (const theme of ["浅色", "深色"])
     await page.goto(`${ONLINE_ORIGIN}/settings`);
     await page.getByRole("button", { name: theme, exact: true }).click();
     await walkFirstOnlineLesson(page);
+    await page.locator("[data-journey-recap]").click();
     for (const selector of [
       ".recap-prompt__instruction",
       ".recap-prompt__objective p:last-child",

@@ -9,6 +9,13 @@ import {
   parsePracticeRecent,
   type PracticeRecentState,
 } from "../practice/recent.js";
+import {
+  mergeJourneyHistory,
+  parseJourneyHistory,
+  parseReviewEmailIntent,
+  type JourneyHistory,
+  type ReviewEmailIntent,
+} from "../progress/journey.js";
 
 /** The settings that follow the learner between browser profiles. */
 export interface AccountForeignSettings {
@@ -39,7 +46,9 @@ export type AccountPreferenceKey =
   | "avatarRecipe"
   | "theme"
   | "worldStyle"
-  | "locale";
+  | "locale"
+  | "journey"
+  | "reviewEmail";
 // Interface language is a shared account preference, independent of vocabulary mode.
 
 export interface AccountPreferences {
@@ -55,6 +64,8 @@ export interface AccountPreferences {
   readonly locale: InterfaceLocale | null;
   /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
   readonly avatarRecipe: string | null;
+  readonly journey?: JourneyHistory;
+  readonly reviewEmail?: ReviewEmailIntent;
   /** Per-field timestamps make two devices' independent setting changes merge. */
   readonly updatedAt: Partial<Record<AccountPreferenceKey, string>>;
 }
@@ -147,6 +158,8 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "theme",
       "worldStyle",
       "locale",
+      "journey",
+      "reviewEmail",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -174,6 +187,8 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
     worldStyle: value.worldStyle === "clay" ? "clay" : "classic",
     locale: value.locale === "en" || value.locale === "zh-CN" ? value.locale : null,
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
+    journey: parseJourneyHistory(value.journey),
+    reviewEmail: updatedAt.reviewEmail ? parseReviewEmailIntent(value.reviewEmail) : undefined,
     updatedAt,
   };
 }
@@ -182,6 +197,8 @@ function cloneAccountPreferences(value: AccountPreferences): AccountPreferences 
   return {
     ...value,
     foreignSettings: { ...value.foreignSettings },
+    ...(value.journey ? { journey: parseJourneyHistory(value.journey) } : {}),
+    ...(value.reviewEmail ? { reviewEmail: { ...value.reviewEmail } } : {}),
     updatedAt: { ...value.updatedAt },
   };
 }
@@ -210,6 +227,8 @@ export function mergeAccountPreferences(
   const rightWorldStyle = timestampMs(right.updatedAt.worldStyle);
   const leftLocale = timestampMs(left.updatedAt.locale);
   const rightLocale = timestampMs(right.updatedAt.locale);
+  const leftEmail = timestampMs(left.updatedAt.reviewEmail);
+  const rightEmail = timestampMs(right.updatedAt.reviewEmail);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
   const updatedAt = { ...left.updatedAt };
   const result: AccountPreferences = {
@@ -232,6 +251,17 @@ export function mergeAccountPreferences(
     theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
     worldStyle: newer(leftWorldStyle, rightWorldStyle) ? right.worldStyle : left.worldStyle,
     locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,
+    journey: mergeJourneyHistory(left.journey, right.journey),
+    // A concurrent opt-out wins. Passive prompt history has its own field and
+    // cannot turn an older email consent back on.
+    reviewEmail:
+      rightEmail > leftEmail
+        ? right.reviewEmail
+        : leftEmail > rightEmail
+          ? left.reviewEmail
+          : left.reviewEmail?.enabled === false
+            ? left.reviewEmail
+            : right.reviewEmail,
     updatedAt,
   };
   for (const key of [
@@ -245,6 +275,8 @@ export function mergeAccountPreferences(
     "worldStyle",
     "theme",
     "locale",
+    "journey",
+    "reviewEmail",
   ] as const) {
     if (
       right.updatedAt[key] &&
