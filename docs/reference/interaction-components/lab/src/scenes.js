@@ -1880,6 +1880,7 @@ Object.assign(SCENES, {
       cam.position.set(3.2, 1.2, 0.4);
       cam.rotation.y = -0.2;
       api.add(cam);
+      if (api.opts.easel === false) { es.visible = false; cam.visible = false; }
       const board = noticeBoard(3.4, 2.0);
       board.scale.setScalar(0.75);
       board.position.set(-4.4, 0, -2.6);
@@ -1901,7 +1902,8 @@ Object.assign(SCENES, {
       bins[0].position.set(-5.2, 0, 0.3);
       bins[1].position.set(-3.1, 0, 1.3);
       bins.forEach((b) => { b.visible = false; api.add(b); });
-      const binLabels = [api.label(bins[0], "答得出", "tag big"), api.label(bins[1], "答不出", "tag big")];
+      const binNames = api.opts.bins || ["答得出", "答不出"];
+      const binLabels = [api.label(bins[0], binNames[0], "tag big"), api.label(bins[1], binNames[1], "tag big")];
       binLabels.forEach((l) => { l.offset.set(0, 1.35, 0); l.hidden = true; });
       api.add(track(-0.4, 5.6, 4.2));
       const eng = engine();

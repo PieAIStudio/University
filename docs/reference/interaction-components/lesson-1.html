@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 1 关样机</title>
+<link rel="stylesheet" href="lab/toy.css">
+<link rel="stylesheet" href="lab/lesson.css">
+</head>
+<body>
+<header class="top">
+  <h1>第 1 关 · 可以玩的样机<small>「让 AI 帮你写消息，怎么才能像你自己说的？」课文全写，3D 舞台真的会动。双击打开就能玩，不联网。</small></h1>
+  <nav aria-label="同一套文档"><a href="index.html">← 总览</a><a href="lesson-2.html">第 2 关</a><a href="lesson-3.html">第 3 关</a><a href="spec.html">执行规格</a></nav>
+</header>
+<main class="wrap">
+  <section class="dev" aria-label="第 1 关样机">
+    <div class="dev-top"><div class="phases" id="phases" aria-label="这一关的五段"></div><span class="count" id="count"></span></div>
+    <div class="toy" id="stage" role="img" aria-label="3D 舞台：小兔子的庭院"></div>
+    <div class="card" id="card" aria-live="polite"></div>
+  </section>
+  <aside class="notes">
+    <div class="warnbar">样机里 AI 的回答都是写好的<b>示例</b>，真课里是 AI 现场写的。「自己做」那一步用固定规则检查你的请求，不连 AI。3D 画不出来时，舞台自动换成静态图。</div>
+    <div class="nbox" id="notes" aria-live="polite"></div>
+    <div class="nbox">
+      <h2>整关一览（点一下直接跳过去）</h2>
+      <ul class="jump" id="jump"></ul>
+      <p class="legend">每一步都在练三件事之一：怎么交代 AI、怎么检查它、哪些得你自己拿主意。AI 该干的活，不让你替它干。</p>
+    </div>
+  </aside>
+</main>
+<noscript><p style="max-width:640px;margin:0 auto;padding:16px">这个样机需要打开 JavaScript 才能玩。</p></noscript>
+<script src="lab/toy3d.js"></script>
+<script src="lab/lesson.js"></script>
+<script src="lessons/l1-voice.js"></script>
+<script src="lab/lesson-player.js"></script>
+</body>
+</html>

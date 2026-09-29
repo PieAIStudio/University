@@ -337,7 +337,7 @@ export function makeStage() {
  * def: { build(api) -> { tick?(t,dt), pick?(obj,api), camera?: {pos,target,fov} }, labels? }
  * Labels are DOM, never geometry (the product's rule): api.label(obj|vec3, text, cls)
  */
-export function mount(host, def, { live = true, demo = false } = {}) {
+export function mount(host, def, { live = true, demo = false, opts = {} } = {}) {
   const canvas = document.createElement("canvas");
   canvas.className = "toy-cv";
   const layer = document.createElement("div");
@@ -353,6 +353,7 @@ export function mount(host, def, { live = true, demo = false } = {}) {
   const api = {
     THREE,
     demo,
+    opts,
     scene,
     camera,
     host,
