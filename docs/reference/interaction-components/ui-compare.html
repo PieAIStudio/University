@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>界面风格对比</title>
+<style>
+:root{
+  --bg:#f5f1e8;--paper:#fffdf8;--ink:#1f2b2a;--ink2:#46524f;--ink3:#5f6967;--line:#e2dbcd;--soft:#f0ebe1;
+  --mint:#8fd0b8;--gold:#f2c963;--sky:#a9c9ec;--coral:#f3a58a;--pink:#f1b8c8;--lilac:#c9b8f0;
+  --ok:#2e7a61;--ok-bg:#dff2e9;--no:#a8492b;--no-bg:#fbe6dc;--blue:#2b5fc0;
+  --shadow:0 1px 2px rgba(31,43,42,.05),0 6px 18px rgba(31,43,42,.07);
+  --font:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171a1c;--paper:#212629;--ink:#ecebe6;--ink2:#c7cbc6;--ink3:#a7aeab;--line:#394044;--soft:#2a3033;
+  --ok:#7fd3ae;--ok-bg:#1d3a30;--no:#f3a07e;--no-bg:#40271d;--blue:#8fb2ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#171a1c;--paper:#212629;--ink:#ecebe6;--ink2:#c7cbc6;--ink3:#a7aeab;--line:#394044;--soft:#2a3033;
+  --ok:#7fd3ae;--ok-bg:#1d3a30;--no:#f3a07e;--no-bg:#40271d;--blue:#8fb2ff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.7}
+a{color:var(--blue)}
+.page{max-width:1120px;margin:0 auto;padding:22px 16px 70px;display:grid;grid-template-columns:minmax(0,1fr);gap:34px}
+header{display:grid;gap:10px}
+.kicker{font-size:13.5px;color:var(--ink3);font-weight:700}
+h1{margin:0;font-size:30px;line-height:1.3}
+h2{margin:0;font-size:23px;line-height:1.35}
+h3{margin:0;font-size:18px}
+p{margin:0}
+.nav{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14.5px}
+.lead{color:var(--ink2);font-size:16.5px}
+.minute{background:var(--paper);border-radius:20px;box-shadow:var(--shadow);padding:18px 20px;display:grid;gap:8px;border:2px solid var(--gold)}
+.minute ol{margin:0;padding-left:22px;display:grid;gap:6px}
+section{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.card{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:16px 18px;display:grid;gap:10px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--paper);border-radius:999px;box-shadow:var(--shadow);padding:8px 14px;justify-self:start;max-width:100%}
+@media (max-width:520px){.toolbar{border-radius:18px}}
+.seg{display:flex;gap:4px;align-items:center;font-size:14px}
+.seg>span{color:var(--ink3);font-weight:700;margin-right:4px}
+.seg button{all:unset;cursor:pointer;padding:5px 12px;border-radius:999px;font-weight:700;font-size:14px;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible,.cond button:focus-visible,.opt-q:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:start}
+@media (max-width:900px){.trio{grid-template-columns:minmax(0,1fr)}.phone{max-width:340px;margin:0 auto}}
+.col{display:grid;gap:10px}
+.col>h3{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.tag.now{background:var(--soft);color:var(--ink2);border:1px solid var(--line)}
+.tag.orig{background:#fde7c6;color:#6b4a12}
+.tag.fix{background:#d6f0e4;color:#1d5a45}
+.notes{margin:0;padding-left:20px;font-size:14.5px;color:var(--ink2);display:grid;gap:3px}
+.phone{border-radius:30px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);background:var(--paper);width:100%}
+.phone img.shot{display:block;width:100%}
+.stage-img{display:block;width:100%;aspect-ratio:16/11;object-fit:cover}
+.composite{position:relative}
+.composite .badge{position:absolute;left:8px;top:8px;font-size:11.5px;font-weight:700;background:rgba(31,43,42,.72);color:#fff;border-radius:999px;padding:1px 8px}
+.fine{font-size:13px;color:var(--ink3)}
+
+/* ── mock screens: ② original prototype, ③ proposed fix. Each follows the frame's own light/dark switch. */
+.mock{--m-bg:#fffdf8;--m-ink:#2d3a3e;--m-ink2:#4a5654;--m-ink3:#7b8583;--m-line:#e3dccf;--m-soft:#f3ede2;padding:0 0 18px;background:var(--m-bg);color:var(--m-ink);font-family:var(--font)}
+.mock[data-dark]{--m-bg:#23272a;--m-ink:#ecebe6;--m-ink2:#c9ccc7;--m-ink3:#9aa19e;--m-line:#3a3f42;--m-soft:#2c3134}
+.mock .top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 8px}
+.mock .phs{display:flex;gap:4px}
+.mock .phs i{font-style:normal;font-size:12.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--m-soft);color:var(--m-ink3)}
+.mock .phs i.on{background:var(--m-ink);color:var(--m-bg)}
+.mock .cnt{font-size:12.5px;color:var(--m-ink3)}
+.mock .body{padding:14px 16px 0;display:grid;gap:10px}
+.mock .eb{font-size:12.5px;font-weight:700;color:#c0602f}
+.mock[data-dark] .eb{color:#f0a070}
+.mock h4{margin:0;font-size:18px;line-height:1.45}
+.mock .sub{font-size:14px;color:var(--m-ink2)}
+.mock .opts{display:grid;gap:8px}
+.mock .o{border-radius:14px;border:1.5px solid var(--m-line);background:var(--m-bg);padding:10px 12px;font-size:15px;line-height:1.45}
+.mock .fb{border-radius:14px;padding:9px 12px;font-size:14px;line-height:1.55;background:var(--m-soft)}
+.mock .btn{display:inline-flex;justify-content:center;align-items:center;min-height:42px;padding:8px 18px;border-radius:999px;font-weight:700;font-size:15px;justify-self:start}
+.mock .rc{border-radius:16px;border:2px solid #e7b94a;padding:12px;text-align:center;font-size:18px;font-weight:700}
+.mock .bins{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mock .bins .btn{justify-self:stretch;min-height:48px;font-size:16px}
+.mock .pips{display:flex;gap:5px;justify-content:center}
+.mock .pips i{width:8px;height:8px;border-radius:50%;background:var(--m-line)}
+.mock .pips i.ok{background:#2f8a6b}.mock .pips i.now{background:var(--m-ink)}
+.mock .sentence{min-height:46px;border-radius:14px;border:2px dashed var(--m-line);padding:7px;display:flex;flex-wrap:wrap;gap:6px}
+.mock .tray{display:flex;flex-wrap:wrap;gap:7px}
+.mock .chip{padding:6px 11px;border-radius:10px;font-size:14.5px;font-weight:700;color:#2d3a3e}
+.mock .ctx{font-size:13px;color:var(--m-ink3)}
+
+/* ② original: as in the playable prototype */
+.v-orig .o.picked{border-color:var(--m-ink);background:var(--m-soft);font-weight:700}
+.v-orig .btn.go{background:#e97a4f;color:#fff}
+.v-orig .btn.yes{background:#4f9e84;color:#fff}
+.v-orig .btn.no{background:#dd7a5c;color:#fff}
+.v-orig .fb.no{background:#fbeadf}
+.v-orig[data-dark] .fb.no{background:#40291c}
+.v-orig .chip.used{opacity:.3}
+
+/* ③ proposed: same hues; dark ink on every pastel; a darker lower edge keeps the press; grey text darkened */
+.v-fix{--m-ink3:#5f6967;--edge:rgba(31,43,42,.22)}
+.v-fix[data-dark]{--m-ink3:#a7aeab;--edge:rgba(0,0,0,.45)}
+.v-fix .o{border:2px solid var(--m-line);box-shadow:0 3px 0 var(--m-line)}
+.v-fix .o.picked{border-color:#3f9c7c;background:#d3f0e3;color:#10241c;font-weight:700;box-shadow:0 3px 0 #3f9c7c}
+.v-fix[data-dark] .o.picked{background:#8fd0b8;border-color:#5fae92;box-shadow:0 3px 0 #3d7f69}
+.v-fix .btn{color:#1f2b2a;box-shadow:0 4px 0 var(--edge)}
+.v-fix .btn.go{background:#f0935f}
+.v-fix .btn.yes{background:#8fd0b8}
+.v-fix .btn.no{background:#f3a58a}
+.v-fix .fb.no{background:#fbe6dc;color:#1f2b2a}
+.v-fix[data-dark] .fb.no{background:#40271d;color:#ecebe6}
+.v-fix .fb.ok{background:#dff2e9;color:#1f2b2a}
+.v-fix[data-dark] .fb.ok{background:#1d3a30;color:#ecebe6}
+.v-fix .chip{box-shadow:0 3px 0 var(--edge)}
+.v-fix .chip.used{opacity:.4;box-shadow:none;outline:1.5px dashed var(--m-ink3);outline-offset:-1.5px;background:transparent!important;color:var(--m-ink3)}
+.v-fix .rc{box-shadow:0 3px 0 #e7b94a}
+
+/* ── contrast lab */
+.lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:900px){.lab{grid-template-columns:minmax(0,1fr)}}
+.cond{display:flex;flex-wrap:wrap;gap:6px}
+.cond button{all:unset;cursor:pointer;padding:6px 13px;border-radius:999px;font-size:14px;font-weight:700;background:var(--soft);color:var(--ink2);border:1.5px solid var(--line)}
+.cond button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.viewer{position:relative;border-radius:18px;overflow:hidden;background:#fffdf8;padding:16px;display:grid;gap:12px;border:1px solid var(--line)}
+.viewer .glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.62),rgba(255,255,255,.38) 45%,rgba(255,255,255,.55));opacity:0;transition:opacity .2s}
+.viewer.glare .glare{opacity:1}
+.viewer.dim .inner{filter:brightness(.5)}
+.viewer.blur .inner{filter:blur(1.4px)}
+.viewer.cvd .inner{filter:url(#deutan)}
+.inner{display:grid;gap:12px}
+.crow{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center}
+.crow .lbl{font-size:13px;color:#46524f;line-height:1.4}
+.crow .bset{display:flex;flex-wrap:wrap;gap:8px}
+.demo-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:96px;padding:8px 14px;border-radius:999px;font-weight:700;font-size:16px;font-family:var(--font)}
+.ratios{display:grid;gap:6px;font-size:14.5px}
+.ratios div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:12.5px;font-weight:700;border-radius:999px;padding:0 9px;line-height:1.8}
+.pill.pass{background:var(--ok-bg);color:var(--ok)}
+.pill.big{background:#fdf0d2;color:#7a5410}
+.pill.fail{background:var(--no-bg);color:var(--no)}
+.scale{position:relative;height:14px;border-radius:999px;background:linear-gradient(90deg,#f3a58a 0%,#f3a58a 10%,#f2c963 10%,#f2c963 17.5%,#8fd0b8 17.5%,#8fd0b8 100%)}
+.scale-wrap{display:grid;gap:4px}
+.scale-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3)}
+blockquote{margin:0;border-left:4px solid var(--sky);padding:6px 12px;background:var(--paper);border-radius:0 12px 12px 0;color:var(--ink2);font-size:15px}
+.twocol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.twocol{grid-template-columns:minmax(0,1fr)}}
+.ingredients{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ing{border-radius:16px;padding:12px 14px;display:grid;gap:4px;font-size:14.5px;line-height:1.6;color:#1f2b2a}
+.ing b{font-size:15.5px}
+.paths{display:grid;gap:10px}
+.path{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:start;background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:12px 14px}
+.path .mark{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:900}
+.path .mark.y{background:var(--ok-bg);color:var(--ok)}.path .mark.n{background:var(--no-bg);color:var(--no)}
+.q{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:16px 18px;display:grid;gap:10px}
+.q h3 .qid{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:14px;margin-right:8px}
+.q .os{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.opt-q{all:unset;box-sizing:border-box;cursor:pointer;border:2px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:3px;background:var(--paper);box-shadow:0 3px 0 var(--line)}
+.opt-q b{font-size:15.5px}.opt-q span{font-size:13.5px;color:var(--ink2)}
+.opt-q .rec{justify-self:start;font-size:12px;font-weight:700;border-radius:999px;padding:0 8px;background:var(--ok-bg);color:var(--ok)}
+.opt-q[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+.picks{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--paper);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);border:2px dashed var(--lilac)}
+.picks code{font-size:15px;font-weight:700}
+.picks button{all:unset;cursor:pointer;background:var(--ink);color:var(--paper);border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px}
+details.src{font-size:13.5px;color:var(--ink3)}
+details.src summary{cursor:pointer}
+details.src p{margin-top:4px}
+footer{font-size:13px;color:var(--ink3)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <!-- red-green colour vision deficiency (deuteranopia), Machado et al. 2009, severity 1.0 -->
+  <filter id="deutan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.367322 0.860646 -0.227968 0 0  0.280085 0.672501 0.047413 0 0  -0.011820 0.042940 0.968881 0 0  0 0 0 1 0"/></filter>
+</svg>
+<div class="page">
+<header>
+  <div class="kicker">University · 界面风格 · 对比页 · 2026 年 9 月 30 日 · 讨论稿，不改产品</div>
+  <h1>扁平马卡龙，还是现在的黏土风？同一屏并排看</h1>
+  <p class="lead">你喜欢样机里那种扁平、多彩的样子，想把它放进品牌 UI。这一页把「现在产品里的样子」「样机原样」「我提议的修正版」放在一起，同一屏、同样的字，浅色深色都能切。中间专门回答你问的「对比度是什么、好看是不是第一」。</p>
+  <nav class="nav" aria-label="同一套文档"><a href="index.html">← 总览</a><a href="album.html">旧组件相册</a><a href="first-level.html">新第一关样机</a><a href="pro-lesson.html">专业课样机</a><a href="spec.html">执行规格</a></nav>
+</header>
+
+<div class="minute">
+  <h2>如果你只有一分钟</h2>
+  <ol>
+    <li><b>你的眼光没错。</b>3D 舞台是立体的，操作用平的，两层一眼分得开；按钮颜色和 3D 里是同一套，所以看着像一家人。</li>
+    <li><b>样机原样有一个真问题：</b>白字配彩色底的按钮太浅，对比度 2.9 到 3.2。有两个连视力正常的人读字的最低线 3 都不到。</li>
+    <li><b>好看和看得清不冲突。</b>修正版颜色还是那几种，只是把字改成深色、按钮下面加一道稍深的边。你看下面三列，差别很小；可到了阳光下，差别很大。</li>
+    <li><b>怎么进品牌 UI：</b>不改它现在的样子（别的产品也在用），给它加一套可选的新主题，University 选用。先在课文页试，再往别的页面铺。</li>
+  </ol>
+</div>
+
+<!-- ───────── side by side ───────── -->
+<section id="side">
+  <h2>一、同一屏「猜」，三种样子</h2>
+  <p class="lead">左边是正式版产品现在的真实截图（9 月 29 日的构建，我在本机打开后截的）；中间是样机原样；右边是修正版。都用同一句题目、同样三个选项，第二项被选中。</p>
+  <div class="toolbar" role="group" aria-label="切换">
+    <div class="seg"><span>颜色</span><button type="button" data-mode="light" aria-pressed="true">浅色</button><button type="button" data-mode="dark" aria-pressed="false">深色</button></div>
+    <div class="seg"><span>上面放 3D 舞台</span><button type="button" data-stage="on" aria-pressed="true">放</button><button type="button" data-stage="off" aria-pressed="false">不放</button></div>
+  </div>
+  <div class="trio">
+    <div class="col">
+      <h3>① 现在的产品 <span class="tag now">真实截图 · 黏土风</span></h3>
+      <div class="phone"><div class="composite" data-now="guess"></div></div>
+      <ul class="notes">
+        <li>米色底、按钮是立体的「黏土」：下面有厚边，有渐变和阴影。</li>
+        <li>选中是薄荷绿，主按钮是橙色渐变，<b>按钮上用的是深色字</b>：品牌 UI 包本来就守着对比度这条规矩。</li>
+        <li>现在课里没有 3D 舞台。开了「放」时，上面是我把舞台图拼上去的，看放在一起像不像一家。</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>② 样机原样 <span class="tag orig">扁平马卡龙</span></h3>
+      <div class="phone"><div class="mock v-orig" data-mock="guess"></div></div>
+      <ul class="notes">
+        <li>没有阴影、没有渐变，靠色块和留白分层。</li>
+        <li>主按钮白字配浅橙，对比度 2.85，太浅。</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>③ 修正版 <span class="tag fix">提议的新主题</span></h3>
+      <div class="phone"><div class="mock v-fix" data-mock="guess"></div></div>
+      <ul class="notes">
+        <li>颜色不变，字全改成深墨色：主按钮 6.3，选中项 8 以上。</li>
+        <li>按钮和选项下面加一道 3 像素的深边，保留一点「按下去」的手感。</li>
+        <li>灰色小字压深一档（3.7 → 5.6）。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="side2">
+  <h2>二、同一屏「分一分」小回合、「排一排」</h2>
+  <p class="lead">这两屏正式版这次走不到（本机没接 AI，「发送」拿不到回答），左边用 9 月 27 日自动测试截的真实深色图。</p>
+  <div class="trio">
+    <div class="col">
+      <h3>① 现在的产品 <span class="tag now">真实截图 · 深色</span></h3>
+      <div class="phone"><img class="shot" src="assets/views/l1-5-can-photo-answer.jpg" alt="正式版的分一分：6 张全放对以后"></div>
+    </div>
+    <div class="col">
+      <h3>② 样机原样</h3>
+      <div class="phone"><div class="mock v-orig" data-mock="round"></div></div>
+      <ul class="notes"><li>「答得出」白字配绿 3.20，「答不出」白字配橙 2.99。</li></ul>
+    </div>
+    <div class="col">
+      <h3>③ 修正版</h3>
+      <div class="phone"><div class="mock v-fix" data-mock="round"></div></div>
+      <ul class="notes"><li>深字配薄荷 8.3、配珊瑚 7.4。按钮颜色和 3D 里的篮子仍是同一对。</li></ul>
+    </div>
+  </div>
+  <div class="trio">
+    <div class="col">
+      <div class="phone"><img class="shot" src="assets/views/now-build-dark.jpg" alt="正式版的排一排：拼一句"></div>
+    </div>
+    <div class="col">
+      <div class="phone"><div class="mock v-orig" data-mock="build"></div></div>
+      <ul class="notes"><li>积木本来就是深字，已经过关（6.6 到 7.5）。用过的积木只是变淡。</li></ul>
+    </div>
+    <div class="col">
+      <div class="phone"><div class="mock v-fix" data-mock="build"></div></div>
+      <ul class="notes"><li>积木加底边；用过的积木变成虚线空位，一看就知道它去了句子里。</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── contrast ───────── -->
+<section id="contrast">
+  <h2>三、你问的：对比度是什么？是为了色盲吗？</h2>
+  <div class="card">
+    <p><b>一句话：对比度就是字比底亮多少倍，只看深浅，不看颜色。</b>黑字白底最高，是 21；同一种颜色的字写在同色的底上是 1，完全看不见。</p>
+    <p><b>不主要是为了色盲。</b>色盲分不清的是某些颜色，比如红和绿；对比度算的是深浅，和颜色无关。制定这个标准的 W3C（管网页标准的国际组织）写得很直白：</p>
+    <blockquote>对色觉异常的人来说，颜色和饱和度几乎不影响读字；影响读字的是深浅对比。所以对比度的算法，故意不把颜色算进去。</blockquote>
+    <p><b>那它是给谁的？</b>给「看深浅的能力弱一点」的人，这种人比想的多：</p>
+    <ul class="notes">
+      <li><b>视力正常的人也有一条最低线：3。</b>这是国际人体工学标准给正常视力读正文定的最低对比度。</li>
+      <li><b>4.5 是给视力差一点的人留的余量。</b>大约相当于 20/40 的视力，W3C 说这是很多八十岁左右老人的常见视力；还包括天生或后来色觉不好、分辨深浅变弱的人。</li>
+      <li><b>字大可以放宽到 3。</b>粗体 18.5 像素以上、或普通 24 像素以上算大字，笔画粗，浅一点也读得出。</li>
+      <li><b>公式里本来就算进了一点环境光。</b>真到了阳光下，屏幕反光更强，所有对比度都会往下掉，本来就浅的最先看不清。</li>
+    </ul>
+    <p>样机那两个按钮，「答不出」2.99、主按钮 2.85，是<b>连视力正常的人那条 3 都没到</b>；「答得出」3.20 过了 3，没过 4.5。我们的品牌 UI 包自己也写着：可以点的控件，文字对比度都要到 4.5。</p>
+  </div>
+
+  <div class="lab">
+    <div class="card">
+      <h3>亲手试：换几种看东西的情况</h3>
+      <div class="cond" role="group" aria-label="看东西的情况">
+        <button type="button" data-cond="" aria-pressed="true">正常</button>
+        <button type="button" data-cond="glare" aria-pressed="false">阳光下（屏幕反光）</button>
+        <button type="button" data-cond="dim" aria-pressed="false">屏幕调暗</button>
+        <button type="button" data-cond="blur" aria-pressed="false">看不太清（模糊）</button>
+        <button type="button" data-cond="cvd" aria-pressed="false">红绿色弱</button>
+      </div>
+      <div class="viewer" id="viewer">
+        <div class="inner" id="rows"></div>
+        <div class="glare" aria-hidden="true"></div>
+      </div>
+      <p class="fine">「阳光下」是在上面盖了一层半透明白光，「屏幕调暗」把亮度压到一半，「红绿色弱」用的是 2009 年 Machado 等人的色觉模拟。都是示意，不是医学测量。</p>
+    </div>
+    <div class="card">
+      <h3>算出来的数</h3>
+      <div class="ratios" id="ratios"></div>
+      <div class="scale-wrap">
+        <div class="scale" aria-hidden="true"></div>
+        <div class="scale-lab"><span>1</span><span>3（正常视力最低线）</span><span>4.5（标准）</span><span>21</span></div>
+      </div>
+      <p class="fine">「反光下」一栏，是在字和底上各加了同样多的反射光再算，大约是晴天户外看手机的程度。</p>
+      <p>试一下「红绿色弱」：「答得出」和「答不出」两个按钮，颜色会变得很像。所以按钮上一定要有字，不能只靠绿和橙分对错。这一点和对比度是两回事，修正版也一样要守。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>「好看是第一吧？」我的实话</h3>
+    <p><b>好看很重要，这点我同意。</b>用户愿不愿意打开第二次，第一眼的感觉占很大分量。</p>
+    <p><b>但在这个产品里，按钮上的字就是答案本身。</b>看不清，就会点错；点错了，学的人不会怪按钮，只会觉得「是我不会」。小林是在地铁里、在阳光下用手机学的，这正是字最容易看不清的时候。</p>
+    <p><b>好消息是两样都能要。</b>你把上面第一部分切到②和③对着看：颜色一样多、一样亮，③只是把字改成深色、底下加了一道边。大多数人第一眼分不出哪个更好看，可是一到「阳光下」，②的按钮字就糊了，③还在。</p>
+    <p><b>我不硬卡的地方：</b>灰掉、暂时不能点的按钮，标准本来就不要求对比度；装饰用的字（比如舞台上的小标签「AI」）也不算。</p>
+  </div>
+</section>
+
+<!-- ───────── why it looks good ───────── -->
+<section id="why">
+  <h2>四、它为什么好看？拆开看</h2>
+  <p class="lead">把「清新干净」拆成六样。进品牌 UI 时，要搬的是这六样，不是某一个按钮。</p>
+  <div class="ingredients">
+    <div class="ing" style="background:#fdf6e3"><b>暖白纸色的底</b>不是纯白，也不是灰。字用深墨色，不用纯黑。</div>
+    <div class="ing" style="background:#dff2e9"><b>颜色只放在「东西」上</b>积木、篮子、选中的那项有颜色；界面框架本身几乎没颜色。</div>
+    <div class="ing" style="background:#e3eef9"><b>和 3D 用同一套颜色</b>我做样机时，积木的颜色就是直接从 3D 小岛的配色里拿的。</div>
+    <div class="ing" style="background:#fbe6dc"><b>没有阴影、渐变、高光</b>层次靠色块和留白，所以看着「干净」。</div>
+    <div class="ing" style="background:#f7e3ec"><b>大圆角、胶囊按钮、粗标题</b>圆的东西让人放松；标题粗，一眼知道这屏要干嘛。</div>
+    <div class="ing" style="background:#ece6fb"><b>一屏只做一件事</b>这一条其实是一半的「干净」。信息多的页面，换了风格也不会自动干净。</div>
+  </div>
+  <div class="twocol">
+    <div class="card">
+      <h3>你判断对的地方</h3>
+      <p>平的操作层配立体的世界，是游戏里用了几十年的办法：世界是 3D 的，血条和按钮是平的，一眼分得清「哪里能点」。现在的黏土风按钮本身就是立体的，放在 3D 舞台下面，两层都在「凸出来」，会抢。</p>
+      <p>颜色和 3D 接近，也是对的：两层用同一套颜色，看起来是一个世界的东西。</p>
+    </div>
+    <div class="card">
+      <h3>要注意的地方</h3>
+      <ul class="notes">
+        <li><b>对比度</b>：上面说了，白字配浅色底不行，要换成深字。</li>
+        <li><b>颜色多要有规矩</b>：颜色代表「这个东西是谁」，和 3D 里的物件一一对应；对和错另外留两个专用色，不和积木的颜色混用。否则会变成糖果铺。</li>
+        <li><b>别丢了手感</b>：品牌 UI 的性格第一条是「有触感」。纯扁平会丢掉按下去的感觉，所以修正版加了一道底边（多邻国也是这么做的）。</li>
+        <li><b>深色模式要单独调</b>：马卡龙色在深底上会发亮刺眼，按钮可以保持原色，大块的底要换成更暗的版本。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── how ───────── -->
+<section id="how">
+  <h2>五、怎么放进品牌 UI</h2>
+  <p class="lead">项目的规矩是：界面只从品牌 UI 包里拿；包做不到，就改包、发新版本，不在 University 里另起一套。</p>
+  <div class="paths">
+    <div class="path"><div class="mark n">✕</div><div><b>在 University 里自己写一套样式</b><p>最快，但违反「品牌 UI 优先」的规矩；以后两套样式一起维护，越走越散。</p></div></div>
+    <div class="path"><div class="mark n">✕</div><div><b>把品牌 UI 的默认样子改成扁平马卡龙</b><p>别的产品（TuringPact、SwimmerParty 等）也在用这个包，默认一改，它们全变样。</p></div></div>
+    <div class="path"><div class="mark y">✓</div><div><b>给品牌 UI 加一套可选的新主题（推荐）</b><p>包里本来就有「浅色、深色」两套主题，也支持再加一套，还有一张清单能自动检查新主题漏没漏项。阴影已经是可以调的变量，能直接关掉。要新加的是一组「分类色」（六种马卡龙色，每种配好深字和深边），和按钮底边的样子。University 挂上这套主题就行，别的产品不受影响。</p></div></div>
+  </div>
+  <div class="card">
+    <h3>时机</h3>
+    <p>品牌 UI 包这两天正在另一条线上做账号控件（刚发了 2.13.0），第 7 版也刚用黏土风做完一批页面（宝箱、徽章、段位）。所以我建议分两步：</p>
+    <ol class="notes">
+      <li><b>先在课文页试</b>：新主题只挂在课文阅读器和 3D 舞台下面那一块。课文页正好要重做，改动最集中。</li>
+      <li><b>看着好，再往别处铺</b>：地图、个人页、付费页这些信息多的页面，挨个看过再换，不一次全换。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ───────── decide ───────── -->
+<section id="decide">
+  <h2>六、要你定的三件事</h2>
+  <div id="decisions" style="display:grid;gap:12px">
+    <div class="q" data-q="U1"><h3><span class="qid">U1</span>要不要做这套新主题？</h3><div class="os">
+      <button type="button" class="opt-q" data-v="U1a"><b>做，先只在课文页用</b><span>课文页重做时一起换，看着好再铺开。</span><span class="rec">推荐</span></button>
+      <button type="button" class="opt-q" data-v="U1b"><b>做，整个 App 一起换</b><span>风格统一最快，但第 7 版的页面都要重看一遍。</span></button>
+      <button type="button" class="opt-q" data-v="U1c"><b>先不做</b><span>继续用黏土风，课文页只加 3D 舞台。</span></button>
+    </div></div>
+    <div class="q" data-q="U2"><h3><span class="qid">U2</span>按钮要不要保留一点「按下去」的手感？</h3><div class="os">
+      <button type="button" class="opt-q" data-v="U2a"><b>加一道稍深的底边</b><span>修正版的样子，像多邻国那样。</span><span class="rec">推荐</span></button>
+      <button type="button" class="opt-q" data-v="U2b"><b>纯扁平，什么都不加</b><span>最干净，和样机原样一样。</span></button>
+    </div></div>
+    <div class="q" data-q="U3"><h3><span class="qid">U3</span>彩色按钮上的字怎么处理？</h3><div class="os">
+      <button type="button" class="opt-q" data-v="U3a"><b>浅色底配深字</b><span>颜色最接近样机，最容易过标准。</span><span class="rec">推荐</span></button>
+      <button type="button" class="opt-q" data-v="U3b"><b>把底色压深，保留白字</b><span>更「饱满」一些，颜色会比样机深一档。</span></button>
+      <button type="button" class="opt-q" data-v="U3c"><b>按钮字改大到 19 像素粗体</b><span>标准放宽到 3，样机的绿按钮能过，橙色的还差一点。</span></button>
+    </div></div>
+    <div class="picks" aria-live="polite"><span>你的选择：</span><code id="picks-code">还没选</code><button type="button" id="copy-picks">复制给我</button><span id="copy-msg" class="fine"></span></div>
+  </div>
+</section>
+
+<section>
+  <details class="src"><summary>出处和做法（点开）</summary>
+    <p>对比度标准：W3C《Understanding SC 1.4.3 Contrast (Minimum)》，页面 2026-06-01 更新，2026-09-30 查阅，<a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">原文</a>。其中：正文 4.5:1、大字 3:1；大字是 14pt 粗体（约 18.5px）或 18pt（约 24px）；3:1 是 ISO 9241-3 和 ANSI/HFES 100-1988 给正常视力定的最低线；4.5:1 对应约 20/40 视力，「常被报告为八十岁左右老人的典型视力」；色觉异常的人读字几乎不受颜色影响；不能点的控件不要求对比度。</p>
+    <p>品牌 UI 包的规矩：SwimmerUIKit 设计系统说明「账号界面原件」一节，「两套主题的可用控件使用不透明底色；静止及悬停/按下的文字对比度均须达到 4.5:1」；主题机制见同一文件「主题化配方」。</p>
+    <p>对比度数字：按 W3C 公式（相对亮度，比值 = (亮 + 0.05) / (暗 + 0.05)）用样机里的真实色值计算；「反光下」在两边各加 0.1 的相对亮度再算。</p>
+    <p>截图：①「猜」是 2026-09-29 22:16 的正式版构建，在本机只读打开、关掉 3D 后截的（3D 在无头浏览器里太慢）；「分一分」「排一排」来自 9 月 27 日的自动测试。②③是这一页里的网页，不是截图。</p>
+  </details>
+</section>
+<footer>University · 界面风格对比（讨论稿）。这一页只在设计文件夹里，不改产品，也不改品牌 UI 包。</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var PHOTO='<img src="assets/coffee.jpg" alt="" style="width:92px;height:62px;object-fit:cover;border-radius:10px">';
+var STAGE={guess:'assets/views/w-guess.jpg',round:'assets/views/w-round.jpg',build:'assets/views/w-build.jpg'};
+var state={mode:'light',stage:'on'};
+function phases(on,n){ return '<div class="top"><div class="phs">'+['猜','跑','看','改','做'].map(function(p,i){return '<i class="'+(i===on?'on':'')+'">'+p+'</i>';}).join('')+'</div><span class="cnt">'+n+'</span></div>'; }
+var MOCK={
+  guess:function(){ return phases(0,'2 / 12')+stage('guess')+'<div class="body"><div class="eb">猜 · 选一个</div><h4>你想知道勺子在杯子哪一边。哪句最能问到？</h4><p class="sub">随便猜，猜错不扣分。</p>'+PHOTO+'<div class="opts"><div class="o">说说这张照片里有什么。</div><div class="o picked">勺子在杯子的哪一边？</div><div class="o">帮我看看这张照片。</div></div><p class="fb ok">记住你选的这句。马上发出去试试。</p><span class="btn go">发出去试试</span></div>'; },
+  round:function(){ return phases(2,'6 / 12')+stage('round')+'<div class="body"><div class="eb">看 · 分一分（3D 小回合）</div><h4>光看照片，答得出来吗？</h4><p class="sub">第 2 张，共 6 张</p><div class="pips"><i class="ok"></i><i class="now"></i><i></i><i></i><i></i><i></i></div><div class="rc">咖啡甜不甜？</div><div class="bins"><span class="btn yes">答得出</span><span class="btn no">答不出</span></div><p class="fb no">照片只能看，不能尝。甜不甜，看不出来。再放一次。</p></div>'; },
+  build:function(){
+    var C={a:'#f2c963',b:'#8fd0b8',c:'#a9c9ec',d:'#f3a58a',e:'#f1b8c8'};
+    function chip(t,c,used){ return '<span class="chip'+(used?' used':'')+'" style="background:'+c+'">'+t+'</span>'; }
+    return phases(3,'7 / 12')+stage('build')+'<div class="body"><div class="eb">改 · 排一排</div><h4>现在想知道：杯子里有没有泡沫。拼一句，只问这一处</h4><p class="ctx">原来那句：说说这张照片里有什么。</p><div class="sentence">'+chip('看这张照片，',C.a)+chip('杯子里',C.b)+chip('有没有泡沫？',C.c)+'</div><div class="tray">'+chip('看这张照片，',C.a,1)+chip('杯子里',C.b,1)+chip('有没有泡沫？',C.c,1)+chip('说说整张照片',C.d)+chip('写得越长越好',C.e)+'</div><span class="btn go">拼好了，发车</span></div>';
+  }
+};
+function stage(kind){ return state.stage==='on' ? '<img class="stage-img" src="'+STAGE[kind]+'" alt="3D 舞台">' : ''; }
+function render(){
+  [].forEach.call(document.querySelectorAll('[data-mock]'),function(el){
+    el.innerHTML=MOCK[el.getAttribute('data-mock')]();
+    if(state.mode==='dark') el.setAttribute('data-dark',''); else el.removeAttribute('data-dark');
+  });
+  [].forEach.call(document.querySelectorAll('[data-now]'),function(el){
+    var s=state.stage==='on'?'<div class="composite"><img class="stage-img" src="'+STAGE.guess+'" alt="拼上去的 3D 舞台图"><span class="badge">拼的</span></div>':'';
+    el.innerHTML=s+'<img class="shot" src="assets/views/now-guess-'+state.mode+'.jpg" alt="正式版现在的猜一屏（'+(state.mode==='dark'?'深色':'浅色')+'）">';
+  });
+}
+document.querySelectorAll('[data-mode]').forEach(function(b){ b.addEventListener('click',function(){ state.mode=b.getAttribute('data-mode'); document.querySelectorAll('[data-mode]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));}); render(); }); });
+document.querySelectorAll('[data-stage]').forEach(function(b){ b.addEventListener('click',function(){ state.stage=b.getAttribute('data-stage'); document.querySelectorAll('[data-stage]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));}); render(); }); });
+render();
+
+// contrast lab — the same WCAG formula the numbers in the text come from
+function lum(h){ h=h.replace('#',''); var c=[0,2,4].map(function(i){ var v=parseInt(h.substr(i,2),16)/255; return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4); }); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+function ratio(a,b,glare){ var la=lum(a)+(glare||0), lb=lum(b)+(glare||0); var hi=Math.max(la,lb), lo=Math.min(la,lb); return (hi+0.05)/(lo+0.05); }
+var ROWS=[
+  {label:'② 样机原样', btns:[['答得出','#ffffff','#4f9e84'],['答不出','#ffffff','#dd7a5c'],['继续','#ffffff','#e97a4f']]},
+  {label:'③ 修正版：浅底深字', btns:[['答得出','#1f2b2a','#8fd0b8'],['答不出','#1f2b2a','#f3a58a'],['继续','#1f2b2a','#f0935f']]},
+  {label:'另一种修法：压深底色', btns:[['答得出','#ffffff','#2e7a61'],['答不出','#ffffff','#b4502f'],['继续','#ffffff','#b85427']]}
+];
+var rowsEl=document.getElementById('rows'), ratiosEl=document.getElementById('ratios');
+function pill(r){ return r>=4.5?'<span class="pill pass">'+r.toFixed(2)+' 过</span>':(r>=3?'<span class="pill big">'+r.toFixed(2)+' 只够大字</span>':'<span class="pill fail">'+r.toFixed(2)+' 不够</span>'); }
+ROWS.forEach(function(row){
+  rowsEl.insertAdjacentHTML('beforeend','<div class="crow"><div class="lbl">'+row.label+'</div><div class="bset">'+row.btns.map(function(b){ return '<span class="demo-btn" style="color:'+b[1]+';background:'+b[2]+'">'+b[0]+'</span>'; }).join('')+'</div></div>');
+  ratiosEl.insertAdjacentHTML('beforeend','<div><b style="min-width:9em">'+row.label+'</b></div><div>'+row.btns.map(function(b){ return b[0]+' '+pill(ratio(b[1],b[2]))+' <span class="fine">反光下 '+ratio(b[1],b[2],0.1).toFixed(2)+'</span>'; }).join('　')+'</div>');
+});
+var viewer=document.getElementById('viewer');
+document.querySelectorAll('[data-cond]').forEach(function(b){ b.addEventListener('click',function(){
+  document.querySelectorAll('[data-cond]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
+  viewer.className='viewer'+(b.getAttribute('data-cond')?' '+b.getAttribute('data-cond'):'');
+}); });
+
+// decisions
+var picks={}, code=document.getElementById('picks-code');
+function show(){ var ks=Object.keys(picks).sort(); code.textContent=ks.length?'界面：'+ks.map(function(k){return picks[k];}).join(' '):'还没选'; }
+document.getElementById('decisions').addEventListener('click',function(e){
+  var o=e.target.closest('.opt-q'); if(!o) return;
+  var q=o.closest('.q'), k=q.getAttribute('data-q'), v=o.getAttribute('data-v');
+  picks[k]=picks[k]===v?undefined:v; if(!picks[k]) delete picks[k];
+  q.querySelectorAll('.opt-q').forEach(function(x){ x.setAttribute('aria-pressed',String(picks[k]===x.getAttribute('data-v'))); });
+  show();
+});
+document.getElementById('copy-picks').addEventListener('click',function(){
+  var msg=document.getElementById('copy-msg'), t=code.textContent;
+  try{ navigator.clipboard.writeText(t).then(function(){ msg.textContent='已复制'; },function(){ msg.textContent='请手动选中复制'; }); }catch(err){ msg.textContent='请手动选中复制'; }
+});
+})();
+</script>
+</body>
+</html>
