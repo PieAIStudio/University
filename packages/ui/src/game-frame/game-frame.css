@@ -360,6 +360,47 @@
   white-space: nowrap;
 }
 
+/* One line under the question: what the learner has in hand right now. */
+.game-frame__hint {
+  margin: 6px auto 0;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgb(255 250 240 / 0.92);
+  color: var(--game-frame-ink, #1d3336);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.game-frame__briefing-note {
+  margin: 6px 0 0;
+  opacity: 0.85;
+}
+
+.game-frame__clock {
+  position: relative;
+  display: block;
+  inline-size: min(220px, 60%);
+  block-size: 8px;
+  margin: 6px auto 0;
+  border-radius: 999px;
+  background: rgb(255 250 240 / 0.7);
+  overflow: hidden;
+}
+
+.game-frame__clock-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: #73b6a1;
+  transition: inline-size 0.1s linear;
+}
+
+.game-frame__clock[data-low="true"] .game-frame__clock-fill {
+  background: #e99073;
+}
+
 /* DOM labels the scene anchors to boats and baskets. */
 .game-label {
   position: absolute;
@@ -398,6 +439,25 @@
 .game-label--basket {
   padding: 3px 10px;
   font-size: 13px;
+  cursor: default;
+}
+
+/* A numbered badge: the two stones that carry the same number are a pair. */
+.game-label small.game-label__pair {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  margin: 0 0 0 6px;
+  padding: 0;
+  vertical-align: 1px;
+  color: #1d3336;
+  font-size: 12px;
+}
+
+/* A stone whose links all stand: still readable, no longer asking for a tap. */
+.game-label--done {
+  opacity: 0.6;
   cursor: default;
 }
 

@@ -205,17 +205,26 @@ export function gameRoundsFromLesson(lesson: GameLesson): readonly GameRound[] {
 }
 
 /**
- * The rounds for one place on the map: the segment's own lessons first, in
- * course order, then earlier lessons from the nearest backwards. `lessons` is
- * whatever the host already decided the learner may practise (completed or
- * proved); this never widens that.
+ * The rounds for one place on the map, for any game's projection: the
+ * segment's own lessons first, in course order, then earlier lessons from the
+ * nearest backwards. `lessons` is whatever the host already decided the
+ * learner may practise (completed or proved); this never widens that.
  */
+export function roundsForSegment<R>(
+  project: (lesson: GameLesson) => readonly R[],
+  lessons: readonly GameLesson[],
+  segmentLessonIds: readonly string[],
+): readonly R[] {
+  const inSegment = new Set(segmentLessonIds);
+  const own = lessons.filter((lesson) => inSegment.has(lesson.id));
+  const earlier = lessons.filter((lesson) => !inSegment.has(lesson.id)).reverse();
+  return [...own, ...earlier].flatMap(project);
+}
+
+/** 庭院拦截's rounds for one place on the map. */
 export function gameRoundsForSegment(
   lessons: readonly GameLesson[],
   segmentLessonIds: readonly string[],
 ): readonly GameRound[] {
-  const inSegment = new Set(segmentLessonIds);
-  const own = lessons.filter((lesson) => inSegment.has(lesson.id));
-  const earlier = lessons.filter((lesson) => !inSegment.has(lesson.id)).reverse();
-  return [...own, ...earlier].flatMap(gameRoundsFromLesson);
+  return roundsForSegment(gameRoundsFromLesson, lessons, segmentLessonIds);
 }

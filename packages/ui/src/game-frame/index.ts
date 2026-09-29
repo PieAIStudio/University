@@ -1,6 +1,7 @@
 export {
   AnswerButtons,
   ChipGroup,
+  ClockMeter,
   GameFrame,
   GameNotice,
   HeartsMeter,

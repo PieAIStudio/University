@@ -17,13 +17,17 @@ export interface BriefingBin {
 export function BriefingPanel({
   eyebrow,
   question,
-  bins,
+  note,
+  bins = [],
   source,
   onReady,
 }: {
   eyebrow: string;
   question: string;
-  bins: readonly BriefingBin[];
+  /** The lesson's own framing of the task, when it has one. */
+  note?: string;
+  /** A game without answer bins (连连看, 贪吃蛇) leaves this out. */
+  bins?: readonly BriefingBin[];
   source: string;
   onReady: () => void;
 }) {
@@ -32,23 +36,26 @@ export function BriefingPanel({
     <div className="game-frame__briefing" data-testid="game-briefing">
       <p className="game-frame__eyebrow">{eyebrow}</p>
       <h3>{question}</h3>
-      <ul className="game-frame__bins">
-        {bins.map((bin, index) => (
-          <li key={bin.id}>
-            <span
-              className="game-frame__bin-swatch"
-              style={{ background: binColour(index), color: BIN_INK }}
-              aria-hidden="true"
-            >
-              {index + 1}
-            </span>
-            <span>
-              <b>{bin.label}</b>
-              {bin.note ? <small>{bin.note}</small> : null}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {note ? <p className="game-frame__briefing-note">{note}</p> : null}
+      {bins.length ? (
+        <ul className="game-frame__bins">
+          {bins.map((bin, index) => (
+            <li key={bin.id}>
+              <span
+                className="game-frame__bin-swatch"
+                style={{ background: binColour(index), color: BIN_INK }}
+                aria-hidden="true"
+              >
+                {index + 1}
+              </span>
+              <span>
+                <b>{bin.label}</b>
+                {bin.note ? <small>{bin.note}</small> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <p className="game-frame__source">{source}</p>
       <GameButton static sound={false} onClick={onReady} data-testid="game-ready">
         {t("gameKit.ready")}
@@ -124,6 +131,7 @@ export function PausePanel({ onResume, onQuit }: { onResume: () => void; onQuit?
 export interface ResultLine {
   readonly key: string;
   readonly text: string;
+  /** Where it belonged, as a coloured tag; empty when the text says it all. */
   readonly bin: string;
   readonly binIndex: number;
   readonly why: string;
@@ -184,12 +192,14 @@ export function ResultPanel({
               <li key={line.key} data-outcome={line.outcome}>
                 <p>
                   <b>{line.text}</b>
-                  <span
-                    className="game-frame__bin-tag"
-                    style={{ background: binColour(line.binIndex), color: BIN_INK }}
-                  >
-                    {line.bin}
-                  </span>
+                  {line.bin ? (
+                    <span
+                      className="game-frame__bin-tag"
+                      style={{ background: binColour(line.binIndex), color: BIN_INK }}
+                    >
+                      {line.bin}
+                    </span>
+                  ) : null}
                 </p>
                 <p>{line.why}</p>
                 <small>

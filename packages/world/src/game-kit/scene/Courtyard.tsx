@@ -134,7 +134,7 @@ function Terrace({ baskets }: { baskets: number }) {
         color={TOY.soil}
       />
       {/* Rails beside the baskets keep the edge readable at a glance. */}
-      {basketSpots(baskets).map(({ x }) => (
+      {(baskets ? basketSpots(baskets) : []).map(({ x }) => (
         <Block
           key={x}
           position={[x, top + 0.02, COURTYARD.basketZ]}
@@ -176,6 +176,7 @@ function Frame() {
   );
 }
 
+/** `baskets` is how many answer baskets stand on the terrace; 0 for a game without them. */
 export function Courtyard({ baskets }: { baskets: number }) {
   const soil = useMemo(() => wax(TOY.soil), []);
   const grass = useMemo(() => wax(TOY.grass), []);

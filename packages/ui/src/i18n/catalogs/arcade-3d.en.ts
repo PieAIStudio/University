@@ -4,6 +4,7 @@ export const messages: Record<keyof typeof zh, string> = {
   "arcade3d.intro":
     "Fly, catch and clear word rows. The little building blocks are really in play.",
   "arcade3d.courtyard": "Courtyard Catch · new",
+  "arcade3d.links": "Link-up · new",
   "arcade3d.invaders": "Twin-tool intercept · 3D",
   "arcade3d.stack": "Falling sorter · 3D",
   "arcade3d.cloze-tetris": "Word-row clear · 3D",

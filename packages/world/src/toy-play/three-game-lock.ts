@@ -15,7 +15,7 @@
  *
  * It costs nothing at runtime: every line below is erased by the compiler.
  */
-import type { ThreeGame } from "@pieai/university-ui/play-catalog/three-games.js";
+import type { KitThreeGame, ThreeGame } from "@pieai/university-ui/play-catalog/three-games.js";
 
 import type { ToyMode } from "./material.js";
 import type { WorkshopMode } from "./workshop-engine.js";
@@ -24,7 +24,7 @@ import type { WorkshopMode } from "./workshop-engine.js";
  * Every mode this package can actually play: the two old engines, plus the
  * games assembled from the kit (`game-kit/`, ADR-0011).
  */
-export type ImplementedThreeGame = ToyMode | WorkshopMode | "courtyard";
+export type ImplementedThreeGame = ToyMode | WorkshopMode | KitThreeGame;
 
 /**
  * Registered identities with copy but no scene, as of 2026-09-21.

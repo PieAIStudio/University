@@ -109,6 +109,30 @@ export function ScoreChip({ score, combo }: { score: number; combo: number }) {
   );
 }
 
+/**
+ * Time left for the thing on the clock (a link before the tide, a word before
+ * the snake is hungry), as a slim bar under the question. The scene shows the
+ * same clock in the world; this is the one a screen reader and a glance can
+ * read. It sits under the question rather than among the chips, which have no
+ * room left on a phone.
+ */
+export function ClockMeter({ fraction, label }: { fraction: number; label: string }) {
+  const value = Math.round(Math.max(0, Math.min(1, fraction)) * 100);
+  return (
+    <span
+      className="game-frame__clock"
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={value}
+      data-low={value < 25 ? "true" : undefined}
+    >
+      <span className="game-frame__clock-fill" style={{ inlineSize: `${value}%` }} />
+    </span>
+  );
+}
+
 export function ChipGroup({ children }: { children: ReactNode }) {
   return <div className="game-frame__chips">{children}</div>;
 }

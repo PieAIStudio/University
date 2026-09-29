@@ -7,19 +7,13 @@ import {
 } from "@pieai/university-core";
 
 import {
-  applyUpgrade,
-  availableUpgrades,
-  createRun,
-  endRound,
-  logOutcome,
-  loseHeart,
-  scoreCorrected,
-  scoreRight,
-  type LogEntry,
-  type RunState,
-  type UpgradeId,
-} from "./run.js";
-import { GameSession, seededRandom, shuffled } from "./session.js";
+  RoundGame,
+  type PlayRound,
+  type RoundAction,
+  type RoundGameState,
+  type RoundNotice,
+  type RoundPhase,
+} from "./round-game.js";
 
 /**
  * 庭院拦截 — the first game assembled from the kit (ADR-0011).
@@ -39,19 +33,9 @@ export const HAND = { x: 0, y: 1.2, z: 2.1 } as const;
 export const WINDUP_SECONDS = 0.18;
 export const FLIGHT_SECONDS = 0.36;
 const THROW_COOLDOWN = 0.22;
-const COUNTDOWN_SECONDS = 3;
-/** Main rounds per run, before the review round. */
-export const MAX_ROUNDS = 6;
 const SHORT_ITEM = 10;
 
-export type InterceptPhase =
-  | "intro"
-  | "briefing"
-  | "countdown"
-  | "playing"
-  | "upgrade"
-  | "won"
-  | "lost";
+export type InterceptPhase = RoundPhase;
 
 export interface Boat {
   readonly id: number;
@@ -105,66 +89,26 @@ export type InterceptEvent =
       readonly kind: "docked";
       readonly boatId: number;
       readonly shielded: boolean;
-    }
-  | { readonly id: number; readonly kind: "round-clear" }
-  | { readonly id: number; readonly kind: "lost" }
-  | { readonly id: number; readonly kind: "won" };
+    };
 
 /** What the frame says after an event; the item's own words, never invented ones. */
-export interface InterceptNotice {
-  readonly id: number;
-  readonly kind: "right" | "corrected" | "wrong" | "docked" | "shield";
-  readonly itemId: string;
-  /** The lesson's reason: `tempting.whyNot` when the learner took the tempting bin, else `why`. */
-  readonly reason: string;
-  readonly points: number;
-}
+export type InterceptNotice = RoundNotice;
+export type InterceptRound = PlayRound<GameRound>;
 
-export interface InterceptRound {
-  readonly round: GameRound;
-  /** A review round replays what went wrong earlier; no upgrade follows it. */
-  readonly review: boolean;
-  readonly itemIds: readonly string[];
-}
-
-export interface InterceptState {
-  phase: InterceptPhase;
-  rounds: InterceptRound[];
-  roundIndex: number;
-  /** Main rounds in this run, excluding review. */
-  mainRounds: number;
+export interface InterceptState extends RoundGameState<GameRound, InterceptEvent> {
   queue: string[];
   boats: Boat[];
   balls: Ball[];
-  run: RunState;
-  log: LogEntry[];
-  offered: UpgradeId[];
-  countdown: number;
   spawnIn: number;
   cooldown: number;
   /** Chosen by the learner; otherwise the boat nearest the dock. */
   targetId: number | null;
-  /** Player-chosen gentler pace, for the whole run. */
-  calm: boolean;
-  events: InterceptEvent[];
-  notice: InterceptNotice | null;
-  elapsed: number;
-  serial: number;
 }
 
 export type InterceptAction =
-  | { readonly type: "start"; readonly calm?: boolean }
-  | { readonly type: "ready" }
+  | RoundAction
   | { readonly type: "throw"; readonly binId: string }
-  | { readonly type: "target"; readonly boatId: number }
-  | { readonly type: "upgrade"; readonly id: UpgradeId };
-
-/** An event before the session numbers it (a distributive `Omit`). */
-type EventInput = InterceptEvent extends infer E
-  ? E extends InterceptEvent
-    ? Omit<E, "id">
-    : never
-  : never;
+  | { readonly type: "target"; readonly boatId: number };
 
 /** Reading room in CJK characters: an English letter is half of one. */
 const chars = (text: string) => displayWidth(text) / 2;
@@ -175,51 +119,23 @@ export function crossingSeconds(text: string, roundIndex: number, pace: number):
   return (reading * (1 / (1 + 0.06 * roundIndex))) / pace;
 }
 
-export class InterceptSession extends GameSession<InterceptState, InterceptAction> {
-  private readonly random: () => number;
+export class InterceptSession extends RoundGame<
+  GameRound,
+  InterceptEvent,
+  InterceptState,
+  Exclude<InterceptAction, RoundAction>
+> {
   private readonly sorts = new Map<string, SortState>();
-  private readonly byRound = new Map<string, GameRound>();
 
-  constructor(
-    rounds: readonly GameRound[],
-    readonly seed = 1,
-  ) {
-    const random = seededRandom(seed);
-    const main = rounds.slice(0, MAX_ROUNDS).map((round) => ({
-      round,
-      review: false,
-      itemIds: shuffled(
-        round.items.map((item) => item.id),
-        random,
-      ),
-    }));
-    super({
-      phase: "intro",
-      rounds: main,
-      roundIndex: 0,
-      mainRounds: main.length,
+  constructor(rounds: readonly GameRound[], seed = 1) {
+    super(rounds, seed, {
       queue: [],
       boats: [],
       balls: [],
-      run: createRun(),
-      log: [],
-      offered: [],
-      countdown: 0,
       spawnIn: 0,
       cooldown: 0,
       targetId: null,
-      calm: false,
-      events: [],
-      notice: null,
-      elapsed: 0,
-      serial: 0,
     });
-    this.random = random;
-    for (const { round } of main) this.byRound.set(round.id, round);
-  }
-
-  currentRound(): InterceptRound | null {
-    return this.state.rounds[this.state.roundIndex] ?? null;
   }
 
   itemOf(itemId: string) {
@@ -227,65 +143,30 @@ export class InterceptSession extends GameSession<InterceptState, InterceptActio
     return round?.items.find((item) => item.id === itemId) ?? null;
   }
 
-  protected running(state: InterceptState) {
-    return state.phase === "countdown" || state.phase === "playing";
-  }
-
-  private emit(event: EventInput) {
+  protected setUp(current: InterceptRound) {
     const s = this.state;
-    s.events.push({ ...event, id: ++s.serial } as InterceptEvent);
-    if (s.events.length > 24) s.events.splice(0, s.events.length - 24);
-  }
-
-  private say(notice: Omit<InterceptNotice, "id">) {
-    this.state.notice = { ...notice, id: ++this.state.serial };
-  }
-
-  private pace() {
-    const s = this.state;
-    return (s.calm ? 0.7 : 1) * s.run.slowNext;
-  }
-
-  private brief() {
-    const s = this.state;
-    const current = this.currentRound()!;
-    s.phase = "briefing";
     s.queue = [...current.itemIds];
     s.boats = [];
     s.balls = [];
     s.targetId = null;
-    s.notice = null;
+    s.spawnIn = 0;
     if (!this.sorts.has(current.round.id) || current.review)
       this.sorts.set(current.round.id, createSortState());
   }
 
-  protected apply(action: InterceptAction) {
+  protected input(action: Exclude<InterceptAction, RoundAction>) {
     const s = this.state;
-    if (action.type === "start" && s.phase === "intro") {
-      s.calm = Boolean(action.calm);
-      if (!s.rounds.length) return;
-      this.brief();
-      return;
-    }
-    if (action.type === "ready" && s.phase === "briefing") {
-      s.phase = "countdown";
-      s.countdown = COUNTDOWN_SECONDS;
-      return;
-    }
-    if (action.type === "upgrade" && s.phase === "upgrade" && s.offered.includes(action.id)) {
-      applyUpgrade(s.run, action.id);
-      s.offered = [];
-      s.roundIndex += 1;
-      this.brief();
-      return;
-    }
-    if (s.phase !== "playing") return;
     if (action.type === "target") {
       const boat = s.boats.find((b) => b.id === action.boatId && b.state === "sailing");
       if (boat) s.targetId = boat.id;
       return;
     }
-    if (action.type === "throw") this.throwAt(action.binId);
+    this.throwAt(action.binId);
+  }
+
+  protected roundDone() {
+    const s = this.state;
+    return !s.queue.length && s.boats.every((b) => b.state !== "sailing") && !s.balls.length;
   }
 
   /** The chosen boat if it is still free, else the free boat nearest the dock. */
@@ -318,31 +199,14 @@ export class InterceptSession extends GameSession<InterceptState, InterceptActio
     this.emit({ kind: "throw", binId, boatId: boat.id });
   }
 
-  protected step(dt: number) {
+  protected play(dt: number) {
     const s = this.state;
-    s.elapsed += dt;
-    if (s.phase === "countdown") {
-      s.countdown -= dt;
-      if (s.countdown <= 0) {
-        s.countdown = 0;
-        s.phase = "playing";
-        s.spawnIn = 0;
-      }
-      return;
-    }
     s.cooldown = Math.max(0, s.cooldown - dt);
     this.spawn(dt);
     this.sail(dt);
     this.fly(dt);
     for (const boat of s.boats) if (boat.state !== "sailing") boat.gone += dt;
     s.boats = s.boats.filter((boat) => boat.state === "sailing" || boat.gone < 1.2);
-    if (s.run.hearts <= 0) {
-      s.phase = "lost";
-      this.emit({ kind: "lost" });
-      return;
-    }
-    if (!s.queue.length && s.boats.every((b) => b.state !== "sailing") && !s.balls.length)
-      this.finishRound();
   }
 
   private spawn(dt: number) {
@@ -418,9 +282,7 @@ export class InterceptSession extends GameSession<InterceptState, InterceptActio
   }
 
   private resolve(boat: Boat, binId: string) {
-    const s = this.state;
-    const current = this.currentRound()!;
-    const round = current.round;
+    const round = this.currentRound()!.round;
     const rules = {
       buckets: round.bins,
       items: round.items.map((item) => ({
@@ -437,89 +299,23 @@ export class InterceptSession extends GameSession<InterceptState, InterceptActio
     if (verdict.kind === "right") {
       this.sorts.set(round.id, verdict.state);
       boat.state = "sunk";
-      const first = !boat.revealed;
-      const points = first ? scoreRight(s.run, s.run.bonusNext) : scoreCorrected(s.run);
-      logOutcome(
-        s.log,
-        round.id,
-        item.id,
-        first && !current.review ? "first" : "corrected",
-        current.review,
-      );
+      const points = this.scored(item.id, !boat.revealed, item.why);
       this.emit({ kind: "right", boatId: boat.id, binId, points });
-      this.say({ kind: first ? "right" : "corrected", itemId: item.id, reason: item.why, points });
       return;
     }
     if (verdict.kind !== "wrong") return;
     this.sorts.set(round.id, verdict.state);
     boat.revealed = true;
-    const took = loseHeart(s.run);
-    logOutcome(s.log, round.id, item.id, "missed", current.review);
-    this.emit({ kind: "wrong", boatId: boat.id, binId, shielded: took === "shield" });
-    this.say({
-      kind: took === "shield" ? "shield" : "wrong",
-      itemId: item.id,
-      reason: verdict.whyNot ?? item.why,
-      points: 0,
-    });
+    const shielded = this.missed(item.id, verdict.whyNot ?? item.why, "wrong");
+    this.emit({ kind: "wrong", boatId: boat.id, binId, shielded });
   }
 
   private dock(boat: Boat) {
-    const s = this.state;
-    const current = this.currentRound()!;
-    const round = current.round;
     boat.state = "docked";
-    const took = loseHeart(s.run);
-    logOutcome(s.log, round.id, boat.itemId, "missed", current.review);
-    const item = round.items.find((candidate) => candidate.id === boat.itemId)!;
-    this.emit({ kind: "docked", boatId: boat.id, shielded: took === "shield" });
-    this.say({
-      kind: took === "shield" ? "shield" : "docked",
-      itemId: item.id,
-      reason: item.why,
-      points: 0,
-    });
-  }
-
-  private finishRound() {
-    const s = this.state;
-    const finished = this.currentRound()!;
-    endRound(s.run);
-    this.emit({ kind: "round-clear" });
-    if (!finished.review && s.roundIndex === s.mainRounds - 1)
-      s.rounds.push(...this.reviewRounds());
-    if (s.roundIndex >= s.rounds.length - 1) {
-      s.phase = "won";
-      this.emit({ kind: "won" });
-      return;
-    }
-    const next = s.rounds[s.roundIndex + 1]!;
-    if (next.review) {
-      s.roundIndex += 1;
-      this.brief();
-      return;
-    }
-    s.phase = "upgrade";
-    s.offered = shuffled(availableUpgrades(s.run), this.random).slice(0, 3);
-  }
-
-  /** Everything not right the first time comes back once, grouped by its round. */
-  private reviewRounds(): InterceptRound[] {
-    const s = this.state;
-    const result: InterceptRound[] = [];
-    for (const { round } of s.rounds.slice(0, s.mainRounds)) {
-      const again = round.items
-        .map((item) => item.id)
-        .filter((id) =>
-          s.log.some((e) => e.roundId === round.id && e.itemId === id && e.outcome !== "first"),
-        );
-      if (again.length) result.push({ round, review: true, itemIds: shuffled(again, this.random) });
-    }
-    return result;
-  }
-
-  /** The round a logged item belongs to, for the review sheet. */
-  roundOf(roundId: string): GameRound | null {
-    return this.byRound.get(roundId) ?? null;
+    const item = this.currentRound()!.round.items.find(
+      (candidate) => candidate.id === boat.itemId,
+    )!;
+    const shielded = this.missed(item.id, item.why, "escaped");
+    this.emit({ kind: "docked", boatId: boat.id, shielded });
   }
 }

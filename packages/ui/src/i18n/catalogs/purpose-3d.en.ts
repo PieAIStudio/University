@@ -22,6 +22,8 @@ export const messages = {
   "gallery.three.rank": "Reorder action cars and run a process that respects its prerequisites",
   "gallery.three.courtyard":
     "Paper boats bring sentences from your lessons; your character throws each into the right basket",
+  "gallery.three.links":
+    "Stones in the pond carry things from your lessons; bridge each pair that connects",
   "gallery.three.kit": "Kit edition · questions from your lessons, your character plays",
   "gallery.three.retained": "Retained garden edition · Still playable",
   "gallery.three.new": "New scene · Built for its game",
