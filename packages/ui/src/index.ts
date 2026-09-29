@@ -1,3 +1,6 @@
+export { CosmeticsPanel } from "./cosmetics/CosmeticsPanel.js";
+export { CosmeticAppearanceProvider } from "./cosmetics/appearance.js";
+
 /**
  * The learning surface, as one import.
  *

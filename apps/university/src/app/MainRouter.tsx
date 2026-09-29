@@ -81,6 +81,7 @@ import {
 import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
+const WardrobeScreen = lazy(() => import("../screens/WardrobeScreen.js"));
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
 const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
 const PropFinishRoute = lazy(() => import("../play-catalog/PropFinishRoute.js"));
@@ -115,6 +116,7 @@ interface MainRouterProps {
   readonly reviewReminderDismissedFor: string | null;
   readonly onDismissReviewReminder: (key: string) => void;
   readonly avatarRecipe: AvatarRecipe | null;
+  readonly avatarEditingRecipe: AvatarRecipe | null;
   readonly avatarSignedIn: boolean;
   readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
   readonly onWorthwhileProgress?: () => void;
@@ -172,6 +174,7 @@ export function MainRouter({
   reviewReminderDismissedFor,
   onDismissReviewReminder,
   avatarRecipe,
+  avatarEditingRecipe,
   avatarSignedIn,
   onAvatarRecipeChange,
   onWorthwhileProgress,
@@ -284,10 +287,15 @@ export function MainRouter({
           )}
         </Suspense>
       ) : null}
+      {view.kind === "wardrobe" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <WardrobeScreen avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} onOpen={setView} />
+        </Suspense>
+      ) : null}
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           <AvatarLab
-            avatarRecipe={avatarRecipe}
+            avatarRecipe={avatarEditingRecipe}
             onRecipeChange={onAvatarRecipeChange}
             onOpen={setView}
           />
@@ -571,6 +579,7 @@ export function MainRouter({
       ) : null}
       {view.kind === "me" ? (
         <ProfileScreen
+          onOpenWardrobe={() => setView({ kind: "wardrobe" })}
           avatar={
             <Suspense
               fallback={

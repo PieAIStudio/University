@@ -47,7 +47,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 
-import { compileAnswerKey } from "@pieai/university-core";
+import { compileAnswerKey, cosmeticRewardRules } from "@pieai/university-core";
 import {
   evidenceCount,
   evidenceLocatorsIn,
@@ -446,6 +446,16 @@ writeFileSync(join(contentRoot, "manifest.json"), `${JSON.stringify(manifest, nu
 // The manifest is human-reviewed and stays pretty; shelf is machine-only and
 // is kept compact so its projection does not spend bytes on indentation.
 writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf)}\n`);
+// Registration belongs to an authorized Backend rollout, never this importer.
+// Emit only the same published catalogue's identity/revision metadata.
+const cosmeticRules = cosmeticRewardRules(shelf.studies.flatMap((study) =>
+  study.courses.map((course) => ({ ...course, studyId: study.id })),
+));
+writeFileSync(join(contentRoot, "cosmetic-rewards.json"), `${JSON.stringify({
+  version: 1,
+  manifestId: createHash("sha256").update(JSON.stringify(cosmeticRules)).digest("hex"),
+  rules: cosmeticRules,
+})}\n`);
 // The manifest is the tracked half of this: it records exactly which package
 // hash each course came from, so a fresh clone can reproduce the import and a
 // review can be recorded against a version rather than a name.

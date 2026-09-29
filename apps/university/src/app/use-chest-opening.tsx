@@ -52,6 +52,7 @@ interface Flow {
   readonly owner: object | string | null;
   readonly knowledgeCards: readonly KnowledgeAlbumCard[];
   readonly completedCourse?: string;
+  readonly completionAvatar?: ReactNode;
   readonly source:
     | { readonly kind: "lesson"; readonly locator: LessonRef; readonly lessonNumber: number }
     | { readonly kind: "weekly"; readonly week: string; readonly onDone?: () => void };
@@ -80,6 +81,7 @@ export function useChestOpening({
   readAlbum,
   courseTitle,
   guestAdoption,
+  completionAvatar,
 }: {
   /** The lesson being read now, or null. The baseline is taken when it changes. */
   readonly lessonOpen: LessonRef | null;
@@ -88,6 +90,7 @@ export function useChestOpening({
   readonly onLessonDone?: (locator: LessonRef) => void;
   readonly readAlbum?: () => KnowledgeAlbum | null;
   readonly courseTitle?: string;
+  readonly completionAvatar?: ReactNode;
   readonly guestAdoption?: GuestAdoption;
 }): {
   readonly active: boolean;
@@ -193,7 +196,7 @@ export function useChestOpening({
       knowledge &&
       courseTitle &&
       knowledge.coursesFinished > before.knowledge.coursesFinished
-        ? { completedCourse: courseTitle }
+        ? { completedCourse: courseTitle, completionAvatar }
         : {}),
       source: { kind: "lesson", locator, lessonNumber: index + 1 },
       from: tier,
@@ -340,6 +343,7 @@ export function useChestOpening({
         completion={
           flow.completedCourse ? (
             <div className="course-completion-card" data-course-completion>
+              {flow.completionAvatar}
               <EmblemImage kind="badge" id="first-course" size={112} />
               <p>{t.t("album.courseComplete", { title: flow.completedCourse })}</p>
             </div>

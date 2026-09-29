@@ -1,5 +1,6 @@
 import { useI18n } from "../../i18n/index.js";
 import type { ReactNode } from "react";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import { LevelProgress } from "../screens/LevelProgress.js";
 
@@ -26,6 +27,7 @@ export function ProfileScreen({
   badges,
   nextHref = "/",
   reviewCardCount = 0,
+  onOpenWardrobe,
 }: {
   readonly avatar?: ReactNode;
   /** Quiet account door. Absent when a shell has not wired identity yet. */
@@ -38,11 +40,17 @@ export function ProfileScreen({
   readonly badges?: ReactNode;
   readonly nextHref?: string;
   readonly reviewCardCount?: number;
+  readonly onOpenWardrobe?: () => void;
 }) {
   const interfaceTranslator = useI18n();
   return (
     <div className="profile-screen">
       <div className="profile-screen__hero">{avatar}</div>
+      {onOpenWardrobe ? (
+        <GameButton variant="secondary" static onClick={onOpenWardrobe}>
+          {interfaceTranslator.t("cosmetics.title")}
+        </GameButton>
+      ) : null}
       {totalXp === undefined ? null : <LevelProgress totalXp={totalXp} />}
       {account}
       <dl className="profile-screen__stats">

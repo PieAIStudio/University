@@ -13,6 +13,8 @@ import {
 } from "@pieai/university-core";
 import { createPaymentOrderId, createSupabasePaymentRemote } from "./payment.js";
 
+export { createSupabaseCosmeticsRemote } from "./cosmetics.js";
+
 export type {
   AuthAction,
   AuthEvent,

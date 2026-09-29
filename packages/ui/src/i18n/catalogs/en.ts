@@ -13,6 +13,7 @@ import { messages as readingSettings } from "./reading-settings.en.js";
 import { messages as productWelcome } from "./product-welcome.en.js";
 import { messages as journeyReturn } from "./journey-return.en.js";
 import { messages as knowledgeAlbum } from "./knowledge-album.en.js";
+import { messages as cosmetics } from "./cosmetics.en.js";
 import { messages as coreMessages } from "./en-core.js";
 import { messages as realitySources } from "./reality-sources.en.js";
 import { messages as accountFailures } from "./account-failures.en.js";
@@ -62,6 +63,7 @@ export const messages = {
   ...productWelcome,
   ...journeyReturn,
   ...knowledgeAlbum,
+  ...cosmetics,
   ...productNavigation,
   ...productBilling,
   ...productSave,

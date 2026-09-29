@@ -113,6 +113,14 @@ export {
 };
 
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
+  "cosmetic-ornament": {
+    technique:
+      "One merged vertex-coloured mesh on qualified existing course ground, selected by the account's server receipt. No new field, animation loop or canvas.",
+    source: "course/cosmetic-ornament.ts; product-owned geometry, existing emblem palette.",
+    budget:
+      "At most one equipped ornament per course, <= 240 triangles, one draw, no textures. None in distant world/planet projections.",
+    rejected: [],
+  },
   terrain: {
     technique:
       "Course view: one lathe-style BufferGeometry from IslandBlueprint: fifty-two course " +

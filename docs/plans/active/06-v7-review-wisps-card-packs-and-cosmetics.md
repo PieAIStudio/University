@@ -100,3 +100,68 @@ the complete gate cannot go green; never force-push or rewrite history.
 ## 7 Report back
 
 Gate numbers verbatim, the migration file and whether it was applied, captures.
+
+## 8 Local candidate and remaining release boundary
+
+The in-flight University implementation has been resumed, not replaced. It has
+one strict cosmetics transport contract, a verified-account-scoped cached receipt
+and durable operation outbox, a Supabase adapter, the existing UIKit pack cards,
+a wardrobe at `/wardrobe`, and account-selected card/hat/island presentation.
+A request deadline means the outcome is unknown; retry keeps the exact operation
+id. Malformed or old-account receipts cannot spend another pack or enter the
+current account. Timers are supplied by the host, keeping core platform-neutral.
+The avatar editor still edits the base recipe, not an equipped overlay.
+
+`COSMETICS_SERVICE_RELEASED` remains **false**. The actual product honestly shows
+that packs are not open. Browser fixtures use fixed, memory-only transport
+receipts; they prove interaction, not server randomness, RLS, remote migration,
+real learning grants or cross-device acceptance. They never enable the product
+switch, write a real account or consume a paid service.
+
+The current continuation could not discover the owning SwimmerBackend project:
+that plugin call was blocked by the tool safety layer. No alternative access path
+was used to bypass it. A migration's presence or prior verification in that
+repository is therefore **not established here**, and no remote apply occurred.
+Do not count frontend mocks as the required server tests.
+
+Before release, the Backend owner must verify its actual migration/RPC and run
+server-side odds, 10/50-pack guarantees, duplicate exchange, client-outcome
+rejection, owner isolation, atomic retries and concurrent-device tests. The same
+review must bind the published course metadata to all approved reward amounts:
+blue/purple one pack, gold three, first-try upgrades, purple avatar awards,
+weekly/streak awards, completed sets and the extra all-shining-set reward.
+`cosmetic-rewards.json` is registration input only, **not proof these grants work**.
+The present metadata projection does not yet represent the extra all-shining
+award; complete its contract with the real Backend implementation before enabling.
+Owner approval is still separately required for remote migration/registration.
+
+The missing explicit concept links in the currently published courses remain
+with the [existing authoring request](../../reference/execution/knowledge-card-authoring-request.md).
+No fabricated set is substituted for them and no course was edited or published.
+Task 06 stays active until its backend acceptance is real; independent task 08
+may proceed after the local candidate's ordinary gates and push are green.
+
+Local candidate acceptance (2026-09-30, not backend acceptance):
+
+- `pnpm verify`: `VERIFY_EXIT=0`, including all workspace types, unit suites,
+  both builds, 64 shared stylesheets, content and documentation gates. Receipt:
+  `SCRATCH/v7-execution/cosmetics-verify-r3.log`. The earlier attempts failed
+  on two lint findings and the new CSS export, both corrected rather than waived.
+- Actual closed product, both modes at 1440/390px, plus synthetic pack/account
+  presentation and real due-card review: `7 passed (1.5m)`, `E2E_EXIT=0`,
+  `cosmetics-browser-r2.log`. The real first lesson's three review cards were
+  recalled through the existing UI and FSRS; its wisp disappeared on return.
+- Final scene readiness and disposal checks: `2 passed (30.6s)`, `E2E_EXIT=0`,
+  `cosmetics-browser-r3.log`. Switching accounts removed the actual equipped
+  mesh and disposed both its geometry and material. A lost transport response
+  recovered the identical operation rather than opening another pack.
+- Screenshots inspected under `SCRATCH/e2e/cosmetics/`: closed phone wardrobe,
+  ordered rarest reveal and the actual course renderer's grounded crystal.
+  Synthetic filenames describe fixed fixture inventory, not earned items.
+  The close-up changes only the inspector camera, never object positions.
+- No migration/registration/release switch, real-account operation, paid call,
+  course publication, production deployment or physical-device test occurred.
+
+Ordinary pre-push acceptance is still the boundary for saving this candidate
+remotely. Its terminal receipt is retained beside these logs; a local verify
+alone must not be described as a successful push.

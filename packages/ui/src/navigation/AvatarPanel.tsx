@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { StudyWeekDay } from "@pieai/university-core";
 
 import { useI18n } from "../i18n/index.js";
@@ -35,6 +36,7 @@ export function AvatarPanel({
   today,
   membership,
   rest,
+  onOpenWardrobe,
 }: {
   readonly avatar: ReactNode;
   /** 0 to 1: today's goal; the ring turns gold at 1. */
@@ -45,6 +47,7 @@ export function AvatarPanel({
   readonly week: readonly StudyWeekDay[];
   readonly today: { readonly done: number; readonly goal: number };
   readonly membership?: { readonly href: string };
+  readonly onOpenWardrobe?: () => void;
   readonly rest?: { readonly balance: number; readonly covered: number };
 }) {
   const interfaceTranslator = useI18n();
@@ -123,6 +126,16 @@ export function AvatarPanel({
           <p>{t("journey.rest.rules")}</p>
           <p>{t("journey.rest.covered", { count: rest.covered })}</p>
         </details>
+      ) : null}
+      {onOpenWardrobe ? (
+        <GameButton
+          className="avatar-panel__wardrobe"
+          variant="ghost"
+          static
+          onClick={onOpenWardrobe}
+        >
+          {t("cosmetics.title")}
+        </GameButton>
       ) : null}
       {membership ? (
         <a className="avatar-panel__membership" href={membership.href}>

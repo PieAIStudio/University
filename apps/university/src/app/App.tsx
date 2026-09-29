@@ -148,6 +148,9 @@ import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../learner/WorldSourceControls";
 import { useAnalyticsPorts } from "./analytics-ports";
 import { useAvatarPreferences } from "./avatar-preferences";
+import { useCosmetics } from "../cosmetics/use-cosmetics.js";
+import { CosmeticAppearanceProvider } from "@pieai/university-ui";
+import { AvatarChip, cosmeticAvatarRecipe } from "@pieai/university-world/avatar.js";
 import { useSkipTest } from "./skip-test.js";
 import { useCoursePathActions } from "./course-path-actions";
 import { useIslandLookSource, useIslandLookView } from "./island-look-view";
@@ -179,10 +182,15 @@ export function App() {
     identityPort.status,
   );
   const avatarSignedIn = identityStatus.kind === "anonymous" || identityStatus.kind === "signed_in";
-  const { avatarRecipe, saveAvatarRecipe } = useAvatarPreferences({
+  const { avatarRecipe: baseAvatarRecipe, saveAvatarRecipe } = useAvatarPreferences({
     accountAvatarRecipe: progress.account.preferences.avatarRecipe,
     signedIn: avatarSignedIn,
   });
+  const cosmeticData = useCosmetics();
+  const avatarRecipe = useMemo(
+    () => cosmeticAvatarRecipe(baseAvatarRecipe, cosmeticData?.equipped.avatar),
+    [baseAvatarRecipe, cosmeticData?.equipped.avatar],
+  );
   useEffect(
     () =>
       progressPort.subscribe(() =>
@@ -480,6 +488,10 @@ export function App() {
     lessons,
     guardName: (role) => guardOf(role)?.name ?? "",
     onLessonDone: journey.afterLesson,
+    completionAvatar:
+      cosmeticData && avatarRecipe ? (
+        <AvatarChip recipe={avatarRecipe} signedIn={avatarSignedIn} size={80} />
+      ) : null,
     readAlbum: knowledge.read,
     courseTitle: course?.title,
   });
@@ -1156,6 +1168,7 @@ export function App() {
                   );
                 }}
                 reviewDue={reviewDue}
+                cosmeticOrnamentId={cosmeticData?.equipped.island}
                 weeklyBoss={weekly.scene}
                 onPickWeeklyBoss={weekly.open}
               />
@@ -1503,6 +1516,10 @@ export function App() {
 
   const renderAvatarPanel = (inDialog = false) => (
     <AvatarPanel
+      onOpenWardrobe={() => {
+        setAvatarPanelOpen(null);
+        setView({ kind: "wardrobe" });
+      }}
       avatar={
         <RailIdentity
           recipe={avatarRecipe}
@@ -1534,66 +1551,69 @@ export function App() {
     />
   );
   const main = (
-    <MainRouter
-      album={knowledge.album}
-      contentPort={contentPort}
-      sceneAttempt={sceneAttempt}
-      planetReadiness={{
-        dataReady: !waitingForData,
-        onSceneReady,
-        onSceneBusy,
-        onSceneProgress,
-        onContextLost,
-        onContextRestored,
-        onRendererUnavailable,
-      }}
-      course={course}
-      focusedStudyId={focusedStudyId}
-      focusStudy={focusStudy}
-      grewFrom={grewFrom}
-      chestOverlay={openingOnMap ? chest.overlay : null}
-      avatarRecipe={avatarRecipe}
-      avatarSignedIn={avatarSignedIn}
-      onAvatarRecipeChange={saveAvatarRecipe}
-      onWorthwhileProgress={onWorthwhileProgress}
-      reviewReminderDismissedFor={reviewReminderDismissedFor}
-      onDismissReviewReminder={setReviewReminderDismissedFor}
-      identityPort={analyticsIdentityPort}
-      authPort={analyticsAuthPort}
-      accountFocusRequest={accountFocusRequest}
-      paymentPort={analyticsPaymentPort}
-      mistakes={mistakes}
-      nextUpProgress={nextUpProgress}
-      pathOverlay={pathOverlay}
-      pathUnit={pathUnit}
-      planetStudies={planetStudies}
-      planetDomainCatalog={planetDomainCatalog}
-      selectedPlanetDomainId={selectedPlanetDomainId}
-      selectedPlanetStudyId={planetStudyChoice}
-      onEnterPlanetStudy={enterPlanetStudy}
-      onClearPlanetPick={clearPlanetPick}
-      onSelectPlanetDomain={selectPlanetDomain}
-      onSelectPlanetStudy={selectPlanetStudy}
-      presencePort={presencePort}
-      reviewReminderPort={reviewReminderPort}
-      profileStats={profileStats}
-      progress={progress}
-      progressPort={progressPort}
-      setNavigationFocus={setNavigationFocus}
-      setPathOverlay={setPathOverlay}
-      setView={setView}
-      shelf={shelf}
-      studies={studies}
-      nodes={nodes}
-      world={world}
-      courseProgress={courseProgress}
-      stage={stage}
-      studyNames={studyNames}
-      todayNode={todayNode}
-      todaySection={todaySection}
-      uncorrectedMistakeCount={uncorrectedMistakeCount}
-      view={view}
-    />
+    <CosmeticAppearanceProvider equipped={cosmeticData?.equipped}>
+      <MainRouter
+        album={knowledge.album}
+        contentPort={contentPort}
+        sceneAttempt={sceneAttempt}
+        planetReadiness={{
+          dataReady: !waitingForData,
+          onSceneReady,
+          onSceneBusy,
+          onSceneProgress,
+          onContextLost,
+          onContextRestored,
+          onRendererUnavailable,
+        }}
+        course={course}
+        focusedStudyId={focusedStudyId}
+        focusStudy={focusStudy}
+        grewFrom={grewFrom}
+        chestOverlay={openingOnMap ? chest.overlay : null}
+        avatarEditingRecipe={baseAvatarRecipe}
+        avatarRecipe={avatarRecipe}
+        avatarSignedIn={avatarSignedIn}
+        onAvatarRecipeChange={saveAvatarRecipe}
+        onWorthwhileProgress={onWorthwhileProgress}
+        reviewReminderDismissedFor={reviewReminderDismissedFor}
+        onDismissReviewReminder={setReviewReminderDismissedFor}
+        identityPort={analyticsIdentityPort}
+        authPort={analyticsAuthPort}
+        accountFocusRequest={accountFocusRequest}
+        paymentPort={analyticsPaymentPort}
+        mistakes={mistakes}
+        nextUpProgress={nextUpProgress}
+        pathOverlay={pathOverlay}
+        pathUnit={pathUnit}
+        planetStudies={planetStudies}
+        planetDomainCatalog={planetDomainCatalog}
+        selectedPlanetDomainId={selectedPlanetDomainId}
+        selectedPlanetStudyId={planetStudyChoice}
+        onEnterPlanetStudy={enterPlanetStudy}
+        onClearPlanetPick={clearPlanetPick}
+        onSelectPlanetDomain={selectPlanetDomain}
+        onSelectPlanetStudy={selectPlanetStudy}
+        presencePort={presencePort}
+        reviewReminderPort={reviewReminderPort}
+        profileStats={profileStats}
+        progress={progress}
+        progressPort={progressPort}
+        setNavigationFocus={setNavigationFocus}
+        setPathOverlay={setPathOverlay}
+        setView={setView}
+        shelf={shelf}
+        studies={studies}
+        nodes={nodes}
+        world={world}
+        courseProgress={courseProgress}
+        stage={stage}
+        studyNames={studyNames}
+        todayNode={todayNode}
+        todaySection={todaySection}
+        uncorrectedMistakeCount={uncorrectedMistakeCount}
+        view={view}
+      />
+    </CosmeticAppearanceProvider>
   );
   // The avatar panel reads the record for today; the rail re-renders with it.
   const panelNow = Date.now();

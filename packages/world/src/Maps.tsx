@@ -102,6 +102,12 @@ import { useBossStrike, type WeeklyBossScene } from "./course/boss-strike.js";
 import { planWeeklyRoam, weeklyBossAnchor } from "./course/weekly-roam.js";
 import { devWeeklyBoss, devWispLessons, useDevOpening } from "./course/dev-opening.js";
 import { WispField, type WispSpot } from "./course/WispField.js";
+import { CosmeticOrnament } from "./course/CosmeticOrnament.js";
+import {
+  COSMETIC_ORNAMENT_RADIUS,
+  cosmeticOrnamentPlacement,
+  isCosmeticOrnament,
+} from "./course/cosmetic-ornament.js";
 import {
   MonsterField,
   type MonsterPlacement,
@@ -1456,6 +1462,7 @@ export function CourseScene({
   onIntroductionReady,
   weeklyBoss = null,
   onPickWeeklyBoss,
+  cosmeticOrnamentId = null,
 }: {
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
@@ -1480,6 +1487,8 @@ export function CourseScene({
   /** This week's boss, when it stands on this island and has not been beaten (V7 mechanic 8). */
   weeklyBoss?: WeeklyBossScene | null;
   onPickWeeklyBoss?: () => void;
+  /** A server-confirmed equipped item, not a local grant or random outcome. */
+  cosmeticOrnamentId?: string | null;
 }) {
   const overview = useContext(CourseOverviewContext);
   const travelClock = useContext(MapTravelClockContext);
@@ -1605,6 +1614,38 @@ export function CourseScene({
       ground.dispose();
     }
   }, [blueprint, lessons, standing, chests, chestFootprints, vignettes, allSites]);
+  const ornament = useMemo(() => {
+    const id = cosmeticOrnamentId ?? undefined;
+    if (!isCosmeticOrnament(id) || !lessons[0]) return null;
+    const position = cosmeticOrnamentPlacement(blueprint, lessons[0].position, [
+      ...standing.map((item) => ({ x: item.x, z: item.z, radius: item.r })),
+      ...learningSiteExclusions(allSites),
+      ...chestFootprints,
+      ...chests.map((chest) => ({
+        x: chest.position.x,
+        z: chest.position.z,
+        radius: CHEST_FOOTPRINT_RADIUS * chest.scale,
+      })),
+      ...vignettes.map((item) => ({ x: item.x, z: item.z, radius: item.radius })),
+      ...lessons.map((lesson) => ({
+        x: lesson.position.x,
+        z: lesson.position.z,
+        radius: blueprint.route.nodeRadius + 0.12,
+      })),
+      ...(idlePosition ? [{ x: idlePosition.x, z: idlePosition.z, radius: AVATAR_CLEARANCE }] : []),
+    ]);
+    return position ? { id, position } : null;
+  }, [
+    cosmeticOrnamentId,
+    blueprint,
+    lessons,
+    standing,
+    allSites,
+    chestFootprints,
+    chests,
+    vignettes,
+    idlePosition,
+  ]);
   const avatarPoint = avatarAt?.position ?? idlePosition ?? null;
   const sequence = useChestSequence({ opening: staged, avatarAt: avatarPoint });
   // While a star is still to be thrown, its target keeps standing (chest-sequence.ts).
@@ -1766,9 +1807,22 @@ export function CourseScene({
       })),
       ...vignettes.map((vignette) => ({ x: vignette.x, z: vignette.z, r: vignette.radius })),
       // Nor through the avatar waiting beside the live stone.
+      ...(ornament
+        ? [{ x: ornament.position.x, z: ornament.position.z, r: COSMETIC_ORNAMENT_RADIUS }]
+        : []),
       ...(idlePosition ? [{ x: idlePosition.x, z: idlePosition.z, r: AVATAR_CLEARANCE }] : []),
     ]);
-  }, [weeklyMonster, blueprint, standing, markers, allSites, chests, vignettes, idlePosition]);
+  }, [
+    weeklyMonster,
+    blueprint,
+    standing,
+    markers,
+    allSites,
+    chests,
+    vignettes,
+    idlePosition,
+    ornament,
+  ]);
   const introductoryChest = introductoryLessonId
     ? chests.find(
         (chest) => chest.owner.kind === "lesson" && chest.owner.lessonId === introductoryLessonId,
@@ -1839,6 +1893,7 @@ export function CourseScene({
         <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
       <CourseVignettes vignettes={vignettes} />
+      {ornament ? <CosmeticOrnament id={ornament.id} position={ornament.position} /> : null}
       <CourseWildflowers blueprint={blueprint} sites={allSites} around={vignetteFootprints} />
       <LessonMarkerField
         markers={markers}

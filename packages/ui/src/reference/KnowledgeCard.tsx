@@ -12,7 +12,8 @@ import {
   type KnowledgeCardTier,
 } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
-import { KNOWLEDGE_CARD_ART, KNOWLEDGE_CARD_BACK } from "./knowledge-card-art.js";
+import { KNOWLEDGE_CARD_ART } from "./knowledge-card-art.js";
+import { useCardCosmetics } from "../cosmetics/appearance.js";
 
 export const CARD_RARITY: Record<KnowledgeCardTier, GameCollectibleCardRarity> = {
   new: "common",
@@ -37,6 +38,7 @@ export function KnowledgeCardFace({
   readonly tilt?: GameCardTilt | null;
 }) {
   const t = useI18n();
+  const cosmetic = useCardCosmetics();
   const title = t.locale === "en" ? card.head.en || card.head.zh : card.head.zh;
   return (
     <GameCollectibleCard
@@ -49,16 +51,18 @@ export function KnowledgeCardFace({
       pips={knowledgeCardPips(card.tier)}
       {...(card.starter ? { sticker: t.t("album.starter") } : {})}
       art={
-        <img
-          className="knowledge-card__art"
-          src={KNOWLEDGE_CARD_ART[card.head.category]}
-          alt=""
-          draggable={false}
-        />
+        <span className="knowledge-card__art-stage" data-card-face-cosmetic={cosmetic.face}>
+          <img
+            className="knowledge-card__art"
+            src={KNOWLEDGE_CARD_ART[card.head.category]}
+            alt=""
+            draggable={false}
+          />
+        </span>
       }
       back={
         <span className="knowledge-card__back">
-          <img src={KNOWLEDGE_CARD_BACK} alt="" draggable={false} />
+          <img src={cosmetic.backArt} alt="" draggable={false} />
           <span>{title}</span>
           <span>{t.t("album.back")}</span>
         </span>

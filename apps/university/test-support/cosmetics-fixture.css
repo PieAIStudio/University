@@ -1,0 +1,49 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--game-ui-bg);
+  color: var(--game-ui-text);
+  font-family: var(--game-ui-font-body);
+}
+.cosmetic-fixture {
+  max-width: 70rem;
+  margin: auto;
+  padding: 1rem;
+}
+.cosmetic-fixture__notice {
+  padding: 0.75rem;
+  border: 1px dashed var(--game-ui-text-muted);
+  line-height: 1.5;
+}
+.cosmetic-fixture__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
+.cosmetic-fixture__scene {
+  height: 34rem;
+  min-width: 0;
+  border-radius: var(--game-ui-radius-card);
+  overflow: hidden;
+}
+.cosmetic-fixture__previews {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 2rem;
+  padding: 1.5rem;
+}
+.cosmetic-fixture__previews .knowledge-card {
+  width: 12rem;
+}
+@media (max-width: 480px) {
+  .cosmetic-fixture {
+    padding: 0.5rem;
+  }
+  .cosmetic-fixture__scene {
+    height: 26rem;
+  }
+}

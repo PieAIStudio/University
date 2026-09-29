@@ -142,6 +142,25 @@ added to what V7-01 placed; none is stored, and every word stays DOM.
   is always one of the live monsters, so the island animates four at most. Which
   island, which questions and when it leaves are core rules (`weekly-boss.ts`).
 
+### V7-06: an equipped ornament is a late, bounded course prop
+
+The approved cosmetic slot uses one merged vertex-coloured mesh, selected only
+from the current account's service receipt. `cosmetic-ornament.ts` uses the
+existing blueprint's height sampler and occupied-ground footprints; it does not
+move a tree, chest, gate, stone, avatar or terrain sample. Unsafe ground returns
+no placement rather than weakening the footprint or slope limits. The weekly
+boss's existing route also avoids the ornament. No ornament is built in the
+world/planet catalogue or when the slot is absent.
+
+Measured local geometry: flower 192 triangles, crystal 72, banner 84, crown 156;
+each is one mesh, one material, no texture, at most 240 triangles and a 0.32-unit
+reserved radius. `cosmetic-ornament.test.ts` checks the three retained real course
+shapes and rejects an entirely occupied island. Avatar accessories use the
+published AvatarKit's hat parameters, preserving the original stored recipe.
+The existing registered avatar viewport also supplies the completion portrait;
+there is no additional canvas implementation. Browser evidence and the deliberately
+closed remote-release boundary belong to task 06, not to this technique lock.
+
 ### R59-02 to R59-05: every stop is the lesson stone; a gate every segment
 
 Owner, 2026-09-23 (second review): the learning nodes' gold and lavender pads were

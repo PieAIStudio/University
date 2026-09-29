@@ -1,3 +1,4 @@
+export { cosmeticAvatarRecipe } from "./cosmetics.js";
 export { AvatarBust } from "./AvatarBust.js";
 export { AvatarPreviewControls } from "./AvatarPreviewControls.js";
 export { AvatarChip } from "./AvatarChip.js";

@@ -115,6 +115,7 @@ export type View =
   | { readonly kind: "plans" }
   | { readonly kind: "settings" }
   | { readonly kind: "me" }
+  | { readonly kind: "wardrobe" }
   // Shared AuthKit destinations. Reserved so `/auth/callback` is never read as
   // a course named `auth`, and so recovery/callback stay one address in both
   // shells. Query and hash values on these paths are not authorization.
@@ -188,6 +189,8 @@ export function toPath(view: View): string {
       return "/settings";
     case "me":
       return "/me";
+    case "wardrobe":
+      return "/wardrobe";
     case "auth-callback":
       return "/auth/callback";
     case "auth-reset":
@@ -271,6 +274,7 @@ export function fromPath(pathname: string): View {
   if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
   if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };
   if (parts.length === 1 && parts[0] === "me") return { kind: "me" };
+  if (parts.length === 1 && parts[0] === "wardrobe") return { kind: "wardrobe" };
   if (parts[0] === "auth") {
     if (parts.length === 2 && parts[1] === "callback") return { kind: "auth-callback" };
     if (parts.length === 2 && parts[1] === "reset") return { kind: "auth-reset" };
@@ -346,6 +350,7 @@ export function activeIdForView(view: View): string {
       return "quests";
     case "plans":
       return "plan";
+    case "wardrobe":
     case "me":
     case "auth-callback":
     case "auth-reset":

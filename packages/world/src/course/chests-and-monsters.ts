@@ -1,3 +1,4 @@
+import { lessonRewardTier } from "@pieai/university-core";
 import { Vector3 } from "three";
 
 import { hash } from "../island/random.js";
@@ -203,11 +204,7 @@ function lessonChestTiers(
     ),
   );
   return lessons.map((lesson, index) =>
-    index === lessons.length - 1
-      ? "legendary"
-      : ends.has(`${lesson.unitId}/${lesson.lessonId}`)
-        ? "rare"
-        : "wood",
+    lessonRewardTier(index, lessons.length, ends.has(`${lesson.unitId}/${lesson.lessonId}`)),
   );
 }
 
@@ -215,14 +212,13 @@ export function lessonChestTier(
   lessons: readonly Pick<LessonPlacement, "lessonId" | "unitId" | "unitTitle">[],
   index: number,
 ): ChestTier {
-  if (index === lessons.length - 1) return "legendary";
   const lesson = lessons[index];
   if (!lesson) return "wood";
   const segments = segmentsFromPlacements(lessons);
   const endsSegment = segments.some(
     (segment) => segment.unitId === lesson.unitId && segment.lessonIds.at(-1) === lesson.lessonId,
   );
-  return endsSegment ? "rare" : "wood";
+  return lessonRewardTier(index, lessons.length, endsSegment);
 }
 
 function lessonChestState(state: LessonPlacement["state"]): ChestState {

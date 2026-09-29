@@ -5,6 +5,7 @@
   "description": "The learning surface both shells render. Neither app is allowed a second copy of anything in here.",
   "type": "module",
   "exports": {
+    "./cosmetics/cosmetics.css": "./src/cosmetics/cosmetics.css",
     "./navigation/location-breadcrumbs.css": "./src/navigation/location-breadcrumbs.css",
     "./path/map-entry-action.css": "./src/path/map-entry-action.css",
     "./path/chest-rewards.css": "./src/path/chest-rewards.css",
