@@ -119,6 +119,9 @@ import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
 import { useProfileStats } from "./profile-stats";
+import { useKnowledgeAlbum } from "./use-knowledge-album.js";
+import { RankPromotion } from "../progress/RankPromotion.js";
+import { rankPromotions } from "../progress/store.js";
 import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
 import { useWorldMarkers, useWorldModel, type PathOverlay } from "./world-model";
@@ -343,8 +346,14 @@ export function App() {
   const lastRouteAnalyticsKey = useRef<string | null>(null);
   const reviewDueAnalyticsReported = useRef(false);
   const source = useMemo(() => progressSourceOf(progressPort), []);
-  const { analyticsIdentityPort, analyticsAuthPort, analyticsPaymentPort, onWorthwhileProgress } =
-    useAnalyticsPorts();
+  const knowledge = useKnowledgeAlbum(shelf, progressPort, source, progress);
+  const {
+    analyticsIdentityPort,
+    analyticsAuthPort,
+    analyticsPaymentPort,
+    onWorthwhileProgress,
+    guestAdoption,
+  } = useAnalyticsPorts();
   const { mistakes, uncorrectedMistakeCount } = useMistakeSummary(progress);
 
   useEffect(
@@ -458,6 +467,7 @@ export function App() {
     onReview: () => setView({ kind: "practice" }),
   });
   const chest = useChestOpening({
+    guestAdoption,
     lessonOpen:
       view.kind === "lesson"
         ? {
@@ -470,6 +480,8 @@ export function App() {
     lessons,
     guardName: (role) => guardOf(role)?.name ?? "",
     onLessonDone: journey.afterLesson,
+    readAlbum: knowledge.read,
+    courseTitle: course?.title,
   });
   const openingOnMap = chest.active && view.kind === "settled";
   // The island the chest opens on is the lesson's own course map: while it
@@ -1518,6 +1530,7 @@ export function App() {
   );
   const main = (
     <MainRouter
+      album={knowledge.album}
       contentPort={contentPort}
       sceneAttempt={sceneAttempt}
       planetReadiness={{
@@ -1833,6 +1846,7 @@ export function App() {
           {renderAvatarPanel(true)}
         </GameModal>
       ) : null}
+      <RankPromotion promotions={rankPromotions} owner={progressPort.syncState().userId} />
       {showOpeningSplash ? null : feedbackSurface}
       {showOpeningSplash ? (
         <OpeningSplash progress={loadProgress} ready={splashReady} onStart={admission.enter} />

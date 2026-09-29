@@ -19,6 +19,7 @@ interface CollectionIndexGroup {
   readonly label: string;
   readonly count: number;
   readonly items: readonly CollectionIndexHit[];
+  readonly detail?: string;
 }
 
 interface CollectionIndexChip {
@@ -50,6 +51,7 @@ export function CollectionIndex({
   emptyMiss,
   emptyIdle,
   onOpenHit,
+  renderHit,
   children,
 }: {
   readonly title: string;
@@ -66,6 +68,8 @@ export function CollectionIndex({
   readonly emptyMiss: { readonly title: string; readonly description: string };
   readonly emptyIdle: { readonly title: string; readonly description: string };
   readonly onOpenHit: (id: string, trigger: HTMLElement) => void;
+  /** A collection can supply a face without duplicating search/group chrome. */
+  readonly renderHit?: (id: string) => ReactNode;
   readonly children?: ReactNode;
 }) {
   const interfaceTranslator = useI18n();
@@ -85,22 +89,31 @@ export function CollectionIndex({
               {group.label}
               <GameBadge>{group.count}</GameBadge>
             </h3>
-            <ul className="term-index__list">
+            {group.detail ? <p className="term-index__group-detail">{group.detail}</p> : null}
+            <ul
+              className={
+                renderHit ? "term-index__list term-index__list--cards" : "term-index__list"
+              }
+            >
               {group.items.map((item) => (
                 <li key={item.id}>
-                  <button
-                    type="button"
-                    className="term-index__hit"
-                    onClick={(event) => onOpenHit(item.id, event.currentTarget)}
-                  >
-                    <span
-                      className="term-index__headword"
-                      {...(item.titleLang ? { lang: item.titleLang } : {})}
+                  {renderHit ? (
+                    renderHit(item.id)
+                  ) : (
+                    <button
+                      type="button"
+                      className="term-index__hit"
+                      onClick={(event) => onOpenHit(item.id, event.currentTarget)}
                     >
-                      {item.title}
-                    </span>
-                    <span className="term-index__gloss">{item.subtitle}</span>
-                  </button>
+                      <span
+                        className="term-index__headword"
+                        {...(item.titleLang ? { lang: item.titleLang } : {})}
+                      >
+                        {item.title}
+                      </span>
+                      <span className="term-index__gloss">{item.subtitle}</span>
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

@@ -6,9 +6,12 @@ import {
   type ChestReward,
   type LessonRef,
   type ProgressDocument,
+  type KnowledgeAlbum,
+  type KnowledgeAlbumCard,
 } from "@pieai/university-core";
 import { ChestRewards, type ChestRewardStage } from "@pieai/university-ui/path/ChestRewards.js";
-import { usePrefersReducedMotion } from "@pieai/university-world";
+import { EmblemImage, usePrefersReducedMotion } from "@pieai/university-world";
+import { useI18n } from "@pieai/university-ui/i18n.js";
 import type { LessonPlacement } from "@pieai/university-world/Maps.js";
 import {
   lessonChestTier,
@@ -20,7 +23,10 @@ import {
   type CourseOpening,
   type MonsterRole,
 } from "@pieai/university-world/learning-nodes.js";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import type { GuestAdoption, GuestAdoptionSnapshot } from "../account/guest-adoption.js";
+const noAdoption = () => null;
+const noSubscription = () => () => {};
 
 import { progressPort, snapshot } from "../progress/store";
 
@@ -42,6 +48,10 @@ export interface WeeklyChest {
 }
 
 interface Flow {
+  readonly key: number;
+  readonly owner: object | string | null;
+  readonly knowledgeCards: readonly KnowledgeAlbumCard[];
+  readonly completedCourse?: string;
   readonly source:
     | { readonly kind: "lesson"; readonly locator: LessonRef; readonly lessonNumber: number }
     | { readonly kind: "weekly"; readonly week: string; readonly onDone?: () => void };
@@ -67,12 +77,18 @@ export function useChestOpening({
   lessons,
   guardName,
   onLessonDone,
+  readAlbum,
+  courseTitle,
+  guestAdoption,
 }: {
   /** The lesson being read now, or null. The baseline is taken when it changes. */
   readonly lessonOpen: LessonRef | null;
   readonly lessons: readonly LessonPlacement[];
   readonly guardName: (role: MonsterRole) => string;
   readonly onLessonDone?: (locator: LessonRef) => void;
+  readonly readAlbum?: () => KnowledgeAlbum | null;
+  readonly courseTitle?: string;
+  readonly guestAdoption?: GuestAdoption;
 }): {
   readonly active: boolean;
   /** The chest open now is the weekly boss's, on the course island rather than after a lesson. */
@@ -83,21 +99,52 @@ export function useChestOpening({
   beginWeekly(chest: WeeklyChest): void;
 } {
   const reducedMotion = usePrefersReducedMotion();
-  const baseline = useRef<{ key: string; value: ChestBaseline } | null>(null);
+  const t = useI18n();
+  const adoption = useSyncExternalStore<GuestAdoptionSnapshot | null>(
+    guestAdoption?.subscribe ?? noSubscription,
+    guestAdoption?.getSnapshot ?? noAdoption,
+  );
+  const readOwner = () => guestAdoption?.getSnapshot().scope ?? progressPort.syncState().userId;
+  const canAct = () => guestAdoption?.getSnapshot().ready !== false;
+  const owner = readOwner();
+  const ready = adoption?.ready !== false;
+  const latestDone = useRef(onLessonDone);
+  latestDone.current = onLessonDone;
+  const baseline = useRef<{
+    key: string;
+    owner: object | string | null;
+    value: ChestBaseline;
+    knowledge: KnowledgeAlbum | null;
+  } | null>(null);
   const lessonKey = lessonOpen
     ? `${lessonOpen.studyId}/${lessonOpen.courseId}/${lessonOpen.unitId}/${lessonOpen.lessonId}`
     : null;
   useEffect(() => {
-    if (!lessonKey || baseline.current?.key === lessonKey) return;
-    baseline.current = { key: lessonKey, value: chestBaseline(snapshot()) };
-  }, [lessonKey]);
+    if (!lessonKey || (baseline.current?.key === lessonKey && baseline.current.owner === owner))
+      return;
+    const knowledge = readAlbum?.() ?? null;
+    baseline.current = {
+      key: lessonKey,
+      owner,
+      knowledge,
+      value: chestBaseline(snapshot(), knowledge?.coursesFinished, knowledge?.pathsFinished),
+    };
+  }, [lessonKey, owner, readAlbum]);
 
-  const [flow, setFlow] = useState<Flow | null>(null);
+  const [storedFlow, setFlow] = useState<Flow | null>(null);
+  const sequence = useRef(0);
+  const flow = storedFlow?.owner === owner ? storedFlow : null;
+  useEffect(() => {
+    if (storedFlow && storedFlow.owner !== owner) setFlow(null);
+  }, [storedFlow, owner]);
 
   const begin = (locator: LessonRef) => {
+    if (readOwner() !== owner || !canAct()) return;
     const key = `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}`;
     const index = lessons.findIndex((lesson) => lesson.lessonId === locator.lessonId);
-    const from = baseline.current?.key === key ? baseline.current.value : null;
+    const before =
+      baseline.current?.key === key && baseline.current.owner === owner ? baseline.current : null;
+    const from = before?.value;
     // Nothing to compare against (a reload mid-lesson): no chest, the page as before.
     if (index < 0 || !from) return;
     const cardsOf = (document: ProgressDocument) =>
@@ -105,12 +152,32 @@ export function useChestOpening({
         cardKey.startsWith(`${locator.studyId}/${locator.courseId}/${locator.lessonId}/`),
       ).length;
     const after = snapshot();
+    const knowledge = readAlbum?.() ?? null;
+    const collectedBefore = new Set(
+      before?.knowledge?.cards.filter((card) => card.collected).map((card) => card.head.id) ?? [],
+    );
+    const knowledgeCards = (knowledge?.cards ?? []).filter(
+      (card) =>
+        card.collected &&
+        card.lessons.some(
+          (lesson) =>
+            lesson.complete &&
+            lesson.locator.studyId === locator.studyId &&
+            lesson.locator.courseId === locator.courseId &&
+            lesson.locator.unitId === locator.unitId &&
+            lesson.locator.lessonId === locator.lessonId,
+        ),
+    );
     let reward = chestReward({
       baseline: from,
       after,
       locator,
       reviewCards: cardsOf(after),
-      knowledgeCards: 0,
+      knowledgeCards: before?.knowledge
+        ? knowledgeCards.filter((card) => !collectedBefore.has(card.head.id)).length
+        : 0,
+      coursesFinished: before?.knowledge ? knowledge?.coursesFinished : 0,
+      pathsFinished: before?.knowledge ? knowledge?.pathsFinished : 0,
     });
     const bonus = dailyFirstBonus(after, Date.now(), reward.xp);
     if (bonus) {
@@ -119,6 +186,15 @@ export function useChestOpening({
     }
     const tier = lessonChestTier(lessons, index);
     setFlow({
+      key: ++sequence.current,
+      owner,
+      knowledgeCards,
+      ...(before?.knowledge &&
+      knowledge &&
+      courseTitle &&
+      knowledge.coursesFinished > before.knowledge.coursesFinished
+        ? { completedCourse: courseTitle }
+        : {}),
       source: { kind: "lesson", locator, lessonNumber: index + 1 },
       from: tier,
       tier: openedTier(tier, reward.allFirstTry),
@@ -130,8 +206,12 @@ export function useChestOpening({
     });
   };
 
-  const beginWeekly = (chest: WeeklyChest) =>
+  const beginWeekly = (chest: WeeklyChest) => {
+    if (readOwner() !== owner || !canAct()) return;
     setFlow({
+      key: ++sequence.current,
+      owner,
+      knowledgeCards: [],
       source: {
         kind: "weekly",
         week: chest.week,
@@ -145,9 +225,18 @@ export function useChestOpening({
       stage: "closed",
       skipped: false,
     });
+  };
 
   const update = (patch: Partial<Flow>) =>
-    setFlow((current) => (current ? { ...current, ...patch } : current));
+    setFlow((current) =>
+      current &&
+      current.key === flow?.key &&
+      current.owner === owner &&
+      readOwner() === owner &&
+      canAct()
+        ? { ...current, ...patch }
+        : current,
+    );
 
   /*
     The scene reports when the chest has settled and when the monster has run.
@@ -156,7 +245,7 @@ export function useChestOpening({
     length, after which the page moves on as if the scene had reported.
   */
   useEffect(() => {
-    if (!flow || (flow.stage !== "opening" && flow.stage !== "throwing")) return;
+    if (!ready || !flow || (flow.stage !== "opening" && flow.stage !== "throwing")) return;
     const seconds =
       flow.stage === "throwing"
         ? THROW_DEADLINE_SECONDS
@@ -166,29 +255,32 @@ export function useChestOpening({
     const timer = window.setTimeout(
       () =>
         setFlow((current) =>
-          current?.stage === "throwing"
-            ? { ...current, stage: "done" }
-            : current?.stage === "opening"
-              ? { ...current, stage: "rewards" }
-              : current,
+          current?.key !== flow.key || current.owner !== readOwner() || !canAct()
+            ? current
+            : current.stage === "throwing"
+              ? { ...current, stage: "done" }
+              : current?.stage === "opening"
+                ? { ...current, stage: "rewards" }
+                : current,
         ),
       seconds * 1000,
     );
     return () => window.clearTimeout(timer);
-  }, [flow?.stage, flow?.skipped, flow?.tier]);
+  }, [flow?.key, flow?.stage, flow?.skipped, flow?.tier, ready]);
 
   useEffect(() => {
-    if (flow?.stage !== "leaving") return;
+    if (!ready || flow?.stage !== "leaving") return;
     const done = flow.source.kind === "weekly" ? flow.source.onDone : flow.onLeave;
     const timer = window.setTimeout(
       () => {
+        if (readOwner() !== owner || !canAct() || sequence.current !== flow.key) return;
         setFlow(null);
         done?.();
       },
       reducedMotion ? 0 : LEAVING_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [flow?.stage, reducedMotion]);
+  }, [flow?.key, flow?.stage, owner, reducedMotion, ready]);
 
   const opening = useMemo<CourseOpening | null>(() => {
     if (!flow) return null;
@@ -213,12 +305,17 @@ export function useChestOpening({
       onPhase: (phase) => {
         if (phase === "settled")
           setFlow((current) =>
-            current?.stage === "opening" ? { ...current, stage: "rewards" } : current,
+            current?.key === flow.key &&
+            current.owner === readOwner() &&
+            canAct() &&
+            current.stage === "opening"
+              ? { ...current, stage: "rewards" }
+              : current,
           );
       },
       onTap: () =>
         setFlow((current) =>
-          !current
+          !current || current.key !== flow.key || current.owner !== readOwner() || !canAct()
             ? current
             : current.stage === "closed"
               ? { ...current, stage: "opening" }
@@ -229,13 +326,30 @@ export function useChestOpening({
     };
   }, [flow]);
 
+  // A scrollable reward list reuses the same pre-rendered 3D picture as
+  // the badge wall, rather than opening a WebGL context per badge.
   const overlay =
-    flow && flow.stage !== "leaving" ? (
+    flow && !ready ? (
+      <section className="chest-rewards" role="status" aria-busy="true">
+        {t.t("album.accountPreparing")}
+      </section>
+    ) : flow && flow.stage !== "leaving" ? (
       <ChestRewards
         stage={flow.stage}
         tier={flow.tier}
         upgraded={flow.tier !== flow.from}
         reward={flow.reward}
+        knowledgeCards={flow.knowledgeCards}
+        sound={progressPort.accountData().preferences.soundEnabled}
+        badgeEmblem={(badge) => <EmblemImage kind="badge" id={badge.id} size={128} />}
+        completion={
+          flow.completedCourse ? (
+            <div className="course-completion-card" data-course-completion>
+              <EmblemImage kind="badge" id="first-course" size={112} />
+              <p>{t.t("album.courseComplete", { title: flow.completedCourse })}</p>
+            </div>
+          ) : null
+        }
         dailyFirst={flow.dailyFirst}
         {...(flow.source.kind === "lesson" ? { lessonNumber: flow.source.lessonNumber } : {})}
         guardName={flow.guard ? guardName(flow.guard.role) : null}
@@ -244,13 +358,15 @@ export function useChestOpening({
         onSkip={() => update({ skipped: true })}
         onThrow={() => update({ stage: "throwing" })}
         onContinue={() => {
-          // Capture this learner's callback on the actual Continue press,
-          // not a mutable callback belonging to a later account/render.
-          const done = onLessonDone;
+          // The timer is fenced by the transient learner scope and chest key.
+          // Only a confirmed adoption of this same guest keeps that scope, so
+          // the completion callback can use the now-bound account's invitation.
           const source = flow.source;
           update({
             stage: "leaving",
-            ...(source.kind === "lesson" && done ? { onLeave: () => done(source.locator) } : {}),
+            ...(source.kind === "lesson"
+              ? { onLeave: () => latestDone.current?.(source.locator) }
+              : {}),
           });
         }}
       />

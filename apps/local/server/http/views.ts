@@ -9,6 +9,7 @@ import {
   type StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
 import { compileAnswerKey, compileChoiceAnswerKey } from "@pieai/university-core";
+import { unlockedConceptIds } from "@pieai/university-core/marks/path-stats.js";
 import { resolveTermLinks, termRangeOf } from "@pieai/university-core/marks/terms.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
 import { loadLexicon } from "../language/lexicon.js";
@@ -21,7 +22,7 @@ import {
   parseLessonLinks,
   resolveLessonLinks,
 } from "../content/lesson-links.js";
-import { readLatestLesson, readUnit } from "../content/repository.js";
+import { readLatestCard, readLatestLesson, readUnit } from "../content/repository.js";
 import { openStudyRepository } from "../studies/snapshots.js";
 import { listKnowledgeNotes, readLatestKnowledgeNote } from "../knowledge/repository.js";
 import type { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
@@ -114,6 +115,7 @@ function buildStudyView(
         ...unit,
         lessons: unit.lessonIds.map((lessonId) => {
           const lesson = readLatestLesson(studiesRoot, study.id, course.id, unit.id, lessonId);
+          const conceptIds = unlockedConceptIds(lesson.content);
           const key = lessonContentKey({ courseId: course.id, unitId: unit.id, lessonId });
           return {
             id: lesson.manifest.id,
@@ -135,6 +137,20 @@ function buildStudyView(
             // Already in hand: `readLatestLesson` reads the body to check it
             // against the unit. The course island sizes its stones by this.
             contentChars: lesson.content.length,
+            conceptIds,
+            // Only linked lessons need the extra card reads. No prose, answers
+            // or invented lesson/card version equivalence crosses this shelf.
+            ...(conceptIds.length
+              ? {
+                  reviewCardRevisions: Object.fromEntries(
+                    lesson.manifest.cardIds.map((id) => [
+                      id,
+                      readLatestCard(studiesRoot, study.id, course.id, unit.id, lessonId, id)
+                        .contentRevision,
+                    ]),
+                  ),
+                }
+              : {}),
             progress: serializeProgress(
               store?.getLessonProgress(key) ?? null,
               store?.hasLessonCompletion(key, lesson.manifest.contentRevision) ?? false,

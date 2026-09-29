@@ -1,5 +1,4 @@
 import { interfaceTranslator } from "../i18n/index.js";
-import { parseLessonLinks, tokenKind } from "@pieai/university-core/marks/references.js";
 
 export {
   evidenceCount,
@@ -7,6 +6,7 @@ export {
   evidenceLocatorsIn,
   tokenPrefixCount,
   unlockEntryCount,
+  unlockedConceptIds,
 } from "@pieai/university-core/marks/path-stats.js";
 
 /**
@@ -55,26 +55,6 @@ export const UNIT_EVIDENCE_HEADING = interfaceTranslator.t(
 
 export function readingMinutes(contentChars: number): number {
   return Math.max(1, Math.round(contentChars / READING_CHARS_PER_MINUTE));
-}
-
-/**
- * Concept ids this lesson actually names, in order, unique.
- *
- * Settlement shows a card only for an id that also exists in the catalogue.
- * Resolving that second half is the caller's job: a missing catalogue entry
- * is not a reward, and this function does not invent one.
- */
-export function unlockedConceptIds(content: string): readonly string[] {
-  const ids: string[] = [];
-  const seen = new Set<string>();
-  for (const link of parseLessonLinks(content)) {
-    if (tokenKind(link) !== "concept") continue;
-    const id = link.rawTarget.slice("concept:".length).trim();
-    if (!id || seen.has(id)) continue;
-    seen.add(id);
-    ids.push(id);
-  }
-  return ids;
 }
 
 /**

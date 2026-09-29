@@ -9,6 +9,7 @@ import {
   waitForMapReady,
 } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
+import { isolatedAnonymousSession } from "./harness/anonymous-session.js";
 
 /**
  * V7 station 4: finishing a lesson opens its chest on the island before the
@@ -34,11 +35,13 @@ async function recordedXp(page: Page): Promise<number> {
   });
 }
 
-async function finishFirstLesson(page: Page) {
+async function finishFirstLesson(page: Page, holdAccount = false) {
+  const account = await isolatedAnonymousSession(page, holdAccount);
   await openOnline(page);
   await waitForMapReady(page);
   await startFirstLessonFromLanding(page);
   await readAndAnswerFirstLesson(page);
+  return account;
 }
 
 test.describe("V7 chest opening", () => {
@@ -81,6 +84,36 @@ test.describe("V7 chest opening", () => {
       await expect(page.locator(".settle")).toHaveCount(0);
     });
     consoleErrors.assertClean();
+  });
+
+  test("a delayed anonymous save keeps this guest's chest and its real reward until Continue", async ({
+    page,
+  }) => {
+    const account = await finishFirstLesson(page, true);
+    const card = page.locator("[data-chest-stage]");
+    await expect(card).toHaveAttribute("data-chest-stage", "closed");
+    await page.locator('[data-chest-action="open"]').click();
+    await expect.poll(account.creations).toBe(1);
+    account.release();
+    await expect(card).toHaveAttribute("data-chest-stage", "rewards", { timeout: 20_000 });
+    await expect(page.locator(".settle")).toHaveCount(0);
+    expect(await recordedXp(page)).toBeGreaterThan(0);
+    await expect
+      .poll(() =>
+        page.evaluate((id) => {
+          const raw = localStorage.getItem(`university.progress.v2.account.${id}`);
+          return raw ? JSON.parse(raw).totalXp : 0;
+        }, account.id),
+      )
+      .toBeGreaterThan(0);
+    const throwStar = page.locator('[data-chest-action="throw"]');
+    await expect(throwStar).toBeVisible();
+    await throwStar.click();
+    const next = page.locator('[data-chest-action="continue"]');
+    await expect(next).toBeVisible({ timeout: 20_000 });
+    await next.click();
+    await expect(page.locator('[data-opening-topic="wrap-up"]')).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(".settle")).toHaveCount(0);
   });
 
   test("under reduced motion the chest is simply open and the rewards come at once", async ({

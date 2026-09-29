@@ -12,6 +12,7 @@ import { messages as worldNavigation } from "./world-navigation.zh-CN.js";
 import { messages as readingSettings } from "./reading-settings.zh-CN.js";
 import { messages as productWelcome } from "./product-welcome.zh-CN.js";
 import { messages as journeyReturn } from "./journey-return.zh-CN.js";
+import { messages as knowledgeAlbum } from "./knowledge-album.zh-CN.js";
 import { messages as realitySources } from "./reality-sources.zh-CN.js";
 import { messages as accountFailures } from "./account-failures.zh-CN.js";
 import { messages as productNavigation } from "./product-navigation.zh-CN.js";
@@ -60,6 +61,7 @@ export const messages = {
   ...realitySources,
   ...productWelcome,
   ...journeyReturn,
+  ...knowledgeAlbum,
   ...productNavigation,
   ...productBilling,
   ...productSave,
@@ -1319,7 +1321,7 @@ export const messages = {
   "ui.reference.knowledgeNotes.copy.张派生卡片": "张派生卡片",
   "ui.reference.knowledgeNotes.copy.当前没有派生卡片": "当前没有派生卡片",
   "ui.reference.knowledgeNotes.copy.待重新核验": "待重新核验",
-  "ui.reference.knowledgeNotes.copy.我的追问-课堂笔记": "我的追问 / 课堂笔记",
+  "ui.reference.knowledgeNotes.copy.我的追问-课堂笔记": "我的笔记",
   "ui.reference.knowledgeNotes.copy.推论": "推论",
   "ui.reference.knowledgeNotes.copy.来源已变化-暂停复习": "来源已变化，暂停复习",
   "ui.reference.knowledgeNotes.copy.没有源码证据": "没有源码证据",
@@ -1328,7 +1330,7 @@ export const messages = {
   "ui.reference.knowledgeNotes.copy.第": "· 第",
   "ui.reference.knowledgeNotes.copy.缺证据-未入复习": "缺证据，未入复习",
   "ui.reference.knowledgeNotes.copy.草稿": "草稿",
-  "ui.reference.knowledgeNotes.copy.还没有课堂笔记": "还没有课堂笔记",
+  "ui.reference.knowledgeNotes.copy.还没有课堂笔记": "还没有保存的笔记",
   "ui.reference.knowledgeNotes.copy.这是个人理解-可以保留-但不要把它冒充源码事实":
     "这是个人理解；可以保留，但不要把它冒充源码事实。",
   "ui.reference.knowledgeNotes.copy.这条知识依据什么": "这条知识依据什么",
@@ -1339,7 +1341,7 @@ export const messages = {
   "ui.reference.librarySurface.copy.收藏": "收藏",
   "ui.reference.librarySurface.copy.概念图解": "概念图解",
   "ui.reference.librarySurface.copy.词义索引": "词义索引",
-  "ui.reference.librarySurface.copy.课堂笔记": "课堂笔记",
+  "ui.reference.librarySurface.copy.课堂笔记": "我的笔记",
   "ui.reference.librarySurface.copy.防-AI-味儿": "防 AI 味儿",
   "ui.reference.referencePanel.copy.关闭-也可按-Esc": "关闭（也可按 Esc）",
   "ui.reference.referencePanel.copy.关闭引用": "关闭引用",

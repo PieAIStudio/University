@@ -16,6 +16,7 @@ import {
   toPath,
   type CourseProgress,
   type IdentityPort,
+  type KnowledgeAlbum,
   type Mistake,
   type PaymentPort,
   type PresencePort,
@@ -101,6 +102,7 @@ const ProfileAvatar = lazy(() =>
 );
 
 interface MainRouterProps {
+  readonly album?: KnowledgeAlbum;
   readonly planetReadiness?: ComponentProps<typeof PlanetStage>["readiness"];
   readonly sceneAttempt?: number;
   readonly contentPort: ContentPort;
@@ -158,6 +160,7 @@ interface MainRouterProps {
 }
 
 export function MainRouter({
+  album,
   planetReadiness,
   sceneAttempt,
   contentPort,
@@ -436,7 +439,14 @@ export function MainRouter({
 
       {LIBRARY_VIEW_TAB[view.kind] ? (
         <Suspense fallback={<RouteFallback />}>
-          <LibraryHost tab={libraryTabOf(view)} studyId={focusedStudyId} onOpen={setView} />
+          <LibraryHost
+            key={progressPort.syncState().userId ?? "guest"}
+            tab={libraryTabOf(view)}
+            studyId={focusedStudyId}
+            onOpen={setView}
+            album={album}
+            sound={progress.account.preferences.soundEnabled}
+          />
         </Suspense>
       ) : null}
 
@@ -521,11 +531,22 @@ export function MainRouter({
         />
       ) : null}
       {view.kind === "league" ? (
-        <LeagueScreen
-          document={progress}
-          signedIn={avatarSignedIn}
-          emblem={(tierId) => <EmblemImage kind="rank" id={tierId} size={96} />}
-        />
+        <>
+          <LeagueScreen
+            document={progress}
+            signedIn={avatarSignedIn}
+            emblem={(tierId) => <EmblemImage kind="rank" id={tierId} size={96} />}
+          />
+          <BadgeWall
+            embedded
+            document={progress}
+            coursesFinished={album?.coursesFinished ?? profileStats.coursesFinished}
+            pathsFinished={album?.pathsFinished ?? 0}
+            emblem={(badge) => (
+              <EmblemImage kind="badge" id={badge.id} locked={!badge.earned} size={96} />
+            )}
+          />
+        </>
       ) : null}
       {view.kind === "quests" ? (
         <QuestsScreen
@@ -587,8 +608,10 @@ export function MainRouter({
           reviewCardCount={Object.keys(progress.cards).length}
           badges={
             <BadgeWall
+              embedded
               document={progress}
-              coursesFinished={profileStats.coursesFinished}
+              coursesFinished={album?.coursesFinished ?? profileStats.coursesFinished}
+              pathsFinished={album?.pathsFinished ?? 0}
               emblem={(badge) => (
                 <EmblemImage kind="badge" id={badge.id} locked={!badge.earned} size={64} />
               )}

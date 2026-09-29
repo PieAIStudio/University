@@ -781,10 +781,12 @@ export function createProgressPort(options: { readonly persistence: Persistence 
         )
       );
     },
-    async importGuestProgress() {
+    async importGuestProgress(onLocalApplied) {
       if (userId === null) return;
+      const appliedTo = userId;
       state = mergeProgress(state, cache.load(null));
       commit();
+      if (userId !== appliedTo) return;
       if (localSaveState === "saved") {
         try {
           cache.save(null, emptyProgress());
@@ -793,6 +795,12 @@ export function createProgressPort(options: { readonly persistence: Persistence 
         }
       }
       for (const listener of listeners) listener();
+      if (userId !== appliedTo) return;
+      try {
+        onLocalApplied?.(appliedTo);
+      } catch {
+        /* A receipt cannot cancel saved data or sync. */
+      }
       await flush();
     },
     flush,

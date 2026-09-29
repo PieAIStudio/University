@@ -44,6 +44,31 @@ function docWith(patch: Partial<ProgressDocument>): ProgressDocument {
   return { ...emptyProgress(), ...patch };
 }
 
+it("does not award a completed-level badge before a modern record confirms reading", () => {
+  const document = docWith({
+    lessons: { "s/c/l": { progress: 1, completedAt: NOW, attempts: 1, readConfirmed: false } },
+    exerciseAttempts: {
+      a: {
+        commandId: "a",
+        locator: { studyId: "s", courseId: "c", unitId: "u", lessonId: "l" },
+        exerciseId: "q",
+        contentRevision: 1,
+        answer: "a",
+        score: 1,
+        maxScore: 1,
+        hostGrade: null,
+        occurredAt: new Date(NOW).toISOString(),
+      },
+    },
+  });
+  expect(completedLessons(document)).toBe(0);
+  expect(badgesFor(document).find((badge) => badge.id === "first-lesson")?.earned).toBe(false);
+  expect(badgesFor(document).find((badge) => badge.id === "perfect-lesson")?.earned).toBe(false);
+  document.lessons["s/c/l"] = { ...document.lessons["s/c/l"]!, readConfirmed: true };
+  expect(completedLessons(document)).toBe(1);
+  expect(badgesFor(document).find((badge) => badge.id === "perfect-lesson")?.earned).toBe(true);
+});
+
 describe("questsForToday", () => {
   it("asks for one lesson, and counts only today's", () => {
     const document = docWith({

@@ -135,7 +135,9 @@ const WORLD_PRIMARY: ExperienceTarget = {
 const LIBRARY_PRIMARY: ExperienceTarget = {
   id: "library-first-entry",
   label: "图鉴第一条概念",
-  locate: (page) => page.locator(".term-index__hit:visible").first(),
+  // V7 presents concepts as cards; the read action still opens the real entry.
+  // The separate terms-dialog probe keeps its own unchanged index target.
+  locate: (page) => page.locator("[data-concept-card] [data-concept-open]:visible").first(),
 };
 
 const PRACTICE_PRIMARY: ExperienceTarget = {

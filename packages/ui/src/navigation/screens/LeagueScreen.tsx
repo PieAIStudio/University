@@ -61,7 +61,7 @@ export function LeagueScreen({
             label={
               standing.next
                 ? interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.到value0", {
-                    value0: standing.next.name,
+                    value0: leagueTierName(standing.next),
                   })
                 : interfaceTranslator.t("ui.navigation.screens.leagueScreen.copy.已在顶阶")
             }

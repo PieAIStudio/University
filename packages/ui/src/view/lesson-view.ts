@@ -320,6 +320,11 @@ interface LessonSummary {
    */
   readonly evidenceCount?: number;
   readonly unlockCount?: number;
+  /** Authored concept links, not a second catalogue or earned-card store.
+   * Missing means an older source cannot answer; [] means no links. */
+  readonly conceptIds?: readonly string[];
+  /** Current declared review-card versions, distinct from this lesson's revision. */
+  readonly reviewCardRevisions?: Readonly<Record<string, number>>;
   readonly evidenceLocators?: readonly string[];
   readonly progress: LessonProgress | null;
 }

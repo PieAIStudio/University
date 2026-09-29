@@ -53,7 +53,13 @@ export function perfectLessons(document: ProgressDocument): number {
   let count = 0;
   for (const { locator, first } of firstAttemptsByLesson(document).values()) {
     const lesson = document.lessons[lessonKeyOf(locator)];
-    if (lesson && lesson.completedAt !== null && everyFirstFull(first)) count += 1;
+    if (
+      lesson &&
+      lesson.completedAt !== null &&
+      lesson.readConfirmed !== false &&
+      everyFirstFull(first)
+    )
+      count += 1;
   }
   return count;
 }

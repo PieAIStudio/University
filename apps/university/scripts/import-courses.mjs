@@ -52,6 +52,7 @@ import {
   evidenceCount,
   evidenceLocatorsIn,
   unlockEntryCount,
+  unlockedConceptIds,
 } from "@pieai/university-core/marks/path-stats.js";
 import { join, resolve } from "node:path";
 
@@ -399,6 +400,8 @@ for (const studyId of readdirSync(upstream).sort()) {
           contentChars: lesson.content.length,
           evidenceCount: evidenceCount(lesson.content),
           unlockCount: unlockEntryCount(lesson.content),
+          conceptIds: unlockedConceptIds(lesson.content),
+          reviewCardRevisions: Object.fromEntries(lesson.cards.map((card) => [card.id, card.contentRevision])),
           // The unit card de-duplicates in lesson order and returns at five.
           // Each lesson's list is already unique and ordered, so keeping its
           // first five can never remove a locator that the unit card would read.

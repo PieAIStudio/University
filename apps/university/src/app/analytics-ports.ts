@@ -1,4 +1,5 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { createGuestAdoption } from "../account/guest-adoption.js";
 
 import { authPort, identityPort } from "../account/identity";
 import { paymentPort } from "../account/payment";
@@ -14,21 +15,20 @@ export function useAnalyticsPorts() {
   const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
   const analyticsAuthPort = useMemo(() => withProductAnalyticsAuth(authPort), []);
   const analyticsPaymentPort = useMemo(() => withProductAnalyticsPayment(paymentPort), []);
+  const guestAdoption = useMemo(
+    () => createGuestAdoption(analyticsIdentityPort, progressPort),
+    [analyticsIdentityPort],
+  );
+  useEffect(() => guestAdoption.connect(), [guestAdoption]);
   const onWorthwhileProgress = useCallback(() => {
-    const before = analyticsIdentityPort.status();
-    if (before.kind === "anonymous" || before.kind === "signed_in") return;
-    void analyticsIdentityPort
-      .signInAnonymously()
-      .then(async () => {
-        const after = analyticsIdentityPort.status();
-        // Only this explicit value-event creation adopts guest progress. Restoring
-        // an account or signing into another email never silently imports it.
-        if (after.kind === "anonymous" && progressPort.syncState().userId === after.user.id) {
-          await progressPort.importGuestProgress?.();
-        }
-      })
-      .catch(() => undefined);
-  }, [analyticsIdentityPort]);
+    void guestAdoption.create();
+  }, [guestAdoption]);
 
-  return { analyticsIdentityPort, analyticsAuthPort, analyticsPaymentPort, onWorthwhileProgress };
+  return {
+    analyticsIdentityPort,
+    analyticsAuthPort,
+    analyticsPaymentPort,
+    onWorthwhileProgress,
+    guestAdoption,
+  };
 }

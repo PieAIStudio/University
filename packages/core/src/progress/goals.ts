@@ -156,7 +156,11 @@ export function longTermCards(document: ProgressDocument): number {
 }
 
 export function completedLessons(document: ProgressDocument): number {
-  return Object.values(document.lessons).filter((lesson) => lesson.completedAt !== null).length;
+  // Old records predate the separate read confirmation and retain their
+  // historical meaning. A modern explicit false is an unfinished level.
+  return Object.values(document.lessons).filter(
+    (lesson) => lesson.completedAt !== null && lesson.readConfirmed !== false,
+  ).length;
 }
 
 /**

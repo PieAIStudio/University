@@ -94,7 +94,9 @@ export interface IdentityAuth {
 export interface IdentityPort {
   status(): IdentityStatus;
   subscribe(listener: () => void): () => void;
-  signInAnonymously(options?: { captchaToken?: string }): Promise<void>;
+  /** A receipt only for this call's confirmed new anonymous session; a restored
+   * or superseding session is never permission to adopt this device's guest. */
+  signInAnonymously(options?: { captchaToken?: string }): Promise<void | { createdUserId: string }>;
   signInWithEmail(email: string, password: string): Promise<void>;
   signUpWithEmail(email: string, password: string): Promise<{ confirmationRequired: boolean }>;
   requestMagicLink(email: string, redirectTo: string): Promise<void>;
@@ -135,7 +137,7 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
   const listeners = new Set<() => void>();
   let status: IdentityStatus = { kind: "signed_out" };
   let explicitOperationStarted = false;
-  let anonymousSignInPromise: Promise<void> | null = null;
+  let anonymousSignInPromise: Promise<void | { createdUserId: string }> | null = null;
   let operationVersion = 0;
   let authEventVersion = 0;
 
@@ -216,7 +218,11 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
       anonymousSignInPromise = (async () => {
         try {
           const session = await auth.signInAnonymously(options);
-          if (responseIsCurrent(operation, session)) applySession(session);
+          if (responseIsCurrent(operation, session)) {
+            applySession(session);
+            if (session?.user?.is_anonymous === true && session.user.id)
+              return { createdUserId: session.user.id };
+          }
         } catch {
           // Anonymous auth is a persistence enhancement, not a prerequisite for
           // learning. Keep this path silent and leave the local learner usable.

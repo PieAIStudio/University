@@ -30,7 +30,14 @@
 // an AI host about a piece of source. It has no single-segment legacy route
 // because it has never had one — it was on the authoring workbench, where the
 // delivery build could not compile it at all.
-export const LIBRARY_TABS = ["concepts", "terms", "flavour", "favourites", "notes"] as const;
+export const LIBRARY_TABS = [
+  "concepts",
+  "terms",
+  "flavour",
+  "favourites",
+  "notes",
+  "courseware",
+] as const;
 
 export type LibraryTab = (typeof LIBRARY_TABS)[number];
 

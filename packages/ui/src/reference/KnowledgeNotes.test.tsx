@@ -40,7 +40,7 @@ describe("classroom knowledge notes", () => {
       ),
     );
 
-    expect(markup).toContain("我的追问 / 课堂笔记");
+    expect(markup).toContain("我的笔记");
     expect(markup).toContain("与经过编排的正式课程分开管理");
     expect(markup).toContain("缺证据，未入复习");
     expect(markup).toContain("来源已变化，暂停复习");
@@ -60,8 +60,8 @@ describe("classroom knowledge notes", () => {
 
     // The delivery build has no notes until the export pipeline ships them, and
     // a tab that renders blank reads as broken rather than as empty.
-    expect(markup).toContain("还没有课堂笔记");
-    expect(markup).toContain("我的追问 / 课堂笔记");
+    expect(markup).toContain("还没有保存的笔记");
+    expect(markup).toContain("我的笔记");
   });
 
   it("asks the caller where a note's evidence lives instead of assuming a server", () => {

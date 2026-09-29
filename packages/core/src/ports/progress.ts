@@ -303,7 +303,8 @@ export interface ProgressPort {
     options?: { readonly adoptGuest?: boolean; readonly adoptAnonymousId?: string },
   ): Promise<void>;
   hasGuestProgress?(): boolean;
-  importGuestProgress?(): Promise<void>;
+  /** The optional receipt runs after this identity's local merge, before remote IO. */
+  importGuestProgress?(onLocalApplied?: (userId: string) => void): Promise<void>;
   flush(): Promise<void>;
   syncState(): ProgressSyncState;
 }

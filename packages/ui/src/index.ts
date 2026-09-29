@@ -128,6 +128,7 @@ export {
 export { TermIndex, LEXICON_SEARCH_PLACEHOLDER } from "./reference/TermIndex.js";
 export { AntiPatternIndex, ANTI_PATTERN_SEARCH_PLACEHOLDER } from "./reference/AntiPatternIndex.js";
 export { ConceptIndex, CONCEPT_SEARCH_PLACEHOLDER } from "./reference/ConceptIndex.js";
+export { KnowledgeCardFace, KnowledgeCardTile } from "./reference/KnowledgeCard.js";
 export { CollectionIndex } from "./reference/CollectionIndex.js";
 export { KnowledgeNotes } from "./reference/KnowledgeNotes.js";
 export { LibrarySurface, REFERENCE_TABS, type ReferenceTab } from "./reference/LibrarySurface.js";

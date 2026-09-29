@@ -1,12 +1,14 @@
-import { interfaceTranslator, useI18n } from "../i18n/index.js";
+import { useI18n } from "../i18n/index.js";
 import {
   LIBRARY_TABS,
   type AntiPatternEntry,
   type ConceptEntry,
   type LexiconEntry,
   type LibraryTab,
+  type KnowledgeAlbum,
 } from "@pieai/university-core";
 import { GameSegmentedControl } from "@pieai/swimmer-ui-kit";
+import type { ReactNode } from "react";
 
 import { FavouritesScreen } from "../favourites/FavouritesScreen.js";
 import type { FavouritesStore } from "../favourites/storage.js";
@@ -27,19 +29,6 @@ import { TermIndex } from "./TermIndex.js";
 */
 export const REFERENCE_TABS = LIBRARY_TABS;
 export type ReferenceTab = LibraryTab;
-
-const TAB_LABEL: Record<ReferenceTab, string> = {
-  concepts: interfaceTranslator.t("ui.reference.librarySurface.copy.概念图解"),
-  terms: interfaceTranslator.t("ui.reference.librarySurface.copy.词义索引"),
-  flavour: interfaceTranslator.t("ui.reference.librarySurface.copy.防-AI-味儿"),
-  favourites: interfaceTranslator.t("ui.reference.librarySurface.copy.收藏"),
-  notes: interfaceTranslator.t("ui.reference.librarySurface.copy.课堂笔记"),
-};
-
-const REFERENCE_TAB_OPTIONS = REFERENCE_TABS.map((id) => ({
-  id,
-  label: TAB_LABEL[id],
-}));
 
 function isReferenceTab(id: string): id is ReferenceTab {
   return (REFERENCE_TABS as readonly string[]).includes(id);
@@ -66,6 +55,12 @@ export function LibrarySurface({
   onOpenConcept,
   onOpenTerm,
   onOpenAntiPattern,
+  album,
+  domain,
+  sound = false,
+  onReview,
+  courseware,
+  showAntiPatterns = true,
 }: {
   readonly activeTab: ReferenceTab;
   readonly concepts: readonly ConceptEntry[];
@@ -87,8 +82,22 @@ export function LibrarySurface({
   readonly onOpenConcept: (entry: ConceptEntry) => void;
   readonly onOpenTerm: (entry: LexiconEntry) => void;
   readonly onOpenAntiPattern: (entry: AntiPatternEntry) => void;
+  readonly album?: KnowledgeAlbum;
+  readonly domain?: { readonly id: string; readonly label: string };
+  readonly sound?: boolean;
+  readonly onReview?: () => void;
+  readonly courseware?: ReactNode;
+  readonly showAntiPatterns?: boolean;
 }) {
   const interfaceTranslator = useI18n();
+  const labels: Record<ReferenceTab, string> = {
+    concepts: interfaceTranslator.t("ui.reference.librarySurface.copy.概念图解"),
+    terms: interfaceTranslator.t("ui.reference.librarySurface.copy.词义索引"),
+    flavour: interfaceTranslator.t("ui.reference.librarySurface.copy.防-AI-味儿"),
+    favourites: interfaceTranslator.t("ui.reference.librarySurface.copy.收藏"),
+    notes: interfaceTranslator.t("album.notes"),
+    courseware: interfaceTranslator.t("album.courseware"),
+  };
   return (
     <div className="terms">
       <button className="linkish" type="button" onClick={onBack}>
@@ -101,17 +110,32 @@ export function LibrarySurface({
         <GameSegmentedControl
           label={interfaceTranslator.t("ui.reference.librarySurface.copy.图鉴")}
           activeId={activeTab}
-          options={REFERENCE_TAB_OPTIONS}
+          options={REFERENCE_TABS.filter((id) => id !== "flavour" || showAntiPatterns).map(
+            (id) => ({ id, label: labels[id] }),
+          )}
           onSelect={(id) => {
             if (isReferenceTab(id)) onTabChange(id);
           }}
         />
       </nav>
-      {activeTab === "concepts" ? <ConceptIndex entries={concepts} onOpen={onOpenConcept} /> : null}
+      {activeTab === "concepts" ? (
+        <ConceptIndex
+          entries={concepts}
+          onOpen={onOpenConcept}
+          album={album}
+          domain={domain}
+          onReview={onReview}
+          sound={sound}
+        />
+      ) : null}
       {activeTab === "terms" ? <TermIndex entries={terms} onOpenFull={onOpenTerm} /> : null}
-      {activeTab === "flavour" ? (
+      {activeTab === "flavour" && showAntiPatterns ? (
         <AntiPatternIndex entries={antiPatterns} onOpen={onOpenAntiPattern} />
       ) : null}
+      {activeTab === "flavour" && !showAntiPatterns ? (
+        <p>{interfaceTranslator.t("album.flavourScope")}</p>
+      ) : null}
+      {activeTab === "courseware" ? courseware : null}
       {activeTab === "notes" ? (
         <KnowledgeNotes notes={notes} basePathOf={notesBasePathOf} panelIdPrefix="library-note" />
       ) : null}

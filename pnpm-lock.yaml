@@ -81,13 +81,13 @@ importers:
         version: 0.2.0(react@19.2.8)
       '@pieai/swimmer-nerve-kit':
         specifier: 0.7.0
-        version: 0.7.0(@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
+        version: 0.7.0(@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-render-kit':
         specifier: 0.5.0
         version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.11.0
-        version: 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.12.0
+        version: 2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -215,7 +215,7 @@ importers:
         version: link:../core
       '@pieaistudio/swimmer-auth-kit':
         specifier: 0.1.9
-        version: 0.1.9(@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
+        version: 0.1.9(@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
       '@supabase/supabase-js':
         specifier: 2.110.3
         version: 2.110.3
@@ -270,14 +270,14 @@ importers:
         specifier: 0.2.0
         version: 0.2.0(react@19.2.8)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.11.0
-        version: 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.12.0
+        version: 2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
       '@pieaistudio/swimmer-auth-kit':
         specifier: 0.1.9
-        version: 0.1.9(@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
+        version: 0.1.9(@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
       mermaid:
         specifier: 11.16.0
         version: 11.16.0
@@ -340,8 +340,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.11.0
-        version: 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.12.0
+        version: 2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -907,8 +907,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@2.11.0':
-    resolution: {integrity: sha512-tCrcm1Wk4ojb/zo87cIuZLUENQ9L6rvcgjzkl/9cT//Ok9S8Ga8x1ygAZKYyDHI/MME/Qdge94HqCXA6fFB/Gw==}
+  '@pieai/swimmer-ui-kit@2.12.0':
+    resolution: {integrity: sha512-yOaM4SzVQty57Lik1Na5vBJqZeTdwvTN8b1Xz1PeVCijEaZm1TI1KznE4fiPg08+YfBnN8eg5yyp5cm98ymifA==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -3389,7 +3389,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@pieai/swimmer-nerve-kit@0.7.0(@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
+  '@pieai/swimmer-nerve-kit@0.7.0(@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@ag-ui/client': 1.0.0
       '@ag-ui/core': 1.0.0(zod@4.4.3)
@@ -3399,7 +3399,7 @@ snapshots:
       rxjs: 7.8.1
       zod: 4.4.3
     optionalDependencies:
-      '@pieai/swimmer-ui-kit': 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@pieai/swimmer-ui-kit': 2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
       react-markdown: 10.1.0(@types/react@19.2.18)(react@19.2.8)
 
@@ -3407,16 +3407,16 @@ snapshots:
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@floating-ui/react': 0.27.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@pieaistudio/swimmer-auth-kit@0.1.9(@pieai/swimmer-ui-kit@2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)':
+  '@pieaistudio/swimmer-auth-kit@0.1.9(@pieai/swimmer-ui-kit@2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)':
     dependencies:
       '@pieai/swimmer-backend-client': 0.7.2(@supabase/supabase-js@2.110.3)
-      '@pieai/swimmer-ui-kit': 2.11.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@pieai/swimmer-ui-kit': 2.12.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@supabase/ssr': 0.12.0(@supabase/supabase-js@2.110.3)
       '@supabase/supabase-js': 2.110.3
       react: 19.2.8

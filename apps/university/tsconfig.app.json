@@ -24,5 +24,12 @@
     a type error and is a build-order error.
   */
   "references": [{ "path": "../../packages/core" }],
-  "include": ["src", "e2e-fixtures", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"]
+  "include": [
+    "src",
+    "e2e-fixtures",
+    "test-support",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
 }

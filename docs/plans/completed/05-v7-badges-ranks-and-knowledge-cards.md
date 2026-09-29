@@ -2,11 +2,11 @@
 id: PLAN-V7-05-BADGES-AND-CARDS
 title: "V7 · 05 3D badges and ranks, the card album and card faces"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-27
+last_reviewed: 2026-09-29
 domain: learning-experience
 tags:
   - v7
@@ -115,3 +115,89 @@ rewrite history.
 
 Gate numbers verbatim, UIKit version, captures, and the concept-marking request
 filed for the course-writing workflow.
+
+## Implementation and local acceptance · 2026-09-29
+
+The dependency is now the official **SwimmerUIKit 2.12.0**, exact-pinned in
+the app, DOM package and world package. Its optional card-tilt owner was
+published from `78d86dd19101b5dbf9c8a1eca7ab2209a933e0bd` by manual Trusted
+Publishing run `36557905337`; independent official-registry readback verified
+the tarball SHA-512 and public declarations. UIKit's own source/API/package
+checks passed 464 tests, and its built catalogue passed Chromium/Firefox/WebKit
+with the existing browser-specific scope. No product website was deployed.
+The exact upstream receipt lives in that repository under
+`.devspace-reports/card-orientation/registry-receipt.json`.
+
+University reads authored concept ids from the existing shelves, not a second
+lesson fetch or catalogue. The album and road sets are pure projections;
+starter gifts do not create learning progress. The complete index remains
+searchable and uncollected concepts remain readable. The existing brand card
+and brand-package illustrations supply faces; `packages/ui` imports no Three.js.
+The optional sensor is one explicitly enabled owner per album, with only the
+selected card receiving samples. Permission denial and reduced motion retain
+finger/keyboard controls and account exit unmounts the owner.
+
+Chest rewards and rank ceremonies use the original scene/emblem builders.
+Rank presentation follows a real local scheduler rating, never cloud loading
+or an imported record. Late chest scene callbacks and close timers are bound
+to their owner and receipt, so they cannot close another chest or change a
+new account. Badge display has both locales; completion and first-try badges
+do not treat an explicit unconfirmed modern reading as a finished level.
+
+The [write-lesson request](../../reference/execution/knowledge-card-authoring-request.md)
+records the actual publication gap: **all 93 currently shipped lessons lack
+concept links**, not merely 认识 AI. The two gifts remain real, but the product
+does not fabricate a newly earned concept or an empty-road set. Isolated
+browser fixtures name their fabricated learning history on screen and use the
+real UI and scheduler. They are not evidence of learner retention, live cloud
+accounts or physical sensor permission dialogs.
+
+The first browser run retained failures from an unpersisted URL-language
+override and unexported fixture imports. The latter caused repeated Vite
+diagnostics, not a product recovery path; its process ended failed. The fixture
+now uses the package's public entry points, and the real navigation path uses
+its current locale rather than claiming the query parameter changed a saved
+preference. The reduced-motion reproducer then passed (1 test, 20.2s).
+The final code passed `pnpm verify` (exit **0**) and the combined album,
+chest-opening and return-loop browser regression: **19 passed (2.5m)**,
+exit **0**. Native WebCodex executions retained under this project's session:
+`wc_job_bz6M7z5ASf1zpYhU` and `wc_job_cfyX6Ej56YYntp-R`. The normal pre-push
+suite remains mandatory; the saved candidate and its push receipt belong in
+`SCRATCH/v7-execution/`, not a replacement or weakened gate.
+
+### Integration defects found by the final acceptance
+
+- Optional anonymous save originally looked like an account switch and erased
+  the first chest while it opened. `guest-adoption` now preserves a transient
+  presentation identity only for the exact SDK creation receipt and this
+  guest's local import. A restored or superseding account never inherits it.
+  Local application is reported before remote IO, so a slow cloud request
+  cannot hold the celebration hostage. The original chest assertions remain;
+  a delayed real-SDK/synthetic-provider browser case now guards the handoff.
+- Review-card revisions are independent of lesson revisions. Both shelves
+  expose the declared card versions; album memory uses those identities and
+  versions, never numeric equality with the lesson version. Old/removed cards
+  and an older source lacking this metadata cannot brighten a frame.
+- A modern reading explicitly left unconfirmed does not count as complete for
+  completion/perfect badges. Sensor denial, language changes, keyboard card
+  flipping, narrow card trays, night-theme contrast and unfinished answer
+  inputs remain covered. Seventeen badges still derive from existing records.
+
+### Visible evidence and remaining boundaries
+
+`SCRATCH/e2e/knowledge-album/` contains both modes at 1440px and 390px, the
+real album/courseware entries, isolated three-tier cards, the ordered reveal,
+five ranks, the seventeen-badge wall and the actual scheduler-triggered
+promotion. Final screenshots were inspected; fixture filenames beginning
+`synthetic-` do not establish live accounts, three weeks of real retention,
+physical sensor permission or native-shell acceptance. Original failures are
+retained in the earlier `album-browser-*` logs.
+
+No existing browser case was removed. The old class-note and flat-concept
+expectations were migrated in `LibrarySurface.test.tsx`,
+`KnowledgeNotes.test.tsx`, `screens.test.tsx`, `App.progress.test.tsx` and
+`e2e/harness/experience.ts`; they still check the real entry and return path.
+Task 08 owns the four-door navigation. Task 06 owns cosmetic grants. The
+source-link and starter-title gaps remain with the linked authoring request.
+No course publication, production deployment, charging or remote schema apply
+is represented by this implementation receipt.

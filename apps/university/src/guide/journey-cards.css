@@ -1,3 +1,24 @@
+.rank-promotion {
+  position: fixed;
+  inset-inline-start: var(--game-ui-safe-left);
+  bottom: calc(var(--game-ui-safe-bottom) + 4.5rem);
+  z-index: var(--game-ui-z-toast);
+  width: min(16rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - var(--game-ui-safe-top) - var(--game-ui-safe-bottom) - 5rem);
+  overflow: auto;
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+}
+.rank-promotion .game-ui-toast {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.rank-promotion p {
+  margin: 0;
+}
 .journey-card,
 .journey-card__save {
   display: grid;

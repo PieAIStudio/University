@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
-import { ANTI_PATTERN_ENTRIES, CONCEPT_ENTRIES } from "@pieai/university-core";
+import { ANTI_PATTERN_ENTRIES, CONCEPT_ENTRIES, type KnowledgeAlbum } from "@pieai/university-core";
 import { LibrarySurface } from "@pieai/university-ui";
 import type { KnowledgeNoteView } from "@pieai/university-ui/view/lesson-view.js";
 
@@ -8,6 +8,10 @@ import { LEXICON } from "../lesson/language";
 import { WORLD, type LibraryTab, type View } from "@pieai/university-core";
 import { contentPort } from "../ports";
 import { FAVOURITES_STORE } from "./FavouritesHost";
+import { mapDomainForStudy } from "../app/map-domain-catalog.js";
+import { RouteFallback } from "./lazy.js";
+
+const Courseware = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
 
 /**
  * One door for everything that is looked up rather than worked through.
@@ -26,13 +30,18 @@ export function LibraryHost({
   tab,
   studyId,
   onOpen,
+  album,
+  sound = false,
 }: {
   tab: LibraryTab;
   /** Whose notes. The capsule already names this series; the tab follows it. */
   studyId: string | null;
   onOpen: (view: View) => void;
+  album?: KnowledgeAlbum;
+  sound?: boolean;
 }) {
   const [notes, setNotes] = useState<readonly KnowledgeNoteView[]>([]);
+  const domain = studyId ? mapDomainForStudy(studyId) : null;
   useEffect(() => {
     if (tab !== "notes" || !studyId) return;
     let alive = true;
@@ -54,6 +63,18 @@ export function LibraryHost({
   return (
     <LibrarySurface
       activeTab={tab}
+      album={album}
+      domain={domain ? { id: domain.id, label: domain.title } : undefined}
+      showAntiPatterns={domain?.id === "programming"}
+      sound={sound}
+      onReview={() => onOpen({ kind: "review" })}
+      courseware={
+        tab === "courseware" ? (
+          <Suspense fallback={<RouteFallback />}>
+            <Courseware />
+          </Suspense>
+        ) : null
+      }
       concepts={CONCEPT_ENTRIES}
       terms={LEXICON}
       antiPatterns={ANTI_PATTERN_ENTRIES}

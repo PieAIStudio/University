@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import type { ChestReward } from "@pieai/university-core";
+import type { Badge, ChestReward, KnowledgeAlbumCard } from "@pieai/university-core";
+import { KnowledgeReveal } from "../reference/KnowledgeReveal.js";
+import { badgeCopy } from "../navigation/badge-copy.js";
 
 import { useI18n } from "../i18n/index.js";
 
@@ -44,6 +46,10 @@ export function ChestRewards({
   onSkip,
   onThrow,
   onContinue,
+  knowledgeCards = [],
+  badgeEmblem,
+  completion,
+  sound = false,
 }: {
   readonly stage: ChestRewardStage;
   readonly tier: ChestRewardTier;
@@ -61,6 +67,10 @@ export function ChestRewards({
   readonly onSkip: () => void;
   readonly onThrow: () => void;
   readonly onContinue: () => void;
+  readonly knowledgeCards?: readonly KnowledgeAlbumCard[];
+  readonly badgeEmblem?: (badge: Badge, arriving: boolean) => ReactNode;
+  readonly completion?: ReactNode;
+  readonly sound?: boolean;
 }): ReactNode {
   const interfaceTranslator = useI18n();
   const t = interfaceTranslator.t;
@@ -81,35 +91,42 @@ export function ChestRewards({
       key: "review",
       text: t("chest.reward.reviewCards", { count: reward.reviewCards }),
     });
-  if (reward.knowledgeCards > 0)
+  if (knowledgeCards.length > 0 || reward.knowledgeCards > 0)
     lines.push({
       key: "knowledge",
-      text: t("chest.reward.knowledgeCards", { count: reward.knowledgeCards }),
+      text: knowledgeCards.length
+        ? t("album.lessonCards")
+        : t("chest.reward.knowledgeCards", { count: reward.knowledgeCards }),
     });
   if (reward.streakDay > 0)
     lines.push({ key: "streak", text: t("chest.reward.streak", { day: reward.streakDay }) });
   for (const badge of reward.badges)
     lines.push({
       key: `badge:${badge.id}`,
-      text: t("chest.reward.badge", { name: badge.name }),
+      text: t("chest.reward.badge", { name: badgeCopy(badge, interfaceTranslator).name }),
       badge: true,
     });
 
   const [shown, setShown] = useState(0);
+  const [cardsDone, setCardsDone] = useState(false);
+  const knowledgeIndex = lines.findIndex((line) => line.key === "knowledge");
+  const waitingForCards =
+    knowledgeCards.length > 0 && !cardsDone && knowledgeIndex >= 0 && shown > knowledgeIndex;
   useEffect(() => {
     if (stage !== "rewards" && stage !== "throwing" && stage !== "done") {
       setShown(0);
+      setCardsDone(false);
       return;
     }
     if (reducedMotion) {
       setShown(lines.length);
       return;
     }
-    if (shown >= lines.length) return;
+    if (shown >= lines.length || waitingForCards) return;
     const timer = window.setTimeout(() => setShown((count) => count + 1), REVEAL_SECONDS * 1000);
     return () => window.clearTimeout(timer);
-  }, [stage, shown, lines.length, reducedMotion]);
-  const allShown = shown >= lines.length;
+  }, [stage, shown, lines.length, reducedMotion, waitingForCards]);
+  const allShown = shown >= lines.length && !waitingForCards;
 
   return (
     <section
@@ -142,7 +159,7 @@ export function ChestRewards({
 
       {stage === "rewards" || stage === "throwing" || stage === "done" ? (
         <ul className="chest-rewards__list" aria-live="polite">
-          {lines.slice(0, shown).map((line) => (
+          {lines.slice(0, shown).map((line, index) => (
             <li
               key={line.key}
               className={
@@ -152,10 +169,28 @@ export function ChestRewards({
               }
             >
               {line.text}
+              {line.key === "knowledge" && knowledgeCards.length > 0 ? (
+                <KnowledgeReveal
+                  cards={knowledgeCards}
+                  reducedMotion={reducedMotion}
+                  sound={sound}
+                  onComplete={() => setCardsDone(true)}
+                />
+              ) : null}
+              {line.badge && badgeEmblem
+                ? badgeEmblem(
+                    badgeCopy(
+                      reward.badges.find((badge) => `badge:${badge.id}` === line.key)!,
+                      interfaceTranslator,
+                    ),
+                    index === shown - 1,
+                  )
+                : null}
             </li>
           ))}
         </ul>
       ) : null}
+      {allShown ? completion : null}
 
       {stage === "rewards" && allShown && guardName ? (
         <>

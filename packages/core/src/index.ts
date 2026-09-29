@@ -1,3 +1,11 @@
+export {
+  knowledgeAlbum,
+  knowledgeRevealOrder,
+  type AlbumCourse,
+  type KnowledgeAlbum,
+  type KnowledgeAlbumCard,
+  type KnowledgeAlbumSet,
+} from "./progress/knowledge-album.js";
 export * from "./map-nodes/segments.js";
 export * from "./map-nodes/checkpoint.js";
 export * from "./map-nodes/challenge.js";

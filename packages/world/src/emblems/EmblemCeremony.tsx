@@ -39,7 +39,12 @@ export function EmblemCeremony({
   const [running, setRunning] = useState(false);
   if (!hasWebGLContext()) return null;
   return (
-    <div role="img" aria-label={label} style={{ width: size, height: size }}>
+    <div
+      role="img"
+      aria-label={label}
+      data-emblem-animating={running}
+      style={{ width: size, height: size }}
+    >
       <Canvas
         frameloop={running ? "always" : "demand"}
         dpr={[1, 1.5]}

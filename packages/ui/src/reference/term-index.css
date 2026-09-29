@@ -1,3 +1,136 @@
+.library-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-block: 6px;
+}
+.library-tabs .game-ui-segmented {
+  width: max-content;
+  min-width: 100%;
+}
+.library-tabs .game-ui-segmented button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.knowledge-reveal__cards {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  padding: 20px 10px;
+  margin: 0;
+  scroll-snap-type: x proximity;
+}
+.knowledge-reveal__cards > li {
+  flex: 0 0 170px;
+  scroll-snap-align: center;
+}
+.knowledge-reveal__navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.knowledge-reveal[data-reduced-motion="true"] .knowledge-reveal__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  overflow: visible;
+}
+.knowledge-reveal > p {
+  font-variant-numeric: tabular-nums;
+}
+.course-completion-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 16px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+}
+.course-completion-card p {
+  margin: 0;
+}
+.knowledge-album__header {
+  display: grid;
+  gap: 0.75rem;
+}
+.knowledge-album__scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.knowledge-album__scope p {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.knowledge-album__rules summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.knowledge-album__rules p,
+.knowledge-album__language,
+.term-index__group-detail {
+  font-size: var(--game-ui-font-sm);
+  color: var(--game-ui-text-muted);
+  line-height: 1.6;
+}
+.term-index__list.term-index__list--cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 24px 16px;
+  padding-block: 16px;
+  align-items: start;
+}
+.knowledge-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.knowledge-card > .game-ui-collect-card-slot,
+.knowledge-card__face {
+  width: min(100%, 220px);
+}
+.knowledge-card__art {
+  width: 65%;
+  height: 65%;
+  object-fit: contain;
+}
+.knowledge-card__back img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+.knowledge-card__back {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+.knowledge-card__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.knowledge-card__actions button {
+  min-height: 44px;
+}
+@media (max-width: 480px) {
+  .term-index__list.term-index__list--cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 10px;
+  }
+}
 /*
   Collection index styles, next to the component that emits the class names.
 

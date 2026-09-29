@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-29T08:43:20.622Z
+generated_at: 2026-09-29T13:26:02.089Z
 generator_version: doc-gov@0.14.2
-docs_count: 164
+docs_count: 165
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -200,13 +200,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-16
     pinned: false
-  - id: PLAN-V7-05-BADGES-AND-CARDS
-    path: docs/plans/active/05-v7-badges-ranks-and-knowledge-cards.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-27
-    pinned: false
   - id: PLAN-V7-06-WISPS-AND-PACKS
     path: docs/plans/active/06-v7-review-wisps-card-packs-and-cosmetics.md
     type: plan
@@ -297,6 +290,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-28
+    pinned: false
+  - id: PLAN-V7-05-BADGES-AND-CARDS
+    path: docs/plans/completed/05-v7-badges-ranks-and-knowledge-cards.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-29
     pinned: false
   - id: PLAN-V7-07-WEEKLY-BOSS
     path: docs/plans/completed/07-v7-weekly-boss.md
@@ -500,6 +500,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-13
+    pinned: false
+  - id: REF-KNOWLEDGE-CARD-AUTHORING-REQUEST
+    path: docs/reference/execution/knowledge-card-authoring-request.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-29
     pinned: false
   - id: REF-LOCAL-DEVICE-TESTING
     path: docs/reference/execution/local-device-testing.md

@@ -723,11 +723,11 @@ a.linkish {
 }
 
 /*
-  A locked badge is dimmed, not hidden. The rule stays readable because the
-  wall's job is to be a list of things worth doing, and a row of question marks
-  is a list of things you are behind on.
+  Only the locked emblem is dimmed. Fading the entire tile reduced the rule
+  and progress text to 2.99:1 in the light theme. The rule is information, not
+  a disabled control; it keeps the same readable ink as an earned badge.
 */
-.badge-tile:not(.badge-tile--earned) {
+.badge-tile:not(.badge-tile--earned) .badge-tile__disc {
   opacity: 0.72;
 }
 

@@ -12,6 +12,9 @@
   justify-items: center;
   gap: 0.55rem;
   width: min(22rem, calc(100% - 2rem));
+  max-height: calc(100dvh - var(--game-ui-safe-bottom, 0px) - 3rem);
+  overflow: auto;
+  overscroll-behavior: contain;
   margin-inline: auto;
   padding: 0.85rem 1rem 1rem;
   border-radius: 1.1rem;
@@ -46,8 +49,12 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  min-width: 0;
+  max-width: 100%;
 }
 .chest-rewards__line {
+  min-width: 0;
+  max-width: 100%;
   font-size: var(--game-ui-font-md);
   animation: chest-rewards-rise var(--game-ui-motion-base) var(--game-ui-ease-pop) both;
 }
@@ -56,6 +63,10 @@
   font-size: var(--game-ui-font-lg);
   font-weight: var(--game-ui-weight-strong);
   color: var(--game-ui-accent-ink);
+}
+.chest-rewards__line--badge .emblem-image {
+  display: block;
+  margin-inline: auto;
 }
 .chest-rewards__guard {
   margin: 0;

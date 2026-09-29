@@ -98,8 +98,8 @@ describe("BadgeWall", () => {
     const markup = renderToStaticMarkup(
       withInterfaceLocale(<BadgeWall document={emptyProgress()} />),
     );
-    expect(markup).toContain("连续 7 天来学");
-    expect(markup).toContain("连续 100 天来学");
+    expect(markup).toContain("连续学习达到 7 天");
+    expect(markup).toContain("连续学习达到 100 天");
     expect(markup).toContain("0 / 17");
   });
 });

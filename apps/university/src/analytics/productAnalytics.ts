@@ -307,8 +307,9 @@ export function withProductAnalyticsIdentity(identity: IdentityPort): IdentityPo
       });
     },
     async signInAnonymously(options) {
-      await identity.signInAnonymously(options);
+      const receipt = await identity.signInAnonymously(options);
       identifyCurrent();
+      return receipt;
     },
     async signInWithEmail(email, password) {
       await identity.signInWithEmail(email, password);

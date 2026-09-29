@@ -35,6 +35,7 @@ import { createBrowserProgressPort } from "@pieai/university-ui/progress/store.j
 import { swimmerBackendClient } from "../account/identity";
 import { createSupabaseProgressRemoteStore } from "../account/progress-remote";
 import { withProductAnalyticsProgress } from "../analytics/productAnalytics";
+import { withRankPromotion } from "./rank-promotion.js";
 
 export { lessonKey };
 
@@ -45,7 +46,9 @@ export { lessonKey };
  * screen, so a `trackEvent` beside either one would count half the saves.
  * Wrapping the port once is the only place that sees all of them.
  */
-export const progressPort: ProgressPort = withProductAnalyticsProgress(createBrowserProgressPort());
+const learning = withRankPromotion(withProductAnalyticsProgress(createBrowserProgressPort()));
+export const progressPort: ProgressPort = learning.progress;
+export const rankPromotions = learning.promotions;
 export const progressRemoteStore: ProgressRemoteStore | null = swimmerBackendClient
   ? createSupabaseProgressRemoteStore(swimmerBackendClient)
   : null;

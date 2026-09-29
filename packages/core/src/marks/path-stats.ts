@@ -22,6 +22,19 @@ export function unlockEntryCount(content: string): number {
   return tokenPrefixCount(content, "[[term:") + tokenPrefixCount(content, "[[concept:");
 }
 
+/** Concepts the authored prose names, in source order, once per identity.
+ * The same projection feeds the shelf, album and completion reveal. Merely
+ * resembling a concept name is not a link and never unlocks a card. */
+export function unlockedConceptIds(content: string): readonly string[] {
+  const ids = new Set<string>();
+  for (const link of parseLessonLinks(content)) {
+    if (tokenKind(link) !== "concept") continue;
+    const id = link.rawTarget.slice("concept:".length).trim();
+    if (id) ids.add(id);
+  }
+  return [...ids];
+}
+
 /** Coordinates only: `path:start-end`, without exposing a private source path elsewhere. */
 export function evidenceLocatorOf(rawTarget: string): string | null {
   if (!rawTarget.startsWith("evidence:")) return null;

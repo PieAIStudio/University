@@ -30,6 +30,18 @@ vi.mock("@pieai/university-world/WorldMapCanvas.js", () => ({
 // progress/badges, not WebGL; leaving that boundary live can suspend act() in
 // jsdom. Browser avatar tests still exercise the actual renderer.
 vi.mock("./ProfileAvatar.js", () => ({ ProfileAvatar: () => null }));
+// Emblems are the same graphics boundary as the avatar, not the learning
+// record this jsdom integration checks. Real image loading and all 17 emblem
+// pictures stay covered by knowledge-album.spec.ts in actual Chromium.
+vi.mock("@pieai/university-world", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pieai/university-world")>();
+  return {
+    ...actual,
+    EmblemImage: ({ kind, id }: { kind: string; id: string }) => (
+      <span data-emblem-kind={kind} data-emblem-id={id} />
+    ),
+  };
+});
 
 vi.mock("../ports/index", () => ({
   contentPort: {
@@ -155,7 +167,7 @@ describe("the four screens that read the progress document", () => {
       root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
-    expect(text).toContain("连续 7 天来学");
+    expect(text).toContain("连续学习达到 7 天");
     expect(text).not.toContain("徽章长在投放端");
   }, 15_000);
 

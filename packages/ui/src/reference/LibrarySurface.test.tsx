@@ -50,15 +50,15 @@ describe("the library's tabs", () => {
 
   it("carries the learner's own collection beside the three catalogues", () => {
     const markup = surface("notes");
-    expect(markup).toContain("课堂笔记");
+    expect(markup).toContain("我的笔记");
     // Empty until the export pipeline ships notes with a package. Saying so is
     // the point: a blank panel reads as broken, an empty state reads as empty.
-    expect(markup).toContain("还没有课堂笔记");
+    expect(markup).toContain("还没有保存的笔记");
   });
 
   it("still opens on the concepts index", () => {
     const markup = surface("concepts");
-    expect(markup).toContain("课堂笔记");
+    expect(markup).toContain("我的笔记");
     expect(markup).toContain('class="game-ui-segmented"');
     expect(markup).toContain('aria-pressed="true"');
   });
