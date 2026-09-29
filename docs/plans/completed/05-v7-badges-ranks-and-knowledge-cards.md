@@ -201,3 +201,34 @@ Task 08 owns the four-door navigation. Task 06 owns cosmetic grants. The
 source-link and starter-title gaps remain with the linked authoring request.
 No course publication, production deployment, charging or remote schema apply
 is represented by this implementation receipt.
+
+### Full-push integration repair
+
+The first ordinary push of `988d98ef` stopped at **5 failed / 433 passed
+(24.0m)**, before the timing lane. Four tests still entered courseware from
+Practice; after moving their real navigation into the album, they exposed two
+actual integration omissions: the old map renderer was not released and the
+catalogue's `entry` / `group` query keys leaked into the returning lesson URL.
+The album courseware now shares the original lab's renderer boundary, and
+only that route's own query keys are removed when leaving it. The original
+no-map-canvas, real AI action, exact return URL and identical foliage checks
+remain in all four mode/viewport cases.
+
+The fifth failure left a chest closed after a real press. A focused rerun was
+**2 passed (1.4m)**; deterministic hook tests then reproduced both losing the
+button and dropping its click while this same guest's optional account was
+being adopted. Presentation now stays mounted and accepts scoped presentation
+transitions; actual navigation still waits for verified local adoption, and a
+replaced account/flow still invalidates every retained callback. Both added
+negative controls failed before the fix. The real-SDK browser regression also
+holds a physical pointer press across the account event and checks exact DOM
+node preservation before release.
+
+Post-fix focused checks: **18 passed** hook/router tests and **10 passed
+(2.2m)** actual-browser chest, contrast and full world/courseware round trips
+(`wc_job_VwjvJcoavcyVQHpv`, exit 0). No failed assertion was relaxed and no test
+was removed. The repaired full `pnpm verify` returned **exit 0**
+(`wc_job_9KOso6S20th3G8RE`), including 165 governed documents with zero warnings.
+The new normal push remains required for this candidate; its terminal receipt
+remains the delivery authority.
+

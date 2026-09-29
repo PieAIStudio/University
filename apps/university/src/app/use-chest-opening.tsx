@@ -227,13 +227,13 @@ export function useChestOpening({
     });
   };
 
+  // These are presentation transitions, not account/data writes. The same
+  // guest's optional save must not detach a button between press and release
+  // or lose the scene's one settlement callback. Only a changed learner scope
+  // cancels them. Navigation still waits for verified local adoption below.
   const update = (patch: Partial<Flow>) =>
     setFlow((current) =>
-      current &&
-      current.key === flow?.key &&
-      current.owner === owner &&
-      readOwner() === owner &&
-      canAct()
+      current && current.key === flow?.key && current.owner === owner && readOwner() === owner
         ? { ...current, ...patch }
         : current,
     );
@@ -307,7 +307,6 @@ export function useChestOpening({
           setFlow((current) =>
             current?.key === flow.key &&
             current.owner === readOwner() &&
-            canAct() &&
             current.stage === "opening"
               ? { ...current, stage: "rewards" }
               : current,
@@ -315,7 +314,7 @@ export function useChestOpening({
       },
       onTap: () =>
         setFlow((current) =>
-          !current || current.key !== flow.key || current.owner !== readOwner() || !canAct()
+          !current || current.key !== flow.key || current.owner !== readOwner()
             ? current
             : current.stage === "closed"
               ? { ...current, stage: "opening" }
@@ -329,11 +328,7 @@ export function useChestOpening({
   // A scrollable reward list reuses the same pre-rendered 3D picture as
   // the badge wall, rather than opening a WebGL context per badge.
   const overlay =
-    flow && !ready ? (
-      <section className="chest-rewards" role="status" aria-busy="true">
-        {t.t("album.accountPreparing")}
-      </section>
-    ) : flow && flow.stage !== "leaving" ? (
+    flow && flow.stage !== "leaving" ? (
       <ChestRewards
         stage={flow.stage}
         tier={flow.tier}
@@ -370,6 +365,10 @@ export function useChestOpening({
           });
         }}
       />
+    ) : flow && !ready ? (
+      <section className="chest-rewards" role="status" aria-busy="true">
+        {t.t("album.accountPreparing")}
+      </section>
     ) : null;
 
   return {

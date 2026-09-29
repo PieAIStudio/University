@@ -23,6 +23,7 @@ vi.mock("../progress/store", () => ({
   snapshot: () => state.port!.snapshot(),
 }));
 import { useChestOpening } from "./use-chest-opening.js";
+import type { GuestAdoption, GuestAdoptionSnapshot } from "../account/guest-adoption.js";
 
 const locator = { studyId: "s", courseId: "c", unitId: "u", lessonId: "l" };
 const heads: readonly ConceptHead[] = [
@@ -53,6 +54,28 @@ const lessons = [{ ...locator, state: "live" }] as unknown as readonly LessonPla
 let host: HTMLDivElement, root: Root;
 let result: ReturnType<typeof useChestOpening>;
 let sourceReady = true;
+let adoption: GuestAdoption | undefined;
+let paint = false;
+function controlledAdoption() {
+  let snapshot: GuestAdoptionSnapshot = { scope: {}, ready: true };
+  const observers = new Set<() => void>();
+  adoption = {
+    getSnapshot: () => snapshot,
+    subscribe: (callback) => {
+      observers.add(callback);
+      return () => {
+        observers.delete(callback);
+      };
+    },
+    connect: () => () => {},
+    create: async () => {},
+  };
+  return (ready: boolean, replaceScope = false) => {
+    snapshot = { scope: replaceScope ? {} : snapshot.scope, ready };
+    const recipients = [...observers];
+    for (const callback of recipients) callback();
+  };
+}
 const done = vi.fn();
 const readAlbum = () =>
   sourceReady
@@ -67,8 +90,9 @@ function Probe() {
     onLessonDone: done,
     readAlbum,
     courseTitle: course.title,
+    guestAdoption: adoption,
   });
-  return null;
+  return paint ? result.overlay : null;
 }
 const card = () => (result.overlay as ReactElement<Parameters<typeof ChestRewards>[0]>).props;
 async function render() {
@@ -98,6 +122,8 @@ beforeEach(() => {
   });
   sourceReady = true;
   done.mockReset();
+  adoption = undefined;
+  paint = false;
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -163,6 +189,51 @@ describe("chest rewards and callbacks keep their original record and owner", () 
     expect(result.active).toBe(true);
     expect(card().stage).toBe("closed");
     expect(done).not.toHaveBeenCalled();
+  });
+  it("does not detach a pressed button or discard its event while this same guest is being adopted", async () => {
+    const change = controlledAdoption();
+    paint = true;
+    await render();
+    await finish();
+    await act(async () => result.begin(locator));
+    const button = host.querySelector<HTMLButtonElement>('[data-chest-action="open"]')!;
+    const receipt = JSON.stringify(state.port!.snapshot());
+    await act(async () => change(false));
+    expect(host.querySelector('[data-chest-action="open"]')).toBe(button);
+    await act(async () => button.click());
+    expect(result.opening?.started).toBe(true);
+    await act(async () => result.opening!.onPhase?.("settled"));
+    await act(async () => change(true));
+    expect(card().stage).toBe("rewards");
+    expect(JSON.stringify(state.port!.snapshot())).toBe(receipt);
+  });
+  it("defers Continue's navigation until local adoption completes and still refuses a replaced scope", async () => {
+    vi.useFakeTimers();
+    const change = controlledAdoption();
+    await render();
+    await finish();
+    await act(async () => result.begin(locator));
+    const next = card().onContinue;
+    await act(async () => {
+      change(false);
+      next();
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(done).not.toHaveBeenCalled();
+    await act(async () => change(true));
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(done).toHaveBeenCalledExactlyOnceWith(locator);
+    done.mockReset();
+    await act(async () => result.begin(locator));
+    const oldNext = card().onContinue;
+    await act(async () => {
+      change(false);
+      oldNext();
+    });
+    await act(async () => change(true, true));
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(done).not.toHaveBeenCalled();
+    expect(result.active).toBe(false);
   });
   it("hides the old account's receipt immediately and blocks its retained scene actions", async () => {
     await render();

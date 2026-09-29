@@ -116,6 +116,39 @@ test.describe("V7 chest opening", () => {
     await expect(page.locator(".settle")).toHaveCount(0);
   });
 
+  test("a real pointer held across anonymous adoption opens the same button exactly once", async ({
+    page,
+  }) => {
+    const account = await finishFirstLesson(page, true);
+    const open = page.locator('[data-chest-action="open"]');
+    await expect(open).toBeVisible();
+    await open.scrollIntoViewIfNeeded();
+    const handle = await open.elementHandle();
+    const box = await open.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await expect.poll(account.creations).toBe(1);
+    account.release();
+    await expect
+      .poll(() =>
+        page.evaluate((id) => {
+          const raw = localStorage.getItem(`university.progress.v2.account.${id}`);
+          return raw ? JSON.parse(raw).totalXp : 0;
+        }, account.id),
+      )
+      .toBeGreaterThan(0);
+    expect(
+      await handle!.evaluate(
+        (node) => node === document.querySelector('[data-chest-action="open"]'),
+      ),
+    ).toBe(true);
+    await page.mouse.up();
+    await expect(page.locator("[data-chest-stage]")).toHaveAttribute(
+      "data-chest-stage",
+      /opening|rewards/,
+    );
+    await handle!.dispose();
+  });
   test("under reduced motion the chest is simply open and the rewards come at once", async ({
     page,
   }) => {

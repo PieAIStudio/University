@@ -44,6 +44,10 @@ function stripAuthSearch(search: string): string {
   return next ? `?${next}` : "";
 }
 
+const ownsCoursewareSearch = (view: View): boolean =>
+  (view.kind === "library" && view.tab === "courseware") ||
+  (view.kind === "play-lab" && view.collection === "catalog");
+
 function canonicalLocation(view: View): string {
   // Authentication owns its callback parameters. Never race the SDK by
   // removing a still-unconsumed fragment while it is still on the auth route.
@@ -56,7 +60,16 @@ function canonicalLocation(view: View): string {
     : location.hash.startsWith("#/")
       ? ""
       : location.hash;
-  const search = keepAuth ? location.search : stripAuthSearch(location.search);
+  let search = keepAuth ? location.search : stripAuthSearch(location.search);
+  if (ownsCoursewareSearch(fromPath(location.pathname)) && !ownsCoursewareSearch(view)) {
+    // The catalogue owns its selection/filter, not the next lesson's address.
+    // Leave language and unrelated document parameters untouched.
+    const params = new URLSearchParams(search);
+    params.delete("entry");
+    params.delete("group");
+    const value = params.toString();
+    search = value ? `?${value}` : "";
+  }
   return `${toPath(view)}${search}${fragment}`;
 }
 

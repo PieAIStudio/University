@@ -1027,7 +1027,12 @@ export function App() {
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
   const stage =
-    view.kind === "avatar-lab" || view.kind === "play-lab" || studioMap ? null : (
+    // Courseware keeps the lab's renderer boundary after moving into the
+    // album: its games may own a canvas, so the map must release its own.
+    view.kind === "avatar-lab" ||
+    view.kind === "play-lab" ||
+    (view.kind === "library" && view.tab === "courseware") ||
+    studioMap ? null : (
       <WorldMapCanvas
         commandsRef={mapCommands}
         dataReady={!waitingForData}

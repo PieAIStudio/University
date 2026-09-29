@@ -55,20 +55,20 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
         await waitForCourseFraming(page);
         const crownsBefore = await inspectWholeCourse(page, join(folder, "course-before.png"));
 
-        if (!(await page.getByRole("link", { name: "练习", exact: true }).isVisible()))
+        if (!(await page.getByRole("link", { name: "图鉴", exact: true }).isVisible()))
           await page.locator(".app-shell__collapse--rail").click();
         await humanClick(
           page,
-          page.getByRole("link", { name: "练习", exact: true }),
-          "open practice from the real shell",
+          page.getByRole("link", { name: "图鉴", exact: true }),
+          "open the real library door",
         );
         await expect(
           page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         await humanClick(
           page,
-          page.getByRole("button", { name: "体验互动课件", exact: true }),
-          "open the learning activities",
+          page.locator(".library-tabs").getByRole("button", { name: "互动课件", exact: true }),
+          "open the learning activities from their V7 album home",
         );
         await expect(page.locator(".learning-activity")).toHaveAttribute(
           "data-activity",
@@ -81,7 +81,7 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
 
         await humanClick(
           page,
-          page.getByRole("link", { name: "用 AI 做产品", exact: true }),
+          page.locator('[data-entry-id="native:ai-brief"]'),
           "switch to the AI collection",
         );
         await expect(page.locator(".learning-activity")).toHaveAttribute(
@@ -103,10 +103,9 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
 
         await humanClick(
           page,
-          page.getByRole("link", { name: "回到练习", exact: true }),
-          "return from the activity",
+          page.getByRole("button", { name: /关卡地图/ }),
+          "return from the album activity to the map",
         );
-        await humanClick(page, page.getByRole("button", { name: /关卡地图/ }), "return to the map");
         await expect(page.locator('.map-breadcrumbs [aria-current="page"]')).toHaveText(
           GAME_ROUTE_TITLE,
         );
@@ -124,9 +123,10 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
         await expect(page.locator(".stagewrap:not([hidden]) canvas")).toHaveCount(1);
         await expect(page.locator('[data-map-surface="true"]')).toBeVisible();
         const crownsAfter = await inspectWholeCourse(page, join(folder, "course-returned.png"));
-        expect(crownsAfter, "returning from the lab must retain the actual course foliage").toBe(
-          crownsBefore,
-        );
+        expect(
+          crownsAfter,
+          "returning from the album activity must retain the actual course foliage",
+        ).toBe(crownsBefore);
         errors.assertClean();
         writeFileSync(
           join(folder, "receipt.json"),
