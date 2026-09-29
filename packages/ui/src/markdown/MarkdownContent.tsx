@@ -1,5 +1,14 @@
 import { interfaceTranslator, useI18n } from "../i18n/index.js";
-import { Children, isValidElement, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Children,
+  createContext,
+  isValidElement,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
@@ -351,6 +360,50 @@ const markdownComponents: Components = {
     return <pre {...props}>{children}</pre>;
   },
 };
+
+/** The board's component identity is not a callback or a catalogue allocation.
+ * Reader progress, source panels and refreshed equivalent content must not
+ * replace a half-finished activity. Context supplies the current inputs while
+ * react-markdown keeps this one component mounted at its original occurrence. */
+const LessonPlayContext = createContext<{
+  readonly activitiesById: ReadonlyMap<string, LearningActivitySpec>;
+  readonly levelsById: ReturnType<typeof groupActivityLevels>;
+  readonly assets: readonly LessonAssetView[];
+  readonly suppressedActivityId?: string;
+  readonly onActivityResult?: (result: ActivityResult) => void;
+} | null>(null);
+
+function LessonPlayBlock({
+  node,
+}: {
+  readonly node?: { readonly properties?: Record<string, unknown> };
+}) {
+  const context = useContext(LessonPlayContext);
+  const t = useI18n();
+  const id = directiveProperty(node, "activityId");
+  if (!context || id === context.suppressedActivityId) return null;
+  const activity = context.activitiesById.get(id);
+  if (!activity) {
+    return (
+      <p className="lesson-directive-unsupported" role="note">
+        {t.t("ui.markdown.markdownContent.copy.找不到这个互动课件")}
+        <code>{id}</code>
+      </p>
+    );
+  }
+  return (
+    <LearningActivity
+      // A genuinely replaced authored exercise starts a new attempt; fresh
+      // objects containing the same definition do not discard the old one.
+      key={JSON.stringify(activity)}
+      activity={activity}
+      assets={context.assets}
+      levels={context.levelsById.get(id)}
+      occurrenceId={id}
+      onResult={context.onActivityResult}
+    />
+  );
+}
 
 /**
  * Renders lesson Markdown, optionally with the English layer switched on.
@@ -780,39 +833,7 @@ export function MarkdownContent({
           </LessonMediaBlock>
         );
       },
-      "lesson-play"({
-        node,
-      }: {
-        readonly node?: { readonly properties?: Record<string, unknown> };
-      }) {
-        const id = directiveProperty(node, "activityId");
-        if (id === suppressedActivityId) return null;
-        const activity = activitiesById.get(id);
-        /*
-          A play block that resolves to nothing is said out loud rather than
-          rendered as a gap. Silence here would read as "this lesson has no
-          activity", which is exactly the state a broken reference produces —
-          so the reader, and anyone reviewing the lesson, could not tell a
-          deliberate omission from a typo in an id.
-        */
-        if (!activity) {
-          return (
-            <p className="lesson-directive-unsupported" role="note">
-              {interfaceTranslator.t("ui.markdown.markdownContent.copy.找不到这个互动课件")}
-              <code>{id}</code>
-            </p>
-          );
-        }
-        return (
-          <LearningActivity
-            activity={activity}
-            assets={assets}
-            levels={levelsById.get(id)}
-            occurrenceId={id}
-            onResult={onActivityResult}
-          />
-        );
-      },
+      "lesson-play": LessonPlayBlock,
       "lesson-directive-unsupported"({
         node,
       }: {
@@ -867,10 +888,6 @@ export function MarkdownContent({
       inlineEvidenceIndices,
       placeTellsThemApart,
       assetsById,
-      activitiesById,
-      suppressedActivityId,
-      levelsById,
-      onActivityResult,
       sectionsByTitle,
       detailMode,
       foreignSettings,
@@ -916,9 +933,13 @@ export function MarkdownContent({
 
   return (
     <>
-      <ReactMarkdown components={components} remarkPlugins={plugins as never}>
-        {children}
-      </ReactMarkdown>
+      <LessonPlayContext.Provider
+        value={{ activitiesById, levelsById, assets, suppressedActivityId, onActivityResult }}
+      >
+        <ReactMarkdown components={components} remarkPlugins={plugins as never}>
+          {children}
+        </ReactMarkdown>
+      </LessonPlayContext.Provider>
       <ReferencePanel
         open={openReference !== null}
         title={

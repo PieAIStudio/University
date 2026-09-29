@@ -309,17 +309,19 @@ test("长标签接线课在两种语言和两种模式下都能亲手完成", as
       await page.goto(`${origin}${target.path}?lang=${language}`);
       const board = page.locator(".play-connect__board");
       await expect(board).toBeVisible();
-      for (const edge of target.activity.edges) {
-        await humanClick(
-          page,
-          board.locator(`[data-connect-node=${JSON.stringify(edge.from)}]`),
-          "choose source node",
-        );
-        await humanClick(
-          page,
-          board.locator(`[data-connect-node=${JSON.stringify(edge.to)}]`),
-          "choose destination node",
-        );
+      for (const [index, edge] of target.activity.edges.entries()) {
+        const source = board.locator(`[data-connect-node=${JSON.stringify(edge.from)}]`);
+        const destination = board.locator(`[data-connect-node=${JSON.stringify(edge.to)}]`);
+        await expect(source).toBeEnabled();
+        await humanClick(page, source, "choose source node");
+        // A pointer release is not the board's state transition. On a busy
+        // machine wait for the actual selected source before choosing its
+        // destination, and for the new wire before starting another edge.
+        // Never replay a dispatched click or relax the final wire count.
+        await expect(source).toHaveAttribute("aria-pressed", "true");
+        await humanClick(page, destination, "choose destination node");
+        await expect(source).toHaveAttribute("aria-pressed", "false");
+        await expect(board.locator(".play-connect__wires > path")).toHaveCount(index + 1);
       }
       await expect(board.locator(".play-connect__wires > path")).toHaveCount(
         target.activity.edges.length,

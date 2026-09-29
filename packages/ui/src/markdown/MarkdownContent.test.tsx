@@ -932,6 +932,46 @@ describe("interactive courseware in the prose", () => {
     expect(container.textContent).not.toContain("::play");
   });
 
+  it("keeps an unfinished wire when the reader supplies fresh callbacks and equivalent content", async () => {
+    const markdown = "::play{#where-a-click-goes}\n";
+    await renderMarkdown(markdown, {
+      activities: [connectActivity],
+      onOpenEvidence: vi.fn(),
+    });
+    const source = container.querySelector<HTMLButtonElement>('[data-connect-node="button"]')!;
+    await act(async () => source.click());
+    expect(source.getAttribute("aria-pressed")).toBe("true");
+    await renderMarkdown(markdown, {
+      activities: [{ ...connectActivity }],
+      onOpenEvidence: vi.fn(),
+    });
+    expect(container.querySelector('[data-connect-node="button"]')).toBe(source);
+    expect(source.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-connect-node="handler"]')!.click();
+    });
+    expect(container.querySelectorAll(".play-connect__wires > path")).toHaveLength(1);
+    await renderMarkdown(markdown, { activities: [connectActivity], onOpenEvidence: vi.fn() });
+    expect(container.querySelectorAll(".play-connect__wires > path")).toHaveLength(1);
+  });
+
+  it("starts a new board for changed authored content and keeps separate occurrences independent", async () => {
+    const markdown = "::play{#where-a-click-goes}\n\n::play{#where-a-click-goes}\n";
+    await renderMarkdown(markdown, { activities: [connectActivity] });
+    const sources = container.querySelectorAll<HTMLButtonElement>('[data-connect-node="button"]');
+    expect(sources).toHaveLength(2);
+    await act(async () => sources[0]!.click());
+    expect(sources[0]!.getAttribute("aria-pressed")).toBe("true");
+    expect(sources[1]!.getAttribute("aria-pressed")).toBe("false");
+    await renderMarkdown(markdown, {
+      activities: [{ ...connectActivity, hint: "A changed authored exercise." }],
+    });
+    expect(container.querySelector('[data-connect-node="button"]')).not.toBe(sources[0]);
+    expect(
+      container.querySelector('[data-connect-node="button"]')?.getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
   /*
     A reference that resolves to nothing has to say so. Rendering an empty gap
     would look exactly like a lesson that deliberately has no activity, which

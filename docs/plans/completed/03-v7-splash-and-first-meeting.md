@@ -21,6 +21,32 @@ superseded_by: null
 
 # Task 03 · Splash, transition screen and 涟's first meeting
 
+## Delivery-gate follow-up: preserve a partly connected exercise
+
+The normal push of `2888cd96` reached `420 passed (21.2m)` and one failure in
+the bilingual connect lesson. Its isolated rerun passed (`1 passed (35.0s)`),
+but three parallel reproductions with per-action state assertions produced
+`2 failed`, `1 passed (1.3m)`. This was not dismissed as harmless test timing.
+The Markdown renderer recreated its `lesson-play` component whenever reader
+callbacks or equivalent content objects changed, unmounting the unfinished
+board between the learner's two clicks.
+
+The directive now has a stable component identity and receives current inputs
+through context. Only a changed authored activity definition resets its board;
+separate occurrences remain independent. A deterministic unit reproduction
+failed on the former implementation and passes after the fix. The browser
+case also checks the actual selected source and each new wire before moving on,
+without replaying clicks or relaxing its completion and geometry assertions.
+The complete Markdown unit file now reports `33 passed`; the same three-worker
+browser reproduction reports `3 passed (40.6s)`. Full local validation is
+`opening-markdown-verify.log`: `VERIFY_EXIT=0`. The retained result and current
+browser captures are in `SCRATCH/v7-execution/connect-state-gates.json` and
+`connect-state-regression/`.
+
+This follow-up remains part of task 03's delivery, not authority to start 04
+before the unchanged full pre-push gate passes. Its final push receipt is recorded
+with the retained delivery evidence.
+
 ## Context the executor does not have
 
 - Repository `/Users/yuanfei/PieAI/University`, branch `main`; queue rules in
