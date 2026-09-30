@@ -156,7 +156,12 @@ export function FirstUseGuide({
             {last ? t("guide.start") : t("guide.ok")}
           </GameButton>
         )}
-        <button type="button" className="first-use__skip" onClick={onDone}>
+        <button
+          type="button"
+          className="first-use__skip"
+          onClick={onDone}
+          data-testid="first-use-skip"
+        >
           {t("guide.skip")}
         </button>
       </div>

@@ -52,6 +52,10 @@ export const messages = {
   "guide.skip": "Skip",
   "guide.replay": "Show me how to play",
   "guide.replayOn": "Showing how at the start ✓",
+  "intercept.reason": "“{text}”: {why}",
+  "guide.intercept.question": "What to decide is written here.",
+  "guide.intercept.boats": "Paper boats sail in under the gate; one that reaches the shore gets away.",
+  "guide.intercept.throw": "Press the button that matches a basket and your character throws at the nearest boat. It counts only in the right basket.",
   "guide.links.question": "What to do is written here.",
   "guide.links.pick": "Tap a stone first.",
   "guide.links.pair":
@@ -149,19 +153,12 @@ export const messages = {
   "links.labNote":
     "Preview: questions from the lessons in this course that have a linking step. The preview ignores progress; on the map, only finished lessons give questions.",
   "intercept.title": "Courtyard Catch",
-  "intercept.intro":
-    "Paper boats bring sentences from this stretch of lessons. Press the button that matches a basket''s colour and your character throws at the nearest boat; it only counts if the sentence lands in the right basket. A wrong throw, or a boat that reaches the shore, costs a heart.",
+  "intercept.intro": "Paper boats bring sentences from your lessons; throw each into the right basket.",
   "intercept.controls": "You can tap a boat first to aim at it; keys 1, 2, 3 throw, Esc pauses.",
   "intercept.calm": "Take it slow: boats drift more gently",
-  "intercept.start": "Start",
-  "intercept.sources": "Questions from: {lessons}",
   "intercept.boat": "Boat: {text}",
   "intercept.boatRevealed": "Boat: {text}, belongs in “{bin}”",
   "intercept.newBoat": "New boat: {text}",
-  "intercept.unavailable":
-    "3D can''t open right now; this run is paused. Try again, or play the 2D matching game instead.",
   "intercept.labNote":
     "Preview: questions from the lessons the first course''s first game node draws on (lessons 1–6). The preview ignores progress; on the map, only finished lessons give questions.",
-  "intercept.plain": "Play the 2D matching game",
-  "intercept.retry": "Open 3D again",
 } as const;

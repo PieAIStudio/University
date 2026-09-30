@@ -50,6 +50,10 @@ export const messages = {
   "guide.skip": "跳过",
   "guide.replay": "看看怎么玩",
   "guide.replayOn": "开局时再教一遍 ✓",
+  "intercept.reason": "「{text}」{why}",
+  "guide.intercept.question": "要判断的事写在这里。",
+  "guide.intercept.boats": "纸船会载着句子从门那边漂过来，漂到岸边就漏掉了。",
+  "guide.intercept.throw": "按和篮子同色的按钮，小兔子就把球扔向最近的船。句子进对的篮子才算对。",
   "guide.links.question": "要做的事写在这里。",
   "guide.links.pick": "先点一块石头。",
   "guide.links.pair": "再点和它连着的那块，桥就搭好了。连错会少一颗心。",
@@ -141,18 +145,12 @@ export const messages = {
   "links.labNote":
     "试玩：题目取自这门课里带「连一连」的关。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "intercept.title": "庭院拦截",
-  "intercept.intro":
-    "纸船载着这一段课里的句子漂过来。按下面和篮子同色的按钮，角色就把球扔向最近的船，句子进对的篮子才算对。扔错或让船漂到岸边，都会少一颗心。",
+  "intercept.intro": "纸船载着课里的句子漂过来，把每一句扔进对的篮子。",
   "intercept.controls": "也可以先点一只船瞄准它；键盘按 1、2、3 扔，Esc 暂停。",
   "intercept.calm": "慢慢玩：船漂得慢一些",
-  "intercept.start": "开始",
-  "intercept.sources": "题目来自：{lessons}",
   "intercept.boat": "船上：{text}",
   "intercept.boatRevealed": "船上：{text}，应放进「{bin}」",
   "intercept.newBoat": "新的一只船：{text}",
-  "intercept.unavailable": "3D 暂时打不开，这一局已暂停。可以重新打开，或改玩二维配对。",
   "intercept.labNote":
     "试玩：题目取第一门课第一个游戏节点能用到的课（第 1–6 节）。试玩不看学习进度；在地图上，只有学完的课才会出题。",
-  "intercept.plain": "改玩二维配对",
-  "intercept.retry": "重新打开 3D",
 } as const;

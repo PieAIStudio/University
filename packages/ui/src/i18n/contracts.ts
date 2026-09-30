@@ -1008,6 +1008,9 @@ export interface MessageContracts {
   readonly "guide.blocks.column": {  };
   readonly "guide.blocks.move": {  };
   readonly "guide.blocks.next": {  };
+  readonly "guide.intercept.boats": {  };
+  readonly "guide.intercept.question": {  };
+  readonly "guide.intercept.throw": {  };
   readonly "guide.links.pair": {  };
   readonly "guide.links.pick": {  };
   readonly "guide.links.question": {  };
@@ -1036,12 +1039,8 @@ export interface MessageContracts {
   readonly "intercept.intro": {  };
   readonly "intercept.labNote": {  };
   readonly "intercept.newBoat": { readonly "text": string | number | bigint | boolean | null | undefined | Date; };
-  readonly "intercept.plain": {  };
-  readonly "intercept.retry": {  };
-  readonly "intercept.sources": { readonly "lessons": string | number | bigint | boolean | null | undefined | Date; };
-  readonly "intercept.start": {  };
+  readonly "intercept.reason": { readonly "text": string | number | bigint | boolean | null | undefined | Date; readonly "why": string | number | bigint | boolean | null | undefined | Date; };
   readonly "intercept.title": {  };
-  readonly "intercept.unavailable": {  };
   readonly "journey.avatar.close": {  };
   readonly "journey.avatar.open": {  };
   readonly "journey.avatar.title": {  };

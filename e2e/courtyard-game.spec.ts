@@ -26,6 +26,13 @@ async function startFirstRound(page: Page) {
   await expect
     .poll(async () => (await live(page)).state.phase, { timeout: 30_000 })
     .toBe("playing");
+  // A fresh learner meets 涟's first-use walk before time starts; this test is
+  // about the game, so it skips the walk (first-use-guide.spec.ts walks it).
+  // The droplet's bubble is drawn at the top of the page, not inside the guide.
+  const guide = page.getByTestId("first-use");
+  await expect(guide).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId("first-use-skip").click();
+  await expect(guide).toHaveCount(0);
 }
 
 /** The answer index for the boat a throw would take now, once it is readable. */
