@@ -115,6 +115,7 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
       ["snake", "blocks:rank", "snake.controls"],
       ["moles", "arcade:slice", "moles.controls"],
       ["runner", "arcade:chase", "runner.controls"],
+      ["blocks", "arcade:stack", "blocks.controls"],
     ] as const
   ).map(([mode, inspiredBy, controls]) => ({
     id: `three:${mode}`,

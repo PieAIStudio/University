@@ -83,3 +83,15 @@ export {
   type RunnerState,
 } from "./rules/runner.js";
 export { LANE_WIDTH, RunnerScene, type RunnerSceneProps } from "./RunnerScene.js";
+export {
+  BlocksSession,
+  MAX_BRICKS,
+  WELL_ROWS,
+  fallSpeed,
+  floorOf,
+  type BlocksAction,
+  type BlocksEvent,
+  type BlocksState,
+  type Falling,
+} from "./rules/blocks.js";
+export { BlocksScene, type BlocksSceneProps } from "./BlocksScene.js";

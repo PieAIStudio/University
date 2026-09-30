@@ -35,7 +35,16 @@ export interface HudInset {
   readonly bottom: number;
 }
 
-export function Framing({ hud, box }: { hud: HudInset; box: (aspect: number) => ArenaBox }) {
+export function Framing({
+  hud,
+  box,
+  pitch,
+}: {
+  hud: HudInset;
+  box: (aspect: number) => ArenaBox;
+  /** Radians below the horizon; omitted, the kit's default for a floor-level arena. */
+  pitch?: number;
+}) {
   const { camera, size } = useThree();
   useEffect(() => {
     if (!(camera instanceof THREE.PerspectiveCamera) || !size.height) return;
@@ -43,12 +52,13 @@ export function Framing({ hud, box }: { hud: HudInset; box: (aspect: number) => 
     const fit = fitStage(box(aspect), aspect, {
       top: Math.min(0.4, (hud.top + 8) / size.height),
       bottom: Math.min(0.2, (hud.bottom + 6) / size.height),
+      ...(pitch === undefined ? {} : { pitch }),
     });
     camera.fov = fit.fov;
     camera.position.copy(fit.position);
     camera.lookAt(fit.target);
     camera.updateProjectionMatrix();
-  }, [camera, size.width, size.height, hud.top, hud.bottom, box]);
+  }, [camera, size.width, size.height, hud.top, hud.bottom, box, pitch]);
   return null;
 }
 

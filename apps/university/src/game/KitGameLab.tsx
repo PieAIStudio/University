@@ -1,10 +1,12 @@
 import {
   choiceRoundsFromLesson,
+  gameRoundsFromLesson,
   linkRoundsFromLesson,
   sequenceRoundsFromLesson,
   spotRoundsFromLesson,
   type ChoiceRound,
   type GameLesson,
+  type GameRound,
   type LinkRound,
   type SequenceRound,
   type SpotRound,
@@ -14,6 +16,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { contentPort } from "../ports/index";
 import samples from "./lab-samples.json";
+import { BlocksGame } from "./BlocksGame.js";
 import { LinksGame } from "./LinksGame.js";
 import { MolesGame } from "./MolesGame.js";
 import { RunnerGame } from "./RunnerGame.js";
@@ -58,6 +61,11 @@ const LABS = {
     samples: samples.runner as unknown as readonly ChoiceRound[],
     play: (rounds) => <RunnerGame rounds={rounds} />,
   } satisfies KitLab<ChoiceRound>,
+  blocks: {
+    project: gameRoundsFromLesson,
+    samples: samples.blocks as unknown as readonly GameRound[],
+    play: (rounds) => <BlocksGame rounds={rounds} />,
+  } satisfies KitLab<GameRound>,
 } as const;
 
 export type KitLabGame = keyof typeof LABS;

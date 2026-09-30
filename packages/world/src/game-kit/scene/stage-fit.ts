@@ -27,6 +27,8 @@ export interface FitOptions {
   readonly bottom?: number;
   /** Share of the canvas width left clear at each side. */
   readonly side?: number;
+  /** Radians below the horizon; by default steeper for taller stages. An upright arena wants a low one. */
+  readonly pitch?: number;
 }
 
 function corners(box: ArenaBox): THREE.Vector3[] {
@@ -48,7 +50,7 @@ export function fitStage(box: ArenaBox, aspect: number, options: FitOptions = {}
   const top = options.top ?? 0.2;
   const bottom = options.bottom ?? 0.03;
   const side = options.side ?? 0.03;
-  const pitch = stagePitch(aspect);
+  const pitch = options.pitch ?? stagePitch(aspect);
   const direction = new THREE.Vector3(0, -Math.sin(pitch), -Math.cos(pitch));
   const camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 400);
   const points = corners(box);

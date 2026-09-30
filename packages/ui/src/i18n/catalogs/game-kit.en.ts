@@ -96,6 +96,19 @@ export const messages = {
   "runner.archCurrent": "Lane {lane}: {text}, you are in this lane",
   "runner.labNote":
     "Preview: questions from the weigh and decision steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
+  "blocks.title": "Falling Blocks",
+  "blocks.intro":
+    "Blocks fall one at a time, each carrying a sentence from the lesson. Each column of the cabinet is one basket. Move a block into the right column and let it land: a right landing melts into the basket; a wrong one costs a heart and stays as a grey brick at the bottom of that column, making it shorter.",
+  "blocks.controls":
+    "Move with the left and right arrows or the buttons below, drop with Space or Drop, or tap a basket name at the top. Esc pauses.",
+  "blocks.calm": "Take it slow: blocks fall more gently",
+  "blocks.next": "Next: {text}",
+  "blocks.drop": "Drop",
+  "blocks.reason": "“{text}”: {why}",
+  "blocks.column": "Column: {label}",
+  "blocks.columnCurrent": "Column: {label}, the block is here",
+  "blocks.labNote":
+    "Preview: questions from the sort steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "links.title": "Link-up",
   "links.intro":
     "Each stone in the pond carries one thing from the lesson. Tap a stone, then the stone it connects to, and a little bridge goes up between them. A wrong link costs a heart and shows what that stone really connects to. Every bridge pushes the tide back; if the tide comes all the way in, it lays one link for you and a heart goes too.",

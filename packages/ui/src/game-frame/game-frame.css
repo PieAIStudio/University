@@ -369,6 +369,11 @@
   justify-content: center;
 }
 
+.game-frame__pad--row {
+  grid-template-columns: minmax(52px, 72px) minmax(96px, 140px) minmax(52px, 72px);
+  grid-template-areas: none;
+}
+
 .game-frame__pad > * {
   min-block-size: 44px;
 }

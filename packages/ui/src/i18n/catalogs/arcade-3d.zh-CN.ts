@@ -6,6 +6,7 @@ export const messages = {
   "arcade3d.snake": "贪吃蛇 · 新",
   "arcade3d.moles": "打地鼠 · 新",
   "arcade3d.runner": "三岔路 · 新",
+  "arcade3d.blocks": "俄罗斯方块 · 新",
   "arcade3d.invaders": "双武器拦截 · 3D",
   "arcade3d.stack": "分类落块 · 3D",
   "arcade3d.cloze-tetris": "填词消行 · 3D",

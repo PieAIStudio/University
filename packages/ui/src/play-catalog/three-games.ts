@@ -13,6 +13,7 @@ export const THREE_GAMES = [
   "snake",
   "moles",
   "runner",
+  "blocks",
   "sky-invaders",
   "factory-stack",
   "press-words",
@@ -32,5 +33,6 @@ export const KIT_THREE_GAMES = [
   "snake",
   "moles",
   "runner",
+  "blocks",
 ] as const satisfies readonly ThreeGame[];
 export type KitThreeGame = (typeof KIT_THREE_GAMES)[number];

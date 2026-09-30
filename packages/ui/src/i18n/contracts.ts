@@ -486,6 +486,7 @@ export interface MessageContracts {
   readonly "app.screens.termEntryHost.copy.词义索引-tppvrm": {};
   readonly "app.screens.termEntryHost.copy.词库里没有这个词义": {};
   readonly "arcade3d.backGame": {};
+  readonly "arcade3d.blocks": {};
   readonly "arcade3d.board": {};
   readonly "arcade3d.boundary": {};
   readonly "arcade3d.calm": {};
@@ -597,6 +598,25 @@ export interface MessageContracts {
   readonly "avatarPanel.weekday.thu": {};
   readonly "avatarPanel.weekday.tue": {};
   readonly "avatarPanel.weekday.wed": {};
+  readonly "blocks.calm": {};
+  readonly "blocks.column": {
+    readonly label: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "blocks.columnCurrent": {
+    readonly label: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "blocks.controls": {};
+  readonly "blocks.drop": {};
+  readonly "blocks.intro": {};
+  readonly "blocks.labNote": {};
+  readonly "blocks.next": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "blocks.reason": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+    readonly why: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "blocks.title": {};
   readonly "chest.continue": {};
   readonly "chest.dailyFirst": {};
   readonly "chest.guard": {
@@ -950,6 +970,7 @@ export interface MessageContracts {
   readonly "gallery.session": {};
   readonly "gallery.short": {};
   readonly "gallery.three": {};
+  readonly "gallery.three.blocks": {};
   readonly "gallery.three.cloze-tetris": {};
   readonly "gallery.three.courtyard": {};
   readonly "gallery.three.factory-stack": {};

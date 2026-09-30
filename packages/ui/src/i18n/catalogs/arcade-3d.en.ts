@@ -8,6 +8,7 @@ export const messages: Record<keyof typeof zh, string> = {
   "arcade3d.snake": "Snake · new",
   "arcade3d.moles": "Whack-a-mole · new",
   "arcade3d.runner": "Fork Run · new",
+  "arcade3d.blocks": "Falling Blocks · new",
   "arcade3d.invaders": "Twin-tool intercept · 3D",
   "arcade3d.stack": "Falling sorter · 3D",
   "arcade3d.cloze-tetris": "Word-row clear · 3D",
