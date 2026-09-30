@@ -18,6 +18,7 @@ export const messages = {
   "gallery.three.wire": "用立体软线连接说法与核对方法，通电找错再修好",
   "gallery.three.rank": "调整步骤车厢，让流程按前置条件顺畅运行",
   "gallery.three.courtyard": "纸船载着这一段课里的句子漂来，用你的角色把它们扔进对的篮子",
+  "gallery.three.snake": "按课里的顺序吃掉词块，小火车一节节拼出整句",
   "gallery.three.links": "池塘里的石头写着课里的东西，把连着的两块搭上小桥",
   "gallery.three.kit": "积木版 · 用课里的题，主角是你的角色",
   "gallery.three.retained": "花园保留版 · 上一轮版本仍可玩",

@@ -552,6 +552,7 @@ export interface MessageContracts {
   readonly "arcade3d.slice": {};
   readonly "arcade3d.slow": {};
   readonly "arcade3d.slowNote": {};
+  readonly "arcade3d.snake": {};
   readonly "arcade3d.stack": {};
   readonly "arcade3d.stageClear": {};
   readonly "arcade3d.start": {};
@@ -959,6 +960,7 @@ export interface MessageContracts {
   readonly "gallery.three.retained": {};
   readonly "gallery.three.sky-invaders": {};
   readonly "gallery.three.slice": {};
+  readonly "gallery.three.snake": {};
   readonly "gallery.three.stack": {};
   readonly "gallery.three.wire": {};
   readonly "gallery.title": {};
@@ -966,6 +968,10 @@ export interface MessageContracts {
   readonly "gameKit.combo": {
     readonly combo: string | number | bigint | boolean | null | undefined | Date;
   };
+  readonly "gameKit.dir.down": {};
+  readonly "gameKit.dir.left": {};
+  readonly "gameKit.dir.right": {};
+  readonly "gameKit.dir.up": {};
   readonly "gameKit.fromLesson": {
     readonly lesson: string | number | bigint | boolean | null | undefined | Date;
   };
@@ -978,7 +984,7 @@ export interface MessageContracts {
   readonly "gameKit.labCourse": {
     readonly course: string | number | bigint | boolean | null | undefined | Date;
   };
-  readonly "gameKit.labEmpty": {};
+  readonly "gameKit.labSamples": { readonly count: number };
   readonly "gameKit.notice.corrected": {
     readonly points: string | number | bigint | boolean | null | undefined | Date;
   };
@@ -4276,6 +4282,37 @@ export interface MessageContracts {
   readonly "reading.settings.stageNote": {};
   readonly "reading.settings.title": {};
   readonly "reading.settings.underline": {};
+  readonly "snake.calm": {};
+  readonly "snake.controls": {};
+  readonly "snake.crate": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.crateAimed": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.crateNext": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.decoy": {};
+  readonly "snake.decoyReason": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+    readonly why: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.hunger": {};
+  readonly "snake.intro": {};
+  readonly "snake.labNote": {};
+  readonly "snake.nextReason": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+    readonly why: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.offOrder": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.sentence": {
+    readonly sentence: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "snake.startHint": {};
+  readonly "snake.title": {};
   readonly "sources.accessed": {};
   readonly "sources.inference": {};
   readonly "sources.limits": {};

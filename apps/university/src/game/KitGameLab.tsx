@@ -1,28 +1,47 @@
-import { linkRoundsFromLesson, type GameLesson } from "@pieai/university-core";
+import {
+  linkRoundsFromLesson,
+  sequenceRoundsFromLesson,
+  type GameLesson,
+  type LinkRound,
+  type SequenceRound,
+} from "@pieai/university-core";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { contentPort } from "../ports/index";
+import samples from "./lab-samples.json";
 import { LinksGame } from "./LinksGame.js";
+import { SnakeGame } from "./SnakeGame.js";
 
 /**
  * A kit game in the play lab, for review (ADR-0011). Each game's content is
  * scarce in a different place, so the lab walks the shelf in order and plays
  * the first course that gives it enough rounds — read through the same content
  * port as the map, and without looking at progress, which it says.
+ *
+ * Until lessons carry enough of a kind (Owner 2026-09-30: 题少的先编一些), the
+ * lab tops a game up with sample rounds from `lab-samples.json` and labels
+ * them as samples. The map never plays them.
  */
 const ENOUGH_ROUNDS = 3;
 
 interface KitLab<R> {
   readonly project: (lesson: GameLesson) => readonly R[];
+  readonly samples: readonly R[];
   readonly play: (rounds: readonly R[]) => ReactNode;
 }
 
 const LABS = {
   links: {
     project: linkRoundsFromLesson,
+    samples: samples.links as readonly LinkRound[],
     play: (rounds) => <LinksGame rounds={rounds} />,
   } satisfies KitLab<ReturnType<typeof linkRoundsFromLesson>[number]>,
+  snake: {
+    project: sequenceRoundsFromLesson,
+    samples: samples.snake as readonly SequenceRound[],
+    play: (rounds) => <SnakeGame rounds={rounds} />,
+  } satisfies KitLab<ReturnType<typeof sequenceRoundsFromLesson>[number]>,
 } as const;
 
 export type KitLabGame = keyof typeof LABS;
@@ -81,13 +100,16 @@ export function KitGameLab({ game }: { game: KitLabGame }) {
   }, [lab]);
   if (failed) return <p role="alert">{t("mapNodes.loadFailed")}</p>;
   if (!found) return <p role="status">{t("mapNodes.loading")}</p>;
-  if (!found.rounds.length) return <p role="status">{t("gameKit.labEmpty")}</p>;
+  const topUp = Math.max(0, ENOUGH_ROUNDS - found.rounds.length);
+  const rounds = [...found.rounds, ...lab.samples.slice(0, topUp)];
   return (
     <>
       <p>
-        {t(`${game}.labNote`)} {t("gameKit.labCourse", { course: found.course })}
+        {t(`${game}.labNote`)}{" "}
+        {found.rounds.length ? t("gameKit.labCourse", { course: found.course }) : null}{" "}
+        {topUp ? t("gameKit.labSamples", { count: Math.min(topUp, lab.samples.length) }) : null}
       </p>
-      {lab.play(found.rounds)}
+      {lab.play(rounds)}
     </>
   );
 }

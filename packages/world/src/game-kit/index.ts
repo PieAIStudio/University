@@ -46,3 +46,18 @@ export {
   type Stone,
 } from "./rules/links.js";
 export { LinksScene, stoneSpots, type LinksSceneProps } from "./LinksScene.js";
+export {
+  LAWN,
+  SNAKE_SETTLE_SECONDS,
+  SnakeSession,
+  hungerSeconds,
+  nextPieces,
+  strideSeconds,
+  type Cell,
+  type Crate,
+  type Direction,
+  type SnakeAction,
+  type SnakeEvent,
+  type SnakeState,
+} from "./rules/snake.js";
+export { SnakeScene, type SnakeSceneProps } from "./SnakeScene.js";

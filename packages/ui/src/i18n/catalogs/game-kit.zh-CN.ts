@@ -45,7 +45,30 @@ export const messages = {
   "gameKit.retry": "重新打开 3D",
   "gameKit.plain": "改玩二维配对",
   "gameKit.labCourse": "这次用的课：{course}。",
-  "gameKit.labEmpty": "书架上还没有能出这种题的课。",
+  "gameKit.labSamples":
+    "{count, plural, other {这种题书架上还不够，另外加了 # 组示例题（不是课里的题，上线后不会出现）。}}",
+  "gameKit.dir.up": "向上",
+  "gameKit.dir.down": "向下",
+  "gameKit.dir.left": "向左",
+  "gameKit.dir.right": "向右",
+  "snake.title": "贪吃蛇",
+  "snake.intro":
+    "小兔子带着小火车在草坪上走。地上的木箱写着课里的词，按课里的顺序一个个吃掉，身后就多一节车厢，句子也就拼出来了。吃到不该要的，或者顺序不对，少一颗心，还会告诉你下一个该吃哪块。饿太久，它会自己吞下一块，也少一颗心。",
+  "snake.controls":
+    "点木箱上的字，小兔子会自己走过去；也可以用方向键、WASD 或下面的箭头转弯，Esc 暂停。撞到篱笆会自己拐弯。",
+  "snake.calm": "慢慢玩：走得慢一些",
+  "snake.hunger": "离饿肚子还有多久",
+  "snake.sentence": "已拼：{sentence}",
+  "snake.startHint": "先吃第一块",
+  "snake.decoy": "不该要",
+  "snake.decoyReason": "「{text}」{why}",
+  "snake.offOrder": "「{text}」不在这条顺序里。",
+  "snake.nextReason": "下一个该吃「{text}」。{why}",
+  "snake.crate": "木箱：{text}",
+  "snake.crateAimed": "木箱：{text}，正走过去",
+  "snake.crateNext": "木箱：{text}，下一个该吃它",
+  "snake.labNote":
+    "试玩：题目取自这门课里「拼一句」和连线的路线。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "links.title": "连连看",
   "links.intro":
     "池塘里每块石头上，写着课里的一样东西。先点一块，再点和它连着的那块，中间就搭起一座小桥。连错了少一颗心，还会告诉你它真正连着谁。每搭好一座桥，潮水就退回去；潮水涨满了，会替你搭上一座，也少一颗心。",

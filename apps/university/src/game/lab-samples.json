@@ -1,0 +1,466 @@
+{
+  "$comment": "Play-lab sample rounds (Owner 2026-09-30: 题少的先编一些). Only KitGameLab reads this, and only to top up a game the shelf cannot fill yet; the map never plays it. Lesson content still has one producer, the apps/local CLI.",
+  "links": [
+    {
+      "id": "sample/links-request",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "请求里写的每一句，管住了什么？",
+      "brief": "左边是你写进请求的话，右边是它让 AI 做对的地方。",
+      "nodes": [
+        { "id": "who", "label": "写明给阿杰" },
+        { "id": "tone", "label": "称呼和口气" },
+        { "id": "past", "label": "附上以前的消息" },
+        { "id": "you", "label": "像你自己说话" },
+        { "id": "three", "label": "限定三句话" },
+        { "id": "length", "label": "长短" },
+        { "id": "what", "label": "说清是生日祝福" },
+        { "id": "topic", "label": "要写的事" }
+      ],
+      "items": [
+        {
+          "id": "who>tone",
+          "from": "who",
+          "to": "tone",
+          "why": "知道写给谁，AI 才知道怎么称呼、用什么口气。"
+        },
+        {
+          "id": "past>you",
+          "from": "past",
+          "to": "you",
+          "why": "有你以前的话当例子，AI 才学得到你的说话习惯。"
+        },
+        {
+          "id": "three>length",
+          "from": "three",
+          "to": "length",
+          "why": "不说长短，AI 常常写一大段。"
+        },
+        {
+          "id": "what>topic",
+          "from": "what",
+          "to": "topic",
+          "why": "先说是什么事，AI 才不会跑题。"
+        }
+      ],
+      "probes": []
+    },
+    {
+      "id": "sample/links-email",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "长邮件里的三件事，各在哪天之前？",
+      "brief": "李经理的邮件：周三中午前报人数，周四下班前订好场地，下周一前定主持人。",
+      "nodes": [
+        { "id": "count", "label": "报人数" },
+        { "id": "wed", "label": "周三中午前" },
+        { "id": "room", "label": "订场地" },
+        { "id": "thu", "label": "周四下班前" },
+        { "id": "host", "label": "定主持人" },
+        { "id": "mon", "label": "下周一前" }
+      ],
+      "items": [
+        {
+          "id": "count>wed",
+          "from": "count",
+          "to": "wed",
+          "why": "邮件第一件事：周三中午前报人数。"
+        },
+        { "id": "room>thu", "from": "room", "to": "thu", "why": "第二件：周四下班前订好场地。" },
+        { "id": "host>mon", "from": "host", "to": "mon", "why": "第三件：下周一前定主持人。" }
+      ],
+      "probes": []
+    },
+    {
+      "id": "sample/links-emoji",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "团建通知里，每个表情配哪句话？",
+      "nodes": [
+        { "id": "clock", "label": "⏰" },
+        { "id": "time", "label": "早上八点集合" },
+        { "id": "hill", "label": "⛰️" },
+        { "id": "climb", "label": "一起去爬山" },
+        { "id": "drop", "label": "💧" },
+        { "id": "water", "label": "记得带水" }
+      ],
+      "items": [
+        { "id": "clock>time", "from": "clock", "to": "time", "why": "闹钟一看就是在说时间。" },
+        { "id": "hill>climb", "from": "hill", "to": "climb", "why": "山的样子，配爬山最直接。" },
+        { "id": "drop>water", "from": "drop", "to": "water", "why": "水滴提醒带水，谁都看得懂。" }
+      ],
+      "probes": []
+    }
+  ],
+  "snake": [
+    {
+      "id": "sample/snake-birthday",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "拼一句请求：让 AI 帮你写生日祝福",
+      "context": "你想给老同学阿杰发生日祝福，要像你自己说的。",
+      "items": [
+        { "id": "who", "text": "给老同学阿杰", "reason": "先说给谁，AI 才知道怎么称呼。" },
+        { "id": "what", "text": "写三句生日祝福", "reason": "再说写什么、写多长。" },
+        { "id": "how", "text": "像我平时那样说", "reason": "最后说口气，它才像你。" },
+        {
+          "id": "grand",
+          "text": "越隆重越好",
+          "why": "你跟阿杰平时不这么说话，太隆重就不像你了。"
+        },
+        { "id": "poet", "text": "用李白的口气", "why": "这是在模仿别人，不是像你自己。" }
+      ],
+      "answers": [
+        ["who", "what", "how"],
+        ["what", "who", "how"]
+      ]
+    },
+    {
+      "id": "sample/snake-email",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "排一排：回一封长邮件，先做什么",
+      "items": [
+        { "id": "find", "text": "先找出要做的事", "reason": "看清要做什么，才知道回什么。" },
+        { "id": "dates", "text": "看一眼截止日", "reason": "日子最容易出错，要单独看。" },
+        { "id": "draft", "text": "请 AI 起草回信", "reason": "有了清单，AI 写得准。" },
+        { "id": "check", "text": "自己看过再发", "reason": "发出去的是你，最后一眼要自己看。" },
+        {
+          "id": "rush",
+          "text": "直接让 AI 回",
+          "why": "没看清要做什么，AI 可能漏事，也可能编理由。"
+        }
+      ],
+      "answers": [["find", "dates", "draft", "check"]]
+    },
+    {
+      "id": "sample/snake-emoji",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "拼一句请求：让 AI 帮你挑表情",
+      "items": [
+        { "id": "to", "text": "发给家里的群", "reason": "先说发给谁，长辈看不懂的就不会选。" },
+        { "id": "count", "text": "最多三个表情", "reason": "说好几个，才不会满屏都是。" },
+        { "id": "where", "text": "放在每句末尾", "reason": "说好放哪儿，句子才读得顺。" },
+        { "id": "more", "text": "越多越热闹", "why": "表情太多会看不清，长辈也可能看不懂。" }
+      ],
+      "answers": [
+        ["to", "count", "where"],
+        ["to", "where", "count"]
+      ]
+    }
+  ],
+  "moles": [
+    {
+      "id": "sample/moles-email",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "AI 帮你读了一封邮件。敲掉它编出来的句子",
+      "source": "李经理：周三中午前报人数；周四下班前订好场地；下周一前定主持人。",
+      "items": [
+        {
+          "id": "count",
+          "text": "周三中午前要报人数。",
+          "target": false,
+          "why": "邮件里写了，对得上。"
+        },
+        {
+          "id": "room",
+          "text": "场地要在周四下班前订好。",
+          "target": false,
+          "why": "邮件里写了，对得上。"
+        },
+        {
+          "id": "host",
+          "text": "主持人下周一前定下来。",
+          "target": false,
+          "why": "邮件里写了，对得上。"
+        },
+        {
+          "id": "budget",
+          "text": "李经理说预算有五千元。",
+          "target": true,
+          "why": "邮件里一个字也没提预算。"
+        },
+        {
+          "id": "moved",
+          "text": "活动改到了周六。",
+          "target": true,
+          "why": "邮件没说改日子，这是 AI 编的。"
+        }
+      ]
+    },
+    {
+      "id": "sample/moles-school",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "AI 总结了老师的通知。敲掉通知里没有的话",
+      "source": "王老师：周五下午 3 点开家长会，地点在三楼会议室，请带上孩子的作业本。",
+      "items": [
+        { "id": "time", "text": "家长会在周五下午 3 点。", "target": false, "why": "通知里写了。" },
+        { "id": "place", "text": "地点在三楼会议室。", "target": false, "why": "通知里写了。" },
+        { "id": "book", "text": "记得带孩子的作业本。", "target": false, "why": "通知里写了。" },
+        { "id": "tea", "text": "会后有茶点招待。", "target": true, "why": "通知没提茶点。" },
+        {
+          "id": "hour",
+          "text": "家长会大约开一个小时。",
+          "target": true,
+          "why": "通知没说要开多久。"
+        }
+      ]
+    },
+    {
+      "id": "sample/moles-photo",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "AI 描述了一张照片。敲掉照片里看不出来的话",
+      "source": "照片：一只白猫趴在红沙发上，旁边有一个蓝色毛线球。",
+      "items": [
+        { "id": "white", "text": "猫是白色的。", "target": false, "why": "照片里看得到。" },
+        { "id": "sofa", "text": "沙发是红色的。", "target": false, "why": "照片里看得到。" },
+        { "id": "ball", "text": "旁边有个毛线球。", "target": false, "why": "照片里看得到。" },
+        { "id": "age", "text": "这只猫三岁了。", "target": true, "why": "年龄从照片里看不出来。" },
+        { "id": "fed", "text": "它刚吃过饭。", "target": true, "why": "吃没吃饭，照片看不出来。" }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "sample/blocks-decide",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "这件事交给 AI，还是你自己定？",
+      "bins": [
+        { "id": "ai", "label": "交给 AI" },
+        { "id": "me", "label": "你自己定" }
+      ],
+      "items": [
+        {
+          "id": "list",
+          "text": "把长邮件理成清单",
+          "binId": "ai",
+          "why": "理清楚是 AI 擅长的，你再核对。"
+        },
+        { "id": "go", "text": "决定去不去参加", "binId": "me", "why": "你的安排只有你知道。" },
+        {
+          "id": "polite",
+          "text": "把回信改得客气些",
+          "binId": "ai",
+          "why": "换说法交给 AI，意思你来把关。"
+        },
+        {
+          "id": "date",
+          "text": "核对截止日期",
+          "binId": "me",
+          "why": "日子错了会误事，要自己对着原文看。"
+        },
+        { "id": "reword", "text": "给祝福换个说法", "binId": "ai", "why": "换几种说法，AI 很快。" },
+        { "id": "money", "text": "决定花多少钱", "binId": "me", "why": "花钱的决定要你自己拍板。" }
+      ]
+    },
+    {
+      "id": "sample/blocks-clear",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "这句请求说清楚了吗？",
+      "bins": [
+        { "id": "clear", "label": "说清了" },
+        { "id": "vague", "label": "没说清" }
+      ],
+      "items": [
+        {
+          "id": "thing",
+          "text": "帮我写个东西",
+          "binId": "vague",
+          "why": "写什么、给谁，一样都没说。"
+        },
+        {
+          "id": "jie",
+          "text": "给阿杰写三句生日祝福",
+          "binId": "clear",
+          "why": "给谁、写什么、多长，都说了。"
+        },
+        {
+          "id": "pretty",
+          "text": "弄好看点",
+          "binId": "vague",
+          "why": "「好看」是什么样，AI 只能猜。"
+        },
+        {
+          "id": "three",
+          "text": "把这封邮件缩成三行",
+          "binId": "clear",
+          "why": "要做什么、做成多长，很清楚。"
+        },
+        {
+          "id": "know",
+          "text": "你懂的",
+          "binId": "vague",
+          "why": "AI 不懂，它只看得到你写的字。"
+        },
+        {
+          "id": "mom",
+          "text": "给妈妈的消息加两个表情",
+          "binId": "clear",
+          "why": "发给谁、加几个，都说了。"
+        }
+      ]
+    },
+    {
+      "id": "sample/blocks-emoji",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "这个表情放心用，还是要看对象？",
+      "bins": [
+        { "id": "safe", "label": "放心用" },
+        { "id": "who", "label": "看对象" }
+      ],
+      "items": [
+        {
+          "id": "clock",
+          "text": "⏰ 提醒时间",
+          "binId": "safe",
+          "why": "闹钟的意思，谁都看得懂。"
+        },
+        { "id": "kiss", "text": "😘 飞吻", "binId": "who", "why": "对家人可以，对同事就不合适。" },
+        {
+          "id": "upside",
+          "text": "🙃 倒着的笑脸",
+          "binId": "who",
+          "why": "有人觉得是开玩笑，有人觉得是在讽刺。"
+        },
+        { "id": "drop", "text": "💧 带水", "binId": "safe", "why": "水滴提醒带水，意思很直白。" },
+        { "id": "hill", "text": "⛰️ 爬山", "binId": "safe", "why": "山就是山，不会被看错。" }
+      ]
+    }
+  ],
+  "runner": [
+    {
+      "id": "sample/runner-ask",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "这件事，怎么交给 AI 最合适？",
+      "options": [
+        { "id": "ask", "label": "直接问" },
+        { "id": "attach", "label": "先附上材料" },
+        { "id": "self", "label": "自己拿主意" }
+      ],
+      "items": [
+        {
+          "id": "word",
+          "text": "想知道「泡沫」的英文怎么说",
+          "bestId": "ask",
+          "why": "常识问题，直接问就行。",
+          "costOf": {
+            "attach": "没什么材料要给，附了也白附。",
+            "self": "查个词，交给 AI 又快又准。"
+          }
+        },
+        {
+          "id": "reply",
+          "text": "想让 AI 帮你回李经理的长邮件",
+          "bestId": "attach",
+          "why": "它没看过那封邮件，不附上就只能编。",
+          "costOf": {
+            "ask": "不给邮件，AI 只能瞎猜要回什么。",
+            "self": "起草回信正是 AI 能帮的地方。"
+          }
+        },
+        {
+          "id": "leave",
+          "text": "要不要请假去参加婚礼",
+          "bestId": "self",
+          "why": "这是你的安排，AI 不知道你的情况。",
+          "costOf": {
+            "ask": "它会给一段道理，但拿主意的还得是你。",
+            "attach": "材料再多，你想不想去它也不知道。"
+          }
+        },
+        {
+          "id": "voice",
+          "text": "想让祝福像你自己说的",
+          "bestId": "attach",
+          "why": "附上你以前的消息，它才学得像。",
+          "costOf": {
+            "ask": "不给例子，它只会写客套话。",
+            "self": "你可以自己写，但这正是 AI 能帮的。"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sample/runner-send",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "AI 写好了，下一步？",
+      "options": [
+        { "id": "send", "label": "直接发" },
+        { "id": "check", "label": "再看一遍" }
+      ],
+      "items": [
+        {
+          "id": "leave",
+          "text": "AI 写的请假条，里面有日期",
+          "bestId": "check",
+          "why": "日期最容易出错，要对一下。",
+          "costOf": { "send": "日子写错了，就请错了假。" }
+        },
+        {
+          "id": "joke",
+          "text": "回朋友的笑话，一个哈哈大笑的表情",
+          "bestId": "send",
+          "why": "错了也不要紧，放心发。",
+          "costOf": { "check": "一个表情，不用那么小心。" }
+        },
+        {
+          "id": "report",
+          "text": "给领导的周报，里面有数字",
+          "bestId": "check",
+          "why": "数字错了会误事，要自己核对。",
+          "costOf": { "send": "错一个数字，就得再解释半天。" }
+        },
+        {
+          "id": "home",
+          "text": "朋友问你到家没，回「到了」",
+          "bestId": "send",
+          "why": "两个字，不会出错。",
+          "costOf": { "check": "这么短，看不看都一样。" }
+        }
+      ]
+    },
+    {
+      "id": "sample/runner-emoji",
+      "lessonId": "sample",
+      "lessonTitle": "示例题",
+      "question": "这条消息，表情怎么配？",
+      "options": [
+        { "id": "none", "label": "不配表情" },
+        { "id": "one", "label": "配一个" },
+        { "id": "few", "label": "配几个" }
+      ],
+      "items": [
+        {
+          "id": "boss",
+          "text": "给领导说明请假原因",
+          "bestId": "none",
+          "why": "正式的事，不配表情更稳妥。",
+          "costOf": { "one": "领导可能觉得不够认真。", "few": "太随便了，像在开玩笑。" }
+        },
+        {
+          "id": "thanks",
+          "text": "谢谢邻居帮你收快递",
+          "bestId": "one",
+          "why": "一个笑脸，客气又亲切。",
+          "costOf": { "none": "干巴巴的，有点冷。", "few": "一堆表情，反而显得夸张。" }
+        },
+        {
+          "id": "party",
+          "text": "朋友群里说周末去爬山",
+          "bestId": "few",
+          "why": "好朋友之间，热闹一点正好。",
+          "costOf": { "none": "像在发通知，不像约朋友。", "one": "也行，但少了点热闹。" }
+        }
+      ]
+    }
+  ]
+}

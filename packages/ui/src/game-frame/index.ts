@@ -2,6 +2,7 @@ export {
   AnswerButtons,
   ChipGroup,
   ClockMeter,
+  DirectionPad,
   GameFrame,
   GameNotice,
   HeartsMeter,
@@ -9,6 +10,7 @@ export {
   PauseButton,
   ScoreChip,
   type AnswerBin,
+  type PadDirection,
 } from "./GameFrame.js";
 export {
   BriefingPanel,

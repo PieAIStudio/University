@@ -360,6 +360,19 @@
   white-space: nowrap;
 }
 
+/* Four arrows for a grid game, laid out like a keypad. */
+.game-frame__pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(52px, 72px));
+  grid-template-areas: ". up ." "left down right";
+  gap: 6px;
+  justify-content: center;
+}
+
+.game-frame__pad > * {
+  min-block-size: 44px;
+}
+
 /* One line under the question: what the learner has in hand right now. */
 .game-frame__hint {
   margin: 6px auto 0;
@@ -453,6 +466,11 @@
   vertical-align: 1px;
   color: #1d3336;
   font-size: 12px;
+}
+
+/* The one that comes next, shown after a mistake. */
+.game-label--next {
+  border-color: #f2c963;
 }
 
 /* A stone whose links all stand: still readable, no longer asking for a tap. */

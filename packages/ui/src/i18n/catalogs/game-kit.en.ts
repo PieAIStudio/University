@@ -47,7 +47,30 @@ export const messages = {
   "gameKit.retry": "Open 3D again",
   "gameKit.plain": "Play the 2D matching game",
   "gameKit.labCourse": "Course used this time: {course}.",
-  "gameKit.labEmpty": "No course on the shelf has questions for this game yet.",
+  "gameKit.labSamples":
+    "The shelf has too few of these yet, so {count, plural, one {# sample round was} other {# sample rounds were}} added (not from a lesson; never shown on the map).",
+  "gameKit.dir.up": "Up",
+  "gameKit.dir.down": "Down",
+  "gameKit.dir.left": "Left",
+  "gameKit.dir.right": "Right",
+  "snake.title": "Snake",
+  "snake.intro":
+    "Your character leads a little train across the lawn. The crates carry words from the lesson; eat them in the lesson order and a wagon joins the train as the sentence builds. A crate that does not belong, or one eaten too early, costs a heart and shows which one comes next. Wait too long and the train swallows the next one by itself, and a heart goes too.",
+  "snake.controls":
+    "Tap the words on a crate and your character walks there; or turn with the arrow keys, WASD or the arrows below. Esc pauses. The train turns by itself at the hedge.",
+  "snake.calm": "Take it slow: the train moves more gently",
+  "snake.hunger": "Time before the train gets hungry",
+  "snake.sentence": "So far: {sentence}",
+  "snake.startHint": "Eat the first crate",
+  "snake.decoy": "does not belong",
+  "snake.decoyReason": "“{text}”: {why}",
+  "snake.offOrder": "“{text}” is not part of this order.",
+  "snake.nextReason": "Next comes “{text}”. {why}",
+  "snake.crate": "Crate: {text}",
+  "snake.crateAimed": "Crate: {text}, heading there",
+  "snake.crateNext": "Crate: {text}, this one comes next",
+  "snake.labNote":
+    "Preview: questions from the build-a-sentence steps and link routes in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "links.title": "Link-up",
   "links.intro":
     "Each stone in the pond carries one thing from the lesson. Tap a stone, then the stone it connects to, and a little bridge goes up between them. A wrong link costs a heart and shows what that stone really connects to. Every bridge pushes the tide back; if the tide comes all the way in, it lays one link for you and a heart goes too.",

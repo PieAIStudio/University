@@ -108,32 +108,24 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
   }));
   // Assembled from the game kit (ADR-0011): content from the lessons, the
   // learner's avatar as the hero.
-  const kit: CatalogEntry[] = [
-    {
-      id: "three:courtyard",
-      group: "three",
-      threeMode: "courtyard",
-      inspiredBy: "arcade:invaders",
-      name: "arcade3d.courtyard",
-      action: "gallery.three.courtyard",
-      controls: "intercept.controls",
-      scope: "gameKit.result.boundary",
-      rhythm: "session",
-      retained: false,
-    },
-    {
-      id: "three:links",
-      group: "three",
-      threeMode: "links",
-      inspiredBy: "blocks:wire",
-      name: "arcade3d.links",
-      action: "gallery.three.links",
-      controls: "links.controls",
-      scope: "gameKit.result.boundary",
-      rhythm: "session",
-      retained: false,
-    },
-  ];
+  const kit: CatalogEntry[] = (
+    [
+      ["courtyard", "arcade:invaders", "intercept.controls"],
+      ["links", "blocks:wire", "links.controls"],
+      ["snake", "blocks:rank", "snake.controls"],
+    ] as const
+  ).map(([mode, inspiredBy, controls]) => ({
+    id: `three:${mode}`,
+    group: "three",
+    threeMode: mode,
+    inspiredBy,
+    name: `arcade3d.${mode}`,
+    action: `gallery.three.${mode}`,
+    controls,
+    scope: "gameKit.result.boundary",
+    rhythm: "session",
+    retained: false,
+  }));
   const upgraded: CatalogEntry[] = THREE_GAMES.filter(
     (mode) => !(KIT_THREE_GAMES as readonly string[]).includes(mode),
   )

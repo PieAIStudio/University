@@ -177,6 +177,39 @@ export function AnswerButtons({
   );
 }
 
+export type PadDirection = "up" | "down" | "left" | "right";
+const PAD_ARROWS: Record<PadDirection, string> = { up: "↑", down: "↓", left: "←", right: "→" };
+
+/** Four arrows for a grid game: the thumb's version of the arrow keys. */
+export function DirectionPad({
+  disabled,
+  onTurn,
+}: {
+  disabled: boolean;
+  onTurn: (dir: PadDirection) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="game-frame__pad" data-testid="game-pad">
+      {(["up", "left", "down", "right"] as const).map((dir) => (
+        <GameButton
+          key={dir}
+          static
+          sound={false}
+          variant="secondary"
+          style={{ gridArea: dir }}
+          disabled={disabled}
+          aria-label={t(`gameKit.dir.${dir}`)}
+          data-testid={`game-pad-${dir}`}
+          onClick={() => onTurn(dir)}
+        >
+          <span aria-hidden="true">{PAD_ARROWS[dir]}</span>
+        </GameButton>
+      ))}
+    </div>
+  );
+}
+
 export function PanelActions({ children }: { children: ReactNode }) {
   return <div className="game-frame__panel-actions">{children}</div>;
 }
