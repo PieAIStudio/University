@@ -20,6 +20,7 @@ import { messages as realitySources } from "./reality-sources.en.js";
 import { messages as accountFailures } from "./account-failures.en.js";
 import { messages as productNavigation } from "./product-navigation.en.js";
 import { messages as productBilling } from "./product-billing.en.js";
+import { messages as productSupport } from "./product-support.en.js";
 import { messages as productSave } from "./product-save.en.js";
 import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.en.js";
 import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.en.js";
@@ -68,6 +69,7 @@ export const messages = {
   ...cosmetics,
   ...productNavigation,
   ...productBilling,
+  ...productSupport,
   ...productSave,
   ...aiPlay,
   ...aiWorkflow,

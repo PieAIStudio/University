@@ -12,10 +12,10 @@
   "grading.host.ai": "AI 评估",
   "billing.free.name": "免费",
   "billing.free.line1": "全部课程免费学",
-  "billing.free.line2": "练习与复习卡",
+  "billing.free.line2": "练习、复习卡、宝箱和徽章",
   "billing.free.line3": "绑定邮箱，每天体验 AI 批改",
   "billing.member.name": "会员",
-  "billing.member.line1": "学习进度、复习卡同步",
+  "billing.member.line1": "开放题 AI 批改与讲解",
   "billing.member.line2": "手机、电脑、平板接着学",
-  "billing.member.line3": "AI 批改不受每日免费额度限制"
+  "billing.member.line3": "学习进度、复习卡同步"
 }

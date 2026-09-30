@@ -140,9 +140,8 @@ describe("PlansScreen", () => {
     expect(markup).toContain("全部课程免费学");
     expect(markup).toContain("绑定邮箱，每天体验 AI 批改");
     expect(markup).toContain("AI 批改按次另计");
-    // The lede describes what the account layer actually delivers today. The
-    // paid grading right is deliberately absent here as well as on the card;
-    // see the guard below for why.
+    // Sync remains a benefit, not the V7 headline. The card must also disclose
+    // the separate wallet cost rather than promising included AI usage.
     expect(markup).toContain("学习进度、复习卡同步");
     expect(markup).toContain("免费");
     expect(markup).not.toContain("当前基线");
@@ -151,20 +150,13 @@ describe("PlansScreen", () => {
     expect(markup).not.toContain("服务端权益");
   });
 
-  it("sells structured grading now that all three layers can keep the promise", () => {
-    // This claim was held back while production could not answer "is this
-    // account a member". Three things had to be true at once, and on
-    // 2026-08-31 they were: the plan-grant read is live in production,
-    // `createSupabasePaymentRemote` calls it, and the grading service that
-    // consults the plan before quota or wallet is the code actually deployed.
-    // The first landed days before the other two, which is why the condition
-    // was written as all three rather than as "the migration shipped".
-    //
-    // The page still does not claim you can buy this today. No payment
-    // provider is connected, and the purchase control says so itself rather
-    // than letting the reader find out by clicking.
+  it("foregrounds grading but never sells wallet usage as included unlimited service", () => {
+    // The current service meters a member's grading through the wallet.
+    // Foreground its useful feedback without claiming the intended future
+    // included/unlimited offer. Availability remains the port's decision.
     const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
-    expect(markup).toContain("不受每日免费额度限制");
+    expect(markup).toContain("开放题 AI 批改与讲解");
+    expect(markup).toContain("AI 批改按次另计");
     expect(markup).not.toContain("开放式辅导按用量计费");
     expect(markup).not.toContain("尚未开放");
     expect(markup).toContain("手机、电脑、平板接着学");
@@ -179,8 +171,8 @@ describe("PlansScreen", () => {
     const markup = renderToStaticMarkup(withInterfaceLocale(<PlansScreen />));
     expect(markup).toContain("$149.00");
     expect(markup).toContain("$12.42");
-    // The static fallback has no account, so it states the first required step
-    // instead of making a payment-shaped promise.
+    // The Owner retained the upgrade action without a permanent sale-status
+    // banner. The unavailable port must explain an attempt without charging.
     expect(markup).not.toContain("会员尚未开售");
     expect(markup).toContain("升级会员");
     expect(markup).not.toContain("待产品确认");

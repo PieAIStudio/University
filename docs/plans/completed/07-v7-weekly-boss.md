@@ -238,3 +238,10 @@ in `SCRATCH/v7-execution/weekly-continuous-fixed.log`. The final full
 `pnpm verify` completed with native exit **0** (`wc_job_vU8Pc-rGkVMjoYiB`).
 No implementation or test source was edited after that verification; a normal
 push remains the remote-delivery boundary.
+
+The subsequent normal push of `cf6a1f62` completed with **465 passed (24.2m)**,
+**39 passed (5.5m)** and native push exit **0** (`wc_job_OEqKp0tf7_qG3Vvc`).
+An independent `git ls-remote` matched the local full commit
+`cf6a1f62b1358971115672fa59699326636648a2`. This closes source delivery of the
+weekly long-term presentation and its timed-drag regression; it is not a
+production deployment or acceptance of task 06's closed cosmetic service.

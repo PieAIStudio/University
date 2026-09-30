@@ -104,6 +104,8 @@ export interface PaymentPort {
    * returns a PaymentExplanation when the state changed or is unavailable.
    */
   purchaseAvailability(): PaymentAvailability;
+  /** Management may remain open when new sales are closed; a method alone is not readiness. */
+  managementAvailability?(): PaymentAvailability;
   readBalance(): Promise<PaymentResult<WalletBalance>>;
   readEntitlements(): Promise<PaymentResult<EntitlementReadModel>>;
   initiatePurchase(input: {
@@ -321,6 +323,14 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     subscribe: (listener) => options.identity.subscribe(listener),
     purchaseAvailability() {
       if (!completeChannel()) return "unavailable";
+      const status = options.identity.status();
+      if (status.kind === "anonymous") return "anonymous";
+      if (status.kind !== "signed_in") return "account-required";
+      return "available";
+    },
+
+    managementAvailability() {
+      if (!options.transport?.createSubscriptionPortal) return "unavailable";
       const status = options.identity.status();
       if (status.kind === "anonymous") return "anonymous";
       if (status.kind !== "signed_in") return "account-required";

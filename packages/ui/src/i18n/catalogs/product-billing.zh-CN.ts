@@ -1,5 +1,4 @@
 export const messages = {
-  "product.billing.lede": "学到哪，换台设备接着学。",
   "product.billing.upgrade": "升级会员",
   "product.billing.currentMember": "✓ 你已是会员",
   "product.billing.freeIncluded": "免费课程也包含在内",
@@ -31,5 +30,5 @@ export const messages = {
   "product.billing.readFailed": "这次没有读到账户信息。请稍后重试；不会把暂时读不到的余额当成零。",
   "product.billing.period": "按{cycle}计费",
   "product.reminders.unavailable":
-    "提醒服务还未就绪，现在不会申请通知权限。你仍可以在“练习”里查看到期复习。",
+    "提醒服务还未就绪，现在不会申请通知权限。你仍可以在“复习”里查看到期卡片。",
 } as const;

@@ -405,11 +405,13 @@ export {
   libraryTabOf,
   LIBRARY_TABS,
   LIBRARY_VIEW_TAB,
+  SUPPORT_PATHS,
   studyIdOfView,
   toHash,
   toPath,
   WORLD,
   type LibraryTab,
+  type SupportPage,
   type View,
 } from "./routing/view.js";
 

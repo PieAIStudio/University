@@ -1,5 +1,4 @@
 export const messages = {
-  "product.billing.lede": "Pick up where you left off, on any device.",
   "product.billing.upgrade": "Upgrade membership",
   "product.billing.currentMember": "✓ Your membership is active",
   "product.billing.freeIncluded": "Free courses are included too",
@@ -35,5 +34,5 @@ export const messages = {
     "Account information could not be read. Try again later; an unavailable balance is not treated as zero.",
   "product.billing.period": "Billed {cycle}",
   "product.reminders.unavailable":
-    "The reminder service is not ready, so notification permission will not be requested. You can still check due reviews in Practice.",
+    "The reminder service is not ready, so notification permission will not be requested. You can still check due cards in Review.",
 } as const;

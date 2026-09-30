@@ -41,6 +41,7 @@ import {
   LeagueScreen,
   LevelProgress,
   PlansScreen,
+  SupportScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
@@ -220,6 +221,7 @@ export function MainRouter({
 }: MainRouterProps) {
   const interfaceTranslator = useI18n();
   const i18n = useI18n();
+  const accountIdentity = identityPort.status();
   const continueView = continueLearningView(
     readLearningReturn(),
     nextUpProgress?.next ?? null,
@@ -590,6 +592,18 @@ export function MainRouter({
       {view.kind === "plans" ? (
         <PlansScreen key={progressPort.syncState().userId ?? "guest"} paymentPort={paymentPort} />
       ) : null}
+      {view.kind === "support" ? (
+        <SupportScreen
+          key={view.page}
+          page={view.page}
+          saveStatus={
+            <LearningSaveStatus
+              key={progressPort.syncState().userId ?? "guest"}
+              progress={progressPort}
+            />
+          }
+        />
+      ) : null}
       {view.kind === "settings" ? (
         <SettingsScreen
           presence={presencePort}
@@ -601,6 +615,7 @@ export function MainRouter({
       ) : null}
       {view.kind === "me" ? (
         <ProfileScreen
+          accountEmail={accountIdentity.kind === "signed_in" ? accountIdentity.user.email : null}
           onOpenWardrobe={() => setView({ kind: "wardrobe" })}
           avatar={
             avatarPanel ?? (

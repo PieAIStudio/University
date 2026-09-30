@@ -252,3 +252,25 @@ exact scheduling is not claimed reproduced by the focus test.
 Before the final focus adjustment, repeated real-browser guide/PRIMM checks
 were **12 passed (1.4m)**, `E2E_EXIT=0`. Final verification and a new ordinary
 push are required for the resulting code; the previous failed log is retained.
+
+### Source delivery and the remaining gate
+
+The source candidate and settling repairs are now on University `main`; the
+subsequent ordinary push through `cf6a1f62` passed **465 default tests (24.2m)**
+and **39 timing tests (5.5m)**, native push exit **0**, and an independent remote
+read matched that SHA. This records source delivery only, not a service rollout.
+
+Backend's follow-up commit `e2db9b52aa3ab1ac3c71da4a6bf75baf1389d17c` is also on
+its independently checked remote `main`. Its forward migration
+`20260930183000_university_cosmetics_rehearsal_boundary.sql` prevents optional
+practice attempts from granting official chest eligibility or changing a real
+first-try upgrade. Three failing SQL counterexamples preceded the fix; **17 SQL
+cases**, **six independent PostgreSQL connection cases**, complete source
+verification and static/document checks passed. The original migration was not
+rewritten. Backend's existing `docs/reference/university-cosmetics.md` owns the
+exact source/rollout evidence; unrelated in-flight Backend changes were not touched.
+
+`COSMETICS_SERVICE_RELEASED` remains false. The only remaining task-06 work is
+separately authorized remote migration/manifest registration, real own-account
+Data API checks and reviewed activation. Do not rerun local random draws as a
+substitute or mark this active record completed because source was pushed.

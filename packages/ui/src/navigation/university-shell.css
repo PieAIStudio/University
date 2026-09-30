@@ -24,6 +24,13 @@
   outline: 2px solid var(--game-ui-focus-ring);
   outline-offset: 3px;
 }
+.profile-screen__email {
+  overflow-wrap: anywhere;
+}
+.support-screen .product-details > summary {
+  min-block-size: 44px;
+  padding-block: 0.65rem;
+}
 .profile-screen__account,
 .profile-screen__help {
   scroll-margin-block-start: 1rem;

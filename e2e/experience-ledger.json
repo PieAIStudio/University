@@ -373,12 +373,12 @@
       "element": "价格 $149.00 / 年",
       "category": "conversion",
       "viewport": "both",
-      "summary": "中文页面用美元标价，且全页没有任何可退可取消的说法",
+      "summary": "退款政策仍待批准；美元计价已由 Owner 决定，不再作为缺陷",
       "severity": "friction",
       "state": "open",
       "foundBy": "claude+grok-4.6",
       "foundOn": "2026-08-31",
-      "note": "这一条捆了两件事，2026-09-02 时它们的结局已经不同，别再当成一件重查。①「中文页面用美元标价」：菲哥 2026-09-01 22:40 拍板——货币保持美元不动，不做地区判断，不改人民币。这是决定，不是欠债，不要再提。②「全页没有任何可退可取消的说法」：取消那半已经做完并有守卫——付款按钮正上方一句「随时可以取消，取消之后不再扣费。」，走 i18n catalog，探针钉 [data-plan-cancellation=\"true\"] 这个结构 hook 而不是文案本身。退款那半仍然空着，而且它不是实现问题是政策问题：退款政策还没做决定，没有决定之前写任何退款承诺都是编。所以这条留 open，堵点是一个待拍板的商业决策，不是一段没写的代码。另注：这句取消文案线上 0.2.6 还没有，是否为它单发 0.2.7 也是菲哥的决定。",
+      "note": "【V7 源码收尾】币种继续遵守 F2。退款说明已有稳定双语地址 /about/refunds，但只展示正式文件未公布的真实状态；Owner 未批准退款条件，因此本项继续 open，不把页面存在当作政策完成。当前实现与事实问题由 docs/plans/active/09-v7-before-charging.md 负责。以下为原始决定与证据，保留历史时点：\n\n这一条捆了两件事，2026-09-02 时它们的结局已经不同，别再当成一件重查。①「中文页面用美元标价」：菲哥 2026-09-01 22:40 拍板——货币保持美元不动，不做地区判断，不改人民币。这是决定，不是欠债，不要再提。②「全页没有任何可退可取消的说法」：取消那半已经做完并有守卫——付款按钮正上方一句「随时可以取消，取消之后不再扣费。」，走 i18n catalog，探针钉 [data-plan-cancellation=\"true\"] 这个结构 hook 而不是文案本身。退款那半仍然空着，而且它不是实现问题是政策问题：退款政策还没做决定，没有决定之前写任何退款承诺都是编。所以这条留 open，堵点是一个待拍板的商业决策，不是一段没写的代码。另注：这句取消文案线上 0.2.6 还没有，是否为它单发 0.2.7 也是菲哥的决定。",
       "guardedBy": "packages/ui/src/navigation/screens/PlansScreen.test.tsx::data-plan-cancellation"
     },
     {
@@ -773,12 +773,12 @@
       "element": "[data-plan-cancellation] 取消保证",
       "category": "broken-promise",
       "viewport": "both",
-      "summary": "付款按钮正上方承诺「随时可以取消」，但产品里没有任何地方能取消——PaymentPort 只有买，没有退",
+      "summary": "真实收款与取消续费仍未联通；客户端已守住缺少管理服务时不下单、不展示取消保证",
       "severity": "blocking",
       "state": "open",
       "foundBy": "claude",
       "foundOn": "2026-09-02",
-      "note": "这句文案是 2026-09-01 为了补信任缺口加的，动机对，但它是一个产品当前兑现不了的承诺。packages/core/src/ports/payment.ts 的 PaymentPort 方法全集是 purchaseAvailability / readBalance / readEntitlements / initiatePurchase / getOrderStatus / refreshEntitlements——能买，不能取消。PaymentOrderStatus 里那个 cancelled 指的是一笔没付成的订单，不是订阅取消。全仓（packages/**、apps/university/src/**）搜不到任何退订入口、账单页、或指向 SwimmerBackend 账户门户的外链；唯一命中 cancel 的就是这句文案自己和它的单元测试。而计划页有按月/按年切换，所以这确实是周期扣费而不是一次性买断，「不再扣费」有实际所指。结论：现在这个状态下，一个想取消的学习者无处可去，那句话就从补信任变成伤信任，而且它出现的位置恰恰是付款页。三条修法，都是决策不是实现细节：①做一个真的取消入口（要 SwimmerBackend 出能力；按「品牌套件优先」的规矩得改套件并发版本，不许在这里 fork）；②把文案退成产品此刻能兑现的说法，并写清怎么联系；③保留文案，同时给出一条学习者点得到的取消路径，哪怕只是邮件。在三选一之前不建议为这句话单发 0.2.7——线上 0.2.6 没有这句话，也就没有这个缺口。守卫要求：修完之后守的必须是「承诺与可执行路径同时存在」，只钉那句文案的探针会在承诺仍然空头时照样绿。\n\n【2026-09-02 菲哥拍板 + 补充查证】决定是①：做真的取消入口。原话「这是最基本的呀，不然到时候就各种投诉啊，就得下架」——他是对的，给三条路本身是把一道必答题当成了权衡题，②「文案退成能兑现的说法」只是把承诺藏起来，缺口还在。\n\n往下查一层之后，紧急程度和顺序都变了，但结论不变：**现在还没有人能付钱。** packages/backend/src/payment.ts 的注释写得很直白——订单创建、webhook 校验、钱包写入是故意缺席的，等 SwimmerBackend 发布 University 的服务端支付面。所以 createSupabasePaymentRemote 只提供 readBalance / readEntitlement，PaymentTransport 里没有 createOrder，于是 purchaseAvailability() 返回 unavailable，付款按钮显示的是「记录购买意向」而不是「购买」。没有人在被扣费，所以此刻没有人需要取消——这不是火，是打开收款之前必须先补上的前置条件。\n\n真正的风险点是「打开收款的那一刻」：如果 createOrder 先上线、取消入口后上线，缺口就是在那一刻凭空造出来的。建议把它锁成不可分割的交付：SwimmerBackend 那边 createOrder 与取消能力同一版发布；University 这边加一道闸门——purchaseAvailability() 只有在取消能力同时存在时才允许返回 available。这样「能收钱但不能退订」在代码层面不可能发生，不依赖谁记得。这道闸门就是这条发现的 guardedBy 该指向的东西，也正是「承诺与可执行路径同时存在」那条守卫要求的具体形状。\n\n另外一个当下的小错位：那句「随时可以取消」现在显示在一个「记录购买意向」的按钮上方。所以 0.2.7 不要为这句文案单发，等收款和取消一起上。"
+      "note": "【V7 源码收尾】PaymentPort 现有 manageSubscription 和独立 managementAvailability；下单需下单、查询、管理三项齐备，暂停销售不移除已连接的管理入口。PlansScreen 同时检查实际管理能力，单次请求且退出账号清掉旧链接；e2e/before-charging.spec.ts 用明确的模拟门户验证两步入口，payment-management.test.ts 与 payment-safety.test.ts 守住能力和账号边界。正式浏览器适配仍只读，没有真实下单或退订，因而本项继续 open；模拟门户不是退订验收。当前事实见 docs/reference/execution/payment-backend-gap.md。以下保留原始发现、Owner 决定与当时证据，不再当作当前源码描述：\n\n这句文案是 2026-09-01 为了补信任缺口加的，动机对，但它是一个产品当前兑现不了的承诺。packages/core/src/ports/payment.ts 的 PaymentPort 方法全集是 purchaseAvailability / readBalance / readEntitlements / initiatePurchase / getOrderStatus / refreshEntitlements——能买，不能取消。PaymentOrderStatus 里那个 cancelled 指的是一笔没付成的订单，不是订阅取消。全仓（packages/**、apps/university/src/**）搜不到任何退订入口、账单页、或指向 SwimmerBackend 账户门户的外链；唯一命中 cancel 的就是这句文案自己和它的单元测试。而计划页有按月/按年切换，所以这确实是周期扣费而不是一次性买断，「不再扣费」有实际所指。结论：现在这个状态下，一个想取消的学习者无处可去，那句话就从补信任变成伤信任，而且它出现的位置恰恰是付款页。三条修法，都是决策不是实现细节：①做一个真的取消入口（要 SwimmerBackend 出能力；按「品牌套件优先」的规矩得改套件并发版本，不许在这里 fork）；②把文案退成产品此刻能兑现的说法，并写清怎么联系；③保留文案，同时给出一条学习者点得到的取消路径，哪怕只是邮件。在三选一之前不建议为这句话单发 0.2.7——线上 0.2.6 没有这句话，也就没有这个缺口。守卫要求：修完之后守的必须是「承诺与可执行路径同时存在」，只钉那句文案的探针会在承诺仍然空头时照样绿。\n\n【2026-09-02 菲哥拍板 + 补充查证】决定是①：做真的取消入口。原话「这是最基本的呀，不然到时候就各种投诉啊，就得下架」——他是对的，给三条路本身是把一道必答题当成了权衡题，②「文案退成能兑现的说法」只是把承诺藏起来，缺口还在。\n\n往下查一层之后，紧急程度和顺序都变了，但结论不变：**现在还没有人能付钱。** packages/backend/src/payment.ts 的注释写得很直白——订单创建、webhook 校验、钱包写入是故意缺席的，等 SwimmerBackend 发布 University 的服务端支付面。所以 createSupabasePaymentRemote 只提供 readBalance / readEntitlement，PaymentTransport 里没有 createOrder，于是 purchaseAvailability() 返回 unavailable，付款按钮显示的是「记录购买意向」而不是「购买」。没有人在被扣费，所以此刻没有人需要取消——这不是火，是打开收款之前必须先补上的前置条件。\n\n真正的风险点是「打开收款的那一刻」：如果 createOrder 先上线、取消入口后上线，缺口就是在那一刻凭空造出来的。建议把它锁成不可分割的交付：SwimmerBackend 那边 createOrder 与取消能力同一版发布；University 这边加一道闸门——purchaseAvailability() 只有在取消能力同时存在时才允许返回 available。这样「能收钱但不能退订」在代码层面不可能发生，不依赖谁记得。这道闸门就是这条发现的 guardedBy 该指向的东西，也正是「承诺与可执行路径同时存在」那条守卫要求的具体形状。\n\n另外一个当下的小错位：那句「随时可以取消」现在显示在一个「记录购买意向」的按钮上方。所以 0.2.7 不要为这句文案单发，等收款和取消一起上。"
     },
     {
       "id": "1638d9fbb120",

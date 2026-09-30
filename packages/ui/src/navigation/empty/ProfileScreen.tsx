@@ -1,6 +1,7 @@
 import { useI18n } from "../../i18n/index.js";
 import type { ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
+import { toPath, type View } from "@pieai/university-core";
 
 /** V7's Me door: identity, saving, and the secondary places that used to
  * crowd the primary rail. The actual badge wall and detailed goals live in
@@ -9,6 +10,7 @@ export function ProfileScreen({
   avatar,
   account,
   saveStatus,
+  accountEmail,
   passagesRead,
   lessonsCompleted,
   nextHref = "/",
@@ -18,6 +20,7 @@ export function ProfileScreen({
   readonly avatar?: ReactNode;
   readonly account?: ReactNode;
   readonly saveStatus?: ReactNode;
+  readonly accountEmail?: string | null;
   readonly passagesRead: number;
   readonly lessonsCompleted: number;
   readonly nextHref?: string;
@@ -25,26 +28,35 @@ export function ProfileScreen({
   readonly onOpenWardrobe?: () => void;
 }) {
   const t = useI18n();
+  const href = (view: View) => `${toPath(view)}?lang=${encodeURIComponent(t.locale)}`;
   return (
     <div className="profile-screen">
       <h1>{t.t("doors.me")}</h1>
+      {accountEmail ? (
+        <p className="profile-screen__email" data-profile-email>
+          {t.t("support.account.email", { email: accountEmail })}
+        </p>
+      ) : null}
       {saveStatus}
       <div className="profile-screen__hero">{avatar}</div>
       <nav className="learner-destinations" aria-label={t.t("doors.me")}>
-        <a href="/league" data-me-door="growth">
+        <a href={href({ kind: "league" })} data-me-door="growth">
           {t.t("doors.growth")}
         </a>
-        <a href="/plans" data-me-door="membership">
+        <a href={href({ kind: "plans" })} data-me-door="membership">
           {t.t("doors.membership")}
         </a>
         <a href="#profile-account" data-me-door="account">
           {t.t("doors.account")}
         </a>
-        <a href="/settings" data-me-door="settings">
+        <a href={href({ kind: "settings" })} data-me-door="settings">
           {t.t("doors.settings")}
         </a>
         <a href="#profile-help" data-me-door="help">
           {t.t("doors.help")}
+        </a>
+        <a href={href({ kind: "support", page: "about" })} data-me-door="about">
+          {t.t("support.about.title")}
         </a>
         {onOpenWardrobe ? (
           <GameButton variant="secondary" static onClick={onOpenWardrobe}>
@@ -83,6 +95,11 @@ export function ProfileScreen({
       </section>
       <section id="profile-help" className="profile-screen__help">
         <h2>{t.t("doors.help")}</h2>
+        <nav className="learner-destinations" aria-label={t.t("doors.help")}>
+          <a href={href({ kind: "support", page: "help" })} data-help-faq>
+            {t.t("support.help.title")}
+          </a>
+        </nav>
         <div id="profile-feedback-host" />
       </section>
     </div>

@@ -12,10 +12,10 @@
   "grading.host.ai": "AI evaluation",
   "billing.free.name": "Free",
   "billing.free.line1": "Read every published course",
-  "billing.free.line2": "Practice and review cards",
+  "billing.free.line2": "Practice, review cards, chests and badges",
   "billing.free.line3": "Link your email for a daily AI-grading trial",
   "billing.member.name": "Member",
-  "billing.member.line1": "Sync learning progress and review cards",
+  "billing.member.line1": "AI grading and explanations for open answers",
   "billing.member.line2": "Continue on your phone, computer or tablet",
-  "billing.member.line3": "AI grading beyond the daily free allowance"
+  "billing.member.line3": "Sync learning progress and review cards"
 }

@@ -41,6 +41,16 @@ export const LIBRARY_TABS = [
 
 export type LibraryTab = (typeof LIBRARY_TABS)[number];
 
+/** Public help addresses remain stable while approved policy documents are pending. */
+export const SUPPORT_PATHS = {
+  help: "/help",
+  about: "/about",
+  privacy: "/about/privacy",
+  terms: "/about/terms",
+  refunds: "/about/refunds",
+} as const;
+export type SupportPage = keyof typeof SUPPORT_PATHS;
+
 export type View =
   | { readonly kind: "world" }
   | { readonly kind: "course"; readonly studyId: string; readonly courseId: string }
@@ -112,6 +122,7 @@ export type View =
   */
   | { readonly kind: "planet" }
   | { readonly kind: "quests" }
+  | { readonly kind: "support"; readonly page: SupportPage }
   | { readonly kind: "plans" }
   | { readonly kind: "settings" }
   | { readonly kind: "me" }
@@ -183,6 +194,8 @@ export function toPath(view: View): string {
       return "/planet";
     case "quests":
       return "/quests";
+    case "support":
+      return SUPPORT_PATHS[view.page];
     case "plans":
       return "/plans";
     case "settings":
@@ -239,6 +252,15 @@ export function isSafeId(value: string): boolean {
  */
 export function fromPath(pathname: string): View {
   const parts = pathname.replace(/^\/?/u, "").split("/").filter(Boolean).map(dec);
+  if (parts[0] === "help" || parts[0] === "about") {
+    const entry = Object.entries(SUPPORT_PATHS).find(([, route]) => {
+      const expected = route.slice(1).split("/");
+      return (
+        expected.length === parts.length && expected.every((part, index) => part === parts[index])
+      );
+    });
+    return entry ? { kind: "support", page: entry[0] as SupportPage } : WORLD;
+  }
   if (parts.length === 0) return WORLD;
   if (parts.length === 1 && parts[0] === "review") return { kind: "review" };
   if (parts.length === 1 && parts[0] === "mistakes") return { kind: "mistakes" };
@@ -347,6 +369,7 @@ export function activeIdForView(view: View): string {
     case "league":
     case "quests":
     case "plans":
+    case "support":
     case "wardrobe":
     case "me":
     case "auth-callback":

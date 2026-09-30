@@ -11,6 +11,7 @@ import {
   walletGradingBalanceText,
   PLANS,
   planCopyForLocale,
+  toPath,
   type EntitlementReadModel,
   type PaymentExplanation,
   type PaymentAvailability,
@@ -27,13 +28,6 @@ import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js
 
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
 export const PLANS_TITLE = interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.会员");
-
-/*
-  One string rather than prose broken across source lines: JSX collapses those
-  line breaks into spaces, and a space after a full-width comma reads as a typo
-  on the one page where a typo costs money.
-*/
-const PLANS_LEDE = interfaceTranslator.t("product.billing.lede");
 
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort(() => interfaceTranslator.locale);
 const NO_SUBSCRIPTION = () => () => undefined;
@@ -144,6 +138,7 @@ function PlanCard({
   yearly,
   busyOfferId,
   purchaseAvailability,
+  canManageSubscription,
   currentPlanId,
   onPurchase,
 }: {
@@ -151,6 +146,7 @@ function PlanCard({
   readonly yearly: boolean;
   readonly busyOfferId: string | null;
   readonly purchaseAvailability: PaymentAvailability;
+  readonly canManageSubscription: boolean;
   readonly currentPlanId: string | null;
   readonly onPurchase: (offerId: string) => void;
 }) {
@@ -200,24 +196,9 @@ function PlanCard({
           </p>
         ) : purchasable ? (
           <>
-            {/*
-              The reassurance appears only where billing can actually begin.
-
-              "Cancel any time, and billing stops" is a claim about a capability
-              this product does not have yet: PaymentPort can buy and cannot
-              cancel, and no screen links anywhere that can. While the transport
-              has no createOrder the button reads 记录购买意向 and nothing is
-              charged, so the sentence above it would promise an escape from a
-              charge that cannot happen — accurate about nothing and wrong in
-              shape. Binding it to `available` keeps the promise off the page
-              until the moment it has a referent.
-
-              This is the small half of ledger 6a7233dd70ba. The other half is
-              the real guard: `available` must itself require a cancellation
-              path, so "can charge, cannot cancel" is unrepresentable rather
-              than something the next person has to remember.
-            */}
-            {purchaseAvailability === "available" ? (
+            {/* Both the order channel and the actual management entry must exist.
+                Opening a portal never means cancellation or refund succeeded. */}
+            {purchaseAvailability === "available" && canManageSubscription ? (
               <p className="plan-card__cancellation" data-plan-cancellation="true">
                 {interfaceTranslator.t(
                   "ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费",
@@ -384,8 +365,13 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
   const [error, setError] = useState<string | null>(null);
   const [portalUrl, setPortalUrl] = useState<string | null>(null);
   const purchaseBusy = useRef(false);
+  const managementBusy = useRef(false);
+  const [managing, setManaging] = useState(false);
   const hasConfiguredCycle = PLANS.some((plan) => plan.pricing.kind === "configured");
   const purchaseAvailability = payment.purchaseAvailability();
+  const canManageSubscription = Boolean(
+    payment.manageSubscription && payment.managementAvailability?.() === "available",
+  );
 
   useEffect(() => {
     let active = true;
@@ -467,7 +453,9 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
   }
 
   async function manageSubscription() {
-    if (!payment.manageSubscription) return;
+    if (!payment.manageSubscription || !canManageSubscription || managementBusy.current) return;
+    managementBusy.current = true;
+    setManaging(true);
     setPortalUrl(null);
     try {
       const result = await payment.manageSubscription();
@@ -475,6 +463,9 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
       else setPortalUrl(result.value.url);
     } catch {
       setError(interfaceTranslator.t("product.billing.readFailed"));
+    } finally {
+      managementBusy.current = false;
+      setManaging(false);
     }
   }
 
@@ -504,10 +495,10 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
   }
 
   return (
-    <section className="shell-screen plans-screen">
+    <section className="shell-screen plans-screen" data-payment-availability={purchaseAvailability}>
       <header className="shell-screen__head">
-        <h1>{PLANS_TITLE}</h1>
-        <p className="shell-screen__lede">{PLANS_LEDE}</p>
+        <h1>{interfaceTranslator.t("ui.navigation.screens.plansScreen.copy.会员")}</h1>
+        <p className="shell-screen__lede">{interfaceTranslator.t("product.value.whyAi")}</p>
       </header>
 
       {hasConfiguredCycle ? (
@@ -545,6 +536,7 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
             yearly={yearly}
             busyOfferId={recovering ? plan.id : busyOfferId}
             purchaseAvailability={purchaseAvailability}
+            canManageSubscription={canManageSubscription}
             currentPlanId={entitlement?.kind === "value" ? entitlement.value.planId : null}
             onPurchase={(offerId) => void startPurchase(offerId)}
           />
@@ -556,13 +548,27 @@ function PlansSession({ payment }: { readonly payment: PaymentPort }) {
         <p>{interfaceTranslator.t("product.billing.walletSeparate")}</p>
         <p>{interfaceTranslator.t("product.billing.renewalDetails")}</p>
       </details>
+      <nav className="learner-destinations" aria-label={interfaceTranslator.t("support.documents")}>
+        <a
+          data-billing-help
+          href={`${toPath({ kind: "support", page: "help" })}?lang=${encodeURIComponent(interfaceTranslator.locale)}`}
+        >
+          {interfaceTranslator.t("support.help.title")}
+        </a>
+        <a
+          data-billing-refunds
+          href={`${toPath({ kind: "support", page: "refunds" })}?lang=${encodeURIComponent(interfaceTranslator.locale)}`}
+        >
+          {interfaceTranslator.t("support.refunds.title")}
+        </a>
+      </nav>
       <PaymentSummary balance={balance} entitlement={entitlement} />
-      {(payment.accountKey?.().startsWith("signed_in:") || purchaseAvailability === "available") &&
-      payment.manageSubscription ? (
+      {canManageSubscription ? (
         <GameButton
           static
           variant="secondary"
           data-subscription-management
+          disabled={managing}
           onClick={() => void manageSubscription()}
         >
           {interfaceTranslator.t("product.billing.manage")}

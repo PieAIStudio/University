@@ -37,6 +37,24 @@ afterEach(async () => {
 });
 
 describe("PlansScreen purchase entry", () => {
+  it("V7 starts with the same reason to learn as the splash", async () => {
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen />)));
+    expect(container.querySelector(".shell-screen__lede")?.textContent).toBe(
+      "直接问 AI，你得到一个答案；在这里，你学会怎么问、怎么判断，还能记住。",
+    );
+  });
+
+  it("V7 never offers subscription management through a read-only adapter", async () => {
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort({ id: "learner", email: "learner@example.test" }),
+      transport: { readEntitlement: async () => ({ planId: "member" }) },
+    });
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
+    expect(container.querySelector("[data-current-membership]")).not.toBeNull();
+    expect(container.querySelector("[data-subscription-management]")).toBeNull();
+    expect(container.querySelector("[data-plan-cancellation]")).toBeNull();
+  });
+
   it("keeps the anonymous purchase CTA visible and points to email binding", async () => {
     const identity = createMemoryIdentityPort();
     await identity.signInAnonymously();
@@ -275,12 +293,72 @@ describe("free plan price line", () => {
 });
 
 describe("PlansScreen wallet line", () => {
+  it("sends one portal request during a double click and restores the entry after failure", async () => {
+    let reject!: (reason: Error) => void;
+    const portal = vi.fn(
+      () =>
+        new Promise<string>((_, fail) => {
+          reject = fail;
+        }),
+    );
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort({ id: "a", email: "a@example.test" }),
+      transport: { createSubscriptionPortal: portal },
+    });
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
+    const button = container.querySelector<HTMLButtonElement>("[data-subscription-management]")!;
+    await act(async () => {
+      button.click();
+      button.click();
+    });
+    expect(portal).toHaveBeenCalledTimes(1);
+    expect(button.disabled).toBe(true);
+    await act(async () => reject(new Error("synthetic portal unavailable")));
+    expect(button.disabled).toBe(false);
+    expect(container.querySelector('a[target="_blank"]')).toBeNull();
+    expect(container.textContent).not.toContain("已取消");
+  });
+
+  it("clears a completed portal link on sign-out and ignores an older pending response", async () => {
+    let resolve!: (url: string) => void;
+    const identity = createMemoryIdentityPort({ id: "a", email: "a@example.test" });
+    const payment = createPaymentPort({
+      identity,
+      transport: {
+        createSubscriptionPortal: () =>
+          new Promise<string>((done) => {
+            resolve = done;
+          }),
+      },
+    });
+    await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>("[data-subscription-management]")!.click(),
+    );
+    await act(async () => resolve("https://payments.example.test/account-a"));
+    expect(
+      container.querySelector('a[href="https://payments.example.test/account-a"]'),
+    ).not.toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>("[data-subscription-management]")!.click(),
+    );
+    await act(async () => identity.signOut());
+    expect(container.querySelector('a[target="_blank"]')).toBeNull();
+    await act(async () => resolve("https://payments.example.test/late-account-a"));
+    expect(container.querySelector('a[target="_blank"]')).toBeNull();
+    expect(container.querySelector("[data-subscription-management]")).toBeNull();
+  });
+
   it("a current member sees membership and management, not a second upgrade request", async () => {
     const identity = createMemoryIdentityPort({ id: "member", email: "member@example.test" });
     const createOrder = vi.fn();
     const payment = createPaymentPort({
       identity,
-      transport: { readEntitlement: async () => ({ planId: "member" }), createOrder },
+      transport: {
+        readEntitlement: async () => ({ planId: "member" }),
+        createOrder,
+        createSubscriptionPortal: async () => "https://payments.example.test/account",
+      },
     });
     await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
     expect(container.querySelector("[data-current-membership]")?.textContent).toContain(

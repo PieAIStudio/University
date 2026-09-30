@@ -19,6 +19,7 @@ import { messages as realitySources } from "./reality-sources.zh-CN.js";
 import { messages as accountFailures } from "./account-failures.zh-CN.js";
 import { messages as productNavigation } from "./product-navigation.zh-CN.js";
 import { messages as productBilling } from "./product-billing.zh-CN.js";
+import { messages as productSupport } from "./product-support.zh-CN.js";
 import { messages as productSave } from "./product-save.zh-CN.js";
 import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
 import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
@@ -68,6 +69,7 @@ export const messages = {
   ...cosmetics,
   ...productNavigation,
   ...productBilling,
+  ...productSupport,
   ...productSave,
   "ui.world.domain.programming": "AI 与编程",
   "ui.world.domain.programming.description": "学会用 AI 做网站和应用，理解功能、数据与交互。",

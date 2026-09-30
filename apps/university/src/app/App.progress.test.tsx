@@ -170,7 +170,8 @@ describe("the four screens that read the progress document", () => {
       root.render(withInterfaceLocale(<App />));
     });
     const growth = container.querySelector<HTMLAnchorElement>('[data-me-door="growth"]');
-    expect(growth?.getAttribute("href")).toBe("/league");
+    // The real Me link preserves the learner's explicit interface language.
+    expect(growth?.getAttribute("href")).toBe("/league?lang=zh-CN");
     expect(container.querySelector(".badge-wall")).toBeNull();
     await act(async () => {
       history.pushState(null, "", growth!.getAttribute("href")!);
