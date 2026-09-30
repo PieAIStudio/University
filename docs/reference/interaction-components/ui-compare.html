@@ -238,7 +238,7 @@ figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-
     <li><b>你的直觉能做出来。</b>「涟」的液体本来就是品牌 UI 包里的一套组件，颜色是可以换的。换成六种橡皮泥色，就是一套彩色液体主题，不是另起一套画法。</li>
     <li><b>比黏土多了什么：</b>黏土只有米色和一两种强调色；液体这套每种题型可以有自己的颜色，按下去会被压扁、向两边摊开，卡片放对了会「流」进篮子里融成一团，词块拼对了会连成一整句。</li>
     <li><b>有一条要守的规矩：</b>品牌 UI 包自己记着一条实测过的教训：<b>静止的色块一直晃，看起来像坏了。</b>所以平时是静止的彩色软块；只有你按它、放卡片、拼句子的那一下，它才像液体。两种你都能在下面切换着看。</li>
-    <li><b>晚上改轻了（你说太重、太抢眼）：</b>照着「涟」的厚度重做了两档。共同点：<b>颜色浅一档</b>成马卡龙色，<b>静止时是轮廓干净的实心软块</b>、一按才变液体，<b>选中不再鼓起来</b>、只变色加对勾，<b>阴影淡到几乎看不见</b>。区别只在光：「中」留一点像涟那样的柔光，「轻」一点不反光。下面默认显示「中」；三档可以来回切。</li>
+    <li><b>晚上照「涟」的参数重做了（你说太重、太抢眼，又太规整）：</b>数字直接取自品牌 UI 包里画「涟」水滴的那段：<b>没有投影</b>，<b>两色渐变</b>（左上浅、右下深），<b>边缘有 3 个很浅的鼓包</b>（幅度约 4，涟是 3.5），光泽 3.5。颜色换成浅一档的马卡龙色；<b>选中不再鼓起来</b>，只变色加对勾，所以一列选项左右两端是对齐的；只有按住的那一下才像液体。下面默认显示「像涟」，可以切回「厚」对比。</li>
     <li><b>字一律用深色。</b>六种颜色配深色字，对比度都在 6.3 以上，阳光下也看得清。深色模式也用同样亮的颜色，彩块在暗底上更跳。</li>
   </ol>
 </div>
@@ -246,10 +246,10 @@ figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-
 <!-- ───────── liquid ───────── -->
 <section id="liquid">
   <h2>一、同一屏「猜」：现在的黏土 和 彩色液体</h2>
-  <p class="lead">左边是正式版现在的真实截图；右边是真组件。点右边的三个选项，看被选中那块怎么鼓起来；按住「发出去试试」，看它怎么被压扁。</p>
+  <p class="lead">左边是正式版现在的真实截图；右边是真组件。点右边的三个选项，看被选中那块怎么变色；按住「发出去试试」，看它怎么被压扁。</p>
   <div class="toolbar" role="group" aria-label="切换">
     <div class="seg"><span>颜色</span><button type="button" data-lmode="light" aria-pressed="true">浅色</button><button type="button" data-lmode="dark" aria-pressed="false">深色</button></div>
-    <div class="seg"><span>质感</span><button type="button" data-lweight="light" aria-pressed="false">轻：不反光</button><button type="button" data-lweight="mid" aria-pressed="true">中：像涟（推荐）</button><button type="button" data-lweight="heavy" aria-pressed="false">厚：第一版</button></div>
+    <div class="seg"><span>质感</span><button type="button" data-lweight="lian" aria-pressed="true">像涟（推荐）</button><button type="button" data-lweight="heavy" aria-pressed="false">厚：第一版</button></div>
     <div class="seg"><span>液体什么时候动</span><button type="button" data-lmotion="act" aria-pressed="true">只在你操作时（推荐）</button><button type="button" data-lmotion="always" aria-pressed="false">一直微微流动</button></div>
   </div>
   <div class="duo">
@@ -263,7 +263,7 @@ figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-
       <div class="phone lq-phone"><div data-liquid="guess"></div></div>
       <ul class="notes">
         <li>没选的选项是奶油色软块；选中的那块<b>变成嫩叶绿</b>，前面有个对勾（颜色不是唯一的提示）。「厚」那一档里它还会鼓起来。</li>
-        <li>主按钮是珊瑚色，按住会被压扁、向两边摊开，松手弹回来。「轻」那一档平时是实心的，只有按住的那一下是液体。</li>
+        <li>主按钮是珊瑚色，按住会被压扁、向两边摊开，松手弹回来。</li>
         <li>现在进行到哪一步（猜）是一颗黄色小水珠。</li>
       </ul>
     </div>
@@ -341,9 +341,9 @@ figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-
     </ul>
     <p><b>L3 质感要多重？</b>（晚上按你的意见改过）</p>
     <ul class="notes">
-      <li><b>中，像涟（推荐）</b>：马卡龙色、轮廓干净、留一点柔光；静止时是实心软块，只有按下那一下是液体。上面默认显示的就是它。</li>
-      <li>轻，不反光：和「中」一样，只是完全没有光泽，最安静；静止时有点接近之前否掉的扁平。</li>
-      <li>厚，第一版：有高光和亮边、颜色更饱和、选中会鼓起来。</li>
+      <li><b>像涟（推荐）</b>：用「涟」的参数：没投影、两色渐变、边缘浅浅的鼓包、光泽 3.5。上面默认显示的就是它。</li>
+      <li>厚，第一版：有高光、亮边和投影，颜色更饱和，选中会鼓起来。</li>
+      <li>完全照「涟」：鼓包 3.5、光泽 3.5 一个数不差。品牌 UI 包的液体按钮现在不让外面调这两个数，要给包加两个参数、发一个新版本，要你点头。</li>
     </ul>
     <p class="fine">回我的时候写「L1 选几、L2 选几、L3 选几」就行。</p>
   </div>
@@ -566,7 +566,7 @@ figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-
 <script src="lab/liquid-theme.js"></script>
 <script>
 (function(){
-  var lstate={mode:'light',motion:'act',weight:'mid'};
+  var lstate={mode:'light',motion:'act',weight:'lian'};
   function lapply(){
     if(window.LiquidTheme) window.LiquidTheme.set(lstate);
     document.querySelectorAll('.lq-phone').forEach(function(el){ if(lstate.mode==='dark') el.setAttribute('data-dark',''); else el.removeAttribute('data-dark'); });

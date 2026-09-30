@@ -25,20 +25,47 @@ const INK = "#2a2320";
 const CREAM = "#fff6e6";
 
 /** Page-level switches: light/dark and how much the liquid moves. */
-const settings = { mode: "light", motion: "act", weight: "mid" };
+const settings = { mode: "light", motion: "act", weight: "lian" };
 
 /*
- * Three weights, heaviest last. 厚 is the glossy first draft the Owner found too
- * heavy (2026-09-30). 中 keeps a little of 涟's sheen; 轻 drops it. Both lighter
- * weights use the macaron colours, rest as a firm body that turns liquid only
- * while touched, keep the chosen option firm, and cast a shadow as soft as 涟's.
+ * Two weights. 厚 is the glossy first draft the Owner found too heavy
+ * (2026-09-30). 涟 copies the presence droplet in SwimmerUIKit's
+ * liquid-presence: a two-stop gradient body, no cast shadow, and a gently
+ * lobed outline (amplitude 3.5, three lobes; its filter uses contrast 18 and
+ * gloss 3.5). LiquidSurface does not take gloss or amplitude, so its bodies
+ * rest in `press` (blob 5, three lobes: the same gentle lobing, idle) with the
+ * matte finish for the droplet's flat face; the two LiquidGroups (pools,
+ * sentence) take the droplet's own numbers.
  */
 const heavy = (s) => s.weight === "heavy";
-const finishOf = (s) => (s.weight === "light" ? "matte" : "glossy");
-const fillOf = (colour, s) => (heavy(s) ? colour.fill : colour.soft);
-const restForm = (s) => (heavy(s) ? "press" : "set");
-const glossOf = (s) => (heavy(s) ? undefined : s.weight === "mid" ? 3 : 2);
-const shadowOf = (s) => (heavy(s) ? undefined : "0 2px 5px rgba(42, 35, 32, 0.08)");
+const finishOf = (s) => (heavy(s) ? "glossy" : "matte");
+const fillOf = (colour, s) => (heavy(s) ? colour.fill : `url(#lq-lian-${colour.id})`);
+const restForm = () => "press";
+const glossOf = (s) => (heavy(s) ? undefined : 3.5);
+const contrastOf = (s) => (heavy(s) ? undefined : 18);
+const shadowOf = (s) => (heavy(s) ? undefined : "none");
+
+/** The droplet's gradient, lighter at the top left, once per page. */
+function mixWhite(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift) => Math.round(((n >> shift) & 255) + (255 - ((n >> shift) & 255)) * amount);
+  return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
+}
+const LIAN_STOPS = [
+  ...PALETTE.map((p) => [p.id, mixWhite(p.soft, 0.38), p.soft]),
+  // Unchosen bodies sit on a cream card, so their deeper end is a step darker.
+  ["cream", "#fffefa", "#f1dfc2"],
+];
+const defs = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+defs.setAttribute("aria-hidden", "true");
+defs.setAttribute("width", "0");
+defs.setAttribute("height", "0");
+defs.style.position = "absolute";
+defs.innerHTML = `<defs>${LIAN_STOPS.map(
+  ([id, from, to]) =>
+    `<linearGradient id="lq-lian-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient>`,
+).join("")}</defs>`;
+document.body.appendChild(defs);
 const listeners = new Set();
 function setLiquidSettings(next) {
   Object.assign(settings, next);
@@ -60,15 +87,20 @@ function Bead({ colour, children, onClick, selected, radius = 999, big, pressed,
   // Colours stay bright in the dark too: dark ink on them clears 6:1 either way,
   // while the deeper shades fell to 3.3-4.2 with any ink.
   const [down, setDown] = useState(false);
-  const fill = colour ? fillOf(colour, s) : s.mode === "dark" ? "#3a3330" : CREAM;
+  const fill = colour
+    ? fillOf(colour, s)
+    : s.mode === "dark"
+      ? "#3a3330"
+      : heavy(s)
+        ? CREAM
+        : "url(#lq-lian-cream)";
   const touched = Boolean(pressed || down);
   // 厚 swells the chosen one; 轻 says it with colour and the tick, and stays firm.
   const form = touched ? "press" : selected && heavy(s) ? "swell" : restForm(s);
   return (
     <LiquidSurface
       form={form}
-      // An engaged `set` is firm: no outline swell and little gloss.
-      active={Boolean(selected || touched || form === "set")}
+      active={Boolean(touched || (selected && heavy(s)))}
       fill={fill}
       shadow={shadowOf(s)}
       radius={radius}
@@ -183,6 +215,7 @@ function Bin({ colour, label, pours, onPoured, onAnswer }) {
       fill={fillOf(colour, s)}
       liquidFinish={finishOf(s)}
       gloss={glossOf(s)}
+      contrast={contrastOf(s)}
       shadow={shadowOf(s)}
       waviness={s.motion === "always" ? 3 : 0}
       className="lq-bin-group"
@@ -285,6 +318,7 @@ function Build() {
           fill={fillOf(C.grape, s)}
           liquidFinish={finishOf(s)}
           gloss={glossOf(s)}
+          contrast={contrastOf(s)}
           shadow={shadowOf(s)}
           blur={7}
           waviness={s.motion === "always" ? 3 : 0}
@@ -360,7 +394,7 @@ function Palette() {
           <Bead colour={p} radius={18}>
             {p.name}
           </Bead>
-          <code>{fillOf(p, s)}</code>
+          <code>{heavy(s) ? p.fill : p.soft}</code>
         </div>
       ))}
     </div>
