@@ -53,7 +53,6 @@ function MolesRun({
       copy={{
         title: t("moles.title"),
         intro: t("moles.intro"),
-        controls: t("moles.controls"),
         calm: t("moles.calm"),
       }}
       onAgain={onAgain}
@@ -78,7 +77,11 @@ function MolesRun({
       }}
       bannerExtra={
         round?.source ? (
-          <p className="game-frame__hint game-frame__hint--source" data-testid="moles-source">
+          <p
+            className="game-frame__hint game-frame__hint--source"
+            data-testid="moles-source"
+            data-guide="moles-source"
+          >
             {t("moles.source", { source: round.source })}
           </p>
         ) : null
@@ -89,6 +92,11 @@ function MolesRun({
         whackHole(hole);
         return true;
       }}
+      guide={[
+        ...(round?.source ? [{ target: "moles-source", say: t("guide.moles.source") }] : []),
+        { target: "question", say: t("guide.moles.question") },
+        { target: "stage", say: t("guide.moles.whack") },
+      ]}
       scene={(slot) => (
         <MolesScene
           session={session}
@@ -97,7 +105,7 @@ function MolesRun({
           {...slot}
           describeMole={(text) => t("moles.mole", { text })}
           onWhack={(moleId) => {
-            if (!slot.frozen) session.act({ type: "whack", moleId });
+            if (!slot.blocked) session.act({ type: "whack", moleId });
           }}
         />
       )}

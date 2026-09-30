@@ -51,7 +51,6 @@ function LinksRun({
       copy={{
         title: t("links.title"),
         intro: t("links.intro"),
-        controls: t("links.controls"),
         calm: t("links.calm"),
       }}
       onAgain={onAgain}
@@ -84,14 +83,22 @@ function LinksRun({
       bannerExtra={
         s.open.length ? (
           <>
-            <ClockMeter fraction={s.window ? s.tide / s.window : 1} label={t("links.tide")} />
-            <p className="game-frame__hint" data-testid="links-picked">
+            <div data-guide="links-tide">
+              <ClockMeter fraction={s.window ? s.tide / s.window : 1} label={t("links.tide")} />
+            </div>
+            <p className="game-frame__hint" data-testid="links-picked" data-guide="links-hint">
               {picked ? t("links.picked", { label: picked }) : t("links.pickFirst")}
             </p>
           </>
         ) : null
       }
       {...(picked ? { idleLive: t("links.picked", { label: picked }) } : {})}
+      guide={[
+        { target: "question", say: t("guide.links.question") },
+        { target: "links-stone", say: t("guide.links.pick"), act: true },
+        { target: "links-hint", say: t("guide.links.pair") },
+        { target: "links-tide", say: t("guide.links.tide") },
+      ]}
       scene={(slot) => (
         <LinksScene
           session={session}
@@ -106,7 +113,7 @@ function LinksRun({
                 : t("links.stone", { label: text })
           }
           onPick={(nodeId) => {
-            if (!slot.frozen) session.act({ type: "pick", nodeId });
+            if (!slot.blocked) session.act({ type: "pick", nodeId });
           }}
         />
       )}

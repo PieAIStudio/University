@@ -85,6 +85,9 @@ export class RunnerSession extends RoundGame<ChoiceRound, RunnerEvent, RunnerSta
     s.queue = [...current.itemIds];
     s.fork = null;
     s.gapIn = 0.3;
+    // The first fork is already down the path when the round is briefed, so
+    // its arches (and a first-use guide pointing at their buttons) are there.
+    if (s.queue.length) this.next();
   }
 
   protected input(action: RunnerAction) {

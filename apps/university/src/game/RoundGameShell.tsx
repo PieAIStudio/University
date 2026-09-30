@@ -36,6 +36,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { FirstUseGuide, useFirstUse, type GuideStep } from "../guide/FirstUseGuide.js";
+
 /**
  * Everything an island game's assembly shares (ADR-0011, assembly layer):
  * pausing when the learner looks away, the camera's room below the question,
@@ -53,13 +55,16 @@ type AnyRoundGame = RoundGame<
 
 export interface RoundGameCopy {
   readonly title: string;
+  /** One line: what the game is. The rules are shown, not written (first-use guide). */
   readonly intro: string;
-  readonly controls: string;
   readonly calm: string;
 }
 
 export interface SceneSlot {
+  /** Time stands still: paused, hidden, a panel, or a first-use guide speaking. */
   readonly frozen: boolean;
+  /** Input is refused. A guide stops time but not the learner's hands. */
+  readonly blocked: boolean;
   readonly booting: boolean;
   readonly hud: { readonly top: number; readonly bottom: number };
   readonly onReady: () => void;
@@ -75,6 +80,12 @@ export interface RoundGameShellProps<G extends AnyRoundGame> {
   readonly scene: (slot: SceneSlot) => ReactNode;
   /** The answer row under the stage while a round is on. */
   readonly actions?: (playing: boolean) => ReactNode;
+  /**
+   * The first-use walk, once the first round is on screen (Owner 2026-09-30:
+   * 涟 shows the way instead of a screen of rules). Targets are `data-guide`
+   * elements in the frame: `question`, `stage`, `answers`, `pad`, or the game's own.
+   */
+  readonly guide?: readonly GuideStep[];
   /** Chips beside the round counter: a clock, a sentence so far. */
   readonly chips?: ReactNode;
   /** Under the question while playing, when the game has more to say. */
@@ -115,7 +126,19 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
   const banner = useRef<HTMLDivElement>(null);
   const [hudTop, setHudTop] = useState(96);
   const running = s.phase === "countdown" || s.phase === "playing";
-  const frozen = paused || !visible || !onScreen || failed || !ready || !running;
+  const firstUse = useFirstUse(props.guide ? `game:${name}` : null);
+  const [replay, setReplay] = useState(false);
+  const [guiding, setGuiding] = useState(false);
+  const guided = useRef(false);
+  const blocked = paused || !visible || !onScreen || failed || !ready || !running;
+  const frozen = blocked || guiding;
+  // The walk starts once, the first time a round is actually on screen.
+  useEffect(() => {
+    if (s.phase !== "playing" || guided.current || !props.guide) return;
+    if (!firstUse.needed && !replay) return;
+    guided.current = true;
+    setGuiding(true);
+  }, [s.phase, firstUse.needed, replay, props.guide]);
 
   useLayoutEffect(() => session.setSuspended(frozen), [session, frozen]);
 
@@ -265,7 +288,6 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
     <div data-testid="game-intro">
       <h3>{copy.title}</h3>
       <p>{copy.intro}</p>
-      <p>{copy.controls}</p>
       <p className="game-frame__source">{t("gameKit.sources", { lessons: lessons.join("、") })}</p>
       <GameToggle checked={calm} label={copy.calm} onClick={() => setCalm((on) => !on)} />
       <PanelActions>
@@ -286,6 +308,18 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
             data-testid="game-plain"
           >
             {t("gameKit.plain")}
+          </GameButton>
+        ) : null}
+        {props.guide && !firstUse.needed ? (
+          <GameButton
+            static
+            sound={false}
+            variant="ghost"
+            aria-pressed={replay}
+            onClick={() => setReplay((on) => !on)}
+            data-testid="game-howto"
+          >
+            {t(replay ? "guide.replayOn" : "guide.replay")}
           </GameButton>
         ) : null}
       </PanelActions>
@@ -343,7 +377,7 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
           setPaused(true);
           return;
         }
-        if (s.phase === "playing" && !frozen && props.onKey?.(event)) event.preventDefault();
+        if (s.phase === "playing" && !blocked && props.onKey?.(event)) event.preventDefault();
       }}
     >
       <GameFrame
@@ -354,6 +388,7 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
             <Fragment key={epoch}>
               {props.scene({
                 frozen,
+                blocked,
                 booting: !ready,
                 hud: { top: hudTop, bottom: 4 },
                 onReady: () => setReady(true),
@@ -387,7 +422,7 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
         banner={
           round && (running || s.phase === "briefing") ? (
             <div ref={banner}>
-              <p className="game-frame__question" data-testid="game-question">
+              <p className="game-frame__question" data-testid="game-question" data-guide="question">
                 {round.round.question}
               </p>
               {running ? props.bannerExtra : null}
@@ -415,11 +450,23 @@ export function RoundGameShell<G extends AnyRoundGame>(props: RoundGameShellProp
         panel={panel}
         actions={
           props.actions && round && s.phase !== "intro"
-            ? props.actions(s.phase === "playing" && !frozen)
+            ? props.actions(s.phase === "playing" && !blocked)
             : null
         }
         live={live}
       />
+      {guiding && props.guide ? (
+        <FirstUseGuide
+          id={`game:${name}`}
+          steps={props.guide}
+          root={frame}
+          onDone={() => {
+            firstUse.finish();
+            setReplay(false);
+            setGuiding(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

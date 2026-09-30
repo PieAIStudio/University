@@ -16,6 +16,7 @@ import {
   type JourneyHistory,
   type ReviewEmailIntent,
 } from "../progress/journey.js";
+import { mergeGuidedHistory, parseGuidedHistory, type GuidedHistory } from "../progress/guided.js";
 
 /** The settings that follow the learner between browser profiles. */
 export interface AccountForeignSettings {
@@ -48,6 +49,7 @@ export type AccountPreferenceKey =
   | "worldStyle"
   | "locale"
   | "journey"
+  | "guided"
   | "reviewEmail";
 // Interface language is a shared account preference, independent of vocabulary mode.
 
@@ -65,6 +67,8 @@ export interface AccountPreferences {
   /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
   readonly avatarRecipe: string | null;
   readonly journey?: JourneyHistory;
+  /** First-use guides already walked through; presentation history, merged by union. */
+  readonly guided?: GuidedHistory;
   readonly reviewEmail?: ReviewEmailIntent;
   /** Per-field timestamps make two devices' independent setting changes merge. */
   readonly updatedAt: Partial<Record<AccountPreferenceKey, string>>;
@@ -159,6 +163,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "worldStyle",
       "locale",
       "journey",
+      "guided",
       "reviewEmail",
     ] as const) {
       const timestamp = value.updatedAt[key];
@@ -188,6 +193,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
     locale: value.locale === "en" || value.locale === "zh-CN" ? value.locale : null,
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     journey: parseJourneyHistory(value.journey),
+    guided: parseGuidedHistory(value.guided),
     reviewEmail: updatedAt.reviewEmail ? parseReviewEmailIntent(value.reviewEmail) : undefined,
     updatedAt,
   };
@@ -198,6 +204,7 @@ function cloneAccountPreferences(value: AccountPreferences): AccountPreferences 
     ...value,
     foreignSettings: { ...value.foreignSettings },
     ...(value.journey ? { journey: parseJourneyHistory(value.journey) } : {}),
+    ...(value.guided ? { guided: [...value.guided] } : {}),
     ...(value.reviewEmail ? { reviewEmail: { ...value.reviewEmail } } : {}),
     updatedAt: { ...value.updatedAt },
   };
@@ -252,6 +259,7 @@ export function mergeAccountPreferences(
     worldStyle: newer(leftWorldStyle, rightWorldStyle) ? right.worldStyle : left.worldStyle,
     locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,
     journey: mergeJourneyHistory(left.journey, right.journey),
+    guided: mergeGuidedHistory(left.guided, right.guided),
     // A concurrent opt-out wins. Passive prompt history has its own field and
     // cannot turn an older email consent back on.
     reviewEmail:
@@ -276,6 +284,7 @@ export function mergeAccountPreferences(
     "theme",
     "locale",
     "journey",
+    "guided",
     "reviewEmail",
   ] as const) {
     if (

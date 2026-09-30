@@ -51,7 +51,6 @@ function BlocksRun({
       copy={{
         title: t("blocks.title"),
         intro: t("blocks.intro"),
-        controls: t("blocks.controls"),
         calm: t("blocks.calm"),
       }}
       onAgain={onAgain}
@@ -75,7 +74,7 @@ function BlocksRun({
       }}
       bannerExtra={
         next ? (
-          <p className="game-frame__hint" data-testid="blocks-next">
+          <p className="game-frame__hint" data-testid="blocks-next" data-guide="blocks-next">
             {t("blocks.next", { text: next.text })}
           </p>
         ) : null
@@ -92,7 +91,11 @@ function BlocksRun({
         return true;
       }}
       actions={(playing) => (
-        <div className="game-frame__pad game-frame__pad--row" data-testid="blocks-pad">
+        <div
+          className="game-frame__pad game-frame__pad--row"
+          data-testid="blocks-pad"
+          data-guide="pad"
+        >
           <GameButton
             static
             sound={false}
@@ -124,6 +127,11 @@ function BlocksRun({
           </GameButton>
         </div>
       )}
+      guide={[
+        { target: "blocks-column", say: t("guide.blocks.column") },
+        { target: "pad", say: t("guide.blocks.move"), act: true },
+        { target: "blocks-next", say: t("guide.blocks.next") },
+      ]}
       scene={(slot) => (
         <BlocksScene
           session={session}
@@ -134,7 +142,7 @@ function BlocksRun({
             current ? t("blocks.columnCurrent", { label }) : t("blocks.column", { label })
           }
           onColumn={(col) => {
-            if (!slot.frozen) session.act({ type: "column", col });
+            if (!slot.blocked) session.act({ type: "column", col });
           }}
         />
       )}

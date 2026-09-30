@@ -222,6 +222,7 @@ export function SnakeScene(props: SnakeSceneProps) {
         selected: aimed,
         ...(next ? { className: "game-label--next" } : {}),
         ariaLabel: props.describeCrate(piece.text, next, aimed),
+        ...(crate.id === snapshot.crates[0]?.id ? { guide: "snake-crate" } : {}),
         onPick: () => props.onAim(crate.id),
         content: piece.text,
       } satisfies AnchoredLabel,

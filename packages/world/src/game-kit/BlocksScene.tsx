@@ -253,6 +253,7 @@ export function BlocksScene(props: BlocksSceneProps) {
       selected: block?.col === col,
       ariaLabel: props.describeColumn(bin.label, block?.col === col),
       onPick: () => props.onColumn(col),
+      ...(col === 0 ? { guide: "blocks-column" } : {}),
       content: bin.label,
     })),
     ...(item && block && !block.landed

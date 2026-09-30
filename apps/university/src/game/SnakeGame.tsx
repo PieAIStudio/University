@@ -62,7 +62,6 @@ function SnakeRun({
       copy={{
         title: t("snake.title"),
         intro: t("snake.intro"),
-        controls: t("snake.controls"),
         calm: t("snake.calm"),
       }}
       onAgain={onAgain}
@@ -95,8 +94,14 @@ function SnakeRun({
       bannerExtra={
         s.crates.length ? (
           <>
-            <ClockMeter fraction={s.window ? s.hunger / s.window : 1} label={t("snake.hunger")} />
-            <p className="game-frame__hint" data-testid="snake-sentence">
+            <div data-guide="snake-hunger">
+              <ClockMeter fraction={s.window ? s.hunger / s.window : 1} label={t("snake.hunger")} />
+            </div>
+            <p
+              className="game-frame__hint"
+              data-testid="snake-sentence"
+              data-guide="snake-sentence"
+            >
               {sentence ? t("snake.sentence", { sentence }) : t("snake.startHint")}
             </p>
           </>
@@ -111,6 +116,13 @@ function SnakeRun({
       actions={(playing) => (
         <DirectionPad disabled={!playing} onTurn={(dir) => session.act({ type: "turn", dir })} />
       )}
+      guide={[
+        { target: "question", say: t("guide.snake.question") },
+        { target: "snake-crate", say: t("guide.snake.crate") },
+        { target: "pad", say: t("guide.snake.turn"), act: true },
+        { target: "snake-sentence", say: t("guide.snake.sentence") },
+        { target: "snake-hunger", say: t("guide.snake.hunger") },
+      ]}
       scene={(slot) => (
         <SnakeScene
           session={session}
@@ -125,7 +137,7 @@ function SnakeRun({
                 : t("snake.crate", { text: label })
           }
           onAim={(pieceId) => {
-            if (!slot.frozen) session.act({ type: "aim", pieceId });
+            if (!slot.blocked) session.act({ type: "aim", pieceId });
           }}
         />
       )}

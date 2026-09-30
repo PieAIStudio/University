@@ -326,6 +326,7 @@ export * from "./progress/goals.js";
 export * from "./progress/chest-reward.js";
 export * from "./progress/rest-days.js";
 export * from "./progress/journey.js";
+export * from "./progress/guided.js";
 export * from "./progress/weekly-boss.js";
 export * from "./progress/knowledge-cards.js";
 export * from "./progress/review-wisps.js";

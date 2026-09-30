@@ -105,6 +105,15 @@
   pointer-events: none;
 }
 
+/*
+  The banner lets taps through to the stage, but a place a first-use guide
+  points at must be hit-testable: the guide checks that its target is really
+  on top before the droplet flies there.
+*/
+.game-frame__banner [data-guide] {
+  pointer-events: auto;
+}
+
 .game-frame__question {
   max-width: min(620px, 100%);
   margin: 0;

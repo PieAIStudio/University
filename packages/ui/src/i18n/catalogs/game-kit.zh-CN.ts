@@ -44,6 +44,30 @@ export const messages = {
   "gameKit.unavailable": "3D 暂时打不开，这一局已暂停。可以重新打开，或改玩二维配对。",
   "gameKit.retry": "重新打开 3D",
   "gameKit.plain": "改玩二维配对",
+  "guide.ok": "知道了",
+  "guide.start": "开始玩",
+  "guide.try": "点一下试试",
+  "guide.skip": "跳过",
+  "guide.replay": "看看怎么玩",
+  "guide.replayOn": "开局时再教一遍 ✓",
+  "guide.links.question": "要做的事写在这里。",
+  "guide.links.pick": "先点一块石头。",
+  "guide.links.pair": "再点和它连着的那块，桥就搭好了。连错会少一颗心。",
+  "guide.links.tide": "潮水在涨。每搭好一座桥，它就退回去。",
+  "guide.snake.question": "要拼的东西写在这里。",
+  "guide.snake.crate": "木箱上写着词。点它，小兔子会自己走过去吃掉。",
+  "guide.snake.turn": "也可以按箭头转弯，试一下。",
+  "guide.snake.sentence": "吃下的词在这里拼成一句。顺序不对会少一颗心。",
+  "guide.snake.hunger": "它会饿。按顺序吃对一块，就又饱了。",
+  "guide.moles.source": "先看原文。地鼠举的每一句，都要和它对一对。",
+  "guide.moles.question": "题目要你敲哪种，就敲哪种；别的放过去。",
+  "guide.moles.whack": "地鼠会从这些洞里冒出来。点它手里的字就是敲。",
+  "guide.runner.situation": "这是要拿主意的事。",
+  "guide.runner.lanes": "每个按钮是一条路。点一个，换到那条路上。",
+  "guide.runner.fork": "跑到拱门就算选定了，到之前都能再换。",
+  "guide.blocks.column": "每一列底下是一个篮子，名字写在顶上。",
+  "guide.blocks.move": "按箭头挪方块，按「落下」直接落。挪一下试试。",
+  "guide.blocks.next": "下一块会是什么，在这里先看到。",
   "gameKit.labCourse": "这次用的课：{course}。",
   "gameKit.labSamples":
     "{count, plural, other {这种题书架上还不够，另外加了 # 组示例题（不是课里的题，上线后不会出现）。}}",
@@ -52,8 +76,7 @@ export const messages = {
   "gameKit.dir.left": "向左",
   "gameKit.dir.right": "向右",
   "snake.title": "贪吃蛇",
-  "snake.intro":
-    "小兔子带着小火车在草坪上走。地上的木箱写着课里的词，按课里的顺序一个个吃掉，身后就多一节车厢，句子也就拼出来了。吃到不该要的，或者顺序不对，少一颗心，还会告诉你下一个该吃哪块。饿太久，它会自己吞下一块，也少一颗心。",
+  "snake.intro": "小兔子带着小火车，按课里的顺序吃掉词块，拼出一整句。",
   "snake.controls":
     "点木箱上的字，小兔子会自己走过去；也可以用方向键、WASD 或下面的箭头转弯，Esc 暂停。撞到篱笆会自己拐弯。",
   "snake.calm": "慢慢玩：走得慢一些",
@@ -70,8 +93,7 @@ export const messages = {
   "snake.labNote":
     "试玩：题目取自这门课里「拼一句」和连线的路线。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "moles.title": "打地鼠",
-  "moles.intro":
-    "地鼠举着一句话冒出来。先看清上面的原文，再对照地鼠手里的话：题目要你敲的，就敲下去；别的放过去。敲错一只少一颗心；该敲的让它缩回洞里，也少一颗心。",
+  "moles.intro": "地鼠举着句子冒出来。对着原文，敲掉该敲的那只。",
   "moles.controls": "点地鼠手里的字就能敲；键盘按 1 到 6 对应六个洞，Esc 暂停。",
   "moles.calm": "慢慢玩：地鼠露头久一些",
   "moles.source": "原文：{source}",
@@ -82,8 +104,7 @@ export const messages = {
   "moles.labNote":
     "试玩：题目取自这门课里「点出那一句」的题。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "runner.title": "三岔路",
-  "runner.intro":
-    "小兔子沿着花园小路往前跑。上面写着一件事，前面的路分成几条，每个拱门写着一种做法。跑到拱门前，拐进最合适的那条。选错少一颗心，还会告诉你那样做会怎样。不拐就直直穿过脚下这条。",
+  "runner.intro": "沿着花园小路跑，到岔路口拐进最合适的那一条。",
   "runner.controls": "点拱门上的字或下面的按钮，键盘按 1、2、3 或左右方向键，Esc 暂停。",
   "runner.calm": "慢慢玩：跑得慢一些",
   "runner.take": "走「{text}」这条路",
@@ -93,8 +114,7 @@ export const messages = {
   "runner.labNote":
     "试玩：题目取自这门课里「取舍」和「判断」的题。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "blocks.title": "俄罗斯方块",
-  "blocks.intro":
-    "一块块方块从上面落下来，每块写着课里的一句话。柜子有几列，就是几个篮子。把方块挪到对的那一列，让它落下去：放对了，它化进篮子里；放错了少一颗心，还会变成一块灰砖堆在那一列底下，让那一列变矮。",
+  "blocks.intro": "方块带着句子落下来，把它挪进对的那一列。",
   "blocks.controls":
     "左右方向键或下面的箭头挪，空格或「落下」直接落；也可以点柜子上面的篮子名字，Esc 暂停。",
   "blocks.calm": "慢慢玩：落得慢一些",
@@ -106,8 +126,7 @@ export const messages = {
   "blocks.labNote":
     "试玩：题目取自这门课里「分一分」的题。试玩不看学习进度；在地图上，只有学完的课才会出题。",
   "links.title": "连连看",
-  "links.intro":
-    "池塘里每块石头上，写着课里的一样东西。先点一块，再点和它连着的那块，中间就搭起一座小桥。连错了少一颗心，还会告诉你它真正连着谁。每搭好一座桥，潮水就退回去；潮水涨满了，会替你搭上一座，也少一颗心。",
+  "links.intro": "池塘里的石头各写着课里的一样东西。把连着的两块搭上桥。",
   "links.controls":
     "点石头上的字就行；键盘用 Tab 选、回车点，Esc 暂停。桥上的小箭头，是课里连线的方向。",
   "links.calm": "慢慢玩：潮水涨得慢一些",

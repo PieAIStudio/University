@@ -12,7 +12,7 @@ import {
   type SpotRound,
 } from "@pieai/university-core";
 import { useI18n } from "@pieai/university-ui/i18n.js";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { contentPort } from "../ports/index";
 import samples from "./lab-samples.json";
@@ -122,10 +122,15 @@ export function KitGameLab({ game }: { game: KitLabGame }) {
       });
     return () => request.abort();
   }, [lab]);
+  const topUp = found ? Math.max(0, ENOUGH_ROUNDS - found.rounds.length) : 0;
+  // One array per search: a new one would start the game over, and this
+  // re-renders whenever account data changes (a finished guide, a setting).
+  const rounds = useMemo(
+    () => (found ? [...found.rounds, ...lab.samples.slice(0, topUp)] : []),
+    [found, lab, topUp],
+  );
   if (failed) return <p role="alert">{t("mapNodes.loadFailed")}</p>;
   if (!found) return <p role="status">{t("mapNodes.loading")}</p>;
-  const topUp = Math.max(0, ENOUGH_ROUNDS - found.rounds.length);
-  const rounds = [...found.rounds, ...lab.samples.slice(0, topUp)];
   return (
     <>
       <p>

@@ -46,6 +46,31 @@ export const messages = {
     "3D cannot open right now; this run is paused. Try again, or play the 2D matching game instead.",
   "gameKit.retry": "Open 3D again",
   "gameKit.plain": "Play the 2D matching game",
+  "guide.ok": "Got it",
+  "guide.start": "Start playing",
+  "guide.try": "Give it a try",
+  "guide.skip": "Skip",
+  "guide.replay": "Show me how to play",
+  "guide.replayOn": "Showing how at the start ✓",
+  "guide.links.question": "What to do is written here.",
+  "guide.links.pick": "Tap a stone first.",
+  "guide.links.pair":
+    "Then tap the stone it connects to, and a bridge goes up. A wrong pair costs a heart.",
+  "guide.links.tide": "The tide is rising. Every bridge pushes it back.",
+  "guide.snake.question": "What to build is written here.",
+  "guide.snake.crate": "Crates carry words. Tap one and your character walks over to eat it.",
+  "guide.snake.turn": "You can also turn with the arrows. Try one.",
+  "guide.snake.sentence": "What you eat builds the sentence here. The wrong order costs a heart.",
+  "guide.snake.hunger": "The train gets hungry. Each right crate fills it up again.",
+  "guide.moles.source": "Read the source first. Every sentence a mole holds is checked against it.",
+  "guide.moles.question": "Whack the kind the question asks for; let the others go.",
+  "guide.moles.whack": "Moles pop up from these holes. Tap the words a mole holds to whack it.",
+  "guide.runner.situation": "This is the decision to make.",
+  "guide.runner.lanes": "Each button is a lane. Tap one to move into it.",
+  "guide.runner.fork": "Reaching the arches makes the choice; until then you can still switch.",
+  "guide.blocks.column": "Each column ends in a basket, named at the top.",
+  "guide.blocks.move": "Arrows move the block, Drop lets it fall. Try moving it.",
+  "guide.blocks.next": "The next block is shown here first.",
   "gameKit.labCourse": "Course used this time: {course}.",
   "gameKit.labSamples":
     "The shelf has too few of these yet, so {count, plural, one {# sample round was} other {# sample rounds were}} added (not from a lesson; never shown on the map).",
@@ -55,7 +80,7 @@ export const messages = {
   "gameKit.dir.right": "Right",
   "snake.title": "Snake",
   "snake.intro":
-    "Your character leads a little train across the lawn. The crates carry words from the lesson; eat them in the lesson order and a wagon joins the train as the sentence builds. A crate that does not belong, or one eaten too early, costs a heart and shows which one comes next. Wait too long and the train swallows the next one by itself, and a heart goes too.",
+    "Your character leads a little train, eating word crates in the lesson order to build a sentence.",
   "snake.controls":
     "Tap the words on a crate and your character walks there; or turn with the arrow keys, WASD or the arrows below. Esc pauses. The train turns by itself at the hedge.",
   "snake.calm": "Take it slow: the train moves more gently",
@@ -73,7 +98,7 @@ export const messages = {
     "Preview: questions from the build-a-sentence steps and link routes in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "moles.title": "Whack-a-mole",
   "moles.intro":
-    "Moles pop up holding one sentence each. Read the source above first, then check each sentence against it: whack the kind the question asks for and let the others go. Whacking the wrong mole costs a heart, and so does letting a target duck back into its hole.",
+    "Moles pop up with sentences. Check them against the source and whack the one asked for.",
   "moles.controls":
     "Tap the words a mole holds to whack it; keys 1 to 6 match the six holes, Esc pauses.",
   "moles.calm": "Take it slow: moles stay up longer",
@@ -85,8 +110,7 @@ export const messages = {
   "moles.labNote":
     "Preview: questions from the point-out-the-sentence steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "runner.title": "Fork Run",
-  "runner.intro":
-    "Your character runs down a garden path. A situation rides above it; ahead, the path splits, and each arch carries one way to handle it. Before the arches, steer into the best one. A wrong turn costs a heart and says what that choice would cost. If you do not steer, you run straight through the lane you are in.",
+  "runner.intro": "Run the garden path and turn into the best lane at each fork.",
   "runner.controls":
     "Tap an arch or a button below, press 1, 2, 3 or the left and right arrows; Esc pauses.",
   "runner.calm": "Take it slow: run more gently",
@@ -97,8 +121,7 @@ export const messages = {
   "runner.labNote":
     "Preview: questions from the weigh and decision steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "blocks.title": "Falling Blocks",
-  "blocks.intro":
-    "Blocks fall one at a time, each carrying a sentence from the lesson. Each column of the cabinet is one basket. Move a block into the right column and let it land: a right landing melts into the basket; a wrong one costs a heart and stays as a grey brick at the bottom of that column, making it shorter.",
+  "blocks.intro": "Blocks fall carrying sentences. Move each one into the right column.",
   "blocks.controls":
     "Move with the left and right arrows or the buttons below, drop with Space or Drop, or tap a basket name at the top. Esc pauses.",
   "blocks.calm": "Take it slow: blocks fall more gently",
@@ -111,7 +134,7 @@ export const messages = {
     "Preview: questions from the sort steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "links.title": "Link-up",
   "links.intro":
-    "Each stone in the pond carries one thing from the lesson. Tap a stone, then the stone it connects to, and a little bridge goes up between them. A wrong link costs a heart and shows what that stone really connects to. Every bridge pushes the tide back; if the tide comes all the way in, it lays one link for you and a heart goes too.",
+    "Stones in the pond each carry one thing from the lesson. Bridge each pair that connects.",
   "links.controls":
     "Tap the words on a stone. With a keyboard, Tab to a stone and press Enter; Esc pauses. The arrow on a bridge points the way the lesson link runs.",
   "links.calm": "Take it slow: the tide rises more gently",

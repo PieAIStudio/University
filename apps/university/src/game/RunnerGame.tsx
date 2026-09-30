@@ -58,7 +58,6 @@ function RunnerRun({
       copy={{
         title: t("runner.title"),
         intro: t("runner.intro"),
-        controls: t("runner.controls"),
         calm: t("runner.calm"),
       }}
       onAgain={onAgain}
@@ -77,7 +76,11 @@ function RunnerRun({
       noticeReason={(notice) => notice.reason}
       bannerExtra={
         item && fork?.taken === null ? (
-          <p className="game-frame__hint game-frame__hint--source" data-testid="runner-situation">
+          <p
+            className="game-frame__hint game-frame__hint--source"
+            data-testid="runner-situation"
+            data-guide="runner-situation"
+          >
             {item.text}
           </p>
         ) : null
@@ -111,6 +114,11 @@ function RunnerRun({
           />
         ) : null
       }
+      guide={[
+        { target: "runner-situation", say: t("guide.runner.situation") },
+        { target: "answers", say: t("guide.runner.lanes"), act: true },
+        { target: "stage", say: t("guide.runner.fork") },
+      ]}
       scene={(slot) => (
         <RunnerScene
           session={session}
@@ -123,7 +131,7 @@ function RunnerRun({
               : t("runner.arch", { text, lane: lane + 1 })
           }
           onLane={(lane) => {
-            if (!slot.frozen) session.act({ type: "lane", lane });
+            if (!slot.blocked) session.act({ type: "lane", lane });
           }}
         />
       )}

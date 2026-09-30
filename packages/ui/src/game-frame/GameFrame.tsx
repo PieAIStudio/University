@@ -49,7 +49,9 @@ export function GameFrame({
       data-testid="game-frame"
     >
       <div className="game-frame__stage">
-        <div className="game-frame__canvas">{stage}</div>
+        <div className="game-frame__canvas" data-guide="stage">
+          {stage}
+        </div>
         {notice ? <div className="game-frame__notice">{notice}</div> : null}
         {overlay ? <div className="game-frame__overlay">{overlay}</div> : null}
       </div>
@@ -157,7 +159,7 @@ export function AnswerButtons({
 }) {
   const { t } = useI18n();
   return (
-    <div className="game-frame__answers" data-count={bins.length}>
+    <div className="game-frame__answers" data-count={bins.length} data-guide="answers">
       {bins.map((bin, index) => (
         <GameButton
           key={bin.id}
@@ -193,7 +195,7 @@ export function DirectionPad({
 }) {
   const { t } = useI18n();
   return (
-    <div className="game-frame__pad" data-testid="game-pad">
+    <div className="game-frame__pad" data-testid="game-pad" data-guide="pad">
       {(["up", "left", "down", "right"] as const).map((dir) => (
         <GameButton
           key={dir}

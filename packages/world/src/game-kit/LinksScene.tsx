@@ -334,6 +334,8 @@ export function LinksScene(props: LinksSceneProps) {
       selected: picked,
       className: done ? "game-label--done" : undefined,
       ariaLabel: props.describeStone(node.label, picked, done),
+      // The first stone is where a first-use guide asks for a first pick.
+      ...(node.id === round?.nodes[0]?.id ? { guide: "links-stone" } : {}),
       ...(done ? {} : { onPick: () => props.onPick(node.id) }),
       content: (
         <>
