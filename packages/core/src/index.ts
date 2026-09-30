@@ -7,6 +7,7 @@ export {
   type KnowledgeAlbumSet,
 } from "./progress/knowledge-album.js";
 export * from "./ports/cosmetics.js";
+export * from "./domain/learning-domain.js";
 export * from "./progress/cosmetic-rewards.js";
 export * from "./progress/cosmetics-store.js";
 export * from "./map-nodes/segments.js";

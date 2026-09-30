@@ -4,6 +4,7 @@
  * Unknown studies remain visible until their domain has been deliberately assigned.
  */
 import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
+import { learningDomainOfStudy } from "@pieai/university-core";
 import type { PlanetStudy, PlanetStudyDomain } from "@pieai/university-world/planet.js";
 
 export type MapDomain = PlanetStudyDomain;
@@ -38,17 +39,8 @@ export function mapDomainCatalog(): readonly MapDomain[] {
   ];
 }
 
-const STUDY_DOMAINS: Readonly<Record<string, "programming" | "ai-foundations" | "ai-games">> =
-  Object.freeze({
-    "turing-pact": "ai-games",
-    "ai-foundations": "ai-foundations",
-    "ai-literacy": "ai-foundations",
-    general: "programming",
-    "browser-ai": "programming",
-  });
-
 export function mapDomainForStudy(studyId: string): MapDomain {
-  const id = Object.hasOwn(STUDY_DOMAINS, studyId) ? STUDY_DOMAINS[studyId]! : "unclassified";
+  const id = learningDomainOfStudy(studyId);
   return (
     mapDomainCatalog().find((domain) => domain.id === id) ?? {
       id: "unclassified",

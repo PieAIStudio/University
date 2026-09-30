@@ -51,6 +51,8 @@ export interface InterceptGameProps {
   readonly onUnavailable?: () => void;
   /** The host's 2D game, offered from the intro to anyone who prefers it. */
   readonly onPlain?: () => void;
+  /** A genuine completed run; the host, not the renderer, owns rewards. */
+  readonly onWon?: () => void;
 }
 
 export function InterceptGame(props: InterceptGameProps) {
@@ -67,12 +69,19 @@ function InterceptRun({
   onOpenLesson,
   onUnavailable,
   onPlain,
+  onWon,
   seed,
   onAgain,
 }: InterceptGameProps & { seed: number; onAgain: () => void }) {
   const { t } = useI18n();
   const session = useMemo(() => new InterceptSession(rounds, seed), [rounds, seed]);
   const s = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const reportedWin = useRef<InterceptSession | null>(null);
+  useEffect(() => {
+    if (s.phase !== "won" || reportedWin.current === session) return;
+    reportedWin.current = session;
+    onWon?.();
+  }, [s.phase, session, onWon]);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [epoch, setEpoch] = useState(0);

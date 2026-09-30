@@ -1,6 +1,7 @@
 import { CONCEPT_HEADS } from "../concepts/heads.js";
 import { learningSegments } from "../map-nodes/segments.js";
-import { HEAD_START_CONCEPTS } from "./knowledge-cards.js";
+import { HEAD_START_CONCEPTS, knowledgeSetConceptIds } from "./knowledge-cards.js";
+import { learningDomainOfStudy } from "../domain/learning-domain.js";
 import { challengeWonEventId } from "./goals.js";
 import type { LessonProgressSnapshot } from "./contract.js";
 
@@ -19,23 +20,29 @@ export interface CosmeticRewardReference {
   readonly contentRevision: number;
   readonly exerciseIds: readonly string[];
   readonly perfect?: true;
+  readonly reviewCardRevisions?: Readonly<Record<string, number>>;
 }
 export interface CosmeticRewardRule {
   readonly id: string;
-  readonly kind: "chest" | "set" | "challenge";
+  readonly kind: "chest" | "set" | "set-shining" | "challenge";
   readonly itemId?: string;
   readonly eventId?: string;
+  readonly packs?: 1 | 2 | 3;
+  readonly perfectPacks?: 1 | 2 | 3;
+  readonly perfectItemId?: string;
   readonly requirements: readonly (readonly CosmeticRewardReference[])[];
 }
 export interface CosmeticRewardCourse {
   readonly studyId: string;
   readonly id: string;
+  readonly isDefault?: boolean;
   readonly units: readonly {
     readonly id: string;
     readonly title: string;
     readonly lessons: readonly (LessonProgressSnapshot & {
       readonly id: string;
       readonly conceptIds?: readonly string[];
+      readonly reviewCardRevisions?: Readonly<Record<string, number>>;
     })[];
   }[];
 }
@@ -57,6 +64,7 @@ export function cosmeticRewardRules(
   const known = new Set(CONCEPT_HEADS.map((head) => head.id));
   const starters = new Set<string>(HEAD_START_CONCEPTS);
   const occurrences = new Map<string, CosmeticRewardReference[]>();
+  const memoryOccurrences = new Map<string, CosmeticRewardReference[]>();
   const shaped = courses.map((course) => {
     const lessons = course.units.flatMap((unit) =>
       unit.lessons.map((lesson) => {
@@ -77,6 +85,9 @@ export function cosmeticRewardRules(
           const refs = occurrences.get(id) ?? [];
           refs.push(ref);
           occurrences.set(id, refs);
+          const memory = memoryOccurrences.get(id) ?? [];
+          memory.push({ ...ref, reviewCardRevisions: { ...lesson.reviewCardRevisions } });
+          memoryOccurrences.set(id, memory);
         }
         return { ...lesson, unitId: unit.id, ref };
       }),
@@ -93,6 +104,8 @@ export function cosmeticRewardRules(
       rules.push({
         id: `lesson:${lesson.ref.lessonKey}`,
         kind: "chest",
+        packs: tier === "legendary" ? 3 : 1,
+        ...(tier === "rare" ? { perfectItemId: "avatar-beanie" } : {}),
         requirements: [[{ ...lesson.ref, ...(tier === "wood" ? { perfect: true as const } : {}) }]],
       });
     }
@@ -101,16 +114,27 @@ export function cosmeticRewardRules(
       rules.push({
         id: `gate:${course.studyId}/${course.id}/${segment.id}`,
         kind: "chest",
+        packs: 1,
+        perfectPacks: 3,
+        itemId: "avatar-beanie",
         requirements: members.map((lesson) => [lesson.ref]),
       });
       rules.push({
         id: `challenge:${course.studyId}/${course.id}/${segment.id}`,
         kind: "challenge",
         eventId: courseChallengeEventId(course.studyId, course.id, segment.id),
+        packs: 1,
+        itemId: "avatar-beanie",
         requirements: [],
       });
-      const concepts = [...new Set(members.flatMap((lesson) => lesson.conceptIds ?? []))].filter(
-        (id) => known.has(id),
+      const concepts = knowledgeSetConceptIds(
+        members.flatMap((lesson) => lesson.conceptIds ?? []),
+        known,
+        {
+          domainId: learningDomainOfStudy(course.studyId),
+          isDefault: course.isDefault === true,
+          ordinal: segment.ordinal,
+        },
       );
       if (!concepts.length) continue;
       rules.push({
@@ -118,6 +142,14 @@ export function cosmeticRewardRules(
         kind: "set",
         itemId: "avatar-set-band",
         requirements: concepts.filter((id) => !starters.has(id)).map((id) => occurrences.get(id)!),
+      });
+      rules.push({
+        id: `set-shining:${course.studyId}/${course.id}/${segment.id}`,
+        kind: "set-shining",
+        itemId: "back-set-crown",
+        // An unlinked gift cannot be declared remembered. Empty alternatives
+        // keep that explicit on the server rather than dropping the condition.
+        requirements: concepts.map((id) => memoryOccurrences.get(id) ?? []),
       });
     }
   }

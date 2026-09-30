@@ -109,9 +109,18 @@ export function ChestRewards({
 
   const [shown, setShown] = useState(0);
   const [cardsDone, setCardsDone] = useState(false);
+  const revealing = stage === "rewards" || stage === "throwing" || stage === "done";
+  // Reduced motion has no reveal phase: the state label, the complete list
+  // and the next action must arrive in the same render, not a passive effect
+  // later. Keep the animated count separately so ordinary reveals still wait.
+  const visibleCount = revealing ? (reducedMotion ? lines.length : shown) : 0;
   const knowledgeIndex = lines.findIndex((line) => line.key === "knowledge");
   const waitingForCards =
-    knowledgeCards.length > 0 && !cardsDone && knowledgeIndex >= 0 && shown > knowledgeIndex;
+    !reducedMotion &&
+    knowledgeCards.length > 0 &&
+    !cardsDone &&
+    knowledgeIndex >= 0 &&
+    visibleCount > knowledgeIndex;
   useEffect(() => {
     if (stage !== "rewards" && stage !== "throwing" && stage !== "done") {
       setShown(0);
@@ -126,7 +135,7 @@ export function ChestRewards({
     const timer = window.setTimeout(() => setShown((count) => count + 1), REVEAL_SECONDS * 1000);
     return () => window.clearTimeout(timer);
   }, [stage, shown, lines.length, reducedMotion, waitingForCards]);
-  const allShown = shown >= lines.length && !waitingForCards;
+  const allShown = revealing && visibleCount >= lines.length && !waitingForCards;
 
   return (
     <section
@@ -159,7 +168,7 @@ export function ChestRewards({
 
       {stage === "rewards" || stage === "throwing" || stage === "done" ? (
         <ul className="chest-rewards__list" aria-live="polite">
-          {lines.slice(0, shown).map((line, index) => (
+          {lines.slice(0, visibleCount).map((line, index) => (
             <li
               key={line.key}
               className={
@@ -183,7 +192,7 @@ export function ChestRewards({
                       reward.badges.find((badge) => `badge:${badge.id}` === line.key)!,
                       interfaceTranslator,
                     ),
-                    index === shown - 1,
+                    !reducedMotion && index === visibleCount - 1,
                   )
                 : null}
             </li>

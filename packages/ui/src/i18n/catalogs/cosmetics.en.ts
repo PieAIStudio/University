@@ -91,6 +91,9 @@ export const messages = {
   "cosmetics.item.backCompass": "Explorer’s compass",
   "cosmetics.item.backGem": "Gem cover",
   "cosmetics.item.backCrown": "Crown cover",
+  "cosmetics.item.backSetCrown": "All-shining set crown",
+  "cosmetics.shiningSetReward":
+    "Remember every card in a linked set to the gold tier to earn this special card back.",
   "cosmetics.item.avatarFlower": "Little flower",
   "cosmetics.item.avatarBow": "Explorer’s bow",
   "cosmetics.item.avatarBeanie": "Cozy beanie",

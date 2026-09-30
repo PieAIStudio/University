@@ -129,6 +129,7 @@ describe("map node sessions", () => {
   });
   it("matches native cards, pauses, restores and reports only practice", async () => {
     const played = vi.fn();
+    const won = vi.fn();
     const cards = Array.from({ length: 3 }, (_, i) => ({
       id: `card${i}`,
       front: `Question ${i}`,
@@ -144,6 +145,7 @@ describe("map node sessions", () => {
         accountScope="test-user-one"
         onClose={() => {}}
         onPlayed={played}
+        onWon={won}
       />
     );
     await act(async () => root.render(withInterfaceLocale(render())));
@@ -158,6 +160,7 @@ describe("map node sessions", () => {
     await click(host.querySelector('[data-match-front="card0"]')!);
     await click(host.querySelector('[data-match-back="card0"]')!);
     await click(button("暂停"));
+    expect(won).not.toHaveBeenCalled();
     expect(host.querySelector("[data-match-front]")).toBeNull();
     await act(async () => root.unmount());
     root = createRoot(host);
@@ -173,6 +176,7 @@ describe("map node sessions", () => {
     }
     await click(button("结束这一轮"));
     expect(played).toHaveBeenCalledWith(["card0", "card1", "card2"]);
+    expect(won).toHaveBeenCalledOnce();
     expect(host.textContent).toContain("复习安排和跳级记录没有改变");
   });
 });

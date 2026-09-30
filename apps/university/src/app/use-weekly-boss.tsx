@@ -3,6 +3,8 @@ import {
   weeklyBoss,
   weeklyBossLessons,
   weeklyBossWonEventId,
+  weeklyBossFlawlessEventId,
+  weeklyBossWeek,
   WEEKLY_BOSS_HIT_XP,
   WEEKLY_BOSS_WIN_XP,
   type FinishedLesson,
@@ -77,6 +79,10 @@ export function useWeeklyBoss({
 } {
   const reducedMotion = usePrefersReducedMotion();
   const interfaceTranslator = useI18n();
+  const owner = progressPort.syncState().userId;
+  const scope = `${owner ?? "guest"}:${island?.studyId ?? ""}/${island?.courseId ?? ""}:${weeklyBossWeek(Date.now())}`;
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
   const finished = weeklyBossLessons(progress, Date.now());
   const last = finished[0];
   const here =
@@ -145,6 +151,12 @@ export function useWeeklyBoss({
   /** Drops the chest once, whichever comes first: the boss out of sight, or the deadline. */
   const finish = useRef<(() => void) | null>(null);
   useEffect(() => {
+    setCard(false);
+    setStrike(null);
+    setEnding(null);
+    finish.current = null;
+  }, [scope]);
+  useEffect(() => {
     if (!ending || ending.gone) return;
     const timer = window.setTimeout(() => finish.current?.(), FINAL_DEADLINE_MS);
     return () => window.clearTimeout(timer);
@@ -166,7 +178,14 @@ export function useWeeklyBoss({
   };
 
   const onStrike = (result: WeeklyBossStrike) => {
-    if (!boss) return;
+    if (
+      !boss ||
+      currentScope.current !== scope ||
+      progressPort.syncState().userId !== owner ||
+      weeklyBossWeek(Date.now()) !== boss.week ||
+      Object.hasOwn(snapshot().xpEvents, weeklyBossWonEventId(boss.week))
+    )
+      return;
     const xpBefore = snapshot().totalXp;
     if (result.hitEventId) progressPort.addXp(result.hitEventId, WEEKLY_BOSS_HIT_XP);
     if (!result.won) {
@@ -176,13 +195,17 @@ export function useWeeklyBoss({
     }
     const week = boss.week;
     const heartXp = snapshot().totalXp;
+    // Store the no-XP witness before the win. A server claim must never see a
+    // winning document that is missing this same round's first-try condition.
+    if (result.flawless) progressPort.addXp(weeklyBossFlawlessEventId(week), 0);
     progressPort.addXp(weeklyBossWonEventId(week), WEEKLY_BOSS_WIN_XP);
     const after = snapshot().totalXp;
     setCard(false);
     setEnding({ week, gone: false });
     let dropped = false;
     const drop = () => {
-      if (dropped) return;
+      if (dropped || currentScope.current !== scope || progressPort.syncState().userId !== owner)
+        return;
       dropped = true;
       finish.current = null;
       setEnding({ week, gone: true });
@@ -200,7 +223,10 @@ export function useWeeklyBoss({
           badges: [],
           allFirstTry: result.flawless,
         },
-        onDone: () => setEnding(null),
+        onDone: () => {
+          if (currentScope.current === scope && progressPort.syncState().userId === owner)
+            setEnding((value) => (value?.week === week ? null : value));
+        },
       });
     };
     finish.current = drop;

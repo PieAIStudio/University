@@ -299,7 +299,13 @@ export function CosmeticsPanel({
                           {t.t("cosmetics.exchange", { count: item.redeemCost })}
                         </GameButton>
                       ) : (
-                        <p>{t.t("cosmetics.setReward")}</p>
+                        <p>
+                          {t.t(
+                            item.id === "back-set-crown"
+                              ? "cosmetics.shiningSetReward"
+                              : "cosmetics.setReward",
+                          )}
+                        </p>
                       )}
                     </GamePanel>
                   </li>

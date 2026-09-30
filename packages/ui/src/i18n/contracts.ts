@@ -534,6 +534,7 @@ export interface MessageContracts {
   readonly "cosmetics.item.backCompass": {  };
   readonly "cosmetics.item.backCrown": {  };
   readonly "cosmetics.item.backGem": {  };
+  readonly "cosmetics.item.backSetCrown": {  };
   readonly "cosmetics.item.faceDusk": {  };
   readonly "cosmetics.item.faceHarbour": {  };
   readonly "cosmetics.item.faceMeadow": {  };
@@ -563,6 +564,7 @@ export interface MessageContracts {
   readonly "cosmetics.revealTitle": {  };
   readonly "cosmetics.rulesNotReady": {  };
   readonly "cosmetics.setReward": {  };
+  readonly "cosmetics.shiningSetReward": {  };
   readonly "cosmetics.signIn": {  };
   readonly "cosmetics.signInReason": {  };
   readonly "cosmetics.slot.all": {  };

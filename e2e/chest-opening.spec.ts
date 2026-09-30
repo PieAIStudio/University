@@ -163,6 +163,7 @@ test.describe("V7 chest opening", () => {
     expect(count).toBeGreaterThan(1);
     // No star to watch: the monster is simply gone, so Continue comes straight away.
     await expect(page.locator('[data-chest-action="throw"]')).toHaveCount(0);
+    await page.screenshot({ path: "SCRATCH/e2e/cosmetics/reduced-motion-chest.png" });
     await humanClick(page, page.locator('[data-chest-action="continue"]'), "继续");
     await expect(card).toHaveCount(0, { timeout: 10_000 });
     await expect(page.locator('[data-opening-topic="wrap-up"]')).toBeVisible({ timeout: 20_000 });

@@ -10,6 +10,7 @@ import {
 } from "./contract.js";
 import {
   HEAD_START_CONCEPTS,
+  knowledgeSetConceptIds,
   knowledgeCardTier,
   type KnowledgeCardTier,
 } from "./knowledge-cards.js";
@@ -101,6 +102,7 @@ export function knowledgeAlbum(
     cardsByLesson.set(key, own);
   }
   const setInputs: Omit<KnowledgeAlbumSet, "collected" | "shining" | "complete">[] = [];
+  const known = new Set(byId.keys());
   const finishedPaths = new Set<string>();
   let coursesFinished = 0;
   let lessonsWithoutConcepts = 0;
@@ -151,20 +153,11 @@ export function knowledgeAlbum(
       if (course.isDefault) finishedPaths.add(course.domainId);
     }
     for (const segment of learningSegments(course)) {
-      const concepts = [
-        ...new Set(segment.lessonIds.flatMap((id) => conceptsByLesson.get(id) ?? [])),
-      ];
-      // The two starter gifts count in the first AI set only. They do not
-      // manufacture four other concepts when the course has no authored links.
-      if (
-        concepts.length &&
-        course.domainId === "ai-foundations" &&
-        course.isDefault &&
-        segment.ordinal === 1
-      )
-        concepts.unshift(
-          ...HEAD_START_CONCEPTS.filter((id) => byId.has(id) && !concepts.includes(id)),
-        );
+      const concepts = knowledgeSetConceptIds(
+        segment.lessonIds.flatMap((id) => conceptsByLesson.get(id) ?? []),
+        known,
+        { domainId: course.domainId, isDefault: course.isDefault, ordinal: segment.ordinal },
+      );
       if (!concepts.length) continue;
       setInputs.push({
         id: `${course.studyId}/${course.id}/${segment.id}`,

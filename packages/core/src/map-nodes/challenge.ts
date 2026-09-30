@@ -65,3 +65,20 @@ export function challengeBoards(
   }
   return boards;
 }
+
+/** Finishing early is practice, not a win. Only the entire real deck counts;
+ * duplicate ids or an empty/single-card deck cannot mint a reward witness.
+ */
+export function isChallengeWon(
+  cards: readonly Pick<ChallengeCard, "id">[],
+  matched: readonly string[],
+): boolean {
+  const ids = new Set(cards.map((card) => card.id));
+  return (
+    ids.size >= 2 &&
+    ids.size === cards.length &&
+    new Set(matched).size === matched.length &&
+    matched.length === ids.size &&
+    matched.every((id) => ids.has(id))
+  );
+}

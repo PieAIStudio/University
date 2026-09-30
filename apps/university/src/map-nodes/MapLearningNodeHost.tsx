@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } fr
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   challengeDeck,
+  courseChallengeEventId,
   gameRoundsForSegment,
   isLessonComplete,
   lessonKeyOf,
@@ -118,6 +119,12 @@ function NodeSession({
     () => ({ ...base, lessonIds: segment.lessonIds }),
     [base, segment.lessonIds],
   );
+  const recordWin = () => {
+    if (identityScope(identityPort.status()) !== accountScope) return;
+    // Existing XP-event set-union gives this zero-XP fact a durable identity.
+    // It does not prove a lesson, add an assessment or award random items here.
+    progressPort.addXp(courseChallengeEventId(studyId, courseId, segment.id), 0);
+  };
 
   /**
    * Rounds for 庭院拦截 (ADR-0011): this segment's lessons and the few before
@@ -255,6 +262,7 @@ function NodeSession({
           <InterceptGame
             rounds={data.rounds}
             recipe={avatarRecipe}
+            onWon={recordWin}
             onClose={onClose}
             onOpenLesson={(lessonId) => {
               const unitId =
@@ -273,6 +281,7 @@ function NodeSession({
       <>
         <MapChallenge
           cards={data.cards}
+          onWon={recordWin}
           locator={locator}
           accountScope={accountScope}
           onClose={onClose}

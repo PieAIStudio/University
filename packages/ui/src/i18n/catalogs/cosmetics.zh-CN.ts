@@ -1,4 +1,6 @@
 export const messages = {
+  "cosmetics.item.backSetCrown": "全套闪卡王冠卡背",
+  "cosmetics.shiningSetReward": "把同一套里的每张卡都记到金色，领取这张专属卡背。",
   "cosmetics.title": "装扮",
   "cosmetics.back": "回到我",
   "cosmetics.intro": "学习时攒下的小装饰。它们不改变你学会了什么，也不影响判题。",
