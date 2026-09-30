@@ -243,3 +243,24 @@ Both modes and lesson shapes passed eight guarded repeats (`8 passed (1.2m)`).
 Temporary event instrumentation was removed; the final complete verification
 and ordinary push still have to judge the resulting candidate.
 
+The next four-worker push returned `3 failed / 457 passed (25.4m)`, with
+three missing authoring DOM snapshots; all three unchanged cases passed the
+focused trace-enabled run (`3 passed (1.1m)`). The two-worker normal push kept
+the same 45-second action/expect and 240-second test limits, with no concurrent
+heavy verification, and those cases passed. Contention is not a proven cause.
+That run instead ended `1 failed / 459 passed (38.4m)`, `PUSH_EXIT=1`, at the
+embedded prototype's pre-press hover check.
+
+The prototype failure also occurred alone (`menu-prototype-hover-repro.log`),
+and its trace is retained. A separate controlled hover movement reproduced the
+helper waiting on an obsolete pointer coordinate for 45 seconds while the
+same target had moved from x=88 to x=388. It now repeats only the bounded
+pre-press targeting, retaining real child hover, child hit testing and the
+exact parent iframe hit (not merely any iframe). Once pressed it never retries.
+The three harness guards cover the movement and invisible parent/child covers;
+all four original catalogue cases remain. Final subset: `7 passed (41.3s)`,
+`E2E_EXIT=0`, in `menu-prototype-pointer-fixed.log`. This establishes the
+targeting repair, not the precise cause of every earlier intermittent failure.
+The resulting complete local check passed (`menu-prototype-verify.log`,
+`VERIFY_EXIT=0`). The next normal push remains the final browser boundary.
+
