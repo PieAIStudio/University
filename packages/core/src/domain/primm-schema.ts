@@ -155,7 +155,17 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
       artifactLabel: copy.optional(),
     })
     .strict();
-  const finish = z.object({ title: copy, note: copy }).strict();
+  // A 你知道吗 line: real-world, one of the lesson's own sources.
+  const aside = z.object({ text: copy, sourceId: id }).strict();
+  const finish = z
+    .object({
+      title: copy,
+      note: copy,
+      didYouKnow: aside.optional(),
+      // One thing to do today, outside the lesson.
+      today: copy.optional(),
+    })
+    .strict();
   const region = z
     .object({
       id,
@@ -196,7 +206,10 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         phase: z.enum(["run", "modify"]),
         title: copy,
         request: id,
-        attachmentLabel: copy,
+        // Absent when the lesson has nothing to attach (a text-only request).
+        attachmentLabel: copy.optional(),
+        // Shown while the request runs; the one real-world line of Run.
+        wait: aside.optional(),
         debriefs: z
           .array(z.object({ requestId: id, text: copy }).strict())
           .max(4)
@@ -225,6 +238,8 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         phase: z.literal("investigate"),
         title: copy,
         requestIds: z.array(id).min(2).max(4),
+        // Said on a wrong pairing, instead of the generic line.
+        miss: copy.optional(),
         after: copy,
       })
       .strict(),
@@ -235,8 +250,11 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         phase: z.enum(["predict", "investigate", "modify"]),
         title: copy,
         buckets: z.array(label).min(2).max(4),
+        // A wrong side says `miss` and the card stays until it goes right.
         cards: z
-          .array(z.object({ id, text: copy, bucketId: id, why: copy }).strict())
+          .array(
+            z.object({ id, text: copy, bucketId: id, why: copy, miss: copy.optional() }).strict(),
+          )
           .min(3)
           .max(10),
         after: copy,
@@ -269,6 +287,8 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
           .min(2)
           .max(8),
         answers: z.array(z.array(id).min(1).max(8)).min(1).max(4),
+        // Said when pieces are missing or out of order.
+        hint: copy.optional(),
         after: copy,
       })
       .strict(),

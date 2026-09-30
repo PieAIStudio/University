@@ -295,6 +295,19 @@ export function PrimmSteps({
         </h2>
         <p className="primm-steps__takeaway">{activity.takeaway}</p>
         <p>{activity.finish.note}</p>
+        {activity.finish.didYouKnow ? (
+          <PrimmAside
+            text={activity.finish.didYouKnow.text}
+            source={activity.sources.find(
+              (source) => source.id === activity.finish.didYouKnow!.sourceId,
+            )}
+          />
+        ) : null}
+        {activity.finish.today ? (
+          <p className="primm-steps__today">
+            <b>{t("primm.steps.today")}</b> {activity.finish.today}
+          </p>
+        ) : null}
         {make ? (
           <section className="primm-steps__artifact" aria-label={activity.make.artifactLabel}>
             <h3>{activity.make.artifactLabel}</h3>
@@ -453,8 +466,9 @@ export function PrimmSteps({
   function renderSend(current: PrimmStepOf<"send">) {
     const request = requestOf(current);
     const work = request ? session.runs[request.key] : undefined;
-    const attached = !!session.attached[current.id] || !!work;
     const image = starterImage;
+    // A text-only request has nothing to attach: Send is ready at once.
+    const attached = !image || !!session.attached[current.id] || !!work;
     demo = () => {
       const from = document.querySelector<HTMLElement>(`[data-attach="${current.id}"]`);
       const to = document.querySelector<HTMLElement>(`[data-composer="${current.id}"]`);
@@ -502,13 +516,15 @@ export function PrimmSteps({
               role="group"
               aria-label={t("primm.conversation")}
             >
-              <div className="primm-steps__slot">
-                {attached && image ? (
-                  <img src={photoUrl(image)} alt={current.attachmentLabel} />
-                ) : (
-                  <span>{t("primm.steps.composerTarget")}</span>
-                )}
-              </div>
+              {image ? (
+                <div className="primm-steps__slot">
+                  {attached ? (
+                    <img src={photoUrl(image)} alt={current.attachmentLabel ?? ""} />
+                  ) : (
+                    <span>{t("primm.steps.composerTarget")}</span>
+                  )}
+                </div>
+              ) : null}
               <p className="primm-steps__composer-text">{request?.prompt}</p>
               <GameButton
                 variant="primary"
@@ -522,7 +538,7 @@ export function PrimmSteps({
             {!attached && image ? (
               <AttachTile
                 stepId={current.id}
-                label={current.attachmentLabel}
+                label={current.attachmentLabel ?? ""}
                 hint={t("primm.steps.attachHint")}
                 url={photoUrl(image)}
                 onAttach={() => {
@@ -539,6 +555,12 @@ export function PrimmSteps({
           onCancel={cancel}
           onRetry={() => void send()}
         />
+        {busy === "run" && current.wait ? (
+          <PrimmAside
+            text={current.wait.text}
+            source={activity.sources.find((source) => source.id === current.wait!.sourceId)}
+          />
+        ) : null}
       </>
     );
   }
@@ -610,7 +632,7 @@ export function PrimmSteps({
         run={(id, prompt) => execute(id, "run", prompt)}
         onCancel={cancel}
         onPlace={(answer, question) => {
-          if (answer !== question) return miss(t("primm.steps.wrongMatch"));
+          if (answer !== question) return miss(current.miss ?? t("primm.steps.wrongMatch"));
           playSound("answer.correct");
           const placed = { ...session.matched[current.id], [answer]: question };
           update({ matched: { ...session.matched, [current.id]: placed } });
@@ -646,13 +668,20 @@ export function PrimmSteps({
         decided={decided}
         done={session.done.includes(current.id)}
         image={starterImage ? photoUrl(starterImage) : undefined}
+        onMiss={(cardId) => {
+          playSound("answer.wrong");
+          const missed = session.missed[current.id] ?? [];
+          if (!missed.includes(cardId))
+            update({ missed: { ...session.missed, [current.id]: [...missed, cardId] } });
+        }}
         onDecide={(cardId, bucketId) => {
           const next = { ...decided, [cardId]: bucketId };
           update({ sorted: { ...session.sorted, [current.id]: next } });
-          const card = current.cards.find((item) => item.id === cardId)!;
-          playSound(card.bucketId === bucketId ? "answer.correct" : "answer.wrong");
+          playSound("answer.correct");
           if (current.cards.every((item) => next[item.id])) {
-            const right = current.cards.filter((item) => next[item.id] === item.bucketId).length;
+            // Every card ends on its side; the score is the ones placed right first time.
+            const missed = session.missed[current.id] ?? [];
+            const right = current.cards.filter((item) => !missed.includes(item.id)).length;
             finishStep(current.id, {
               tone: right === current.cards.length ? "good" : "info",
               title: t("primm.steps.sorted", { right, total: current.cards.length }),
@@ -749,9 +778,9 @@ export function PrimmSteps({
           setFeedback({
             tone: "bad",
             title: t(verdict.reason === "order" ? "primm.steps.order" : "primm.steps.missing"),
-            text: t(
-              verdict.reason === "order" ? "primm.steps.orderText" : "primm.steps.missingText",
-            ),
+            text:
+              current.hint ??
+              t(verdict.reason === "order" ? "primm.steps.orderText" : "primm.steps.missingText"),
           });
         },
       };
@@ -1272,12 +1301,15 @@ function SortStep({
   done,
   image,
   onDecide,
+  onMiss,
 }: {
   readonly step: PrimmStepOf<"sort">;
   readonly decided: Readonly<Record<string, string>>;
   readonly done: boolean;
   readonly image: string | undefined;
   readonly onDecide: (cardId: string, bucketId: string) => void;
+  /** A wrong side: the card stays on top until it goes right (Owner H1). */
+  readonly onMiss: (cardId: string) => void;
 }) {
   const { t } = useI18n();
   const [note, setNote] = useState<{ good: boolean; text: string } | null>(null);
@@ -1291,10 +1323,16 @@ function SortStep({
     if (!top || done) return;
     stopCoach();
     const good = top.bucketId === bucketId;
-    const bucket = step.buckets.find((item) => item.id === top.bucketId)!.label;
-    setNote({ good, text: good ? top.why : t("primm.steps.actually", { bucket, why: top.why }) });
-    setStreak(good ? streak + 1 : 0);
-    if (good && streak + 1 >= 3) playSound("reward.streak");
+    if (!good) {
+      // Why not, never which side: the learner moves the card again.
+      setNote({ good, text: top.miss ?? t("primm.steps.sortAgain") });
+      setStreak(0);
+      onMiss(top.id);
+      return;
+    }
+    setNote({ good, text: top.why });
+    setStreak(streak + 1);
+    if (streak + 1 >= 3) playSound("reward.streak");
     onDecide(top.id, bucketId);
   };
   useEffect(() => {
@@ -1387,5 +1425,23 @@ function SortStep({
         ))}
       </div>
     </div>
+  );
+}
+
+/** A 你知道吗 line: something true from outside the lesson, with its source. */
+function PrimmAside({
+  text,
+  source,
+}: {
+  readonly text: string;
+  readonly source: PrimmStepsActivity["sources"][number] | undefined;
+}) {
+  const { t } = useI18n();
+  return (
+    <aside className="primm-steps__aside">
+      <b>{t("primm.steps.didYouKnow")}</b>
+      <p>{text}</p>
+      <PrimmSource source={source} />
+    </aside>
   );
 }

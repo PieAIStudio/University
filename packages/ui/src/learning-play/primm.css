@@ -954,6 +954,21 @@
   border-radius: var(--game-ui-radius-panel);
   box-shadow: 0 6px 0 var(--game-ui-success);
 }
+/* 你知道吗: a real-world line with its source, while a request runs or at the end. */
+.primm-steps__aside {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text);
+}
+.primm-steps__aside p {
+  margin: 0;
+}
+.primm-steps__today {
+  margin: 0;
+}
 .primm-steps__status {
   margin: 0;
   display: flex;
