@@ -546,6 +546,7 @@ export interface MessageContracts {
   readonly "arcade3d.retry3d": {};
   readonly "arcade3d.review": {};
   readonly "arcade3d.right": {};
+  readonly "arcade3d.runner": {};
   readonly "arcade3d.score": {
     readonly score: string | number | bigint | boolean | null | undefined | Date;
   };
@@ -960,6 +961,7 @@ export interface MessageContracts {
   readonly "gallery.three.press-words": {};
   readonly "gallery.three.rank": {};
   readonly "gallery.three.retained": {};
+  readonly "gallery.three.runner": {};
   readonly "gallery.three.sky-invaders": {};
   readonly "gallery.three.slice": {};
   readonly "gallery.three.snake": {};
@@ -4301,6 +4303,25 @@ export interface MessageContracts {
   readonly "reading.settings.stageNote": {};
   readonly "reading.settings.title": {};
   readonly "reading.settings.underline": {};
+  readonly "runner.arch": {
+    readonly lane: string | number | bigint | boolean | null | undefined | Date;
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "runner.archCurrent": {
+    readonly lane: string | number | bigint | boolean | null | undefined | Date;
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "runner.calm": {};
+  readonly "runner.controls": {};
+  readonly "runner.intro": {};
+  readonly "runner.labNote": {};
+  readonly "runner.situation": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "runner.take": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "runner.title": {};
   readonly "snake.calm": {};
   readonly "snake.controls": {};
   readonly "snake.crate": {

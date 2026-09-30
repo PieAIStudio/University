@@ -475,6 +475,13 @@
   font-size: 12px;
 }
 
+/* An arch's sign on the runner's path: the lane number, then the option. */
+.game-label--arch kbd {
+  font: inherit;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
 /* The one that comes next, shown after a mistake. */
 .game-label--next {
   border-color: #f2c963;

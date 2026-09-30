@@ -73,3 +73,13 @@ export {
   type MolesState,
 } from "./rules/moles.js";
 export { MolesScene, holeSpots, type MolesSceneProps } from "./MolesScene.js";
+export {
+  APPROACH,
+  RunnerSession,
+  approachSeconds,
+  type Fork,
+  type RunnerAction,
+  type RunnerEvent,
+  type RunnerState,
+} from "./rules/runner.js";
+export { LANE_WIDTH, RunnerScene, type RunnerSceneProps } from "./RunnerScene.js";

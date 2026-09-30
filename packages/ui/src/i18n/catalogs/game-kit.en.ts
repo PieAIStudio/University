@@ -84,6 +84,18 @@ export const messages = {
   "moles.leaveTag": "leave",
   "moles.labNote":
     "Preview: questions from the point-out-the-sentence steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
+  "runner.title": "Fork Run",
+  "runner.intro":
+    "Your character runs down a garden path. A situation rides above it; ahead, the path splits, and each arch carries one way to handle it. Before the arches, steer into the best one. A wrong turn costs a heart and says what that choice would cost. If you do not steer, you run straight through the lane you are in.",
+  "runner.controls":
+    "Tap an arch or a button below, press 1, 2, 3 or the left and right arrows; Esc pauses.",
+  "runner.calm": "Take it slow: run more gently",
+  "runner.take": "Take the “{text}” lane",
+  "runner.situation": "Situation: {text}",
+  "runner.arch": "Lane {lane}: {text}",
+  "runner.archCurrent": "Lane {lane}: {text}, you are in this lane",
+  "runner.labNote":
+    "Preview: questions from the weigh and decision steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "links.title": "Link-up",
   "links.intro":
     "Each stone in the pond carries one thing from the lesson. Tap a stone, then the stone it connects to, and a little bridge goes up between them. A wrong link costs a heart and shows what that stone really connects to. Every bridge pushes the tide back; if the tide comes all the way in, it lays one link for you and a heart goes too.",

@@ -1,7 +1,9 @@
 import {
+  choiceRoundsFromLesson,
   linkRoundsFromLesson,
   sequenceRoundsFromLesson,
   spotRoundsFromLesson,
+  type ChoiceRound,
   type GameLesson,
   type LinkRound,
   type SequenceRound,
@@ -14,6 +16,7 @@ import { contentPort } from "../ports/index";
 import samples from "./lab-samples.json";
 import { LinksGame } from "./LinksGame.js";
 import { MolesGame } from "./MolesGame.js";
+import { RunnerGame } from "./RunnerGame.js";
 import { SnakeGame } from "./SnakeGame.js";
 
 /**
@@ -37,19 +40,24 @@ interface KitLab<R> {
 const LABS = {
   links: {
     project: linkRoundsFromLesson,
-    samples: samples.links as readonly LinkRound[],
+    samples: samples.links as unknown as readonly LinkRound[],
     play: (rounds) => <LinksGame rounds={rounds} />,
   } satisfies KitLab<ReturnType<typeof linkRoundsFromLesson>[number]>,
   snake: {
     project: sequenceRoundsFromLesson,
-    samples: samples.snake as readonly SequenceRound[],
+    samples: samples.snake as unknown as readonly SequenceRound[],
     play: (rounds) => <SnakeGame rounds={rounds} />,
   } satisfies KitLab<ReturnType<typeof sequenceRoundsFromLesson>[number]>,
   moles: {
     project: spotRoundsFromLesson,
-    samples: samples.moles as readonly SpotRound[],
+    samples: samples.moles as unknown as readonly SpotRound[],
     play: (rounds) => <MolesGame rounds={rounds} />,
   } satisfies KitLab<SpotRound>,
+  runner: {
+    project: choiceRoundsFromLesson,
+    samples: samples.runner as unknown as readonly ChoiceRound[],
+    play: (rounds) => <RunnerGame rounds={rounds} />,
+  } satisfies KitLab<ChoiceRound>,
 } as const;
 
 export type KitLabGame = keyof typeof LABS;

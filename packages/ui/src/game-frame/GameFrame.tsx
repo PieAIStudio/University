@@ -147,10 +147,13 @@ export function AnswerButtons({
   bins,
   disabled,
   onAnswer,
+  describe,
 }: {
   bins: readonly AnswerBin[];
   disabled: boolean;
   onAnswer: (binId: string) => void;
+  /** What pressing a button does, for a screen reader; 庭院拦截's throw by default. */
+  describe?: (label: string) => string;
 }) {
   const { t } = useI18n();
   return (
@@ -164,7 +167,7 @@ export function AnswerButtons({
           className="game-frame__answer"
           style={{ background: binColour(index), color: BIN_INK }}
           disabled={disabled}
-          aria-label={t("gameKit.throw", { bin: bin.label })}
+          aria-label={describe ? describe(bin.label) : t("gameKit.throw", { bin: bin.label })}
           aria-keyshortcuts={String(index + 1)}
           data-testid={`game-answer-${index}`}
           onClick={() => onAnswer(bin.id)}
