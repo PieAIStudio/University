@@ -124,20 +124,21 @@ async function openOpportunities(page: Page) {
 }
 
 /**
- * The challenge node plays 庭院拦截 (ADR-0011) once the learner's finished or
- * proved lessons — this block's and the nine before it — give two sorts. Which
+ * The challenge node plays an island game (ADR-0011) once the learner's
+ * finished or proved lessons — this block's and the nine before it — give two
+ * rounds of some kind; which game depends on the kinds and the node. Which
  * lessons count as finished depends on the learner store the mode reads, and
  * in authoring that is the machine's own. The node says which game it opened
- * on its flow (`data-game`); the 2D matching game this spec checks is always
- * one visible tap away, and the 3D game has its own spec (courtyard-game).
+ * on its flow (`data-game`, absent for the 2D matching game this spec checks),
+ * which is always one visible tap away; the 3D games have their own specs.
  */
 async function chooseMatchingGame(page: Page) {
   const flow = page.locator('[data-map-node-flow="challenge"]');
   await expect(flow).toBeVisible();
-  if ((await flow.getAttribute("data-game")) !== "courtyard") return;
+  if ((await flow.getAttribute("data-game")) === null) return;
   await expect(page.getByTestId("game-intro")).toBeVisible({ timeout: 60_000 });
   await humanClick(page, page.getByTestId("game-plain"), "choose the 2D matching game");
-  await expect(flow).not.toHaveAttribute("data-game", "courtyard");
+  await expect(flow).not.toHaveAttribute("data-game", /.+/);
 }
 
 async function openNode(page: Page, kind: string, block: LearningSegment = segment) {

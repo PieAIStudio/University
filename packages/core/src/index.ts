@@ -18,6 +18,7 @@ export * from "./game-content/links.js";
 export * from "./game-content/sequences.js";
 export * from "./game-content/choices.js";
 export * from "./game-content/spots.js";
+export * from "./game-content/island-games.js";
 export * from "./map-nodes/personal.js";
 export { localizeLearnerContent } from "./content/localization.js";
 export {

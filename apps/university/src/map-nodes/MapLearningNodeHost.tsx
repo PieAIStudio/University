@@ -3,16 +3,17 @@ import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   challengeDeck,
   courseChallengeEventId,
-  gameRoundsForSegment,
   isLessonComplete,
+  islandRoundsForSegment,
   lessonKeyOf,
+  pickIslandGame,
   planCheckpoint,
   progressSourceOf,
   rememberPracticeQuestion,
   settleCheckpoint,
   type ChallengeCard,
-  type GameRound,
   type IdentityPort,
+  type IslandPick,
   type LearningSegment,
   type LessonRef,
   type MapLearningKind,
@@ -27,8 +28,8 @@ import { MapCheckpoint } from "@pieai/university-ui/map-nodes/MapCheckpoint.js";
 import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
 import { hasWebGLContext } from "@pieai/university-world/webgl-capability.js";
 
-const InterceptGame = lazy(() =>
-  import("../game/InterceptGame.js").then((module) => ({ default: module.InterceptGame })),
+const IslandGame = lazy(() =>
+  import("../game/IslandGame.js").then((module) => ({ default: module.IslandGame })),
 );
 /** How many lessons before the segment the game may also draw rounds from. */
 const EARLIER_LESSONS = 9;
@@ -102,7 +103,7 @@ function NodeSession({
   const [data, setData] = useState<{
     views: LessonView[];
     cards: ChallengeCard[];
-    rounds: GameRound[];
+    island: IslandPick | null;
   } | null>(null);
   const [flat, setFlat] = useState(() => !hasWebGLContext());
   const [failed, setFailed] = useState(false);
@@ -127,15 +128,16 @@ function NodeSession({
   };
 
   /**
-   * Rounds for 庭院拦截 (ADR-0011): this segment's lessons and the few before
-   * it, only those the learner completed or proved — the same gate the 2D
-   * matching game uses for its cards.
+   * The island game for this node (ADR-0011): rounds from this segment's
+   * lessons and the few before it, only those the learner completed or proved
+   * — the same gate the 2D matching game uses for its cards — then the game
+   * those rounds give enough of, taking turns across nodes.
    */
-  async function practisedRounds(
+  async function practisedIsland(
     views: readonly LessonView[],
     source: ReturnType<typeof progressSourceOf>,
     signal: AbortSignal,
-  ): Promise<GameRound[]> {
+  ): Promise<IslandPick | null> {
     const earlier = outline.slice(
       Math.max(0, segment.firstIndex - EARLIER_LESSONS),
       segment.firstIndex,
@@ -162,16 +164,15 @@ function NodeSession({
         source.provenOf?.(ref, snapshot) === true
       );
     });
-    return [
-      ...gameRoundsForSegment(
-        practised.map(({ view }) => ({
-          id: view.lesson.id,
-          title: view.lesson.title,
-          activities: view.lesson.activities ?? [],
-        })),
-        segment.lessonIds,
-      ),
-    ];
+    const rounds = islandRoundsForSegment(
+      practised.map(({ view }) => ({
+        id: view.lesson.id,
+        title: view.lesson.title,
+        activities: view.lesson.activities ?? [],
+      })),
+      segment.lessonIds,
+    );
+    return pickIslandGame(rounds, segment.ordinal);
   }
 
   useEffect(() => {
@@ -227,11 +228,11 @@ function NodeSession({
               )
             ).flat()
           : [];
-      const rounds =
-        kind === "challenge" ? await practisedRounds(views, source, request.signal) : [];
+      const island =
+        kind === "challenge" ? await practisedIsland(views, source, request.signal) : null;
       // The game owns its independently shuffled, saved columns.
       if (!request.signal.aborted)
-        setData({ views, cards: challengeDeck(cards, () => 0.999999), rounds });
+        setData({ views, cards: challengeDeck(cards, () => 0.999999), island });
     })().catch(() => {
       if (!request.signal.aborted) setFailed(true);
     });
@@ -255,12 +256,16 @@ function NodeSession({
     );
   if (!data) return <p role="status">{t("mapNodes.loading")}</p>;
 
-  if (kind === "challenge" && data.rounds.length >= 2 && !flat)
+  if (kind === "challenge" && data.island && !flat)
     return (
-      <section className="map-node-flow" data-map-node-flow="challenge" data-game="courtyard">
+      <section
+        className="map-node-flow"
+        data-map-node-flow="challenge"
+        data-game={data.island.game}
+      >
         <Suspense fallback={<p role="status">{t("mapNodes.loading")}</p>}>
-          <InterceptGame
-            rounds={data.rounds}
+          <IslandGame
+            pick={data.island}
             recipe={avatarRecipe}
             onWon={recordWin}
             onClose={onClose}
