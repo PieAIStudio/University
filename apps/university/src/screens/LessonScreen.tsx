@@ -38,6 +38,7 @@ import { trackEvent, withProductAnalyticsReview } from "../analytics/productAnal
 import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports/index.js";
 import { progressPort } from "../progress/store.js";
 import { identityPort } from "../account/identity.js";
+import { LessonFirstUse } from "../guide/LessonFirstUse.js";
 
 function exerciseAnalyticsKey(locator: LessonRef, exerciseId: string): string {
   return `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exerciseId}`;
@@ -113,6 +114,8 @@ export function LessonScreen({
     >(),
   );
   const knownExerciseGrades = useRef(new Map<string, string>());
+  // The first-use guide watches the reader for the kind of step on screen.
+  const readerRoot = useRef<HTMLElement>(null);
   useEffect(() => {
     pendingExerciseResults.current.clear();
     knownExerciseGrades.current.clear();
@@ -338,7 +341,8 @@ export function LessonScreen({
     );
 
   return (
-    <main className="reader">
+    <main className="reader" ref={readerRoot}>
+      <LessonFirstUse root={readerRoot} />
       <LessonReader
         locator={locator}
         view={overlaid}

@@ -2,6 +2,8 @@ import { expect, test, type Page } from "./harness/learner-test.js";
 
 import { ONLINE_ORIGIN } from "./ports.js";
 
+test.use({ firstUseGuides: "show" });
+
 /**
  * 庭院拦截 (ADR-0011): the first game assembled from the kit, in the play lab.
  * Content comes from the first course's lessons; the learner's avatar is the

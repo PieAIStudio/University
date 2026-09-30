@@ -54,8 +54,29 @@ export const messages = {
   "guide.replayOn": "Showing how at the start ✓",
   "intercept.reason": "“{text}”: {why}",
   "guide.intercept.question": "What to decide is written here.",
-  "guide.intercept.boats": "Paper boats sail in under the gate; one that reaches the shore gets away.",
-  "guide.intercept.throw": "Press the button that matches a basket and your character throws at the nearest boat. It counts only in the right basket.",
+  "guide.intercept.boats":
+    "Paper boats sail in under the gate; one that reaches the shore gets away.",
+  "guide.intercept.throw":
+    "Press the button that matches a basket and your character throws at the nearest boat. It counts only in the right basket.",
+  "guide.step.choose.title": "Read the question first: this step asks you to guess.",
+  "guide.step.choose.options":
+    "Pick the one you think is best. A wrong guess costs nothing; the next step tries it for real.",
+  "guide.step.send.title": "This step sends the request to the AI for real.",
+  "guide.step.send.attach": "First put the material in the chat: drag it over, or tap it.",
+  "guide.step.send.send": "Then press Send. The AI really answers.",
+  "guide.step.find.title": "The AI answered. The question asks you to find one sentence in it.",
+  "guide.step.find.sentences":
+    "The answer is split into sentences; tap the one you are looking for.",
+  "guide.step.match.title": "Each way of asking got an answer.",
+  "guide.step.match.answers": "Connect each answer to how it was asked: tap one, then the other.",
+  "guide.step.sort.card": "Which side does this card go to?",
+  "guide.step.sort.buckets": "Tap a side below to put it there. A wrong side tells you why.",
+  "guide.step.point.title": "This step asks you to find something in the picture.",
+  "guide.step.point.image": "Tap the place in the picture.",
+  "guide.step.build.tiles": "Tap a word block and it joins the sentence above.",
+  "guide.step.build.line": "Your sentence builds here; tap a word in it to take it back.",
+  "guide.step.make.title": "Last step: your turn.",
+  "guide.step.make.write": "Write your own request here, then send it.",
   "guide.links.question": "What to do is written here.",
   "guide.links.pick": "Tap a stone first.",
   "guide.links.pair":
@@ -153,7 +174,8 @@ export const messages = {
   "links.labNote":
     "Preview: questions from the lessons in this course that have a linking step. The preview ignores progress; on the map, only finished lessons give questions.",
   "intercept.title": "Courtyard Catch",
-  "intercept.intro": "Paper boats bring sentences from your lessons; throw each into the right basket.",
+  "intercept.intro":
+    "Paper boats bring sentences from your lessons; throw each into the right basket.",
   "intercept.controls": "You can tap a boat first to aim at it; keys 1, 2, 3 throw, Esc pauses.",
   "intercept.calm": "Take it slow: boats drift more gently",
   "intercept.boat": "Boat: {text}",

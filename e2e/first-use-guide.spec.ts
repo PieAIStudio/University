@@ -2,14 +2,15 @@ import { expect, test, type Page } from "./harness/learner-test.js";
 
 import { ONLINE_ORIGIN } from "./ports.js";
 
+test.use({ firstUseGuides: "show" });
+
 /**
  * First-use guides (Owner 2026-09-30): no screen of rules; the first time a
  * learner plays a game, 涟's droplet walks them through it, once.
  */
 const state = (page: Page) =>
   page.evaluate(
-    () =>
-      (Reflect.get(window, "__links")() as { state: { phase: string; elapsed: number } }).state,
+    () => (Reflect.get(window, "__links")() as { state: { phase: string; elapsed: number } }).state,
   );
 
 async function startLinks(page: Page) {
@@ -53,4 +54,30 @@ test("涟 walks a first-time player through 连连看, once", async ({ page }) =
   await startLinks(page);
   await page.waitForTimeout(500);
   await expect(page.getByTestId("first-use")).toHaveCount(0);
+});
+
+test("涟 shows a lesson step's controls the first time that kind of step appears", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(
+    `${ONLINE_ORIGIN}/ai-literacy/understanding-ai/first-useful-step/ask-about-a-picture?lang=zh-CN`,
+  );
+  // The lesson opens on its situation; the first step comes after 开始.
+  await page.locator(".primm-steps__intro").waitFor({ timeout: 120_000 });
+  await page.getByRole("button", { name: "开始", exact: true }).click();
+  const step = page.locator(".primm-steps__step[data-step-kind]");
+  await expect(step).toBeVisible({ timeout: 30_000 });
+  const kind = await step.getAttribute("data-step-kind");
+
+  const guide = page.getByTestId("first-use");
+  const next = page.getByTestId("first-use-next");
+  await expect(guide).toBeVisible({ timeout: 30_000 });
+  await expect(guide).toHaveAttribute("data-status", "showing");
+  // It points at the step's own places, never past them to an answer.
+  await next.click();
+  await expect(guide).toHaveAttribute("data-step", "1");
+  await next.click();
+  await expect(guide).toHaveCount(0);
+  await expect(step).toHaveAttribute("data-step-kind", kind!);
 });

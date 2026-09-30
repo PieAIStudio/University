@@ -13,6 +13,13 @@
   pointer-events: none;
 }
 
+.first-use--page {
+  position: fixed;
+  z-index: 60;
+  inset-inline-end: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
+
 .first-use > * {
   pointer-events: auto;
 }

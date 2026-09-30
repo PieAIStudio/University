@@ -65,12 +65,18 @@ export function FirstUseGuide({
   id,
   steps,
   root,
+  placement = "frame",
   onDone,
 }: {
   id: string;
   steps: readonly GuideStep[];
   /** Where the targets live; searched once, when the guide starts. */
   root: RefObject<HTMLElement | null>;
+  /**
+   * Where the droplet rests between steps: the corner of the game frame it
+   * guides, or the corner of the page for a lesson.
+   */
+  placement?: "frame" | "page";
   /** Finished or skipped: either way it is not shown again. */
   onDone: () => void;
 }) {
@@ -153,7 +159,7 @@ export function FirstUseGuide({
           <span className="first-use__try">{t("guide.try")}</span>
         ) : (
           <GameButton static sound={false} onClick={advance} data-testid="first-use-next">
-            {last ? t("guide.start") : t("guide.ok")}
+            {last && placement === "frame" ? t("guide.start") : t("guide.ok")}
           </GameButton>
         )}
         <button
@@ -174,7 +180,7 @@ export function FirstUseGuide({
 
   return (
     <div
-      className="first-use"
+      className={`first-use first-use--${placement}`}
       data-testid="first-use"
       data-step={view.index}
       data-status={view.status}
