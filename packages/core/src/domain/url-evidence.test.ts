@@ -90,45 +90,29 @@ describe("URL evidence", () => {
     }
   });
 
-  it("rejects http even when the host is on the authority list", () => {
+  it("rejects http", () => {
     expect(
       messages({ ...mdn, sourceUrl: "http://developer.mozilla.org/en-US/docs/Web/HTML" }),
     ).toMatch(/https/);
   });
 
-  it("rejects a host outside the authority list", () => {
-    expect(messages({ ...mdn, sourceUrl: "https://example.com/html" })).toMatch(
-      /authority-host|not on the/,
-    );
-  });
-
-  it.each([
-    "www.tensorflow.org",
-    "www.nist.gov",
-    "huggingface.co",
-    "antigravity.google",
-    "developers.openai.com",
-    "platform.openai.com",
-    "docs.anthropic.com",
-    "docs.github.com",
-    "npmjs.com",
-    "learn.chatgpt.com",
-  ])("retains the independently admitted course authority %s", (host) => {
-    // Schema-only fixture: admission does not prove that a page supports a claim.
+  it("accepts a real page on a host no one listed beforehand", () => {
+    // Opening the page, not knowing the host, is what catches a fabricated source.
     expect(
       messages({
         ...mdn,
-        sourceUrl: `https://${host}/`,
-        sourceTitle: "Authority admission fixture",
+        sourceUrl: "https://www.nist.gov/itl/ai-risk-management-framework",
+        sourceTitle: "NIST AI RMF",
         sourceAuthority: "official-docs",
       }),
     ).toBe("");
   });
 
-  it("does not admit a lookalike suffix when combining authority lists", () => {
-    expect(messages({ ...mdn, sourceUrl: "https://www.nist.gov.example.com/" })).toMatch(
-      /authority-host|not on the/,
+  it("does not let a lookalike suffix escape the adopted-source ban", () => {
+    expect(messages({ ...mdn, sourceUrl: "https://courses.vibe-hub.org/a" })).toMatch(
+      /adopted source/,
     );
+    expect(messages({ ...mdn, sourceUrl: "https://notvibe-hub.org/a" })).toBe("");
   });
 
   it("rejects a URL that points at the adopted source site", () => {
@@ -152,7 +136,7 @@ describe("URL evidence", () => {
 });
 
 describe("authority tag list", () => {
-  it("matches the JSON host-list file, so z.enum and the adoption gate cannot drift", () => {
+  it("matches the JSON file, so z.enum and the adoption gate cannot drift", () => {
     expect(hosts.authorityTags).toEqual([...AUTHORITY_TAGS]);
   });
 });

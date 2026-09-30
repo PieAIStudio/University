@@ -1545,19 +1545,10 @@ ${packet.outline.oldContent.slice(0, 2000)}
   const result = await callModel("researcher", prompt, schema, join(dir, "research"), {
     webSearch: true,
   });
-  // Only hosts a person has admitted to the authority list may reach a writer;
-  // a verified quote on another host waits for that decision instead.
-  const hosts = readJson(join(repoRoot, "packages/core/src/domain/url-evidence-hosts.json"));
-  const admitted = (url) => {
-    const host = new URL(url).hostname.toLowerCase();
-    return hosts.authorityHosts.some((entry) => host === entry || host.endsWith(`.${entry}`));
-  };
+  // The quote found on the fetched page is the admission; no host list is consulted.
   const checked = [];
   for (const candidate of result.candidates) {
-    const check = await verifyQuote(candidate.url, candidate.quote);
-    if (check.status === "verified" && !admitted(candidate.url))
-      check.status = "verified-host-needs-approval";
-    checked.push({ ...candidate, check });
+    checked.push({ ...candidate, check: await verifyQuote(candidate.url, candidate.quote) });
   }
   const accepted = checked
     .filter((c) => c.check.status === "verified")

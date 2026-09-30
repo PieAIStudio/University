@@ -498,7 +498,7 @@ export type SourceProvenance = z.infer<typeof SourceProvenanceSchema>;
  * General courses have no repository, so they cannot use the shape above.
  * Inventing a snapshot to get past that check would make "the cited lines
  * exist in the studied project" a lie. This type is the honest alternative:
- * the identity is an https URL on an admitted host, and never the site the
+ * the identity is an https URL a reader can open, and never the site the
  * course was rewritten from. Real-world sources add provenance without
  * weakening the repository shape or laundering a publication date into a pin.
  */
