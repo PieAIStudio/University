@@ -3,14 +3,33 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const json = (body: unknown): Response => ({ ok: true, json: async () => body }) as Response;
 const locator = { studyId: "study", courseId: "course", unitId: "unit", lessonId: "lesson" };
 
-beforeEach(() => vi.resetModules());
+let bootstrap: typeof import("./bootstrap");
+let readerModule: typeof import("./reader");
+let gradingModule: typeof import("./grading");
+
+beforeEach(async () => {
+  vi.resetModules();
+  // Module compilation belongs to fixture setup, not the token protocol's
+  // five-second action budget. The cold import alone took 3.9s on this host.
+  // Still reload every module for every case and forbid eager network work.
+  const eagerFetch = vi.fn(() => {
+    throw new Error("Unexpected fetch during module setup");
+  });
+  vi.stubGlobal("fetch", eagerFetch);
+  [bootstrap, readerModule, gradingModule] = await Promise.all([
+    import("./bootstrap"),
+    import("./reader"),
+    import("./grading"),
+  ]);
+  expect(eagerFetch).not.toHaveBeenCalled();
+});
 afterEach(() => vi.unstubAllGlobals());
 
 describe("shared loopback bootstrap contract", () => {
   it("shares the same in-flight promise and resolved payload", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ requestToken: "one" }));
     vi.stubGlobal("fetch", fetchMock);
-    const { localBootstrap } = await import("./bootstrap");
+    const { localBootstrap } = bootstrap;
     const first = localBootstrap();
     expect(localBootstrap()).toBe(first);
     await expect(first).resolves.toEqual({ requestToken: "one" });
@@ -24,7 +43,7 @@ describe("shared loopback bootstrap contract", () => {
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(json({ requestToken: "recovered" }));
     vi.stubGlobal("fetch", fetchMock);
-    const { localBootstrap } = await import("./bootstrap");
+    const { localBootstrap } = bootstrap;
     await expect(localBootstrap()).rejects.toThrow("/api/bootstrap: offline");
     await expect(localBootstrap()).resolves.toEqual({ requestToken: "recovered" });
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -42,7 +61,7 @@ describe("shared loopback bootstrap contract", () => {
       )
       .mockResolvedValueOnce(json({ requestToken: "new" }));
     vi.stubGlobal("fetch", fetchMock);
-    const { localBootstrap, refreshLocalBootstrap } = await import("./bootstrap");
+    const { localBootstrap, refreshLocalBootstrap } = bootstrap;
     const old = localBootstrap();
     const failure = expect(old).rejects.toThrow("/api/bootstrap: old failure");
     const current = refreshLocalBootstrap();
@@ -61,8 +80,8 @@ describe("shared loopback bootstrap contract", () => {
       return json({ correct: false, attemptCount: 1, score: 0, maxScore: 1 });
     });
     vi.stubGlobal("fetch", fetchMock);
-    const { createLocalReaderPort } = await import("./reader");
-    const { createLocalGradingPort } = await import("./grading");
+    const { createLocalReaderPort } = readerModule;
+    const { createLocalGradingPort } = gradingModule;
     const reader = createLocalReaderPort({});
     const grader = createLocalGradingPort({});
     expect(fetchMock).not.toHaveBeenCalled();
@@ -98,8 +117,8 @@ describe("shared loopback bootstrap contract", () => {
         return json({});
       }),
     );
-    const { createLocalReaderPort } = await import("./reader");
-    const { refreshLocalBootstrap } = await import("./bootstrap");
+    const { createLocalReaderPort } = readerModule;
+    const { refreshLocalBootstrap } = bootstrap;
     const reader = createLocalReaderPort({});
     await reader.completeLesson(locator, { commandId: "first", contentRevision: 1 });
     token = "second";
@@ -114,7 +133,7 @@ describe("shared loopback bootstrap contract", () => {
     const fetchMock = vi.fn().mockResolvedValue(json({}));
     const token = vi.fn().mockResolvedValueOnce("one").mockResolvedValueOnce("two");
     vi.stubGlobal("fetch", fetchMock);
-    const { createLocalReaderPort } = await import("./reader");
+    const { createLocalReaderPort } = readerModule;
     const reader = createLocalReaderPort({ requestToken: token });
     await reader.completeLesson(locator, { commandId: "one", contentRevision: 1 });
     await reader.completeLesson(locator, { commandId: "two", contentRevision: 1 });

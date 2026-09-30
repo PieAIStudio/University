@@ -264,3 +264,9 @@ targeting repair, not the precise cause of every earlier intermittent failure.
 The resulting complete local check passed (`menu-prototype-verify.log`,
 `VERIFY_EXIT=0`). The next normal push remains the final browser boundary.
 
+That normal push completed at `eaf24edc95d7d439005eb123c61bf553d9fc4098`:
+`463 passed (40.4m)`, `39 passed (5.7m)`, `PUSH_EXIT=0`, in
+`SCRATCH/v7-execution/menu-push-eaf24edc.log`. An independent
+`git ls-remote origin refs/heads/main` matched the local committed HEAD.
+This closes task 08's source delivery, not a production deployment.
+

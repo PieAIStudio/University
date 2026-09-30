@@ -6,7 +6,7 @@ status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-28
+last_reviewed: 2026-09-30
 domain: learning-experience
 tags:
   - v7
@@ -68,6 +68,24 @@ its crown on a small plinth where it stood, so the island becomes a record of
 weeks shown up; and the growth page counts bosses beaten and weeks in a row.
 All three derive from the `weekly-boss:<week>` XP events, so none needs new
 storage.
+
+### Long-term continuation (2026-09-30)
+
+The Owner's continuation includes the three retained items and the archipelago
+crown. The existing win remains the sole authority for a beaten week. New wins
+also retain a zero-XP, versioned island/lesson witness before that same win;
+legacy win IDs contain no island, so their totals survive but their location is
+not invented from today's lesson progress. No progress field, table, paid right
+or reward identity is added. Conflicting device witnesses remain one week and
+use one deterministic recorded location.
+
+Species rotate through the already shipped creature roster, never randomize on
+reload. Crowns are small, non-interactive world objects on free ground near the
+recorded arrival stone; every week remains in Growth's DOM history, while the
+island draws a bounded recent selection. Existing terrain, routes, scenery,
+learning state and cosmetic ownership are not reshuffled. The archipelago crown
+names the actual available boss, not an unverified five-question promise. A day
+boundary or returning to the tab refreshes the week without writing progress.
 
 ## 3 What "done" looks like
 
@@ -136,3 +154,64 @@ Gate numbers verbatim, captures, anything noticed but not done.
 - ADR-0008 V7-07 updated. Not done here: the long-term half of §2a (a species per
   week, crowns left on plinths, counts on the growth page); a crown on the world
   map's island label; card packs in the chest (task 06).
+
+## 9 Long-term source continuation (2026-09-30)
+
+The retained work now has one core history projection, four calendar-selected
+species and a small course-only trophy field. New victories write their zero-XP
+location before the unchanged win; historical unlocated victories remain in
+Growth without a guessed island. The shared merge and parser preserve these
+witnesses without adding XP, learning completion, an award or a paid right.
+
+The complete history is not the renderer's object count. The course displays up
+to eight safely placed witnessed crowns in one draw; Growth keeps every valid
+won week, current consecutive weeks and the longest run. A still-open current
+week does not erase the previous week's run. Future dates, invalid Mondays,
+heart events and location witnesses alone are not victories. The course's
+existing quick-action palette can open the actual fight when a phone's learning
+camera leaves the shore off-screen; no fifth navigation door is added.
+
+Local checks cover week rollover without remounting, same-day new completions,
+stale account/week callbacks, both locales, legacy wins, merge order, invalid
+records, actual loading of all four existing models and safe placement on three
+course shapes. The 20% size increase is preserved. The source candidate uses
+only existing kit assets, ground, rendering and reward contracts.
+
+The browser journey uses synthetic completed-lesson history, then answers all
+five actual questions through the retained game, opens its real chest, reloads,
+returns the following week and reads Growth in Chinese and English. Both desktop
+delivery and 390px authoring passed with the original 100 XP total and one
+location witness. The separate twelve-week fixture exercises the full model
+roster and disposal without pretending it is twelve weeks of real-account use.
+Its first probe selected an ordinary crab sharing the same scene name; the
+retained probe identifies the exact weekly rig. Disposal is observed on the real
+ancestor navigation that removes the course while keeping its renderer alive,
+not after a full-page link has destroyed the observation context.
+
+Remote migration, cosmetic service activation, physical-device performance,
+production accounts, paid providers, limited-time events and course publishing
+remain outside this continuation. Task 06 owns its unchanged hosted boundary.
+
+The final focused twelve-week browser case passed (`1 passed (1.4m)`), with
+six safely placed crowns on this short island, all twelve wins in Growth, all
+four actual rigs crowned, no page errors, and exactly one disposal event for
+each owned instance, geometry and material when returning to the archipelago.
+The candidate still requires full local verification and the normal push gate.
+
+The first complete source run reached the App suite and exposed a loopback test
+whose cold dynamic imports consumed its five-second protocol budget (3.9s even
+alone). Module setup now reloads all three real adapters after every reset and
+asserts no eager fetch before the test installs its own response. The original
+six protocol cases, request/JSON/token checks and action timeout are unchanged;
+all 427 App tests and both native grid checks passed under the normal package
+command before the complete source gate was restarted.
+
+The resumed full run then caught the new record stylesheet missing from the
+shared export/entry contract. It is now exported and loaded once by the common
+app entry, rather than depending on a component-local CSS import. The unchanged
+world-projection CPU case passed alone (six cases; the six-lesson projection
+measured 16.356 ms against its original 30 ms ceiling). No threshold was raised.
+The final native `pnpm verify` execution `wc_job_J02tQwYClRxbuXKc` completed with
+exit code 0, including all source, content, style, build and documentation gates.
+The native job owns this receipt; it did not write a shell `VERIFY_EXIT` marker.
+The normal pre-push browser gate remains the final remote-delivery boundary.

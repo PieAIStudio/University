@@ -81,6 +81,7 @@
     "./navigation/screens.js": "./src/navigation/screens/index.ts",
     "./navigation/slots.js": "./src/navigation/slots.tsx",
     "./navigation/university-shell.css": "./src/navigation/university-shell.css",
+    "./navigation/screens/weekly-boss-records.css": "./src/navigation/screens/weekly-boss-records.css",
     "./notifications/ReviewReminderPrompt.js": "./src/notifications/ReviewReminderPrompt.tsx",
     "./onboarding/WelcomeCards.js": "./src/onboarding/WelcomeCards.tsx",
     "./progress/LearningSaveStatus.js": "./src/progress/LearningSaveStatus.tsx",

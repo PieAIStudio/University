@@ -7,13 +7,8 @@ import { islandLookFrozen } from "../island/island-surface-style.js";
 import { hash, seeded } from "../island/random.js";
 import { useKitModels, type Role } from "../kit.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
-import {
-  BOSS_HEIGHT,
-  MONSTER_HEIGHT,
-  MONSTER_ROLE_HEIGHT,
-  type CourseMonster,
-  type MonsterRole,
-} from "./chests-and-monsters.js";
+import { monsterWorldHeight } from "./monster-size.js";
+import { type CourseMonster, type MonsterRole } from "./chests-and-monsters.js";
 import {
   bakeMonsterPose,
   buildCrownGeometry,
@@ -55,10 +50,8 @@ export interface MonsterPlacement {
 const ROLES = (list: readonly MonsterPlacement[]) =>
   [...new Set(list.map((entry) => entry.monster.role))].sort() as MonsterRole[];
 const kitRole = (role: MonsterRole) => `monster-${role}` as Role;
-const heightOf = (monster: CourseMonster) =>
-  (monster.boss ? BOSS_HEIGHT : MONSTER_HEIGHT) *
-  MONSTER_ROLE_HEIGHT[monster.role] *
-  (monster.size ?? 1);
+// The drawn height also owns the crown chip and star target.
+const heightOf = monsterWorldHeight;
 /** A small stable turn off its heading, so neighbours do not line up like soldiers. */
 const jitterOf = (monster: CourseMonster) => (hash(`${monster.id}:turn`) - 0.5) * 0.24;
 const yawToward = (from: THREE.Vector3, to: THREE.Vector3) =>
@@ -240,7 +233,7 @@ export function MonsterField({
     const crowns = crownRef.current;
     if (crowns) {
       bosses.forEach((entry, slot) => {
-        const baked = models.get("boss")?.baked;
+        const baked = models.get(entry.monster.role)?.baked;
         const height = heightOf(entry.monster);
         const turn = yawOf(entry);
         scratch.top
@@ -494,7 +487,7 @@ function LiveMonster({
   const crownMaterial = crown?.material ?? null;
   useEffect(() => {
     const body = bodyRef.current;
-    if (!crownGeometry || !crownMaterial || !rig || !head || !body) return;
+    if (!crownGeometry || !crownMaterial || !rig || !body) return;
     const mesh = new THREE.Mesh(crownGeometry, crownMaterial);
     mesh.name = "course-monster-live-crown";
     mesh.castShadow = true;
@@ -503,7 +496,7 @@ function LiveMonster({
     mesh.scale.setScalar(CROWN_SIZE);
     body.add(mesh);
     body.updateWorldMatrix(true, true);
-    head.attach(mesh);
+    if (head) head.attach(mesh);
     return () => {
       mesh.removeFromParent();
     };
@@ -663,6 +656,11 @@ function LiveMonster({
   });
 
   const height = heightOf(monster);
+  useLayoutEffect(() => {
+    if (!roaming) return;
+    roaming.anchor.bodyHeight = height;
+    moveWeeklyAnchor(roaming.anchor, roaming.anchor.at, monster);
+  }, [height, roaming?.anchor, monster]);
   return (
     <group
       ref={(node) => {
@@ -671,6 +669,11 @@ function LiveMonster({
       }}
       position={at}
       name={`course-monster-live-${monster.role}`}
+      userData={{
+        weeklyBoss: monster.stop.kind === "weekly",
+        species: monster.role,
+        bodyHeight: height,
+      }}
       onClick={(event) => {
         if (!onPick) return;
         event.stopPropagation();

@@ -877,6 +877,7 @@ export function App() {
   // V7 mechanic 8: this week's boss, on the course island you last finished a lesson on.
   const weekly = useWeeklyBoss({
     progress,
+    showWorld: view.kind === "world",
     island:
       view.kind === "course" && course ? { studyId: view.studyId, courseId: course.id } : null,
     lessons,
@@ -896,8 +897,30 @@ export function App() {
           position: marker.position.clone().setY(marker.position.y + 1.3),
         }));
     }
-    return weekly.marker ? [...markers, weekly.marker] : markers;
-  }, [markers, weekly.marker, firstMeetingHere, interfaceTranslator]);
+    const withBoss =
+      weekly.availableIsland && view.kind === "world"
+        ? markers.map((marker) =>
+            marker.kind === "course" &&
+            marker.id === weekly.availableIsland?.courseId &&
+            focusedStudyId === weekly.availableIsland.studyId
+              ? {
+                  ...marker,
+                  weeklyBoss: true,
+                  label: `${marker.text} · ${interfaceTranslator.t("weeklyBoss.name")}`,
+                }
+              : marker,
+          )
+        : markers;
+    return weekly.marker ? [...withBoss, weekly.marker] : withBoss;
+  }, [
+    markers,
+    weekly.marker,
+    weekly.availableIsland,
+    firstMeetingHere,
+    interfaceTranslator,
+    view.kind,
+    focusedStudyId,
+  ]);
   const { markUnitProven, provenLessonKeys, unmetFor } = useSkipTest({
     nodes,
     progress,
@@ -1170,6 +1193,7 @@ export function App() {
                 reviewDue={reviewDue}
                 cosmeticOrnamentId={cosmeticData?.equipped.island}
                 weeklyBoss={weekly.scene}
+                weeklyWins={weekly.history.weeks}
                 onPickWeeklyBoss={weekly.open}
               />
             ) : null}
@@ -1473,6 +1497,15 @@ export function App() {
               },
             }));
   const quickCommands: MapQuickCommand[] = [
+    ...(weekly.marker
+      ? [
+          {
+            id: "weekly-boss",
+            title: interfaceTranslator.t("weeklyBoss.name"),
+            run: weekly.open,
+          },
+        ]
+      : []),
     ...(showMap
       ? [
           {

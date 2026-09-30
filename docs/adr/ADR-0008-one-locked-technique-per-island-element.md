@@ -142,6 +142,31 @@ added to what V7-01 placed; none is stored, and every word stays DOM.
   is always one of the live monsters, so the island animates four at most. Which
   island, which questions and when it leaves are core rules (`weekly-boss.ts`).
 
+### V7-07 continuation: weekly species and retained crowns
+
+The 2026-09-30 continuation rotates four already attributed kit creatures by
+calendar Monday, keeping the original golem in the first delivered week. The
+frog, crab and yeti share the existing gilded rig, crown, 20% size increase and
+roaming pipeline. Actual GLB loading measured 6/4/4/6 live meshes respectively;
+each bakes to one still part, at 5864/5016/3624/2136 triangles. The 55-mesh chicken
+is not promoted to an always-live weekly boss. Shared model height keeps the
+crown chip and star target attached to the selected species, not the old golem.
+
+A won week's island/arrival witness projects a small retained crown onto safe
+existing ground. The field reuses the existing 156-triangle island crown and
+plinth, in one instanced draw, no textures, at most eight crowns (1248 current
+triangles; the machine ceiling is 1920). The actual ground, standing footprints,
+learning sites, chests, ornaments and waiting avatar remain authoritative; no
+free ground means no mesh, not rearranged scenery. One cached projection per live
+blueprint avoids rebuilding it on progress-only renders. The field owns and
+releases its instance, geometry and material rather than disposing donor models.
+
+The full history stays in Growth's DOM regardless of the scene limit. A legacy
+win with no recorded island is never assigned one from today's progress. The
+archipelago crown requires the real available question pool; the existing map
+command palette also opens a verified weekly fight when its shore is off-screen.
+No new renderer, canvas, paid right, procedural island pipeline or asset import.
+
 ### V7-06: an equipped ornament is a late, bounded course prop
 
 The approved cosmetic slot uses one merged vertex-coloured mesh, selected only

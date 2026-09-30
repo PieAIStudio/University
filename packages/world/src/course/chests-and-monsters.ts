@@ -41,6 +41,8 @@ export type ChestState = "closed" | "ready" | "open";
 
 export type MonsterRole = "frog" | "crab" | "yeti" | "boar" | "mushroom" | "chicken" | "boss";
 /** The six ordinary fears; the boss is placed separately. */
+import { weeklyBossSpecies } from "./weekly-species.js";
+
 export const MONSTER_ROSTER: readonly Exclude<MonsterRole, "boss">[] = [
   "frog",
   "crab",
@@ -616,13 +618,19 @@ export function openingGuard(
  * This week's boss on this island: at the shore nearest the stone the learner
  * is on now, so the map opens with it in view. Null when the shore has no room.
  */
+// An explicit arrival stone keeps a historical crown near its recorded place.
 export function courseWeeklyBoss(
   lessons: readonly LessonPlacement[],
   sites: readonly LearningSite[],
   week: string,
+  arrivalLessonId?: string,
 ): CourseMonster | null {
   const { shore: all } = placeChestsAndBosses(lessons, sites);
-  const here = (lessons.find((lesson) => lesson.state !== "done") ?? lessons.at(-1))?.position;
+  const here = (
+    arrivalLessonId
+      ? lessons.find((lesson) => lesson.lessonId === arrivalLessonId)
+      : (lessons.find((lesson) => lesson.state !== "done") ?? lessons.at(-1))
+  )?.position;
   const blueprint = lessons[0]?.blueprint;
   if (!here || !blueprint || all.length === 0) return null;
   // Out toward the edge where there is room; inland only on an island with none.
@@ -636,7 +644,7 @@ export function courseWeeklyBoss(
   const position = new Vector3(spot.x, spot.y, spot.z);
   return {
     id: `monster:weekly:${week}`,
-    role: "boss",
+    role: weeklyBossSpecies(week),
     boss: true,
     stop: { kind: "weekly", week },
     position,

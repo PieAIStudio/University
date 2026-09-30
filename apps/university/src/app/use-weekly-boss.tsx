@@ -5,6 +5,9 @@ import {
   weeklyBossWonEventId,
   weeklyBossFlawlessEventId,
   weeklyBossWeek,
+  weeklyBossHistory,
+  weeklyBossLocationEventId,
+  type WeeklyBossHistory,
   WEEKLY_BOSS_HIT_XP,
   WEEKLY_BOSS_WIN_XP,
   type FinishedLesson,
@@ -30,6 +33,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { contentPort } from "../ports/index";
 import { progressPort, snapshot } from "../progress/store";
 import type { WeeklyChest } from "./use-chest-opening";
+import { useLocalDay } from "./use-local-day.js";
 
 type Exercises = LessonView["lesson"]["exercises"];
 type CourseOf = (studyId: string, courseId: string) => CourseView | null;
@@ -49,8 +53,9 @@ const keyOf = (lesson: FinishedLesson) => `${lesson.studyId}/${lesson.courseId}/
  * outlives the fight; everything held here is the few seconds of a strike.
  *
  * The questions need the lessons' exercises, which only the content port has,
- * so they are fetched when the island the boss stands on is on screen, not
- * before: the world map never pays for a boss it does not show.
+ * so they are fetched only on its course island or the course overview. The
+ * overview crown is withheld until the actual five-question pool is known;
+ * other routes do not fetch a boss they cannot show.
  */
 export function useWeeklyBoss({
   progress,
@@ -59,6 +64,7 @@ export function useWeeklyBoss({
   courseOf,
   onOpenLesson,
   onChest,
+  showWorld = false,
 }: {
   readonly progress: ProgressDocument;
   /** The course island on screen, or null. */
@@ -69,21 +75,29 @@ export function useWeeklyBoss({
   readonly onOpenLesson: (locator: LessonRef) => void;
   /** The boss has run: its chest stands where it stood. */
   readonly onChest: (chest: WeeklyChest) => void;
+  /** The overview may announce a boss only after its real question pool is read. */
+  readonly showWorld?: boolean;
 }): {
   /** What the course scene draws, or null when no boss stands on this island. */
   readonly scene: WeeklyBossScene | null;
   readonly overlay: ReactNode;
   /** The crown chip over the boss, while it stands and no fight is open. */
   readonly marker: Marker | null;
+  readonly availableIsland: WeeklyBoss["island"] | null;
+  readonly history: WeeklyBossHistory;
   open(): void;
 } {
   const reducedMotion = usePrefersReducedMotion();
+  const now = useLocalDay();
+  const weekNow = weeklyBossWeek(now);
+  // History changes with the progress document or week, not every animation render.
+  const history = useMemo(() => weeklyBossHistory(progress, now), [progress, weekNow]);
   const interfaceTranslator = useI18n();
   const owner = progressPort.syncState().userId;
-  const scope = `${owner ?? "guest"}:${island?.studyId ?? ""}/${island?.courseId ?? ""}:${weeklyBossWeek(Date.now())}`;
+  const scope = `${owner ?? "guest"}:${island?.studyId ?? ""}/${island?.courseId ?? ""}:${weekNow}`;
   const currentScope = useRef(scope);
   currentScope.current = scope;
-  const finished = weeklyBossLessons(progress, Date.now());
+  const finished = weeklyBossLessons(progress, now);
   const last = finished[0];
   const here =
     island !== null &&
@@ -108,7 +122,7 @@ export function useWeeklyBoss({
 
   const [exercises, setExercises] = useState<ReadonlyMap<string, Exercises>>(new Map());
   useEffect(() => {
-    if (!here) return;
+    if (!here && !showWorld) return;
     const missing = finished.filter((lesson) => !exercises.has(keyOf(lesson)));
     if (missing.length === 0) return;
     const controller = new AbortController();
@@ -130,15 +144,13 @@ export function useWeeklyBoss({
     return () => controller.abort();
     // `finishedKeys` stands for `finished`, which is new every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [here, finishedKeys]);
+  }, [here, showWorld, finishedKeys, owner, weekNow]);
 
-  const loaded = here && finished.every((lesson) => exercises.has(keyOf(lesson)));
+  const loaded = (here || showWorld) && finished.every((lesson) => exercises.has(keyOf(lesson)));
   const boss = useMemo<WeeklyBoss | null>(
     () =>
-      loaded
-        ? weeklyBoss(progress, Date.now(), (lesson) => exercises.get(keyOf(lesson)) ?? [])
-        : null,
-    [loaded, progress, exercises],
+      loaded ? weeklyBoss(progress, now, (lesson) => exercises.get(keyOf(lesson)) ?? []) : null,
+    [loaded, progress, exercises, now],
   );
 
   const [card, setCard] = useState(false);
@@ -197,6 +209,11 @@ export function useWeeklyBoss({
     const heartXp = snapshot().totalXp;
     // Store the no-XP witness before the win. A server claim must never see a
     // winning document that is missing this same round's first-try condition.
+    const arrival =
+      (lessons.find((lesson) => lesson.state !== "done") ?? lessons.at(-1))?.lessonId ??
+      last?.lessonId;
+    if (arrival)
+      progressPort.addXp(weeklyBossLocationEventId(week, { ...boss.island, lessonId: arrival }), 0);
     if (result.flawless) progressPort.addXp(weeklyBossFlawlessEventId(week), 0);
     progressPort.addXp(weeklyBossWonEventId(week), WEEKLY_BOSS_WIN_XP);
     const after = snapshot().totalXp;
@@ -235,7 +252,7 @@ export function useWeeklyBoss({
   };
 
   // Beaten and its chest taken, it is gone for the week; while it runs, it still stands.
-  const standing = boss !== null && (!boss.beaten || ending?.week === boss.week);
+  const standing = here && boss !== null && (!boss.beaten || ending?.week === boss.week);
   const scene = useMemo<WeeklyBossScene | null>(
     () =>
       boss && standing
@@ -250,7 +267,7 @@ export function useWeeklyBoss({
   );
 
   const overlay =
-    card && boss && !boss.beaten ? (
+    here && card && boss && !boss.beaten ? (
       <WeeklyBossFight
         boss={boss}
         now={Date.now()}
@@ -270,10 +287,10 @@ export function useWeeklyBoss({
     ) : null;
 
   const open = () => {
-    if (boss && !boss.beaten) setCard(true);
+    if (here && boss && !boss.beaten) setCard(true);
   };
   const chipLabel =
-    boss && !boss.beaten && !card && ending === null
+    here && boss && !boss.beaten && !card && ending === null
       ? `${interfaceTranslator.t("weeklyBoss.name")} · ${interfaceTranslator.t("weeklyBoss.hearts", { hearts: boss.hearts })}`
       : null;
   const week = boss?.week ?? null;
@@ -283,5 +300,12 @@ export function useWeeklyBoss({
     [chipLabel, week, lessons],
   );
 
-  return { scene, overlay, marker, open };
+  return {
+    scene,
+    overlay,
+    marker,
+    open,
+    history,
+    availableIsland: boss && !boss.beaten ? boss.island : null,
+  };
 }

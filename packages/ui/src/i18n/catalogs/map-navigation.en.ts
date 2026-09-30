@@ -67,6 +67,19 @@ export const messages = {
   "map.monster.boss.fear": "I''ll never get this.",
   "chest.weeklyLabel": "{tier}, left by this week''s boss",
   "weeklyBoss.name": "This week''s boss",
+  "weeklyBoss.history.title": "Your weekly crowns",
+  "weeklyBoss.history.total": "{count, plural, one {# boss beaten} other {# bosses beaten}}",
+  "weeklyBoss.history.streak": "{count, plural, one {# week in a row} other {# weeks in a row}}",
+  "weeklyBoss.history.longest":
+    "{count, plural, one {Longest run: # week} other {Longest run: # weeks}}",
+  "weeklyBoss.history.empty":
+    "The boss arrives when there are five questions from lessons you finished recently. Wrong answers cost nothing. Come back when it suits you.",
+  "weeklyBoss.history.details": "See every week",
+  "weeklyBoss.history.sceneLimit":
+    "Each island displays up to eight recent crowns. Every week you win stays in this list.",
+  "weeklyBoss.history.flawless": "Five in a row",
+  "weeklyBoss.history.won": "Beaten",
+  "weeklyBoss.history.legacy": "This early record did not save its island. Your win is still kept.",
   "weeklyBoss.daysLeft": "{days, plural, one {# day left} other {# days left}}",
   "weeklyBoss.hearts": "{hearts, plural, one {# heart left} other {# hearts left}}",
   "weeklyBoss.pitch":
