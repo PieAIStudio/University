@@ -13,12 +13,12 @@ import { createRoot } from "react-dom/client";
  * the glossy first draft too heavy (2026-09-30).
  */
 const PALETTE = [
-  { id: "coral", name: "珊瑚", fill: "#f4876b", deep: "#c9583c", soft: "#f8b3a0" },
-  { id: "sun", name: "向日葵", fill: "#f7c948", deep: "#c99a1c", soft: "#f9dd8a" },
-  { id: "leaf", name: "嫩叶", fill: "#72c58f", deep: "#3f9660", soft: "#a6dcb8" },
-  { id: "sky", name: "晴空", fill: "#6bb3ea", deep: "#3a84bd", soft: "#a9d0f3" },
-  { id: "grape", name: "葡萄", fill: "#b39bf0", deep: "#7f63c9", soft: "#cfc0f6" },
-  { id: "pink", name: "泡泡糖", fill: "#f59ac2", deep: "#c9628f", soft: "#f8bfd8" },
+  { id: "coral", name: "珊瑚", fill: "#f4876b", deep: "#c9583c", soft: "#fab29d" },
+  { id: "sun", name: "向日葵", fill: "#f7c948", deep: "#c99a1c", soft: "#f8dda1" },
+  { id: "leaf", name: "嫩叶", fill: "#72c58f", deep: "#3f9660", soft: "#b0d5bd" },
+  { id: "sky", name: "晴空", fill: "#6bb3ea", deep: "#3a84bd", soft: "#b3d3f7" },
+  { id: "grape", name: "葡萄", fill: "#b39bf0", deep: "#7f63c9", soft: "#e1c8f2" },
+  { id: "pink", name: "泡泡糖", fill: "#f59ac2", deep: "#c9628f", soft: "#fdbfdf" },
 ];
 const C = Object.fromEntries(PALETTE.map((p) => [p.id, p]));
 const INK = "#2a2320";
@@ -36,21 +36,28 @@ const settings = { mode: "light", motion: "act", weight: "lian" };
  * amplitude per named form, so a 涟 body is built from the same two public
  * parts LiquidSurface itself uses: one LiquidGroup and one LiquidGroup.Item.
  */
-const LIAN = { blur: 5, contrast: 18, gloss: 3.5, amplitude: 3.5, lobes: 3 };
+// Gloss: 涟's own 3.5 left a white rim along the top that the Owner found too
+// strong; their reference (2026-09-30) reads as gloss 1 over a vertical fall of
+// light, so the body keeps a little thickness without the rim.
+const LIAN = { blur: 5, contrast: 18, gloss: 1, amplitude: 3.5, lobes: 3 };
+/** The reference's soft contact shadow: the card reads about 7% darker under a body. */
+const LIAN_SHADOW = "0 6px 14px rgba(110, 85, 60, 0.13)";
+const lianGloss = (s) => s.gloss ?? LIAN.gloss;
 const heavy = (s) => s.weight === "heavy";
 // "matte" forces gloss to 0, which is what made the last try look paper-flat.
 const finishOf = () => "glossy";
 const fillOf = (colour, s) => (heavy(s) ? colour.fill : `url(#lq-lian-${colour.id})`);
-const glossOf = (s) => (heavy(s) ? undefined : LIAN.gloss);
+const glossOf = (s) => (heavy(s) ? undefined : lianGloss(s));
 const contrastOf = (s) => (heavy(s) ? undefined : LIAN.contrast);
 const blurOf = (s, own) => (heavy(s) ? own : LIAN.blur);
-const shadowOf = (s) => (heavy(s) ? undefined : "none");
+const shadowOf = (s) => (heavy(s) ? undefined : LIAN_SHADOW);
 
 /** The press squash LiquidSurface gives an engaged `press`, on a 涟 body. */
 const PRESS_ITEM = liquidFormItem("press");
 const SQUASH = { scale: 1.05, scaleY: 0.9, y: 2 };
 const REST = { scale: 1, scaleY: 1, y: 0 };
 function LianSurface({ fill, radius = 999, pressed, style, children }) {
+  const s = useSettings();
   return (
     <span className="game-ui-liquid-surface" data-liquid-form="lian" style={style}>
       <LiquidGroup
@@ -59,10 +66,10 @@ function LianSurface({ fill, radius = 999, pressed, style, children }) {
         blur={LIAN.blur}
         contrast={LIAN.contrast}
         liquidFinish="glossy"
-        gloss={LIAN.gloss}
+        gloss={lianGloss(s)}
         fill={fill}
         filterPadding={28}
-        shadow="none"
+        shadow={LIAN_SHADOW}
       >
         <LiquidGroup.Item
           className="game-ui-liquid-surface__shape"
@@ -81,16 +88,20 @@ function LianSurface({ fill, radius = 999, pressed, style, children }) {
   );
 }
 
-/** The droplet's gradient, lighter at the top left, once per page. */
-function mixWhite(hex, amount) {
+/*
+ * The body's light, from the Owner's reference (2026-09-30): a gentle
+ * vertical fall from a lighter top to a touch deeper bottom, no white rim.
+ * Sampled there: yellow top #fee9b0, middle #f8dda1, bottom #f3d38e.
+ */
+function mix(hex, toward, amount) {
   const n = parseInt(hex.slice(1), 16);
-  const ch = (shift) => Math.round(((n >> shift) & 255) + (255 - ((n >> shift) & 255)) * amount);
+  const ch = (shift) => Math.round(((n >> shift) & 255) + (toward - ((n >> shift) & 255)) * amount);
   return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
 }
 const LIAN_STOPS = [
-  ...PALETTE.map((p) => [p.id, mixWhite(p.soft, 0.38), p.soft]),
-  // Unchosen bodies sit on a cream card, so their deeper end is a step darker.
-  ["cream", "#fffefa", "#f1dfc2"],
+  ...PALETTE.map((p) => [p.id, p.soft]),
+  // Unchosen bodies sit on a cream card, so they read by a lighter face.
+  ["cream", "#fbf1e0"],
 ];
 const defs = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 defs.setAttribute("aria-hidden", "true");
@@ -98,8 +109,8 @@ defs.setAttribute("width", "0");
 defs.setAttribute("height", "0");
 defs.style.position = "absolute";
 defs.innerHTML = `<defs>${LIAN_STOPS.map(
-  ([id, from, to]) =>
-    `<linearGradient id="lq-lian-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient>`,
+  ([id, base]) =>
+    `<linearGradient id="lq-lian-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(base, 255, id === "cream" ? 0.7 : 0.32)}"/><stop offset="0.45" stop-color="${base}"/><stop offset="1" stop-color="${mix(base, 0, 0.04)}"/></linearGradient>`,
 ).join("")}</defs>`;
 document.body.appendChild(defs);
 const listeners = new Set();
