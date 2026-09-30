@@ -46,8 +46,8 @@ describe("domain labels", () => {
       );
       expect([...nodes.keys()].sort()).toEqual(["ai-foundations", "ai-media", "programming"]);
       expect(nodes.get("programming")?.textContent).toBe("AI 与编程");
-      expect(nodes.get("ai-foundations")?.textContent).toContain("暂未发布");
-      expect(nodes.get("ai-media")?.textContent).toContain("暂未发布");
+      expect(nodes.get("ai-foundations")?.textContent).toContain("即将开放");
+      expect(nodes.get("ai-media")?.textContent).toContain("即将开放");
       expect(nodes.get("ai-media")?.dataset.active).toBe("true");
       await act(async () =>
         root.render(
@@ -63,9 +63,9 @@ describe("domain labels", () => {
         ),
       );
       expect(nodes.get("ai-foundations")?.textContent).toBe("AI 基础已选");
-      expect(nodes.get("ai-foundations")?.textContent).not.toContain("暂未发布");
+      expect(nodes.get("ai-foundations")?.textContent).not.toContain("即将开放");
       expect(nodes.get("ai-foundations")?.dataset.active).toBe("true");
-      expect(nodes.get("ai-media")?.textContent).toContain("暂未发布");
+      expect(nodes.get("ai-media")?.textContent).toContain("即将开放");
       expect(nodes.get("ai-media")?.textContent).not.toContain("已选");
     } finally {
       await act(async () => root.unmount());

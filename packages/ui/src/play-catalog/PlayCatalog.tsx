@@ -55,17 +55,27 @@ export function PlayCatalog({
   sources,
   presentation,
   renderThree,
+  learner = false,
 }: {
   readonly sources: PrototypeSources;
   readonly presentation: string;
+  /** Library presentation reuses every playable activity; author diagnostics
+   * and historic layout comparisons remain in the retained laboratory. */
+  readonly learner?: boolean;
   readonly renderThree?: (mode: NonNullable<CatalogEntry["threeMode"]>) => ReactNode;
 }) {
   const interfaceTranslator = useI18n();
   const { locale } = useI18n();
-  const entries = useMemo(() => createCatalog(sources), [sources]);
+  const entries = useMemo(
+    () => createCatalog(sources).filter((entry) => !learner || entry.group !== "history"),
+    [sources, learner],
+  );
+  const groups = CATALOG_GROUPS.filter((id) => !learner || id !== "history");
+  const title = interfaceTranslator.t(learner ? "album.courseware" : "gallery.title");
+  const groupLabel = (id: CatalogGroup | "all") =>
+    interfaceTranslator.t(learner ? `doors.courseware.${id}` : `gallery.${id}`);
   const [group, setGroup] = useState<CatalogGroup | "all">(
-    () =>
-      CATALOG_GROUPS.find((g) => g === new URLSearchParams(location.search).get("group")) ?? "all",
+    () => groups.find((g) => g === new URLSearchParams(location.search).get("group")) ?? "all",
   );
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(() => {
@@ -102,19 +112,23 @@ export function PlayCatalog({
   return (
     <div className="play-catalog">
       <header className="play-catalog__header">
-        <a href="/play-lab">{interfaceTranslator.t("gallery.back")}</a>
-        <h1>{interfaceTranslator.t("gallery.title")}</h1>
-        <p>{interfaceTranslator.t("gallery.intro")}</p>
-        <a href={`/play-lab/prop-finish?lang=${locale}`} data-testid="prop-finish-link">
-          {interfaceTranslator.t("finish.open")}
-        </a>
+        {!learner ? <a href="/play-lab">{interfaceTranslator.t("gallery.back")}</a> : null}
+        <h1>{title}</h1>
+        <p>{interfaceTranslator.t(learner ? "doors.courseware.intro" : "gallery.intro")}</p>
+        {!learner ? (
+          <a href={`/play-lab/prop-finish?lang=${locale}`} data-testid="prop-finish-link">
+            {interfaceTranslator.t("finish.open")}
+          </a>
+        ) : null}
       </header>
       <div className="play-catalog__layout">
         <details ref={picker} className="play-catalog__picker" open>
           <summary>
-            {interfaceTranslator.t("gallery.title")} · {entries.length}
+            {title} · {entries.length}
           </summary>
-          <label htmlFor="play-catalog-search">{interfaceTranslator.t("gallery.search")}</label>
+          <label htmlFor="play-catalog-search">
+            {interfaceTranslator.t(learner ? "doors.courseware.search" : "gallery.search")}
+          </label>
           <GameInput
             id="play-catalog-search"
             type="search"
@@ -136,9 +150,9 @@ export function PlayCatalog({
               if (first) url.searchParams.set("entry", first.id);
               history.replaceState(history.state, "", url);
             }}
-            tabs={["all", ...CATALOG_GROUPS].map((id) => ({
+            tabs={(["all", ...groups] as const).map((id) => ({
               id,
-              label: `${interfaceTranslator.t(`gallery.${id}` as "gallery.all")} ${id === "all" ? entries.length : entries.filter((entry) => entry.group === id).length}`,
+              label: `${groupLabel(id)} ${id === "all" ? entries.length : entries.filter((entry) => entry.group === id).length}`,
               panelId: "play-catalog-results",
             }))}
           />
@@ -164,8 +178,8 @@ export function PlayCatalog({
                     >
                       <strong>{interfaceTranslator.t(entry.name)}</strong>
                       <span>{interfaceTranslator.t(entry.action)}</span>
-                      <small>{entry.id}</small>
-                      {entry.threeMode ? (
+                      {!learner ? <small>{entry.id}</small> : null}
+                      {!learner && entry.threeMode ? (
                         <small>
                           {interfaceTranslator.t(
                             entry.retained ? "gallery.three.retained" : "gallery.three.new",
@@ -196,11 +210,16 @@ export function PlayCatalog({
               <div className="play-catalog__selection">
                 <div>
                   <p className="play-catalog__eyebrow">
-                    {interfaceTranslator.t(`gallery.${selected.group}`)} ·{" "}
-                    <code>{selected.id}</code>
+                    {groupLabel(selected.group)}
+                    {!learner ? (
+                      <>
+                        {" "}
+                        · <code>{selected.id}</code>
+                      </>
+                    ) : null}
                   </p>
                   <h2>{interfaceTranslator.t(selected.name)}</h2>
-                  {selected.threeMode ? (
+                  {!learner && selected.threeMode ? (
                     <small>
                       {interfaceTranslator.t(
                         selected.retained ? "gallery.three.retained" : "gallery.three.new",
@@ -242,12 +261,16 @@ export function PlayCatalog({
               ) : null}
               {selected.rhythm ? (
                 <p className="play-catalog__scope">
-                  {interfaceTranslator.t(`gallery.${selected.rhythm}`)}
+                  {interfaceTranslator.t(
+                    learner ? `doors.courseware.${selected.rhythm}` : `gallery.${selected.rhythm}`,
+                  )}
                 </p>
               ) : null}
               {selected.source ? (
                 <p className="play-catalog__limit">
-                  {interfaceTranslator.t("gallery.researchLimit")}
+                  {interfaceTranslator.t(
+                    learner ? "doors.courseware.localDemo" : "gallery.researchLimit",
+                  )}
                 </p>
               ) : null}
               <div key={`${selected.id}:${round}`} className="play-catalog__board">
@@ -264,7 +287,7 @@ export function PlayCatalog({
                 {selected.href ? (
                   <GamePanel title={interfaceTranslator.t("gallery.paths")}>
                     <p>{interfaceTranslator.t("gallery.pathsScope")}</p>
-                    <p>{interfaceTranslator.t("gallery.pathNote")}</p>
+                    {!learner ? <p>{interfaceTranslator.t("gallery.pathNote")}</p> : null}
                     <a className="play-catalog__lesson-link" href={selected.href}>
                       {interfaceTranslator.t("gallery.openLesson")} →
                     </a>
@@ -272,10 +295,20 @@ export function PlayCatalog({
                 ) : null}
               </div>
               <p className="play-catalog__scope">
-                <b>{interfaceTranslator.t("gallery.scope")}：</b>
-                {interfaceTranslator.t(selected.scope)}
+                {learner ? (
+                  interfaceTranslator.t(
+                    selected.href
+                      ? "doors.courseware.courseProgress"
+                      : "doors.courseware.noProgress",
+                  )
+                ) : (
+                  <>
+                    <b>{interfaceTranslator.t("gallery.scope")}：</b>
+                    {interfaceTranslator.t(selected.scope)}
+                  </>
+                )}
               </p>
-              {selected.source ? (
+              {!learner && selected.source ? (
                 <p className="play-catalog__scope">{interfaceTranslator.t("gallery.boundary")}</p>
               ) : null}
             </>
@@ -284,25 +317,27 @@ export function PlayCatalog({
           )}
         </section>
       </div>
-      <details className="play-catalog__rationale">
-        <summary>{interfaceTranslator.t("gallery.appearance")}</summary>
-        <p>{interfaceTranslator.t("gallery.appearanceText")}</p>
-        <a
-          href="https://developer.apple.com/design/human-interface-guidelines/game-controls"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Apple HIG · Game controls
-        </a>
-        {" · "}
-        <a
-          href="https://developer.apple.com/design/human-interface-guidelines/designing-for-games"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Designing for games
-        </a>
-      </details>
+      {!learner ? (
+        <details className="play-catalog__rationale">
+          <summary>{interfaceTranslator.t("gallery.appearance")}</summary>
+          <p>{interfaceTranslator.t("gallery.appearanceText")}</p>
+          <a
+            href="https://developer.apple.com/design/human-interface-guidelines/game-controls"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Apple HIG · Game controls
+          </a>
+          {" · "}
+          <a
+            href="https://developer.apple.com/design/human-interface-guidelines/designing-for-games"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Designing for games
+          </a>
+        </details>
+      ) : null}
     </div>
   );
 }

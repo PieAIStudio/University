@@ -80,6 +80,45 @@ button.label--icon.is-locked {
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }
+/* V7: only the inked face becomes smaller, never the hit target or the
+ * projected anchor. A selected lesson recovers the complete medallion. */
+@media (max-width: 767px) {
+  .label--lesson-medallion.scene-label {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .label--lesson-medallion .scene-label__icon-face {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--game-ui-radius-control);
+    color: var(--game-ui-overlay-glass-text);
+    background: var(--game-ui-overlay-glass-bg-strong);
+    box-shadow: 0 1px 6px color-mix(in srgb, var(--game-ui-scrim-strong) 36%, transparent);
+    transform: scale(0.5);
+    pointer-events: none;
+  }
+  .label--lesson-medallion[aria-pressed="true"] .scene-label__icon-face {
+    transform: none;
+  }
+  .label--lesson-medallion[data-lesson-state="locked"],
+  .label--lesson-medallion.is-locked {
+    outline: none;
+  }
+  .label--lesson-medallion[data-lesson-state="locked"] .scene-label__icon-face {
+    outline: 1px dashed currentColor;
+    outline-offset: 2px;
+  }
+  button.label--lesson-medallion:focus-visible {
+    outline: 2px solid var(--game-ui-focus-ring);
+    outline-offset: 2px;
+  }
+}
 @media (pointer: coarse) {
   button.label--icon,
   button.label--lesson {

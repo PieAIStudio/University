@@ -31,6 +31,7 @@ import {
 import { ReviewReminderSettings } from "./ReviewReminderSettings.js";
 import { ReviewEmailPreference } from "./ReviewEmailPreference.js";
 import { WorldStyleControl } from "../../world-style.js";
+import { DailyGoalControl } from "./DailyGoalControl.js";
 
 const NO_SYSTEM_SUBSCRIPTION = () => () => undefined;
 
@@ -44,12 +45,15 @@ export function SettingsScreen({
   progress,
   reminders,
   guide,
+  laboratory,
 }: {
   readonly presence?: PresencePort;
   readonly progress?: ProgressPort;
   readonly reminders?: ReviewReminderPort;
   /** The map guide's capabilities, cost and privacy (ADR-0012), from the app. */
   readonly guide?: ReactNode;
+  /** An explicitly injected author-workbench entry, absent in the learner build. */
+  readonly laboratory?: ReactNode;
 } = {}) {
   const interfaceTranslator = useI18n();
   useI18n();
@@ -67,21 +71,28 @@ export function SettingsScreen({
       <h1 className="settings-screen__title">
         {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.偏好设置")}
       </h1>
-      <ThemePreferenceControl progress={progress} />
-      <section className="settings-screen__block">
-        <WorldStyleControl />
-      </section>
-      <InterfaceLanguageControl progress={progress} />
-      <section className="settings-screen__block" aria-labelledby="settings-sound">
-        <h2 id="settings-sound" className="settings-screen__heading">
-          {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.声音")}
-        </h2>
-        <SoundToggle progress={progress} />
-        <SpeechQualityControl progress={progress} />
-      </section>
-      {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
-      {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
-      {progress ? <ReviewEmailPreference progress={progress} /> : null}
+      {progress ? <DailyGoalControl progress={progress} /> : null}
+      <div id="settings-appearance">
+        <h2>{interfaceTranslator.t("doors.settings.appearance")}</h2>
+        <ThemePreferenceControl progress={progress} />
+        <section className="settings-screen__block">
+          <WorldStyleControl />
+        </section>
+        <InterfaceLanguageControl progress={progress} />
+        <section className="settings-screen__block" aria-labelledby="settings-sound">
+          <h2 id="settings-sound" className="settings-screen__heading">
+            {interfaceTranslator.t("ui.navigation.empty.settingsScreen.copy.声音")}
+          </h2>
+          <SoundToggle progress={progress} />
+          <SpeechQualityControl progress={progress} />
+        </section>
+      </div>
+      <div id="settings-privacy">
+        <h2>{interfaceTranslator.t("doors.settings.privacy")}</h2>
+        {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
+        {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
+        {progress ? <ReviewEmailPreference progress={progress} /> : null}
+      </div>
       {guide ? (
         <section id="map-guide" className="settings-screen__block" aria-labelledby="settings-guide">
           <h2 id="settings-guide" className="settings-screen__heading">
@@ -113,6 +124,7 @@ export function SettingsScreen({
           }}
         />
       </details>
+      {laboratory}
     </div>
   );
 }

@@ -197,15 +197,16 @@ describe("which slot lights up", () => {
     // Standing on the planet is choosing what to learn, not leaving learning.
     expect(activeIdForView({ kind: "planet" })).toBe("learn");
     expect(activeIdForView({ kind: "me" })).toBe("profile");
-    expect(activeIdForView({ kind: "favourites" })).toBe("favourites");
+    expect(activeIdForView({ kind: "favourites" })).toBe("library");
     expect(activeIdForView({ kind: "mistakes" })).toBe("review");
     expect(activeIdForView({ kind: "library", tab: "terms" })).toBe("library");
     expect(activeIdForView({ kind: "concept", id: "state" })).toBe("library");
-    expect(activeIdForView({ kind: "studio" })).toBe("studio");
+    expect(activeIdForView({ kind: "studio" })).toBe("profile");
   });
 
   it("gives every view a slot", () => {
-    for (const view of views) expect(activeIdForView(view)).not.toBe("");
+    for (const view of views)
+      expect(["learn", "review", "library", "profile"]).toContain(activeIdForView(view));
   });
 });
 

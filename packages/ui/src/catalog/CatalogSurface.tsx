@@ -76,12 +76,6 @@ export function CatalogSurface({
           {interfaceTranslator.t("ui.catalog.catalogSurface.copy.在地图上看")}
         </button>
         <h1>{interfaceTranslator.t("ui.catalog.catalogSurface.copy.目录")}</h1>
-        <p className="catalog__lede">
-          {listing.totals.studies}{" "}
-          {interfaceTranslator.t(
-            "ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺",
-          )}
-        </p>
         <p className="catalog__totals">
           {listing.totals.studies} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.个世界")}{" "}
           {listing.totals.courses} {interfaceTranslator.t("ui.catalog.catalogSurface.copy.门课")}{" "}
@@ -194,11 +188,6 @@ function StudyBlock({
           </span>
         </h2>
       </summary>
-      {study.flat ? (
-        <p className="catalog__flat">
-          {interfaceTranslator.t("ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出")}
-        </p>
-      ) : null}
       {study.courses.map((course) => (
         <CourseBlock
           key={course.id}
@@ -238,14 +227,6 @@ function CourseBlock({
       <summary>
         <span className="catalog__course-head">
           <span className="catalog__title-row">
-            <span
-              className="catalog__depth"
-              aria-label={interfaceTranslator.t("ui.catalog.catalogSurface.copy.第-value0-层", {
-                value0: course.depth + 1,
-              })}
-            >
-              L{course.depth + 1}
-            </span>
             <h3>{course.title}</h3>
             <span className={`catalog__gate catalog__gate--${course.state}`}>
               {gateLabel(course.state, course.done)}
@@ -386,7 +367,6 @@ function LessonLink({
       }}
     >
       <span className="catalog__lesson-title">{lesson.title}</span>
-      {lesson.variant ? <span className="catalog__variant">{lesson.variant}</span> : null}
       {lesson.state === "done" ? (
         <span className="catalog__gate catalog__gate--done">
           {interfaceTranslator.t("ui.catalog.catalogSurface.copy.已完成")}

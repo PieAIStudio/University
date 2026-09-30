@@ -1,4 +1,5 @@
-import { expect, test } from "./harness/learner-test.js";
+import { expect, test, type Page } from "./harness/learner-test.js";
+import { assertVisibleAndHittableAtFivePoints } from "./harness/experience.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import { assertPanelIsPainted } from "./harness/assert.js";
@@ -284,6 +285,17 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
   nowhere to scroll sideways to, so a horizontal scrollbar there is always a
   bug, at every size.
 */
+async function assertFourDoors(page: Page) {
+  const links = page.locator(".nav-rail__list a.nav-rail__link");
+  await expect(links).toHaveCount(4);
+  expect(
+    await links.evaluateAll((items) => items.map((item) => item.getAttribute("href"))),
+  ).toEqual(["/", "/review", "/library", "/me"]);
+  for (const link of await links.all()) {
+    await assertVisibleAndHittableAtFivePoints(page, link, "V7 four-door navigation");
+  }
+}
+
 test.describe("E2 短窗口 · 导航栏不该长出滚动条", () => {
   for (const [width, height] of [
     [1097, 513],
@@ -312,8 +324,7 @@ test.describe("E2 短窗口 · 导航栏不该长出滚动条", () => {
         not — so this checks the links exist and are clickable, not that the
         rail happens to fit.
       */
-      const links = rail.locator(".nav-rail__link");
-      expect(await links.count()).toBeGreaterThanOrEqual(7);
+      await assertFourDoors(page);
 
       console_.assertClean();
     });
@@ -322,7 +333,7 @@ test.describe("E2 短窗口 · 导航栏不该长出滚动条", () => {
   /*
     Decoration goes before navigation. The avatar is the tallest thing in the
     rail and the only one that is not a destination, so a short window loses it
-    and keeps all eight routes.
+    and keeps all four V7 doors. Their nested destinations are exercised by menu-doors.spec.ts.
   */
   test("短窗口先丢头像，不丢去处", async ({ page }) => {
     await page.setViewportSize({ width: 1097, height: 513 });
@@ -330,7 +341,7 @@ test.describe("E2 短窗口 · 导航栏不该长出滚动条", () => {
     await waitForMapReady(page);
 
     await expect(page.locator(".nav-rail__identity")).toBeHidden();
-    expect(await page.locator(".nav-rail .nav-rail__link").count()).toBeGreaterThanOrEqual(7);
+    await assertFourDoors(page);
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(400);

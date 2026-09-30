@@ -1,5 +1,5 @@
 import { interfaceTranslator, useI18n } from "../i18n/index.js";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   lessonRefKey,
@@ -88,18 +88,25 @@ export function feedbackRouteOf(location: {
  * host the rail always renders. Watching the body is how a sibling finds a
  * node it does not own, and how it lets go when a lesson route removes it.
  */
-function useRailFooter(): HTMLElement | null {
-  const [host, setHost] = useState<HTMLElement | null>(null);
-
+function useFeedbackHosts() {
+  const [hosts, setHosts] = useState<{ rail: HTMLElement | null; profile: HTMLElement | null }>({
+    rail: null,
+    profile: null,
+  });
   useLayoutEffect(() => {
-    const sync = () => setHost(document.getElementById("app-shell-rail-footer"));
+    const sync = () => {
+      const rail = document.getElementById("app-shell-rail-footer");
+      const profile = document.getElementById("profile-feedback-host");
+      setHosts((current) =>
+        current.rail === rail && current.profile === profile ? current : { rail, profile },
+      );
+    };
     sync();
     const observer = new MutationObserver(sync);
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
-
-  return host;
+  return hosts;
 }
 
 /**
@@ -214,7 +221,28 @@ export function FeedbackNote({
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const scrolling = useHiddenWhileScrolling();
-  const host = useRailFooter();
+  const { rail: host, profile } = useFeedbackHosts();
+  const opener = useRef<HTMLElement | null>(null);
+  const openPanel = () => {
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setOpen(true);
+  };
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    opener.current?.focus();
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (!document.querySelector(".feedback-note")?.contains(document.activeElement)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closePanel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, closePanel]);
 
   const submit = useCallback(async () => {
     const feedbackContext: FeedbackContext = {
@@ -291,6 +319,8 @@ export function FeedbackNote({
     >
       <textarea
         className="feedback-note__text"
+        aria-label={interfaceTranslator.t("ui.feedback.feedbackNote.copy.这一屏哪里不对")}
+        disabled={isBusy}
         value={said}
         autoFocus
         rows={3}
@@ -318,7 +348,7 @@ export function FeedbackNote({
           type="button"
           className="feedback-note__close"
           onClick={() => {
-            setOpen(false);
+            closePanel();
             setState("idle");
             setReceiptTransport(null);
             setErrorMessage(null);
@@ -334,7 +364,7 @@ export function FeedbackNote({
     <FeedbackTrigger
       className="nav-rail__link feedback-note__open--docked"
       open={open}
-      onOpen={() => setOpen(true)}
+      onOpen={openPanel}
     />
   );
 
@@ -356,8 +386,19 @@ export function FeedbackNote({
 
   return (
     <>
-      {host ? createPortal(docked, host) : null}
-      <FeedbackTrigger className={floatClass} open={open} onOpen={() => setOpen(true)} />
+      {profile
+        ? createPortal(
+            <FeedbackTrigger
+              className="feedback-note__open--profile"
+              open={open}
+              onOpen={openPanel}
+            />,
+            profile,
+          )
+        : host
+          ? createPortal(docked, host)
+          : null}
+      <FeedbackTrigger className={floatClass} open={open} onOpen={openPanel} />
       {panel && shellRoot ? createPortal(panel, shellRoot) : panel}
     </>
   );

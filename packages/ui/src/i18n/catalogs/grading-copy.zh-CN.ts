@@ -37,7 +37,7 @@ export const messages = {
   "grading.result.undecidedExplanation":
     "这次暂时无法判断对错。你的答案已经提交，但只靠字面比对不能可靠判断这类解释。",
   "grading.result.undecidedNext":
-    "你可以补充或改写答案、查看下面的提示，或者自行选择页面提供的 AI 评估；也可以先继续下一节。",
+    "你可以补充或改写答案、查看下面的提示，或者自行选择页面提供的 AI 评估；也可以先继续下一关。",
   "grading.local.title": "这端使用本机 AI 宿主",
   "grading.local.whatItDoes": "在线学习里的 AI 语义批改会先展示费用和余额，再由你决定是否使用。",
   "grading.local.whyUnavailable":

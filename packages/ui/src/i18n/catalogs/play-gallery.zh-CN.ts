@@ -155,9 +155,8 @@ export const messages = {
     "原型正文仅中文；键盘支持见操作说明。回复与生成稿均为本地规则模拟，无真实 AI 调用。得分不证明掌握，不写课程进度或云端 XP。",
   "gallery.session": "多阶段 · 真人时长未测",
   "gallery.short": "短轮次 · 真人时长未测",
-  "gallery.pathsScope":
-    "前五节是完整 PRIMM 样课，另保留第 19 节早期实验。打开课程后，按当前步骤操作。",
-  "gallery.openLesson": "打开这节课",
+  "gallery.pathsScope": "选择一项练习，按屏幕提示试一试。想回课程时，可以从这里打开。",
+  "gallery.openLesson": "打开这一关",
   "gallery.pathAction": "在同一份材料上判断、定位、改条件与修补",
   "gallery.pathControls": "打开课程后按当前步骤操作；可重看材料与来源。",
   "gallery.pathNote": "课程内容由课程工作流维护；此目录不生成或发布新修订。",

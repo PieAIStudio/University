@@ -1,3 +1,4 @@
+import { messages as menuDoors } from "./menu-doors.zh-CN.js";
 import { messages as mapNavigation } from "./map-navigation.zh-CN.js";
 import { messages as mapNodes } from "./map-nodes.zh-CN.js";
 import { messages as primm } from "./primm.zh-CN.js";
@@ -40,6 +41,7 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  */
 import { messages as purpose3d } from "./purpose-3d.zh-CN.js";
 export const messages = {
+  ...menuDoors,
   ...mapNavigation,
   ...mapNodes,
   ...primm,
@@ -75,7 +77,7 @@ export const messages = {
   "ui.world.domain.aiGames.description": "学会用 AI 设计与制作游戏，理解玩法、规则和体验。",
   "ui.world.domain.aiMedia": "AI 媒体创作",
   "ui.world.domain.aiMedia.description": "认识图像、视频、音乐等生成式媒体的创作方法。",
-  "ui.world.domain.unpublished": "暂未发布",
+  "ui.world.domain.unpublished": "即将开放",
   "ui.world.domain.selected": "已选",
   "ui.world.navigation.planets": "学习星球",
   "ui.world.navigation.archipelago": "飞岛群",
@@ -134,7 +136,7 @@ export const messages = {
   "app.app.pagemetadata.copy.value0-本节-value1": "{value0} 本节：{value1}。",
   "app.app.pagemetadata.copy.value0-本节-value1-m4ij3g": "{value0}，本节：{value1}。",
   "app.app.profileAvatar.copy.打开头像工坊": "打开头像工坊",
-  "app.app.todaydata.copy.找不到这节课的版本-value0": "找不到这节课的版本：{value0}",
+  "app.app.todaydata.copy.找不到这节课的版本-value0": "找不到这一关的版本：{value0}",
   "app.app.useshelf.copy.读不到课程": "读不到课程",
   "app.app.worldmodel.copy.回到value0地图": "← 回到{value0}地图",
   "app.app.worldmodel.copy.回到课程地图": "← 回到课程地图",
@@ -305,7 +307,7 @@ export const messages = {
   "app.lesson.settlement.copy.现在就可以复习": "现在就可以复习",
   "app.lesson.settlement.copy.读完了": "读完了。",
   "app.lesson.settlement.copy.课程进度": "课程进度",
-  "app.lesson.settlement.copy.这一节记下的概念": "这一节记下的概念",
+  "app.lesson.settlement.copy.这一节记下的概念": "这一关记下的概念",
   "app.lesson.settlement.copy.这座岛建成了-村子中央立起了会堂":
     "这座岛建成了 —— 村子中央立起了会堂。",
   "app.mapstudio.mapStudioScreen.copy.value0模型": "{value0}模型",
@@ -373,7 +375,7 @@ export const messages = {
     "用 AI 宿主注册一个真实项目后，它会出现在这里；源码不会被学习资料污染。",
   "app.ports.feedback.copy.当前浏览器不提供复制功能": "当前浏览器不提供复制功能。",
   "app.ports.local.content.copy.这个项目的地址不对-value0": "这个项目的地址不对：{value0}",
-  "app.ports.local.content.copy.这节课的地址不对-value0": "这节课的地址不对：{value0}",
+  "app.ports.local.content.copy.这节课的地址不对-value0": "这一关的地址不对：{value0}",
   "app.ports.local.content.copy.这道题的地址不对-value0": "这道题的地址不对：{value0}",
   "app.ports.local.reader.copy.标记没有更新": "标记没有更新",
   "app.ports.local.sourceaccess.copy.作者端现在也读不到这份项目分析-value0":
@@ -397,7 +399,7 @@ export const messages = {
   "app.ports.online.content.copy.复习卡内容尚未加载": "复习卡内容尚未加载",
   "app.ports.online.content.copy.复述卡内容尚未加载": "复述卡内容尚未加载",
   "app.ports.online.content.copy.自检": "自检",
-  "app.ports.online.content.copy.这节课不在这门课里": "这节课不在这门课里",
+  "app.ports.online.content.copy.这节课不在这门课里": "这一关不在这门课里",
   "app.ports.online.content.copy.这道题不在这门课里": "这道题不在这门课里",
   "app.ports.online.reader.copy.无法读取固定源码-value0": "无法读取固定源码（{value0}）",
   "app.ports.online.sourceaccess.copy.交付端拿到的是已发布的课程包-不携带被学习项目的本地仓库-也不能替项目启动本地进程-这样才能在浏览器里安全地阅读":
@@ -410,11 +412,11 @@ export const messages = {
     "以后会在桌面端提供项目检出与启动；浏览器端会提供克隆、切换到固定提交和启动的手动步骤，移动端也会保留同一份说明。",
   "app.ports.online.sourceaccess.copy.删除正在学习的-App-版本": "删除正在学习的 App 版本",
   "app.ports.online.sourceaccess.copy.它会删除为这节课准备的临时项目检出-避免一份用完的源码继续占用空间":
-    "它会删除为这节课准备的临时项目检出，避免一份用完的源码继续占用空间。",
+    "它会删除为这一关准备的临时项目检出，避免一份用完的源码继续占用空间。",
   "app.ports.online.sourceaccess.copy.它会取出这节课钉住的源码版本-并给出启动步骤-让你把课文中的代码和真实-App-对上":
-    "它会取出这节课钉住的源码版本，并给出启动步骤，让你把课文中的代码和真实 App 对上。",
+    "它会取出这一关钉住的源码版本，并给出启动步骤，让你把课文中的代码和真实 App 对上。",
   "app.ports.online.sourceaccess.copy.它会打开完整的-Understand-Anything-图谱-让你从这节课引用的文件继续看整个项目的结构":
-    "它会打开完整的 Understand Anything 图谱，让你从这节课引用的文件继续看整个项目的结构。",
+    "它会打开完整的 Understand Anything 图谱，让你从这一关引用的文件继续看整个项目的结构。",
   "app.ports.online.sourceaccess.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件":
     "它会按 Understand Anything 的项目分层，列出这门课已经引用和还没有走到的文件。",
   "app.ports.online.sourceaccess.copy.打开-UA-项目地图": "打开 UA 项目地图",
@@ -429,9 +431,9 @@ export const messages = {
   "app.screens.lazy.copy.正在打开": "正在打开…",
   "app.screens.lessonScreen.copy.回到课程岛": "回到课程岛",
   "app.screens.lessonScreen.copy.无法读取课程": "无法读取课程",
-  "app.screens.lessonScreen.copy.正在打开这节课": "正在打开这节课…",
-  "app.screens.lessonScreen.copy.这节课打不开": "这节课打不开",
-  "app.screens.lessonScreen.copy.重试这节课": "重试这节课",
+  "app.screens.lessonScreen.copy.正在打开这节课": "正在打开这一关…",
+  "app.screens.lessonScreen.copy.这节课打不开": "这一关打不开",
+  "app.screens.lessonScreen.copy.重试这节课": "重试这一关",
   "app.screens.practiceHost.copy.概念图解": "概念图解",
   "app.screens.termEntryHost.copy.词义索引": "← 词义索引",
   "app.screens.termEntryHost.copy.词义索引-tppvrm": "词义索引",
@@ -466,7 +468,7 @@ export const messages = {
   "ui.capability.capabilityExplanation.copy.知道了": "知道了",
   "ui.catalog.catalogSurface.copy.个世界": "个世界 ·",
   "ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺":
-    "个世界里的课，按先修关系排。没有先后的就平铺。",
+    "条可以探索的学习路线。",
   "ui.catalog.catalogSurface.copy.先修": "先修：",
   "ui.catalog.catalogSurface.copy.单元": "单元 ·",
   "ui.catalog.catalogSurface.copy.可以学": "可以学",
@@ -476,10 +478,9 @@ export const messages = {
   "ui.catalog.catalogSurface.copy.正在学": "正在学",
   "ui.catalog.catalogSurface.copy.目录": "目录",
   "ui.catalog.catalogSurface.copy.第-value0-层": "第 {value0} 层",
-  "ui.catalog.catalogSurface.copy.节": "节",
+  "ui.catalog.catalogSurface.copy.节": "关",
   "ui.catalog.catalogSurface.copy.课程目录": "课程目录",
-  "ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出":
-    "这几门课没有先后，所以平铺列出。",
+  "ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出": "先从你感兴趣的课程开始。",
   "ui.catalog.catalogSurface.copy.门课": "门课 ·",
   "ui.catalog.catalogSurface.copy.门课-qlwl1n": "门课",
   "ui.entry.defaultrenderers.copy.不该用": "不该用",
@@ -596,8 +597,8 @@ export const messages = {
   "ui.evidence.layerCoverage.copy.正在读取项目分层": "正在读取项目分层…",
   "ui.evidence.layerCoverage.copy.完整项目分层需要仓库分析-课文已经引用的文件可以直接看":
     "完整项目分层需要仓库分析。课文已经引用的文件可以直接看。",
-  "ui.evidence.layerCoverage.copy.这节课已经引用了这些文件": "这节课已经引用了这些文件",
-  "ui.evidence.layerCoverage.copy.这节课的文件落在项目仓库里": "这节课的文件落在项目仓库里",
+  "ui.evidence.layerCoverage.copy.这节课已经引用了这些文件": "这一关已经引用了这些文件",
+  "ui.evidence.layerCoverage.copy.这节课的文件落在项目仓库里": "这一关的文件落在项目仓库里",
   "ui.evidence.layerCoverage.copy.项目文件覆盖分析": "项目文件覆盖分析",
   "ui.evidence.lessonSources.copy.出处": "出处",
   "ui.evidence.loadevidencesnippet.copy.无法读取固定源码": "无法读取固定源码",
@@ -651,17 +652,17 @@ export const messages = {
   "ui.glossary.copy.你在正文里选中一段话后记下的东西-没看懂-会攒成一份清单-高亮-只是留个记号":
     "你在正文里选中一段话后记下的东西。「没看懂」会攒成一份清单，「高亮」只是留个记号。",
   "ui.glossary.copy.你当前主要在学的那个项目-首页的-下一节课-只从它里面挑":
-    "你当前主要在学的那个项目。首页的「下一节课」只从它里面挑。",
+    "你当前主要在学的那个项目。首页的「下一关」只从它里面挑。",
   "ui.glossary.copy.你的-已完成-和复习进度记在具体某一版上-课文重写会生成新版本-所以旧的完成记录不会假装还有效":
     "你的「已完成」和复习进度记在具体某一版上。课文重写会生成新版本，所以旧的完成记录不会假装还有效。",
   "ui.glossary.copy.决定这张卡片下次什么时候再问你的算法-答得越轻松-下次间隔越长-答得吃力-很快就会再见到它":
     "决定这张卡片下次什么时候再问你的算法。答得越轻松，下次间隔越长；答得吃力，很快就会再见到它。",
   "ui.glossary.copy.别的课在正文里链接到了这一节-点开可以直接跳过去-不必先回到目录":
-    "别的课在正文里链接到了这一节。点开可以直接跳过去，不必先回到目录。",
+    "别的课在正文里链接到了这一关。点开可以直接跳过去，不必先回到目录。",
   "ui.glossary.copy.到期卡片": "到期卡片",
   "ui.glossary.copy.名字是-Free-Spaced-Repetition-Scheduler-它的目标不是考你-而是尽量在你-快要忘":
     "名字是 Free Spaced Repetition Scheduler。它的目标不是考你，而是尽量在你「快要忘掉」的那一刻出现——那个时刻复习，记得最牢。",
-  "ui.glossary.copy.哪些课用到这节": "哪些课用到这节",
+  "ui.glossary.copy.哪些课用到这节": "哪些课用到这一关",
   "ui.glossary.copy.回答之后-你自己说这次-想起来有多费劲-这不是判对错":
     "回答之后，你自己说这次「想起来有多费劲」。这不是判对错。",
   "ui.glossary.copy.回答之后-你自己说这次-想起来有多费劲-这不是判对错-对错你自己看参考答案就知道了":
@@ -685,7 +686,7 @@ export const messages = {
   "ui.glossary.copy.朗读用的也是系统自带的语音-不会把单词发到任何服务器":
     "朗读用的也是系统自带的语音，不会把单词发到任何服务器。",
   "ui.glossary.copy.点-在完整项目地图里看-会打开测绘那张大图-学习进度仍留在这节课-没有这一行-只说明测绘还没给这个文件建档-不代":
-    "点「在完整项目地图里看」会打开测绘那张大图；学习进度仍留在这节课。没有这一行，只说明测绘还没给这个文件建档，不代表文件不重要。",
+    "点「在完整项目地图里看」会打开测绘那张大图；学习进度仍留在这一关。没有这一行，只说明测绘还没给这个文件建档，不代表文件不重要。",
   "ui.glossary.copy.点某一条会滚回正文里那段话并选中它-攒够了用-拷贝全部去问-AI-拷出来的内容带上每段话的出处和小节名-这样对方":
     "点某一条会滚回正文里那段话并选中它。攒够了用「拷贝全部去问 AI」，拷出来的内容带上每段话的出处和小节名，这样对方知道你问的是哪里。标记只存在本机这个项目的学习库里。",
   "ui.glossary.copy.点某个词会滚到正文里第一次出现的位置-状态会影响之后复习队列里是否再见到它":
@@ -706,10 +707,11 @@ export const messages = {
   "ui.glossary.copy.这是故意的-看一遍觉得懂了-和-能自己说出来-是两回事-而只有后者会留在长期记忆里-写错也有效-努力回想这个动作":
     "这是故意的。「看一遍觉得懂了」和「能自己说出来」是两回事，而只有后者会留在长期记忆里。写错也有效——努力回想这个动作本身就在加固记忆。",
   "ui.glossary.copy.这节课引用的文件-在整个项目里属于哪一层-一层就是一组干同类活的文件":
-    "这节课引用的文件，在整个项目里属于哪一层。一层就是一组干同类活的文件。",
-  "ui.glossary.copy.这节课文改过几次-第-1-版就是-REV-1": "这节课文改过几次。第 1 版就是 REV 1。",
+    "这一关引用的文件，在整个项目里属于哪一层。一层就是一组干同类活的文件。",
+  "ui.glossary.copy.这节课文改过几次-第-1-版就是-REV-1":
+    "这一关的课文改过几次。第 1 版就是 REV 1。",
   "ui.glossary.copy.这节课的说法出自被学项目里的哪个文件-哪几行-点开就能看到原文":
-    "这节课的说法出自被学项目里的哪个文件、哪几行。点开就能看到原文。",
+    "这一关的说法出自被学项目里的哪个文件、哪几行。点开就能看到原文。",
   "ui.glossary.copy.选-重来-不丢人-它只是让这张卡片更早回来找你-诚实评分-算法才能算准间隔":
     "选「重来」不丢人，它只是让这张卡片更早回来找你。诚实评分，算法才能算准间隔。",
   "ui.glossary.copy.通过答题复习": "通过答题复习",
@@ -733,31 +735,31 @@ export const messages = {
   "ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0": "回到课程地图：{value0}",
   "ui.lesson.lessonNav.copy.离开课文": "离开课文",
   "ui.lesson.lessonNav.copy.课文进度": "课文进度",
-  "ui.lesson.lessonNextStep.copy.下一节": "下一节",
-  "ui.lesson.lessonNextStep.copy.下一节-第": "下一节 · 第",
-  "ui.lesson.lessonNextStep.copy.先去下一节": "先去下一节",
+  "ui.lesson.lessonNextStep.copy.下一节": "下一关",
+  "ui.lesson.lessonNextStep.copy.下一节-第": "下一关 · 第",
+  "ui.lesson.lessonNextStep.copy.先去下一节": "先去下一关",
   "ui.lesson.lessonNextStep.copy.回到课程": "回到课程",
   "ui.lesson.lessonNextStep.copy.回到课程页可以看到这门课覆盖了项目的哪些地方-以及接下来还有哪些课":
     "回到课程页可以看到这门课覆盖了项目的哪些地方，以及接下来还有哪些课。",
   "ui.lesson.lessonNextStep.copy.学到这里": "学到这里",
   "ui.lesson.lessonNextStep.copy.第": "第",
-  "ui.lesson.lessonNextStep.copy.继续下一节": "继续下一节",
-  "ui.lesson.lessonNextStep.copy.节": "节",
-  "ui.lesson.lessonNextStep.copy.节-共": "节 / 共",
-  "ui.lesson.lessonNextStep.copy.节-这门课的最后一节": "节 · 这门课的最后一节",
+  "ui.lesson.lessonNextStep.copy.继续下一节": "继续下一关",
+  "ui.lesson.lessonNextStep.copy.节": "关",
+  "ui.lesson.lessonNextStep.copy.节-共": "关 / 共",
+  "ui.lesson.lessonNextStep.copy.节-这门课的最后一节": "关 · 这门课的最后一关",
   "ui.lesson.lessonNextStep.copy.题目过了-还差确认你读过这一版-这节才会计入进度":
-    "题目过了。还差确认你读过这一版，这节才会计入进度。",
+    "题目过了。还差确认你读过这一版，这一关才会计入进度。",
   "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度":
-    "这节还没标为完成。上面确认课文、答完练习之后，这节才会计入进度。",
+    "这一关还没标为完成。上面确认课文、答完练习之后，这一关才会计入进度。",
   "ui.lesson.lessonNextStep.copy.这门课到这里就走完了": "这门课到这里就走完了。",
   "ui.lesson.lessonReader.copy.再次确认本次更新": "再次确认本次更新",
   "ui.lesson.lessonReader.copy.回到刚才那一课": "← 回到刚才那一课",
   "ui.lesson.lessonReader.copy.外语模式": "外语模式",
   "ui.lesson.lessonReader.copy.完成本次更新": "完成本次更新",
-  "ui.lesson.lessonReader.copy.已经会了-直接答这一节的题": "已经会了？直接答这一节的题",
+  "ui.lesson.lessonReader.copy.已经会了-直接答这一节的题": "已经会了？直接答这一关的题",
   "ui.lesson.lessonReader.copy.已确认读过这一版-还差练习": "已确认读过这一版。还差练习。",
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
-    "答对题目不等于读过课文。点一下，这节才算读完。",
+    "答对题目不等于读过课文。点一下，这一关才算读完。",
   "ui.lesson.lessonReader.copy.我读完了": "我读完了",
   "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上":
     "答对不会自动完课。确认你读过这一版，进度才会记上，复习卡也是这时才安排。",
@@ -779,7 +781,7 @@ export const messages = {
   "ui.lesson.lessonReader.copy.阅读笔记": "阅读笔记",
   "ui.lesson.lessonReader.copy.页边批注": "页边批注",
   "ui.lesson.lessonRelated.copy.关于反向链接": "关于反向链接",
-  "ui.lesson.lessonRelated.copy.哪些课用到这节": "哪些课用到这节",
+  "ui.lesson.lessonRelated.copy.哪些课用到这节": "哪些课用到这一关",
   "ui.lesson.lessonSourceVersion.copy.value0年value1月value2日": "{value0}年{value1}月{value2}日",
   "ui.lesson.lessonSourceVersion.copy.value0月value1日": "{value0}月{value1}日",
   "ui.lesson.lessonSourceVersion.copy.复制命令": "复制命令",
@@ -795,11 +797,11 @@ export const messages = {
   "ui.lesson.lessonSourceVersion.copy.正在打开": "正在打开…",
   "ui.lesson.lessonSourceVersion.copy.用完了-删掉": "用完了，删掉",
   "ui.lesson.lessonSourceVersion.copy.的版本": "的版本（",
-  "ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本": "这节课钉在 {value0} 的版本",
-  "ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0": "这节课钉在提交 {value0}",
+  "ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本": "这一关钉在 {value0} 的版本",
+  "ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0": "这一关钉在提交 {value0}",
   "ui.lesson.lessonSourceVersion.copy.完整提交号-value0": "完整提交号 {value0}",
   "ui.lesson.lessonSourceVersion.copy.这个版本已经在": "这个版本已经在",
-  "ui.lesson.lessonSourceVersion.copy.这节课钉在": "这节课钉在",
+  "ui.lesson.lessonSourceVersion.copy.这节课钉在": "这一关钉在",
   "ui.lesson.lessonWordList.copy.value0-个已处理": " · {value0} 个已处理",
   "ui.lesson.lessonWordList.copy.个要留意": "个要留意",
   "ui.lesson.lessonWordList.copy.关于生词": "关于生词",
@@ -927,12 +929,12 @@ export const messages = {
     "徽章长在投放端。学完的课会记在上面。",
   "ui.navigation.empty.profileScreen.copy.段": "段",
   "ui.navigation.empty.profileScreen.copy.练习": "练习",
-  "ui.navigation.empty.profileScreen.copy.节": "节",
+  "ui.navigation.empty.profileScreen.copy.节": "关",
   "ui.navigation.empty.profileScreen.copy.设置": "设置",
   "ui.navigation.empty.profileScreen.copy.读过真实代码": "读过真实代码",
-  "ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始": "还没学完一节 —— 从这里开始",
+  "ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始": "还没学完一关 —— 从这里开始",
   "ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有":
-    "还没读过真实代码 —— 第一节里就有",
+    "还没读过真实代码 —— 第一关里就有",
   "ui.navigation.empty.questsEmpty.copy.任务还没开张": "任务还没开张",
   "ui.navigation.empty.questsEmpty.copy.回到学习": "回到学习",
   "ui.navigation.empty.questsEmpty.copy.日-周-月三层任务会长在这里-今天该做的那一件事-在学习页上等着":
@@ -1006,7 +1008,7 @@ export const messages = {
     "在线语音只发送产品挑选的一个英文单词；学习者自己写的字、说的话和私有仓库内容不会因为打开朗读而外发。 学习者口述自己的理解要另行明确选择加入。",
   "ui.navigation.empty.settingsScreen.copy.声音": "声音",
   "ui.navigation.empty.settingsScreen.copy.外观": "外观",
-  "ui.navigation.empty.settingsScreen.copy.帐户": "帐户",
+  "ui.navigation.empty.settingsScreen.copy.帐户": "账号",
   "ui.navigation.empty.settingsScreen.copy.当前生效": "当前生效：",
   "ui.navigation.empty.settingsScreen.copy.朗读语音质量": "朗读语音质量",
   "ui.navigation.empty.settingsScreen.copy.浅色": "浅色",
@@ -1146,10 +1148,10 @@ export const messages = {
   "ui.path.courseRouteQuiz.copy.根据你的回答": "根据你的回答：",
   "ui.path.courseRouteQuiz.copy.看起来你可以跳过前面": "看起来你可以跳过前面",
   "ui.path.courseRouteQuiz.copy.个单元-要不要各测三道": "个单元。要不要各测三道？",
-  "ui.path.courseRouteQuiz.copy.这门课从第一节开始最省力": "这门课从第一节开始最省力。",
-  "ui.path.courseRouteQuiz.copy.从第一节开始": "从第一节开始",
+  "ui.path.courseRouteQuiz.copy.这门课从第一节开始最省力": "这门课从第一关开始最省力。",
+  "ui.path.courseRouteQuiz.copy.从第一节开始": "从第一关开始",
   "ui.path.courseRouteQuiz.copy.回答本身不会解锁任何一节-做对题才会":
-    "回答这几个问题本身不会跳过任何一节课。做对题才会。",
+    "回答这几个问题本身不会跳过任何一关。做对题才会。",
   "ui.path.unitSkipTest.copy.我会了": "我会了",
   "ui.path.unitSkipTest.copy.再测一次": "再测一次",
   "ui.path.unitSkipTest.copy.再试一次": "再试一次",
@@ -1167,7 +1169,7 @@ export const messages = {
     "这一单元凑不出三道能当场判对错的题——它的练习多半要写一整句话。所以这一单元没法用做题跳过。",
   "ui.path.unitSkipTest.copy.三道全对-这一单元你不用从头学了": "三道全对。这一单元你不用从头学了。",
   "ui.path.unitSkipTest.copy.错了一道-那一节读一下-其余的算你会了":
-    "错了一道。那一节读一下，其余的算你会了。",
+    "错了一道。那一关读一下，其余的算你会了。",
   "ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧":
     "错了 {wrong} 道。这一单元还是从头读一遍吧。",
   "ui.path.unitSkipTest.copy.跳过不等于学过-这几节的复习卡不会进复习队列-想正式读随时点进来-那时才开始排期":
@@ -1203,9 +1205,9 @@ export const messages = {
   "ui.path.pathDialog.copy.关闭": "关闭",
   "ui.path.pathDialog.copy.关闭-也可按-Esc": "关闭（也可按 Esc）",
   "ui.path.pathstats.copy.value0-条真实代码引用": "{value0} 条真实代码引用",
-  "ui.path.pathstats.copy.value0-节-约-value1-分钟": "{value0} 节 · 约 {value1} 分钟",
+  "ui.path.pathstats.copy.value0-节-约-value1-分钟": "{value0} 关 · 约 {value1} 分钟",
   "ui.path.pathstats.copy.value0-道题": "{value0} 道题",
-  "ui.path.pathstats.copy.从第-1-节开始": "从第 1 节开始",
+  "ui.path.pathstats.copy.从第-1-节开始": "从第 1 关开始",
   "ui.path.pathstats.copy.先看这一单元讲什么": "先看这一单元讲什么",
   "ui.path.pathstats.copy.学完这一单元-你能": "学完这一单元，你能——",
   "ui.path.pathstats.copy.开始": "开始",
@@ -1436,7 +1438,7 @@ export const messages = {
   "ui.review.reviewempty.copy.今天没有到期卡片": "今天没有到期卡片",
   "ui.review.reviewempty.copy.今天的复习已经清空": "今天的复习已经清空。",
   "ui.review.reviewempty.copy.学一节新课-它会掉落新的卡片-明天就有事做了":
-    "学一节新课，它会掉落新的卡片，明天就有事做了。",
+    "可以学一关新内容。有复习卡时，它们会按进度回来。",
   "ui.review.reviewinterval.copy.value0-分钟": "{value0} 分钟",
   "ui.review.reviewinterval.copy.value0-天": "{value0} 天",
   "ui.review.reviewinterval.copy.value0-小时": "{value0} 小时",

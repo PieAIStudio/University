@@ -49,6 +49,29 @@ for (const viewport of [
   { id: "desktop", width: 1280, height: 800 },
   { id: "phone", width: 390, height: 844 },
 ]) {
+  test(`map guide ${viewport.id}: review points at the actual four-door navigation`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await openCourse(page);
+    await ask(page, 2);
+    await expect(said(page)).toContainText("复习");
+    const target = page
+      .locator('.nav-rail [data-nav-id="review"]:visible, .tab-bar [data-nav-id="review"]:visible')
+      .first();
+    await expect(target.locator("a")).toHaveAttribute("href", "/review");
+    const label = page.locator(".game-ui-liquid-presence-label");
+    await expect(label).toHaveText("复习");
+    await expect(label).toBeVisible();
+    await expect
+      .poll(async () => {
+        const a = await label.boundingBox(),
+          b = await target.boundingBox();
+        return a && b ? Math.hypot(centre(a).x - centre(b).x, centre(a).y - centre(b).y) : Infinity;
+      })
+      .toBeLessThan(200);
+  });
+
   test(`map guide ${viewport.id}: owns the bottom centre and points at the stone to start on`, async ({
     page,
   }) => {
@@ -58,7 +81,13 @@ for (const viewport of [
     // The droplet sits at the bottom centre; the gesture cue moved to the top.
     const seat = (await body(page).boundingBox())!;
     expect(Math.abs(centre(seat).x - viewport.width / 2)).toBeLessThan(24);
-    expect(viewport.height - (seat.y + seat.height)).toBeLessThan(48);
+    const stage = (await page.locator(".stagewrap:not([hidden])").boundingBox())!;
+    const floor =
+      viewport.id === "phone"
+        ? (await page.locator(".tab-bar").boundingBox())!.y
+        : stage.y + stage.height;
+    expect(floor - (seat.y + seat.height)).toBeGreaterThanOrEqual(0);
+    expect(floor - (seat.y + seat.height)).toBeLessThan(48);
     const controls = (await page.locator(".hint--controls").boundingBox())!;
     expect(controls.y + controls.height).toBeLessThan(viewport.height / 4);
     // V7 replaces the persistent shortcut sentence with on-demand help.

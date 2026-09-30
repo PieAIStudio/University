@@ -79,3 +79,11 @@
     bottom: 4px;
   }
 }
+
+/* V7 keeps the four tabs on the full-height map. The picture may extend
+   behind them; the guide's real pointer target must stay above their floor. */
+@media (max-width: 767px) {
+  .map-guide {
+    bottom: calc(var(--tab-bar-height, 56px) + 10px);
+  }
+}

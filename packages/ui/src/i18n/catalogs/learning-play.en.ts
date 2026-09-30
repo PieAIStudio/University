@@ -3,7 +3,7 @@ export const messages = {
   "play.lab.intro":
     "Connect an idea, break a rule, or send a little courier on its way. Pick a way to explore.",
   "play.lab.entry": "Open the learning playground",
-  "play.lab.back": "Back to practice",
+  "play.lab.back": "Back to interactive lessons",
   "play.lab.mix": "Play all {total}",
   "play.lab.mixing": "Playlist in progress",
   "play.lab.cancelMix": "Explore freely",

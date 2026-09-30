@@ -23,12 +23,9 @@ import {
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
 
-const KNOWN_DIALOG_ISSUES = new Map([
-  [
-    "feedback",
-    "反馈面板是 role=dialog，但 .feedback-note__close 当前小于 44×44，且组件没有 Esc 关闭路径；留在报告，不改产品。",
-  ],
-]);
+// V7 moves the phone entry into Me and fixes its 44px/Escape exit. Keep the
+// scenario and require it to pass; the former tolerated failure is retired.
+const KNOWN_DIALOG_ISSUES = new Map<string, string>();
 
 const KNOWN_RESPONSE_ISSUES = new Map([
   [

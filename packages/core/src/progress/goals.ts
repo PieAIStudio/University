@@ -20,6 +20,7 @@
  */
 
 import type { ProgressDocument } from "../ports/progress.js";
+import { dailyLessonGoal } from "./learner-preferences.js";
 import { RECAP_CARD_ID } from "./document.js";
 import { perfectLessons } from "./first-try.js";
 import { mistakeBookEverCleared, mistakesOf } from "./mistakes.js";
@@ -80,6 +81,7 @@ export const scoredQuests = (quests: readonly Quest[]) =>
  */
 export function questsForToday(document: ProgressDocument, now: number): Quest[] {
   const today = calendarDay(now);
+  const dailyGoal = dailyLessonGoal(document.account.preferences.dailyLessonGoal);
 
   const lessonsToday = Object.values(document.lessons).filter(
     (lesson) => lesson.completedAt !== null && calendarDay(lesson.completedAt) === today,
@@ -98,8 +100,8 @@ export function questsForToday(document: ProgressDocument, now: number): Quest[]
       id: "lesson",
       title: "学一节新课",
       detail: "读完讲解、完成练习，就完成这一节。复习会按实际学过的内容安排。",
-      done: Math.min(lessonsToday, 1),
-      goal: 1,
+      done: Math.min(lessonsToday, dailyGoal),
+      goal: dailyGoal,
     },
     {
       id: "review",

@@ -272,7 +272,7 @@ test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", ()
       await expect(rows).toHaveCount(scenario.empty ? 0 : scenario.series);
       if (scenario.empty) {
         await expect(page.locator(".planet-page__detail").getByRole("status")).toContainText(
-          "暂未发布",
+          "即将开放",
         );
         await expect(page.locator(".planet-page__detail .planet-page__hint")).toHaveText(
           "这个领域还没有课程系列。",

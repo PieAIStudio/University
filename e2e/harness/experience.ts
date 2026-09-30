@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { ONLINE_ORIGIN } from "../ports.js";
 import { humanClick, scrollIntoView } from "./click.js";
 import { selectCompleteLessonEntry, type ShelfForSelection } from "./catalogue.js";
-import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
+import { waitForMapReady } from "./online-learner.js";
 import { navigateMapBreadcrumb, openMapQuickActions } from "./map-actions.js";
 
 type ExperienceShelf = ShelfForSelection;
@@ -141,9 +141,12 @@ const LIBRARY_PRIMARY: ExperienceTarget = {
 };
 
 const PRACTICE_PRIMARY: ExperienceTarget = {
-  id: "practice-start",
-  label: "练习一轮",
-  locate: (page) => page.locator("button[data-practice-round]"),
+  id: "practice-return",
+  label: "练习返回复习",
+  // New learners must not be given the old global question bank. Their real
+  // practice screen has an empty explanation and this usable return action;
+  // menu-doors.spec exercises graded native questions with completed history.
+  locate: (page) => page.locator("button[data-practice-leave]"),
 };
 
 const PLANS_PRIMARY: ExperienceTarget = {
@@ -190,9 +193,9 @@ const PROFILE_PRIMARY: ExperienceTarget = {
 };
 
 const REVIEW_PRIMARY: ExperienceTarget = {
-  id: "review-today-lesson",
-  label: "复习页今天这一课",
-  locate: (page) => page.getByRole("button", { name: TODAY_CTA }).first(),
+  id: "review-practice",
+  label: "复习页原生关卡练习入口",
+  locate: (page) => page.locator("[data-review-practice-entry]"),
 };
 
 const LESSON_COMPLETION: ExperienceTarget = {
@@ -236,7 +239,7 @@ async function readyLibrary(page: Page): Promise<void> {
 }
 
 async function readyPractice(page: Page): Promise<void> {
-  await readyShellHeading(page, "练一点，记得更牢。");
+  await readyShellHeading(page, "再练几道");
   await expect(PRACTICE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
 }
 
@@ -329,7 +332,7 @@ export const EXPERIENCE_ROUTES: readonly ExperienceRoute[] = [
     id: "league",
     label: "排行榜",
     path: "/league",
-    ready: (page) => readyShellHeading(page, "排行榜"),
+    ready: (page) => readyShellHeading(page, "成长"),
     primary: null,
     coverage: [],
     returnToWorld: SHELL_RETURN("排行榜"),
@@ -617,8 +620,12 @@ export async function openFeedbackDialog(
   page: Page,
   viewport: ExperienceViewport,
 ): Promise<Locator> {
-  await openExperienceRoute(page, EXPERIENCE_ROUTES[0]!, viewport);
-  const trigger = page.locator('button[aria-haspopup="dialog"]:visible', { hasText: "提意见" });
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.goto(`${ONLINE_ORIGIN}/me`);
+  const help = page.locator('[data-me-door="help"]');
+  await expect(help).toBeVisible();
+  await humanClick(page, help, "我 → 帮助与提意见");
+  const trigger = page.locator('#profile-feedback-host button[aria-haspopup="dialog"]');
   await expect(trigger).toBeVisible({ timeout: 15_000 });
   await humanClick(page, trigger, "提意见");
   const dialog = page.locator(VISIBLE_DIALOGS).last();

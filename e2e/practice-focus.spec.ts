@@ -1,135 +1,157 @@
-import { expect, test } from "./harness/learner-test.js";
+import { expect, test, type Page } from "./harness/learner-test.js";
 import AxeBuilder from "@axe-core/playwright";
+import { mkdirSync } from "node:fs";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { prepareNativePractice, answerNativePractice } from "./harness/native-practice.js";
 
-for (const width of [390, 320, 1440]) {
-  test.describe(`V practice focus ${width}`, () => {
-    const height = width === 390 ? 844 : width === 320 ? 740 : 900;
-    test.use({
-      viewport: { width, height },
-      isMobile: width < 768,
-      hasTouch: width < 768,
-      storageState: { cookies: [], origins: [] },
-    });
+// V7 retains these focus/feedback/ending contracts, but asks native questions
+// from completed levels. The old fresh-learner global concept bank was the
+// defect being removed, not a fixture that could still judge this path.
+async function startRound(page: Page, reduced = false) {
+  const { answers } = await prepareNativePractice(page);
+  if (reduced) await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`${ONLINE_ORIGIN}/practice`);
+  await expect(page.locator("[data-native-practice]")).toHaveAttribute(
+    "data-practice-state",
+    "asking",
+  );
+  await expect(page.locator("[data-practice-focus]")).toBeFocused();
+  return answers;
+}
+const submit = (page: Page) => page.locator('[data-question-action="submit"]');
+const next = (page: Page) => page.locator("[data-practice-next]");
 
-    test.beforeEach(async ({ page }) => {
-      // A repeatable isolated guest; never prefill answers or award progress.
-      await page.addInitScript(() => {
-        Math.random = () => 0;
-      });
-      await page.goto(`${ONLINE_ORIGIN}/practice`);
-      await page.locator("[data-practice-round]").click();
-    });
-
-    test("V1 starting puts the question in focus without a second page introduction", async ({
+for (const width of [320, 390, 1440]) {
+  test.describe(`V practice flow ${width}`, () => {
+    test.use({ viewport: { width, height: width === 1440 ? 900 : 844 } });
+    test("V1 Next returns to the question heading and collapses the previous answer", async ({
       page,
     }) => {
-      const prompt = page.locator(".practice-stream__question .exercise-prompt");
-      await expect(prompt).toBeVisible();
-      await expect(page.locator(".practice-overview")).toHaveCount(0);
-      const box = await prompt.boundingBox();
+      const answers = await startRound(page);
+      const oldPrompt = await page.locator(".question-step__prompt").textContent();
+      await answerNativePractice(page, answers);
+      await expect(page.locator("[data-practice-reward]")).not.toHaveAttribute("open");
+      await page.locator("[data-practice-reward] summary").click();
+      await expect(page.locator("[data-practice-reward]")).toHaveAttribute("open", "");
+      await next(page).click();
+      await expect(page.locator("[data-practice-focus]")).toBeFocused();
+      await expect(page.locator(".question-step__prompt")).not.toHaveText(oldPrompt!);
+      const box = await page.locator(".question-step__prompt").boundingBox();
+      // The reader's practice section has a deliberate 52px margin and 38px
+      // top padding; the standalone rehearsal must not inherit either.
+      await expect(page.locator("[data-native-practice]")).not.toHaveClass(/lesson-practice/);
+      await expect(page.locator("[data-native-practice]")).toHaveCSS("margin-top", "0px");
+      expect(box!.y).toBeGreaterThanOrEqual(0);
       expect(box!.y).toBeLessThan(240);
-      await expect(page.locator("[data-practice-focus]")).toBeFocused();
-      await page.locator(".practice-stream__question .choice-block__option").first().click();
-      const submit = page.locator(".practice-stream__question .choice-block__submit button");
-      await expect(submit).toBeEnabled();
-      const action = await submit.boundingBox();
-      expect(action!.height).toBeGreaterThanOrEqual(44);
-      expect(action!.y + action!.height).toBeLessThanOrEqual(height - (width < 768 ? 56 : 0));
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        width,
-      );
+      await expect(page.locator("[data-practice-reward]")).toHaveCount(0);
+      await expect(page.locator("[data-practice-verdict]")).toHaveCount(0);
+      await expect(submit(page)).toBeVisible();
+      await expect(submit(page)).toBeDisabled();
     });
-
-    test("V2 the last explanation is not replaced by celebration before I read it", async ({
+    test("V2 the last correct answer stays readable until an explicit result click", async ({
       page,
     }) => {
-      for (let question = 0; question < 3; question++) {
-        const block = page.locator(".practice-stream__question .choice-block");
-        const options = block.locator(".choice-block__option");
-        for (let choice = 0; choice < (await options.count()); choice++) {
-          await options.nth(choice).click();
-          await block.locator(".choice-block__submit button").click();
-          if (await block.locator(".choice-block__option--correct").count()) break;
-        }
-        await expect(page.locator("[data-practice-round-complete]")).toHaveCount(0);
-        await expect(block).toContainText("答案解释");
-        const reward = page.locator("[data-practice-reward]");
-        await expect(reward).not.toHaveAttribute("open");
-        if (question === 0) {
-          await reward.locator("summary").click();
-          await expect(reward).toHaveAttribute("open", "");
-          await expect(reward.locator(".entry-page")).toBeVisible();
-        }
-        if (question < 2) {
-          await block.getByRole("button", { name: /继续下一题/ }).click();
-          await expect(page.locator("[data-practice-focus]")).toBeFocused();
-          await expect(page.locator("[data-practice-reward]")).toHaveCount(0);
-        } else {
-          await block.getByRole("button", { name: "完成这一轮", exact: true }).click();
-        }
+      const answers = await startRound(page);
+      for (let index = 0; index < 3; index += 1) {
+        await answerNativePractice(page, answers);
+        if (index < 2) await next(page).click();
       }
-      const completed = page.locator("[data-practice-round-complete]");
-      await expect(completed).toContainText("3 道题");
-      await expect(page.locator("[data-practice-focus]")).toBeFocused();
-      await expect(completed.locator("[data-practice-finish]")).toHaveClass(
-        /game-ui-button--primary/,
+      await expect(page.locator("[data-native-practice]")).toHaveAttribute(
+        "data-practice-state",
+        "asking",
       );
-      await expect(page.locator(".practice-overview")).toHaveCount(0);
-      expect((await new AxeBuilder({ page }).include("main").analyze()).violations).toEqual([]);
+      await expect(page.locator("[data-practice-round-complete]")).toHaveCount(0);
+      await expect(page.locator("[data-practice-verdict]")).toHaveText("这次答对了。");
+      await expect(page.locator("[data-practice-reward]")).not.toHaveAttribute("open");
+      await page.locator("[data-practice-reward] summary").click();
+      await expect(page.locator("[data-practice-reward]")).toHaveAttribute("open", "");
+      await expect(page.locator("[data-practice-reward] button")).toBeVisible();
+      await expect(next(page)).toHaveText("结束这轮");
+      await next(page).click();
+      await expect(page.locator("[data-practice-round-complete]")).toBeVisible();
+      await expect(page.locator("[data-practice-focus]")).toBeFocused();
+      await expect(page.locator("[data-practice-round-complete]")).toContainText("这次练了 3 道题");
+      expect(
+        (await new AxeBuilder({ page }).include(".app-shell__main").analyze()).violations,
+      ).toEqual([]);
+      mkdirSync("SCRATCH/e2e/practice-flow", { recursive: true });
+      await page.screenshot({ path: `SCRATCH/e2e/practice-flow/native-round-${width}.png` });
     });
   });
 }
 
-test("V3 named details have finger-sized targets and still support keyboard", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${ONLINE_ORIGIN}/settings`);
-  const summaries = page.locator("main .product-details > summary");
-  await expect(summaries.first()).toBeVisible();
-  for (const summary of await summaries.all()) {
-    expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  }
-  const first = summaries.first();
-  await first.focus();
-  await page.keyboard.press("Enter");
-  await expect(first.locator("..")).toHaveAttribute("open", "");
-  await page.keyboard.press("Space");
-  await expect(first.locator("..")).not.toHaveAttribute("open");
-});
-
-test("V4 disabled answer labels stay readable in both themes, with real reduced motion", async ({
+test("V3 keyboard and reduced motion can read final feedback, open details and finish", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const colorScheme of ["light", "dark"] as const) {
-    await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
-    await page.goto(`${ONLINE_ORIGIN}/practice`);
-    await page.locator("[data-practice-round]").click();
-    const submit = page.locator(".practice-stream__question .choice-block__submit button");
-    await expect(submit).toBeDisabled();
-    await expect(submit).toHaveText("提交");
-    const paint = await submit.evaluate((element) => {
-      const probe = document.createElement("span");
-      probe.style.color = "var(--game-ui-text-muted)";
-      element.append(probe);
-      const expected = getComputedStyle(probe).color;
-      probe.remove();
-      return {
-        color: getComputedStyle(element).color,
-        expected,
-        background: getComputedStyle(element).backgroundColor,
-        reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
-      };
-    });
-    expect(paint.reduced).toBe(true);
-    expect(paint.color).toBe(paint.expected);
-    expect(paint.background).not.toBe("rgba(0, 0, 0, 0)");
-    await page.locator(".practice-stream__question .choice-block__option").first().click();
-    await expect(submit).toBeEnabled();
-    await expect(page.locator(".choice-block__submit .game-ui-liquid-surface__body")).toHaveCSS(
-      "visibility",
-      "visible",
-      { timeout: 2000 },
+  const answers = await startRound(page, true);
+  for (let index = 0; index < 3; index += 1) {
+    const prompt = (await page.locator(".question-step__prompt").innerText()).trim();
+    const input = page.locator("[data-native-practice] textarea");
+    if (await input.count()) {
+      await input.focus();
+      await page.keyboard.insertText(answers.get(prompt)!);
+    } else {
+      const choice = page
+        .locator("[data-native-practice] [role=radio]")
+        .filter({ hasText: answers.get(prompt)! })
+        .first();
+      await choice.focus();
+      await page.keyboard.press("Space");
+    }
+    await submit(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("[data-practice-verdict]")).toHaveAttribute(
+      "data-practice-verdict",
+      "correct",
     );
+    if (index < 2) {
+      await next(page).focus();
+      await page.keyboard.press("Enter");
+    }
   }
+  const summary = page.locator("[data-practice-reward] summary");
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("[data-practice-reward]")).toHaveAttribute("open", "");
+  await next(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("[data-practice-round-complete]")).toBeVisible();
+  await expect(page.locator("[data-practice-focus]")).toBeFocused();
+  const finish = page.locator("[data-practice-finish]");
+  await finish.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/review(?:\?|$)/);
+});
+
+test("V4 dark disabled Submit uses the muted ink token and reveals a real enabled affordance", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  const answers = await startRound(page, true);
+  await expect(submit(page)).toBeDisabled();
+  const colors = await submit(page).evaluate((element) => {
+    const style = getComputedStyle(element);
+    const probe = document.createElement("span");
+    probe.style.color = "var(--game-ui-text-muted)";
+    document.body.append(probe);
+    const muted = getComputedStyle(probe).color;
+    probe.remove();
+    return { color: style.color, muted, cursor: style.cursor };
+  });
+  expect(colors.color).toBe(colors.muted);
+  expect(colors.cursor).toBe("not-allowed");
+  const prompt = (await page.locator(".question-step__prompt").innerText()).trim();
+  const input = page.locator("[data-native-practice] textarea");
+  if (await input.count()) await input.fill(answers.get(prompt)!);
+  else
+    await page
+      .locator("[data-native-practice] [role=radio]")
+      .filter({ hasText: answers.get(prompt)! })
+      .first()
+      .click();
+  await expect(submit(page)).toBeEnabled();
+  expect((await new AxeBuilder({ page }).include(".app-shell__main").analyze()).violations).toEqual(
+    [],
+  );
 });

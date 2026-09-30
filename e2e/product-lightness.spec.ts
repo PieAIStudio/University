@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { enterOpening } from "./harness/opening.js";
+import { prepareNativePractice, answerNativePractice } from "./harness/native-practice.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 
@@ -68,7 +69,9 @@ for (const width of [390, 320, 1440]) {
       page,
     }) => {
       await page.goto(`${ONLINE_ORIGIN}/practice`);
-      const start = page.locator("[data-practice-round]");
+      // V7 forbids testing a new learner on unseen global-catalogue questions.
+      // The primary empty-state action is the real learning entrance instead.
+      const start = page.locator("[data-practice-learn]");
       await expect(start).toBeVisible();
       if (width < 768) {
         const counters = await page.locator(".counter-row").boundingBox();
@@ -77,10 +80,13 @@ for (const width of [390, 320, 1440]) {
       }
       const box = await start.boundingBox();
       expect(box!.y + box!.height).toBeLessThan(page.viewportSize()!.height - 52);
-      await expect(page.locator("[data-practice-details]")).not.toHaveAttribute("open");
+      await expect(page.locator("[data-native-practice]")).toHaveAttribute(
+        "data-practice-state",
+        "empty",
+      );
+      await expect(page.locator(".question-step")).toHaveCount(0);
       await start.click();
-      await expect(page.locator(".practice-stream__ordinal")).toContainText("0 / 3");
-      await expect(page.getByRole("button", { name: "先停一下", exact: true })).toBeVisible();
+      await expect(page).toHaveURL(new RegExp(`${ONLINE_ORIGIN}/(?:\\?.*)?$`));
     });
 
     test("U4 a preserved draft and one undecided result stay actionable", async ({ page }) => {
@@ -167,31 +173,23 @@ test.describe("U details accessibility", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
+    const { answers } = await prepareNativePractice(page);
     await page.goto(`${ONLINE_ORIGIN}/practice`);
     expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
       true,
     );
-    await page.locator("[data-practice-round]").click();
+    await expect(page.locator("[data-native-practice]")).toHaveAttribute(
+      "data-practice-state",
+      "asking",
+    );
     for (let question = 0; question < 3; question += 1) {
-      const block = page.locator(".practice-stream__question .choice-block");
-      const options = block.locator(".choice-block__option");
-      // Exercise the published quiz through real selections, not seeded completion.
-      for (let candidate = 0; candidate < (await options.count()); candidate += 1) {
-        await options.nth(candidate).click();
-        await block.locator(".choice-block__submit button").click();
-        if (
-          (await page.locator("[data-practice-round-complete]").count()) ||
-          (await block.locator(".choice-block__option--correct").count())
-        )
-          break;
-      }
-      if (question < 2) await block.locator(".choice-block__submit button").click();
+      // Only prerequisite migrated history is synthetic. Each result and the
+      // three-question ending must still follow actual native submissions.
+      await answerNativePractice(page, answers);
+      if (question < 2) await page.locator("[data-practice-next]").click();
     }
     await expect(page.locator("[data-practice-round-complete]")).toHaveCount(0);
-    await page
-      .locator(".practice-stream__question")
-      .getByRole("button", { name: "完成这一轮", exact: true })
-      .click();
+    await page.locator("[data-practice-next]").click();
     const completed = page.locator("[data-practice-round-complete]");
     await expect(completed).toContainText("3 道题");
     const icon = completed.locator(".practice-stream__celebrate");

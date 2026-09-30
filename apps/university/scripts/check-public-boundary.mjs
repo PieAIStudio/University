@@ -8,9 +8,10 @@
  * rather than trusting the TypeScript view types or the importer source.
  */
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { publishedAuthorSpeechViolations } from "../../../scripts/learner-speech.mjs";
 
 const contentRoot = resolve(import.meta.dirname, "../content");
 const AUTHOR_STATUS_KEY = "status";
@@ -54,7 +55,10 @@ export function publicBoundaryErrors({ manifest, shelf } = {}) {
   return [
     ["manifest", manifest],
     ["shelf", shelf],
-  ].flatMap(([name, projection]) => publicBoundaryViolations(projection, name));
+  ].flatMap(([name, projection]) => [
+    ...publicBoundaryViolations(projection, name),
+    ...publishedAuthorSpeechViolations(projection, name).map((entry) => `${entry.location} [${entry.rule}] ${entry.text}`),
+  ]);
 }
 
 function failureMessage(violations) {
@@ -62,7 +66,7 @@ function failureMessage(violations) {
   const remainder =
     violations.length > shown.length ? `\n  ... and ${violations.length - shown.length} more` : "";
   return (
-    "author workflow status crossed the learner publish boundary:\n" +
+    "author workflow status or speech crossed the learner publish boundary:\n" +
     shown.map((violation) => `  - ${violation}`).join("\n") +
     remainder
   );
@@ -77,10 +81,26 @@ export function checkPublicBoundaryData(projections) {
 export function checkPublicBoundaryFiles({ manifestPath, shelfPath } = {}) {
   const resolvedManifest = manifestPath ?? join(contentRoot, "manifest.json");
   const resolvedShelf = shelfPath ?? join(contentRoot, "shelf.json");
-  return checkPublicBoundaryData({
+  const result = checkPublicBoundaryData({
     manifest: readJson(resolvedManifest, "delivery manifest"),
     shelf: readJson(resolvedShelf, "delivery shelf"),
   });
+  let contentFiles = 0;
+  const violations = [];
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      // Never follow a symlink out of the generated package being accepted.
+      if (entry.isDirectory()) visit(path);
+      else if (entry.isFile() && entry.name.endsWith(".json") && path !== resolvedManifest && path !== resolvedShelf) {
+        contentFiles++;
+        violations.push(...publishedAuthorSpeechViolations(readJson(path, "published content"), path).map((issue) => `${issue.location} [${issue.rule}] ${issue.text}`));
+      }
+    }
+  };
+  visit(dirname(resolvedShelf));
+  if (violations.length) throw new Error(failureMessage(violations));
+  return { ...result, contentFiles };
 }
 
 function writeProjectionFiles(root, projections) {
@@ -141,7 +161,7 @@ function expectRed(label, root, projections) {
   assert.ok(failure instanceof Error, `${label} should fail closed`);
   assert.match(
     failure.message,
-    /author workflow status crossed the learner publish boundary/,
+    /author workflow status or speech crossed the learner publish boundary/,
     `${label} should name the boundary violation`,
   );
   console.log(`  ${label}: red`);
@@ -174,6 +194,14 @@ export function runSelfTests() {
     expectRed("injected lesson status", root, projections);
     delete projections.shelf.studies[0].courses[0].units[0].lessons[0].status;
 
+    projections.shelf.studies[0].courses[0].units[0].lessons[0].title = "作者备注：这里先放个占位";
+    expectRed("injected learner-visible author note", root, projections);
+    delete projections.shelf.studies[0].courses[0].units[0].lessons[0].title;
+    const lessonPath = join(root, "lesson.json");
+    writeFileSync(lessonPath, JSON.stringify({ lesson: { content: "[AUTHOR NOTE] replace before release" } }));
+    expectRed("injected author speech in the published lesson body", root, projections);
+    writeFileSync(lessonPath, JSON.stringify({ lesson: { content: "对比两个现象。代码里的 className 描述样式；一节公开课不是关卡。" } }));
+
     writeProjectionFiles(root, projections);
     checkPublicBoundaryFiles(paths);
     console.log(`  ${SELF_TEST_TITLE}: green`);
@@ -188,7 +216,7 @@ if (process.argv.includes("--self-test")) {
   try {
     const result = checkPublicBoundaryFiles();
     console.log(
-      `check-public-boundary: ${result.projections} delivery projections contain no author status fields.`,
+      `check-public-boundary: ${result.projections} delivery projections and ${result.contentFiles} content files contain no forbidden author speech or workflow state.`,
     );
   } catch (error) {
     console.error(

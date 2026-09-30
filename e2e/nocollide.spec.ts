@@ -7,6 +7,7 @@ import {
   type ExperienceViewport,
 } from "./harness/experience.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { scrollIntoView } from "./harness/click.js";
 
 type Box = {
   readonly x: number;
@@ -98,12 +99,14 @@ test.describe("N nocollide · 四条体验回归", () => {
     await page.setViewportSize({ width: PHONE.width, height: PHONE.height });
     await page.goto(`${ONLINE_ORIGIN}/me`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".account-panel")).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
-
-    const accountFeedback = page.locator(".feedback-note__open--float:visible");
+    await page.locator('[data-me-door="help"]').click();
+    const accountFeedback = page.locator("#profile-feedback-host button");
     await waitForFeedbackReturn(accountFeedback, "account-feedback");
-    await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "个人档案 / 提意见浮钮");
-    const accountFeedbackBox = await boxOf(accountFeedback, "个人档案 / 提意见浮钮");
+    await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "我 / 提意见");
+    expect(await accountFeedback.evaluate((node) => getComputedStyle(node).position)).not.toBe(
+      "fixed",
+    );
+    await expect(page.locator(".feedback-note__open--float")).toBeHidden();
     const accountForm = page.locator("details.account-panel__form");
     await expect(accountForm).toBeVisible();
     await expect(accountForm).not.toHaveAttribute("open");
@@ -111,79 +114,50 @@ test.describe("N nocollide · 四条体验回归", () => {
     await expect(accountForm).toHaveAttribute("open", "");
     const password = accountForm.locator('input[type="password"]:visible');
     await expect(password, "在线账号回归必须渲染密码框").toBeVisible();
+    const accountFeedbackBox = await boxOf(accountFeedback, "我 / 提意见");
     const accountTargetBox = await boxOf(password, "密码框");
-    expect(overlaps(accountFeedbackBox, accountTargetBox), "提意见浮钮盖住密码框").toBe(false);
-
-    await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".lesson-reader__header")).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
-
-    const lessonFeedback = page.locator(".feedback-note__open--float:visible");
-    await waitForFeedbackReturn(lessonFeedback, "lesson-feedback");
-    await assertVisibleAndHittableAtFivePoints(page, lessonFeedback, "课文 / 提意见浮钮");
-    const lessonFeedbackBox = await boxOf(lessonFeedback, "课文 / 提意见浮钮");
-    const coveredBlocks = await page.evaluate((feedback) => {
-      const selectors = [
-        ".lesson-main > :not(.lesson-reader__header) p",
-        ".lesson-main > :not(.lesson-reader__header) h1",
-        ".lesson-main > :not(.lesson-reader__header) h2",
-        ".lesson-main > :not(.lesson-reader__header) h3",
-        ".lesson-main > :not(.lesson-reader__header) h4",
-        ".lesson-main > :not(.lesson-reader__header) li",
-        ".lesson-main > :not(.lesson-reader__header) strong",
-      ];
-      const isVisible = (element: Element) => {
-        const style = getComputedStyle(element);
-        const box = element.getBoundingClientRect();
-        return (
-          style.display !== "none" &&
-          style.visibility !== "hidden" &&
-          box.width > 0 &&
-          box.height > 0 &&
-          box.bottom > 0 &&
-          box.top < innerHeight &&
-          element.textContent?.trim()
-        );
-      };
-      return [...document.querySelectorAll(selectors.join(","))]
-        .filter(isVisible)
-        .map((element) => {
-          const box = element.getBoundingClientRect();
-          return {
-            text: element.textContent?.trim().slice(0, 80) ?? "",
-            x: box.x,
-            y: box.y,
-            width: box.width,
-            height: box.height,
-          };
-        })
-        .filter(
-          (box) =>
-            box.x < feedback.x + feedback.width &&
-            box.x + box.width > feedback.x &&
-            box.y < feedback.y + feedback.height &&
-            box.y + box.height > feedback.y,
-        );
-    }, lessonFeedbackBox);
-    expect(coveredBlocks, "提意见浮钮盖住课文文字").toEqual([]);
+    expect(overlaps(accountFeedbackBox, accountTargetBox), "提意见盖住密码框").toBe(false);
 
     // Attack the new readiness guard in the browser. Waiting for a fade must
-    // never bless a control that remains invisible indefinitely.
+    // never bless an invisible control, including the relocated V7 entry.
     const fault = await page.addStyleTag({
-      content: ".feedback-note__open--float { opacity: 0 !important; }",
+      content: "#profile-feedback-host button { opacity: 0 !important; }",
     });
-    await expect(lessonFeedback).toHaveCSS("opacity", "0");
+    await expect(accountFeedback).toHaveCSS("opacity", "0");
     let rejected = false;
     try {
-      await waitForFeedbackReturn(lessonFeedback, "injected-hidden-feedback");
+      await waitForFeedbackReturn(accountFeedback, "injected-hidden-feedback");
     } catch {
       rejected = true;
     } finally {
       await fault.evaluate((node) => node.remove());
     }
     expect(rejected, "the readiness guard must reject permanently hidden feedback").toBe(true);
-    await waitForFeedbackReturn(lessonFeedback, "restored-feedback");
-    await assertVisibleAndHittableAtFivePoints(page, lessonFeedback, "恢复后 / 提意见浮钮");
+    // Expanding the account form moved this inline entry below the viewport.
+    // Scroll its real location into view; the strict five-point gate stays.
+    await scrollIntoView(accountFeedback);
+    await waitForFeedbackReturn(accountFeedback, "restored-feedback");
+    await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "恢复后 / 提意见");
+    await accountFeedback.click();
+    await expect(page.locator(".feedback-note__text")).toBeFocused();
+    await page.locator(".feedback-note__text").fill("Synthetic unsent mobile feedback");
+    await page.keyboard.press("Escape");
+    await expect(accountFeedback).toBeFocused();
+
+    await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".lesson-reader__header")).toBeVisible({ timeout: 30_000 });
+    // V7 moved the phone entry to Me: no invisible hit target or floating
+    // pill may remain over the lesson. Walk its real replacement, too.
+    await expect(page.locator(".feedback-note__open--float")).toBeHidden();
+    await expect(page.locator(".feedback-note")).toHaveCount(0);
+    await page.locator(".lesson-toolbar__close").click();
+    await page.locator('.tab-bar a[href="/me"]').click();
+    await page.locator('[data-me-door="help"]').click();
+    await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "课文返回我 / 提意见");
+    await accountFeedback.click();
+    await expect(page.locator(".feedback-note__text")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await page.screenshot({ path: test.info().outputPath("phone-feedback-in-me.png") });
   });
 
   test("N4 phone · lesson toolbar 工具单行且没有悬空标签", async ({ page }) => {

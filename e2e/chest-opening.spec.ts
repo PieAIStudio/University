@@ -122,27 +122,57 @@ test.describe("V7 chest opening", () => {
     const account = await finishFirstLesson(page, true);
     const open = page.locator('[data-chest-action="open"]');
     await expect(open).toBeVisible();
-    await open.scrollIntoViewIfNeeded();
-    const handle = await open.elementHandle();
-    const box = await open.boundingBox();
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
-    await page.mouse.down();
-    await expect.poll(account.creations).toBe(1);
-    account.release();
-    await expect
-      .poll(() =>
-        page.evaluate((id) => {
-          const raw = localStorage.getItem(`university.progress.v2.account.${id}`);
-          return raw ? JSON.parse(raw).totalXp : 0;
-        }, account.id),
-      )
-      .toBeGreaterThan(0);
-    expect(
-      await handle!.evaluate(
-        (node) => node === document.querySelector('[data-chest-action="open"]'),
-      ),
-    ).toBe(true);
-    await page.mouse.up();
+    // A DOM box can exist behind V7's late transition splash. The worker-load
+    // reproducer pressed that splash, then released over the chest: it never
+    // pressed this button. Begin the held gesture only once the real screen
+    // is uncovered; adoption still happens strictly between down and up.
+    await expect(page.locator(".university-splash")).toBeHidden();
+    let handle: Awaited<ReturnType<typeof open.elementHandle>> = null;
+    await humanClick(page, open, "hold the actual chest button across anonymous adoption", {
+      beforePress: async () => {
+        handle = await open.elementHandle();
+        await page.evaluate(() => {
+          const events: { type: string; trusted: boolean; buttonTarget: boolean }[] = [];
+          (window as any).__heldChestProbe = events;
+          const button = document.querySelector('[data-chest-action="open"]')!;
+          for (const type of ["pointerdown", "pointerup", "click"]) {
+            document.addEventListener(
+              type,
+              (event) => {
+                events.push({
+                  type,
+                  trusted: event.isTrusted,
+                  buttonTarget: button.contains(event.target as Node),
+                });
+              },
+              true,
+            );
+          }
+        });
+      },
+      whilePressed: async () => {
+        await expect.poll(account.creations).toBe(1);
+        account.release();
+        await expect
+          .poll(() =>
+            page.evaluate((id) => {
+              const raw = localStorage.getItem(`university.progress.v2.account.${id}`);
+              return raw ? JSON.parse(raw).totalXp : 0;
+            }, account.id),
+          )
+          .toBeGreaterThan(0);
+        expect(
+          await handle!.evaluate(
+            (node) => node === document.querySelector('[data-chest-action="open"]'),
+          ),
+        ).toBe(true);
+      },
+    });
+    expect(await page.evaluate(() => (window as any).__heldChestProbe)).toEqual([
+      { type: "pointerdown", trusted: true, buttonTarget: true },
+      { type: "pointerup", trusted: true, buttonTarget: true },
+      { type: "click", trusted: true, buttonTarget: true },
+    ]);
     await expect(page.locator("[data-chest-stage]")).toHaveAttribute(
       "data-chest-stage",
       /opening|rewards/,

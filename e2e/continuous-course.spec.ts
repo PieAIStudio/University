@@ -223,7 +223,7 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     await humanClick(page, lessonMarker, `${vp.name} 首节关卡标记`);
 
     await expect(mapEntryButton(page)).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator(".map-information")).toContainText("课节");
+    await expect(page.locator(".map-information")).toContainText("关");
     await expect(page.locator('dialog[open], [aria-modal="true"]')).toHaveCount(0);
   });
 

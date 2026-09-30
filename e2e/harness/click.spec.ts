@@ -39,6 +39,50 @@ test.describe("trusted pointer harness", () => {
     expect(events[0]!.x).toBeLessThanOrEqual(380);
   });
 
+  test("holds one trusted pointer through a transition without releasing early", async ({
+    page,
+  }) => {
+    await page.setContent(`<button style="width:140px;height:48px">Target</button><output>0</output>
+      <script>window.heldEvents=[]; const button=document.querySelector('button');
+      for(const type of ['pointerdown','pointerup','click']) button.addEventListener(type, event=>{
+        window.heldEvents.push([event.type,event.isTrusted]);
+        document.querySelector('output').textContent=String(window.heldEvents.length);
+      });</script>`);
+    let calls = 0;
+    await humanClick(page, page.getByRole("button"), "held target", {
+      whilePressed: async () => {
+        calls++;
+        await expect(page.locator("output")).toHaveText("1");
+        await page.getByRole("button").evaluate((node) => {
+          node.textContent = "Same target, new state";
+        });
+        await expect(page.locator("output")).toHaveText("1");
+      },
+    });
+    expect(calls).toBe(1);
+    expect(await page.evaluate(() => (window as any).heldEvents)).toEqual([
+      ["pointerdown", true],
+      ["pointerup", true],
+      ["click", true],
+    ]);
+  });
+
+  test("does not chase a target that moves away after the held press", async ({ page }) => {
+    await page.setContent(`<button style="position:absolute;left:20px;top:80px;width:140px;height:48px"
+      onclick="document.querySelector('output').textContent='1'">Target</button><output>0</output>`);
+    let calls = 0;
+    await humanClick(page, page.getByRole("button"), "moving during press", {
+      whilePressed: async () => {
+        calls++;
+        await page.getByRole("button").evaluate((node) => {
+          node.style.left = "500px";
+        });
+      },
+    });
+    expect(calls).toBe(1);
+    await expect(page.locator("output")).toHaveText("0");
+  });
+
   test("does not force a click through an invisible overlay", async ({ page }) => {
     await page.setContent(`
       <button style="position:absolute;left:20px;top:80px;width:140px;height:48px"

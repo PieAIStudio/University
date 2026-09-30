@@ -70,6 +70,12 @@ function canonicalLocation(view: View): string {
     const value = params.toString();
     search = value ? `?${value}` : "";
   }
+  if (fromPath(location.pathname).kind === "practice" && view.kind !== "practice") {
+    const params = new URLSearchParams(search);
+    params.delete("mode");
+    const value = params.toString();
+    search = value ? `?${value}` : "";
+  }
   return `${toPath(view)}${search}${fragment}`;
 }
 

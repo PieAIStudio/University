@@ -339,7 +339,12 @@ export function AppShell({
           }}
         />
       ) : null}
-      <TabBar label={navigationLabels.tabs} items={tabs} activeId={activeId} />
+      <TabBar
+        label={navigationLabels.tabs}
+        items={tabs}
+        activeId={activeId}
+        inert={mapMode && narrow && mobilePanel !== null}
+      />
     </div>
   );
 }

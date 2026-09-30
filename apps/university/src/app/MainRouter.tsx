@@ -39,6 +39,7 @@ import type { LearnerNavigationFocus } from "@pieai/university-ui/navigation/Stu
 import {
   BadgeWall,
   LeagueScreen,
+  LevelProgress,
   PlansScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
@@ -63,8 +64,9 @@ import {
   readLearningReturn,
 } from "../account/continue-learning";
 import { AUTHORING } from "../mode";
+import { SettingsLab } from "../authoring/SettingsLab.js";
 import { MapGuideDetails } from "../guide/MapGuideDetails.js";
-import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
+import { StudioScreen } from "../authoring/index";
 import { MapStudioScreen } from "../authoring/map-studio";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { AvatarLab } from "../screens/AvatarLab";
@@ -118,6 +120,7 @@ interface MainRouterProps {
   readonly avatarRecipe: AvatarRecipe | null;
   readonly avatarEditingRecipe: AvatarRecipe | null;
   readonly avatarSignedIn: boolean;
+  readonly avatarPanel?: ReactNode;
   readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
   readonly onWorthwhileProgress?: () => void;
   readonly identityPort: IdentityPort;
@@ -176,6 +179,7 @@ export function MainRouter({
   avatarRecipe,
   avatarEditingRecipe,
   avatarSignedIn,
+  avatarPanel,
   onAvatarRecipeChange,
   onWorthwhileProgress,
   identityPort,
@@ -266,7 +270,6 @@ export function MainRouter({
         />
       ) : null}
       {stage ? <div className="learn-stage">{stage}</div> : null}
-      {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "play-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           {view.collection === "catalog" ? (
@@ -426,8 +429,21 @@ export function MainRouter({
 
       {view.kind === "review" ? (
         <div className="review-page">
-          <MistakesEntry count={uncorrectedMistakeCount} hasMistakes={mistakes.length > 0} />
           {todaySection}
+          <section className="review-door__practice" data-review-practice>
+            <h2>{interfaceTranslator.t("doors.practice.title")}</h2>
+            <p>{interfaceTranslator.t("doors.practice.description")}</p>
+            <nav
+              className="learner-destinations"
+              aria-label={interfaceTranslator.t("doors.practice.title")}
+            >
+              <a href="/practice" data-review-practice-entry>
+                {interfaceTranslator.t("doors.practice.start")}
+              </a>
+              <a href="/practice?mode=free">{interfaceTranslator.t("doors.practice.free")}</a>
+            </nav>
+            <MistakesEntry count={uncorrectedMistakeCount} hasMistakes={mistakes.length > 0} />
+          </section>
         </div>
       ) : null}
 
@@ -466,7 +482,7 @@ export function MainRouter({
 
       {view.kind === "practice" ? (
         <Suspense fallback={<RouteFallback />}>
-          <PracticeHost onOpen={setView} />
+          <PracticeHost onOpen={setView} studies={studies} ready={shelf !== null} />
         </Suspense>
       ) : null}
 
@@ -545,6 +561,11 @@ export function MainRouter({
             signedIn={avatarSignedIn}
             emblem={(tierId) => <EmblemImage kind="rank" id={tierId} size={96} />}
           />
+          <details className="product-details" data-growth-goals>
+            <summary>{interfaceTranslator.t("doors.growth.details")}</summary>
+            <LevelProgress totalXp={progress.totalXp} />
+            <QuestsScreen document={progress} learnHref={continueHref} />
+          </details>
           <BadgeWall
             embedded
             document={progress}
@@ -575,29 +596,34 @@ export function MainRouter({
           progress={progressPort}
           reminders={reviewReminderPort}
           guide={<MapGuideDetails />}
+          laboratory={AUTHORING ? <SettingsLab /> : undefined}
         />
       ) : null}
       {view.kind === "me" ? (
         <ProfileScreen
           onOpenWardrobe={() => setView({ kind: "wardrobe" })}
           avatar={
-            <Suspense
-              fallback={
-                <div className="profile-avatar">
-                  <LoadingTrivia />
-                </div>
-              }
-            >
-              <ProfileAvatar avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} />
-            </Suspense>
+            avatarPanel ?? (
+              <Suspense
+                fallback={
+                  <div className="profile-avatar">
+                    <LoadingTrivia />
+                  </div>
+                }
+              >
+                <ProfileAvatar avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} />
+              </Suspense>
+            )
+          }
+          saveStatus={
+            <LearningSaveStatus
+              key={progressPort.syncState().userId ?? "guest"}
+              progress={progressPort}
+              allowGuestImport
+            />
           }
           account={
             <>
-              <LearningSaveStatus
-                key={progressPort.syncState().userId ?? "guest"}
-                progress={progressPort}
-                allowGuestImport
-              />
               <AccountPanel
                 identity={identityPort}
                 auth={authPort}
@@ -613,19 +639,7 @@ export function MainRouter({
               />
             </>
           }
-          totalXp={progress.totalXp}
           reviewCardCount={Object.keys(progress.cards).length}
-          badges={
-            <BadgeWall
-              embedded
-              document={progress}
-              coursesFinished={album?.coursesFinished ?? profileStats.coursesFinished}
-              pathsFinished={album?.pathsFinished ?? 0}
-              emblem={(badge) => (
-                <EmblemImage kind="badge" id={badge.id} locked={!badge.earned} size={64} />
-              )}
-            />
-          }
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}
           nextHref={

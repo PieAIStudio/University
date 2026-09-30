@@ -106,14 +106,14 @@ describe("Settlement", () => {
     await renderSettle({
       unlocked: [{ id: "frontend", zh: "前端", tagline: "你在网页上看到、点到、填进去的那一层。" }],
     });
-    expect(container.textContent).toContain("这一节记下的概念");
+    expect(container.textContent).toContain("这一关记下的概念");
     expect(container.textContent).toContain("前端");
     expect(container.textContent).toContain("你在网页上看到、点到、填进去的那一层。");
   });
 
   it("does not invent an unlock section when the lesson named nothing", async () => {
     await renderSettle({ unlocked: [] });
-    expect(container.textContent).not.toContain("这一节记下的概念");
+    expect(container.textContent).not.toContain("这一关记下的概念");
   });
 
   it("does not render a leftover zero as the reward", async () => {

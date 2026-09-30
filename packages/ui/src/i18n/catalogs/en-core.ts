@@ -423,7 +423,7 @@ export const messages = {
   "ui.capability.capabilityExplanation.copy.知道了": "Got it",
   "ui.catalog.catalogSurface.copy.个世界": "worlds ·",
   "ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺":
-    "worlds of lessons, arranged by prerequisites. Those without an order are laid out side by side.",
+    "learning paths to explore.",
   "ui.catalog.catalogSurface.copy.先修": "Prerequisites:",
   "ui.catalog.catalogSurface.copy.单元": "units ·",
   "ui.catalog.catalogSurface.copy.可以学": "Available",
@@ -433,10 +433,10 @@ export const messages = {
   "ui.catalog.catalogSurface.copy.正在学": "In progress",
   "ui.catalog.catalogSurface.copy.目录": "Contents",
   "ui.catalog.catalogSurface.copy.第-value0-层": "Level {value0}",
-  "ui.catalog.catalogSurface.copy.节": "lessons",
+  "ui.catalog.catalogSurface.copy.节": "levels",
   "ui.catalog.catalogSurface.copy.课程目录": "Course catalog",
   "ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出":
-    "These courses have no set order, so they are listed flat.",
+    "Start with the course that interests you.",
   "ui.catalog.catalogSurface.copy.门课": "courses ·",
   "ui.catalog.catalogSurface.copy.门课-qlwl1n": "courses",
   "ui.entry.defaultrenderers.copy.不该用": "When not to use",

@@ -46,8 +46,8 @@ describe("QuestsScreen", () => {
     const markup = renderToStaticMarkup(
       withInterfaceLocale(<QuestsScreen document={emptyProgress()} now={NOW} />),
     );
-    expect(markup).toContain("学一节新课");
-    expect(markup).toContain("把连击接上");
+    expect(markup).toContain("每天 1 关");
+    expect(markup).toContain("接上学习的日子");
     expect(markup).toContain("0 / 2");
     expect(markup).toContain("不计分");
   });

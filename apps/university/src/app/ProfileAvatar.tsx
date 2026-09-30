@@ -52,8 +52,8 @@ export function ProfileAvatar({
         <div className="profile-avatar__fallback" aria-hidden="true" />
       )}
       {/* Not `ghost`: that variant is transparent, and this sits on a canvas. */}
-      <a className="profile-avatar__lab" href="/avatar-lab">
-        {interfaceTranslator.t("app.app.profileAvatar.copy.打开头像工坊")}
+      <a className="profile-avatar__lab" href="/wardrobe">
+        {interfaceTranslator.t("doors.wardrobe")}
       </a>
     </div>
   );

@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-30T07:22:18.998Z
+generated_at: 2026-09-30T09:00:25.001Z
 generator_version: doc-gov@0.14.2
 docs_count: 165
 docs:
@@ -207,13 +207,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-27
     pinned: false
-  - id: PLAN-V7-08-MENU-AND-TIDY
-    path: docs/plans/active/08-v7-menu-doors-naming-and-author-speech.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-27
-    pinned: false
   - id: PLAN-V7-09-BEFORE-CHARGING
     path: docs/plans/active/09-v7-before-charging.md
     type: plan
@@ -304,6 +297,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-28
+    pinned: false
+  - id: PLAN-V7-08-MENU-AND-TIDY
+    path: docs/plans/completed/08-v7-menu-doors-naming-and-author-speech.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-27
     pinned: false
   - id: PLAN-AI-PRODUCT-PLAY
     path: docs/plans/completed/ai-product-play.md

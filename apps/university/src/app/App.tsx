@@ -87,7 +87,7 @@ import {
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
-import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
+import { CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
 import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
 import { identityPort, paymentPort } from "../account/identity";
 import { captureLearningReturn } from "../account/continue-learning";
@@ -129,7 +129,6 @@ import { useWorldMarkers, useWorldModel, type PathOverlay } from "./world-model"
 /** No labels: the chest's close-up keeps the island to itself. */
 const NO_MARKERS: readonly never[] = [];
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
-import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { bindWorldStylePreference, WorldStyleControl } from "@pieai/university-ui/world-style.js";
@@ -160,6 +159,7 @@ import { useSceneInteraction } from "./scene-interaction";
 import { useStudyContext } from "./study-context";
 import { readNavigationFocus } from "./navigation-focus.js";
 import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
+import { DomainInterest } from "./DomainInterest.js";
 import { useTodaySectionData } from "./today-section-data";
 import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
 import { OpeningSplash, useOpeningAdmission } from "./OpeningSplash.js";
@@ -472,7 +472,7 @@ export function App() {
     onLesson: (locator) => setView({ kind: "lesson", ...locator }),
     onAccount: openAccount,
     onMember: () => setView({ kind: "plans" }),
-    onReview: () => setView({ kind: "practice" }),
+    onReview: () => setView({ kind: "review" }),
   });
   const chest = useChestOpening({
     guestAdoption,
@@ -1330,7 +1330,9 @@ export function App() {
   */
   const todaySection = (
     <TodaySection
+      key={guideUser}
       data={todayData}
+      reviewOnly={view.kind === "review"}
       review={todayReview}
       readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}
@@ -1509,11 +1511,38 @@ export function App() {
   ];
   const aside = (
     <>
-      {mapShell ? <MapInformation data={mapInfo} /> : null}
+      {mapShell ? (
+        <>
+          <MapInformation data={mapInfo} />
+          {view.kind === "planet" &&
+          selectedDomain &&
+          !planetStudies.some((study) => study.domain?.id === selectedDomain.id) ? (
+            <DomainInterest
+              key={`${guideUser}:${selectedDomain.id}`}
+              domainId={selectedDomain.id}
+              progress={progressPort}
+            />
+          ) : null}
+          {view.kind === "world" ? (
+            <nav
+              className="learner-destinations"
+              aria-label={interfaceTranslator.t("doors.findCourse")}
+            >
+              <a href="/catalog" data-find-course>
+                {interfaceTranslator.t("doors.findCourse")}
+              </a>
+            </nav>
+          ) : null}
+        </>
+      ) : null}
       {view.kind === "settings" ? <SettingsSubnav /> : null}
     </>
   );
 
+  // One projection feeds the rail, phone drawer and Me: no competing daily counter.
+  const panelNow = Date.now();
+  const standing = leagueStanding(progress, panelNow);
+  const lessonQuest = questsForToday(progress, panelNow).find((quest) => quest.id === "lesson");
   const renderAvatarPanel = (inDialog = false) => (
     <AvatarPanel
       onOpenWardrobe={() => {
@@ -1554,6 +1583,7 @@ export function App() {
     <CosmeticAppearanceProvider equipped={cosmeticData?.equipped}>
       <MainRouter
         album={knowledge.album}
+        avatarPanel={view.kind === "me" ? renderAvatarPanel(true) : undefined}
         contentPort={contentPort}
         sceneAttempt={sceneAttempt}
         planetReadiness={{
@@ -1615,12 +1645,9 @@ export function App() {
       />
     </CosmeticAppearanceProvider>
   );
-  // The avatar panel reads the record for today; the rail re-renders with it.
-  const panelNow = Date.now();
-  const standing = leagueStanding(progress, panelNow);
-  const lessonQuest = questsForToday(progress, panelNow).find((quest) => quest.id === "lesson");
   const feedbackSurface = (
     <FeedbackNote
+      key={guideUser}
       shell={CAMPUS_NAME}
       port={feedbackPort}
       context={feedbackContext}
@@ -1773,14 +1800,8 @@ export function App() {
           activeId={activeIdForView(view)}
           mapMode={mapShell}
           asideTitle={mapShell ? mapInfo.title : undefined}
-          /*
-          The workbench's own way in, behind 更多 and only where there is a
-          workbench. `G` compares the rail's own destinations between the two
-          builds and deliberately excludes what sits behind 更多 — that is the
-          one place a real difference between them is allowed to show.
-        */
-          extraMoreItems={[
-            ...(mapMode
+          contextActions={
+            mapMode
               ? [
                   {
                     id: "map-shortcuts",
@@ -1790,9 +1811,8 @@ export function App() {
                     onActivate: shortcuts.show,
                   },
                 ]
-              : []),
-            ...(AUTHORING ? [STUDIO_MORE_ITEM] : []),
-          ]}
+              : []
+          }
           counters={
             shellConfig.showLearnerChrome
               ? mapMode

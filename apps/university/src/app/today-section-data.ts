@@ -35,40 +35,65 @@ export function useTodaySectionData({
   */
   const dueLocator = useMemo(
     () => (due[0] ? todayCardLocatorOf(studies, due[0]) : null),
-    [studies, due[0]?.cardKey],
+    [studies, due[0]?.cardKey, due[0]?.contentRevision, due[0]?.kind],
   );
-  const [todayCard, setTodayCard] = useState<TodayCard | null>(null);
+  const owner = progressPort.syncState().userId;
+  const requestKey = due[0]
+    ? `${owner ?? "guest"}:${due[0].cardKey}:${due[0].contentRevision}:${due[0].dueAt}`
+    : null;
+  const [resolved, setResolved] = useState<{
+    key: string | null;
+    card: TodayCard | null;
+    state: "loading" | "ready" | "failed";
+  }>({ key: null, card: null, state: "ready" });
+  const todayCard = resolved.key === requestKey ? resolved.card : null;
+  const cardState = resolved.key === requestKey ? resolved.state : "loading";
   useEffect(() => {
     const card = due[0];
     if (!dueLocator || !card) {
-      setTodayCard(null);
+      setResolved({ key: requestKey, card: null, state: card ? "failed" : "ready" });
       return;
     }
     let alive = true;
+    setResolved({ key: requestKey, card: null, state: "loading" });
+    const timer = window.setTimeout(() => {
+      if (!alive || progressPort.syncState().userId !== owner) return;
+      alive = false;
+      setResolved({ key: requestKey, card: null, state: "failed" });
+    }, 30_000);
     void contentPort
       .card(dueLocator)
       .then((body) => {
-        if (!alive) return;
-        setTodayCard({
-          ...dueLocator,
-          front: body.front,
-          contentRevision: body.contentRevision,
-          dueAt: new Date(card.dueAt).toISOString(),
+        if (!alive || progressPort.syncState().userId !== owner) return;
+        window.clearTimeout(timer);
+        setResolved({
+          key: requestKey,
+          state: "ready",
+          card: {
+            ...dueLocator,
+            front: body.front,
+            contentRevision: body.contentRevision,
+            dueAt: new Date(card.dueAt).toISOString(),
+          },
         });
       })
       .catch(() => {
         // A card whose body cannot be read is not a card to offer. The panel
         // falls back to the next lesson, which is the honest thing on screen.
-        if (alive) setTodayCard(null);
+        window.clearTimeout(timer);
+        if (alive && progressPort.syncState().userId === owner)
+          setResolved({ key: requestKey, card: null, state: "failed" });
       });
     return () => {
       alive = false;
+      window.clearTimeout(timer);
     };
-  }, [dueLocator, due[0]?.dueAt]);
+  }, [dueLocator, requestKey, owner]);
 
   const todayData = useMemo<TodaySectionData>(
     () => ({
       card: todayCard,
+      cardState,
       // Today follows the learner's transient navigation context through
       // `focusedNextUpProgress`. The persisted authoring preference stays in
       // the local server/workbench boundary and is not smuggled into either
@@ -77,7 +102,7 @@ export function useTodaySectionData({
       dueCount: due.length,
       issues: [],
     }),
-    [studies, todayCard, due, focusedNextUpProgress],
+    [studies, todayCard, cardState, due, focusedNextUpProgress],
   );
   const todayReview = useMemo(
     () =>

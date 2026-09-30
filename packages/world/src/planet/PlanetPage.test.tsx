@@ -242,7 +242,7 @@ describe("PlanetPage", () => {
       );
       expect(container.querySelector(".planet-page__enter")).toBeNull();
       expect(container.querySelector("[role=status]")?.textContent).toContain(empty.description);
-      expect(container.querySelector("[role=status]")?.textContent).toContain("暂未发布");
+      expect(container.querySelector("[role=status]")?.textContent).toContain("即将开放");
       const back = [...container.querySelectorAll("button")].find(
         (button) => button.textContent === "返回 AI 与编程",
       )!;

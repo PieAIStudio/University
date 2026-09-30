@@ -365,7 +365,7 @@ describe("the shared lesson reader", () => {
 
   it("keeps the source checkout entry visible and explains the delivery boundary", async () => {
     await renderHost();
-    expect(container.textContent).toContain("这节课钉在");
+    expect(container.textContent).toContain("这一关钉在");
     expect(container.textContent).toContain("浏览器端读的是课程包");
     expect(container.querySelector(".lesson-version[data-unavailable]")).not.toBeNull();
     expect(

@@ -401,6 +401,9 @@
 }
 
 .tab-bar__link {
+  /* The four door names are text now, not decorative icons: muted ink on
+     the clay footer missed 4.5:1 in the real browser. */
+  color: var(--game-ui-text);
   flex-direction: column;
   justify-content: center;
   width: 100%;
@@ -420,20 +423,19 @@
 }
 
 .tab-bar__label {
-  /*
-    C3's tab bar is icon-only. The label stays in the tree so the accessible
-    name is the word, not the glyph. Labels become visible on the rail at
-    1160px, not here and not on the icon-only tablet rail.
-  */
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
+  /* V7's four doors keep their names, including on the course map. */
+  /* Selected accent ink also misses 4.5:1 on the clay footer. Keep the
+     name in reading ink; the icon and underline identify the current door. */
+  color: var(--game-ui-text);
+  display: block;
+  line-height: 1.3;
+  font-size: var(--game-ui-font-xs);
   white-space: nowrap;
-  border: 0;
+}
+
+.tab-bar__link[aria-current="page"] .tab-bar__label {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 /* ---- Counters ---------------------------------------------------------- */
@@ -853,6 +855,27 @@
 
   .app-shell__east-stack {
     width: 320px;
+  }
+}
+
+/* Four short names remain readable on the tablet's narrow rail too. The
+ * map rail already has full-width rows and retains its approved layout. */
+@media (min-width: 768px) and (max-width: 1159px) {
+  .app-shell:not([data-map-shell="true"]) .nav-rail__list .nav-rail__link {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-inline: 2px;
+  }
+  .app-shell:not([data-map-shell="true"]) .nav-rail__list .nav-rail__label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    text-align: center;
+    font-size: var(--game-ui-font-xs);
   }
 }
 

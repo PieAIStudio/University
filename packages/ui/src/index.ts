@@ -1,3 +1,4 @@
+export { LessonPracticeSurface } from "./practice/LessonPracticeSurface.js";
 export { CosmeticsPanel } from "./cosmetics/CosmeticsPanel.js";
 export { CosmeticAppearanceProvider } from "./cosmetics/appearance.js";
 

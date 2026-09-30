@@ -71,7 +71,7 @@ export function LibraryHost({
       courseware={
         tab === "courseware" ? (
           <Suspense fallback={<RouteFallback />}>
-            <Courseware />
+            <Courseware learner />
           </Suspense>
         ) : null
       }

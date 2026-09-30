@@ -195,7 +195,7 @@ describe("map domain catalogue", () => {
         expect(container.querySelector("[data-map-entry]")).toBeNull();
         expect(
           container.querySelector(`[data-map-information="domain:${domain}"]`)?.textContent,
-        ).toContain("暂未发布");
+        ).toContain("即将开放");
       }
       await click('[data-test-globe-domain="ai-games"]');
       expect(stage().getAttribute("data-selected-domain")).toBe("ai-games");

@@ -198,7 +198,7 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
         "看起来你可以跳过前面",
       );
       await expect(page.locator(".course-route-quiz__result")).toContainText(
-        "回答这几个问题本身不会跳过任何一节课",
+        "回答这几个问题本身不会跳过任何一关",
       );
       /*
         决定 A, checked where it would actually be printed: the result branch.

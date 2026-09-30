@@ -1,4 +1,11 @@
 import {
+  dailyLessonGoal,
+  parseDomainInterests,
+  mergeDomainInterests,
+  type DailyLessonGoal,
+  type DomainInterests,
+} from "../progress/learner-preferences.js";
+import {
   EMPTY_FAVOURITES,
   parseFavourites,
   type Favourite,
@@ -50,7 +57,9 @@ export type AccountPreferenceKey =
   | "locale"
   | "journey"
   | "guided"
-  | "reviewEmail";
+  | "reviewEmail"
+  | "dailyLessonGoal"
+  | "domainInterests";
 // Interface language is a shared account preference, independent of vocabulary mode.
 
 export interface AccountPreferences {
@@ -70,6 +79,9 @@ export interface AccountPreferences {
   /** First-use guides already walked through; presentation history, merged by union. */
   readonly guided?: GuidedHistory;
   readonly reviewEmail?: ReviewEmailIntent;
+  readonly dailyLessonGoal?: DailyLessonGoal;
+  /** Contact intent only; real announcement delivery is separately released. */
+  readonly domainInterests?: DomainInterests;
   /** Per-field timestamps make two devices' independent setting changes merge. */
   readonly updatedAt: Partial<Record<AccountPreferenceKey, string>>;
 }
@@ -165,6 +177,8 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "journey",
       "guided",
       "reviewEmail",
+      "dailyLessonGoal",
+      "domainInterests",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -195,6 +209,11 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
     journey: parseJourneyHistory(value.journey),
     guided: parseGuidedHistory(value.guided),
     reviewEmail: updatedAt.reviewEmail ? parseReviewEmailIntent(value.reviewEmail) : undefined,
+    dailyLessonGoal:
+      value.dailyLessonGoal === undefined ? undefined : dailyLessonGoal(value.dailyLessonGoal),
+    domainInterests: updatedAt.domainInterests
+      ? parseDomainInterests(value.domainInterests)
+      : undefined,
     updatedAt,
   };
 }
@@ -206,6 +225,9 @@ function cloneAccountPreferences(value: AccountPreferences): AccountPreferences 
     ...(value.journey ? { journey: parseJourneyHistory(value.journey) } : {}),
     ...(value.guided ? { guided: [...value.guided] } : {}),
     ...(value.reviewEmail ? { reviewEmail: { ...value.reviewEmail } } : {}),
+    ...(value.domainInterests
+      ? { domainInterests: parseDomainInterests(value.domainInterests) }
+      : {}),
     updatedAt: { ...value.updatedAt },
   };
 }
@@ -258,6 +280,21 @@ export function mergeAccountPreferences(
     theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
     worldStyle: newer(leftWorldStyle, rightWorldStyle) ? right.worldStyle : left.worldStyle,
     locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,
+    dailyLessonGoal:
+      left.dailyLessonGoal === undefined && right.dailyLessonGoal === undefined
+        ? undefined
+        : dailyLessonGoal(
+            newer(
+              timestampMs(left.updatedAt.dailyLessonGoal),
+              timestampMs(right.updatedAt.dailyLessonGoal),
+            )
+              ? right.dailyLessonGoal
+              : left.dailyLessonGoal,
+          ),
+    domainInterests:
+      left.domainInterests === undefined && right.domainInterests === undefined
+        ? undefined
+        : mergeDomainInterests(left.domainInterests, right.domainInterests),
     journey: mergeJourneyHistory(left.journey, right.journey),
     guided: mergeGuidedHistory(left.guided, right.guided),
     // A concurrent opt-out wins. Passive prompt history has its own field and
@@ -286,6 +323,8 @@ export function mergeAccountPreferences(
     "journey",
     "guided",
     "reviewEmail",
+    "dailyLessonGoal",
+    "domainInterests",
   ] as const) {
     if (
       right.updatedAt[key] &&

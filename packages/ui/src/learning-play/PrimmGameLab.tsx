@@ -42,7 +42,7 @@ export function PrimmGameLab() {
     <div className="learning-play-lab">
       <h1 className="play-visually-hidden">{interfaceTranslator.t("primm.lab.title")}</h1>
       <div className="learning-play-lab__top">
-        <a href="/practice">{interfaceTranslator.t("play.lab.back")}</a>
+        <a href="/library/courseware">{interfaceTranslator.t("play.lab.back")}</a>
         <SoundToggle />
       </div>
       <nav

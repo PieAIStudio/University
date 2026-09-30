@@ -195,7 +195,7 @@ for (const [mode, origin] of [
           "true",
         );
         await expect(page.locator('[data-planet-domain-label="ai-media"]')).toContainText(
-          "暂未发布",
+          "即将开放",
         );
         await page.screenshot({ path: join(folder, "planet-empty.png") });
         await humanClick(
@@ -707,7 +707,7 @@ for (const viewport of [
         "visit an empty learning domain",
       );
       await expect(page.locator(`[data-planet-domain-label="${EMPTY_DOMAIN_ID}"]`)).toContainText(
-        "暂未发布",
+        "即将开放",
       );
       await expect(page.locator("[data-study-id]")).toHaveCount(0);
       await humanClick(
