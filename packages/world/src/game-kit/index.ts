@@ -61,3 +61,15 @@ export {
   type SnakeState,
 } from "./rules/snake.js";
 export { SnakeScene, type SnakeSceneProps } from "./SnakeScene.js";
+export {
+  DUCK_SECONDS,
+  HOLES,
+  MolesSession,
+  RISE_SECONDS,
+  upSeconds,
+  type Mole,
+  type MolesAction,
+  type MolesEvent,
+  type MolesState,
+} from "./rules/moles.js";
+export { MolesScene, holeSpots, type MolesSceneProps } from "./MolesScene.js";

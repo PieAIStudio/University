@@ -526,6 +526,7 @@ export interface MessageContracts {
   readonly "arcade3d.lose": {};
   readonly "arcade3d.material": {};
   readonly "arcade3d.materialNote": {};
+  readonly "arcade3d.moles": {};
   readonly "arcade3d.original": {};
   readonly "arcade3d.pause": {};
   readonly "arcade3d.paused": {};
@@ -954,6 +955,7 @@ export interface MessageContracts {
   readonly "gallery.three.invaders": {};
   readonly "gallery.three.kit": {};
   readonly "gallery.three.links": {};
+  readonly "gallery.three.moles": {};
   readonly "gallery.three.new": {};
   readonly "gallery.three.press-words": {};
   readonly "gallery.three.rank": {};
@@ -1561,6 +1563,23 @@ export interface MessageContracts {
   };
   readonly "mapNodes.retry": {};
   readonly "mapNodes.return": {};
+  readonly "moles.calm": {};
+  readonly "moles.controls": {};
+  readonly "moles.intro": {};
+  readonly "moles.labNote": {};
+  readonly "moles.leaveTag": {};
+  readonly "moles.mole": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "moles.reason": {
+    readonly text: string | number | bigint | boolean | null | undefined | Date;
+    readonly why: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "moles.source": {
+    readonly source: string | number | bigint | boolean | null | undefined | Date;
+  };
+  readonly "moles.targetTag": {};
+  readonly "moles.title": {};
   readonly "path.addInstruction": {};
   readonly "path.allAdded": {};
   readonly "path.allSources": {};

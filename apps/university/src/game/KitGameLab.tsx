@@ -1,9 +1,11 @@
 import {
   linkRoundsFromLesson,
   sequenceRoundsFromLesson,
+  spotRoundsFromLesson,
   type GameLesson,
   type LinkRound,
   type SequenceRound,
+  type SpotRound,
 } from "@pieai/university-core";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
@@ -11,6 +13,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { contentPort } from "../ports/index";
 import samples from "./lab-samples.json";
 import { LinksGame } from "./LinksGame.js";
+import { MolesGame } from "./MolesGame.js";
 import { SnakeGame } from "./SnakeGame.js";
 
 /**
@@ -42,6 +45,11 @@ const LABS = {
     samples: samples.snake as readonly SequenceRound[],
     play: (rounds) => <SnakeGame rounds={rounds} />,
   } satisfies KitLab<ReturnType<typeof sequenceRoundsFromLesson>[number]>,
+  moles: {
+    project: spotRoundsFromLesson,
+    samples: samples.moles as readonly SpotRound[],
+    play: (rounds) => <MolesGame rounds={rounds} />,
+  } satisfies KitLab<SpotRound>,
 } as const;
 
 export type KitLabGame = keyof typeof LABS;

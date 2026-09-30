@@ -386,6 +386,13 @@
   font-weight: 700;
 }
 
+/* The source the sentences are checked against, kept in sight while playing. */
+.game-frame__hint--source {
+  max-inline-size: min(560px, 92%);
+  font-weight: 600;
+  text-align: start;
+}
+
 .game-frame__briefing-note {
   margin: 6px 0 0;
   opacity: 0.85;

@@ -71,6 +71,19 @@ export const messages = {
   "snake.crateNext": "Crate: {text}, this one comes next",
   "snake.labNote":
     "Preview: questions from the build-a-sentence steps and link routes in this course. The preview ignores progress; on the map, only finished lessons give questions.",
+  "moles.title": "Whack-a-mole",
+  "moles.intro":
+    "Moles pop up holding one sentence each. Read the source above first, then check each sentence against it: whack the kind the question asks for and let the others go. Whacking the wrong mole costs a heart, and so does letting a target duck back into its hole.",
+  "moles.controls":
+    "Tap the words a mole holds to whack it; keys 1 to 6 match the six holes, Esc pauses.",
+  "moles.calm": "Take it slow: moles stay up longer",
+  "moles.source": "Source: {source}",
+  "moles.reason": "“{text}”: {why}",
+  "moles.mole": "Mole holding: {text}",
+  "moles.targetTag": "whack",
+  "moles.leaveTag": "leave",
+  "moles.labNote":
+    "Preview: questions from the point-out-the-sentence steps in this course. The preview ignores progress; on the map, only finished lessons give questions.",
   "links.title": "Link-up",
   "links.intro":
     "Each stone in the pond carries one thing from the lesson. Tap a stone, then the stone it connects to, and a little bridge goes up between them. A wrong link costs a heart and shows what that stone really connects to. Every bridge pushes the tide back; if the tide comes all the way in, it lays one link for you and a heart goes too.",

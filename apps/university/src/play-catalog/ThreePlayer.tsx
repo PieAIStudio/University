@@ -7,7 +7,7 @@ import { KitGameLab } from "../game/KitGameLab.js";
 /** Old game IDs retain their original garden edition; no redirect or replacement. */
 export function ThreePlayer({ mode }: { mode: ThreeGame }) {
   if (mode === "courtyard") return <CourseGameLab />;
-  if (mode === "links" || mode === "snake") return <KitGameLab game={mode} />;
+  if (mode === "links" || mode === "snake" || mode === "moles") return <KitGameLab game={mode} />;
   if (mode === "sky-invaders")
     return <ArcadePlayer mode="invaders" displayMode={mode} edition="purpose" />;
   if (mode === "factory-stack")
