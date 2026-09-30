@@ -56,11 +56,47 @@ for (const [mode, origin] of [
       await humanClick(page, page.locator('[data-me-door="about"]'), "open About from Me");
       await expect(page.locator('[data-support-page="about"]')).toBeVisible();
       for (const policy of ["privacy", "terms", "refunds"]) {
+        await expect(page.locator('[data-support-page="about"]')).toBeVisible();
+        // Each ordinary link/reload creates a new document. A prior page's
+        // font-ready receipt cannot establish this page's final line wrapping.
+        await page.evaluate(() => document.fonts.ready);
         await humanClick(
           page,
           page.locator(`[data-policy-link="${policy}"]`),
           "read the actual policy publication state",
+          {
+            beforePress: async () => {
+              await page.locator(`[data-policy-link="${policy}"]`).evaluate((target) => {
+                const records: { type: string; trusted: boolean; intended: boolean }[] = [];
+                sessionStorage.setItem("v7-policy-pointer-evidence", "[]");
+                for (const type of ["pointerdown", "pointerup", "click"]) {
+                  document.addEventListener(
+                    type,
+                    (event) => {
+                      records.push({
+                        type,
+                        trusted: event.isTrusted,
+                        intended: target.isConnected && target.contains(event.target as Node),
+                      });
+                      sessionStorage.setItem("v7-policy-pointer-evidence", JSON.stringify(records));
+                    },
+                    { capture: true, once: true },
+                  );
+                }
+              });
+            },
+          },
         );
+        await expect(page).toHaveURL(`${origin}/about/${policy}?lang=${locale}`);
+        expect(
+          await page.evaluate(() =>
+            JSON.parse(sessionStorage.getItem("v7-policy-pointer-evidence") ?? "[]"),
+          ),
+        ).toEqual([
+          { type: "pointerdown", trusted: true, intended: true },
+          { type: "pointerup", trusted: true, intended: true },
+          { type: "click", trusted: true, intended: true },
+        ]);
         await expect(page.locator('[data-policy-status="unpublished"]')).toBeVisible();
         await expect(page.locator("h1")).toHaveText(
           t.t(`support.${policy as "privacy" | "terms" | "refunds"}.title`),

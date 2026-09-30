@@ -183,6 +183,30 @@ unavailable CTA after scrolling and captures the real viewport; a fixed bottom
 bar across a stitched full-page image is not itself evidence of a blocked click.
 No ordering, billing, legal approval or service switch is changed by that probe.
 
+The first integrated full push reached **472 passed (28.2m)** and one failure:
+the authoring-English policy pointer left the browser on About, rather than
+opening its policy address. The original standalone case passed unchanged
+(**1 passed (50.5s)**, `E2E_EXIT=0`), so the exact full-suite timing is not claimed
+reproduced. The retained page snapshot is in
+`SCRATCH/v7-execution/before-charging-c75effe7-failure/`.
+The policy walk now waits for the current About document's actual fonts, as the
+existing reading-settings walk does, before measuring and pressing its link.
+It additionally requires the exact localized policy URL and one trusted
+down/up/click sequence on that original link. No re-click, route injection,
+publication-state shortcut, assertion removal or timeout increase is used.
+Focused browser verification and a fresh normal push remain required.
+
+Both repeats of every support/management case passed the strengthened pointer
+checks: **12 passed (3.3m)**, `E2E_EXIT=0`, in
+`SCRATCH/v7-execution/before-charging-policy-pointer.log`. The unchanged original
+six scenarios still cover both modes and languages; repetition adds evidence,
+not six new product cases. Complete source verification and normal pre-push
+acceptance follow this exact test and documentation candidate.
+
+`before-charging-policy-verify.log` then completed the full `pnpm verify` with
+`VERIFY_EXIT=0` (`wc_job_iiReB81yPi3ibiyq`). No product behavior, published lesson,
+entitlement or legal-publication state changed during this test-only repair.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |
