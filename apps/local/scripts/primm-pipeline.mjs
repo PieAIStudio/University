@@ -1773,7 +1773,7 @@ async function nativeApply(dir, root, apply) {
  * back, en }] }. Same evidence, card/exercise identities and native path as
  * `assemble`; every display string must already carry its English.
  */
-async function stageAssembleSteps(dir, packet, inputFile, apply) {
+async function stageAssembleSteps(dir, packet, inputFile, apply, replace) {
   const input = readJson(inputFile);
   const root = studiesRoot();
   const lessonDir = join(
@@ -1797,13 +1797,24 @@ async function stageAssembleSteps(dir, packet, inputFile, apply) {
     make: { ...input.activity.make, exerciseId: packet.exerciseIds[0] },
   };
   if (activity.experienceVersion !== 3) throw Error("assemble-steps lands version-3 lessons only");
+  // `--replace` (Owner G3): new content in the lesson's identities. It keeps the
+  // cards, exercises and IDs, but cites only its own sources and retires the old
+  // lesson's media it no longer uses.
+  const used = new Set([
+    ...activity.starter.assetIds,
+    ...activity.make.assetIds,
+    ...activity.materials.flatMap((m) => (m.assetId ? [m.assetId] : [])),
+    ...activity.steps.flatMap((s) => (s.kind === "point" ? [s.assetId] : [])),
+  ]);
+  const assets = replace ? manifest.assets.filter((a) => used.has(a.id)) : manifest.assets;
+  const retireAssetIds = manifest.assets.filter((a) => !assets.includes(a)).map((a) => a.id);
   const { activityDisplayStrings } = await import(
     pathToFileURL(join(repoRoot, "packages/core/dist/learning-play/localization.js")).href
   );
   const strings = activity.locales?.en?.strings ?? {};
   const missing = activityDisplayStrings(activity).filter((text) => !strings[text]?.trim());
   if (missing.length) throw Error(`Missing English for: ${missing.join(" | ")}`);
-  const evidence = [...manifest.evidence];
+  const evidence = replace ? [] : [...manifest.evidence];
   for (const source of activity.sources) {
     if (!evidence.some((e) => e.sourceUrl === source.reference.url)) {
       const record = libraryEvidence(packet, source.reference.url);
@@ -1867,7 +1878,8 @@ async function stageAssembleSteps(dir, packet, inputFile, apply) {
       sections: [],
       locales: { en: { title: en(activity.title), content: recap(en) } },
       evidence,
-      assets: manifest.assets,
+      assets,
+      ...(retireAssetIds.length ? { retireAssetIds } : {}),
       assetFiles: [],
       activities: [activity],
       cards,
@@ -1879,7 +1891,7 @@ async function stageAssembleSteps(dir, packet, inputFile, apply) {
   writeJson(join(dir, apply ? "native-apply.json" : "native-proposal-check.json"), { receipts });
   log(
     dir,
-    `MANUAL assemble-steps r${rev + 1}: hand-written version-3 lesson from ${inputFile}; ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}`,
+    `MANUAL assemble-steps r${rev + 1}: hand-written version-3 lesson from ${inputFile}${replace ? ` replacing the old lesson (retired assets: ${retireAssetIds.join(", ") || "none"})` : ""}; ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}`,
   );
 }
 
@@ -2067,7 +2079,7 @@ else if (stage === "polish")
   await stagePolish(dir, packet, Number(options.version ?? bestVersion(dir)), S);
 else if (stage === "assemble") await stageAssemble(dir, packet, !!options.apply);
 else if (stage === "assemble-steps")
-  await stageAssembleSteps(dir, packet, String(options.input), !!options.apply);
+  await stageAssembleSteps(dir, packet, String(options.input), !!options.apply, !!options.replace);
 else if (stage === "finish") await stageFinish(dir);
 else if (stage === "review") {
   // A person's reading goes into the same fix loop as the Detector's, marked as theirs.

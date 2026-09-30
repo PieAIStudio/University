@@ -513,6 +513,38 @@ describe("course revision workflow", () => {
         ),
       ),
     ).toEqual(assetBytes);
+
+    // A replacement lesson retires media it no longer uses, by name, never by omission.
+    const replacement = (id: string, lesson: Record<string, unknown>) => {
+      const next = proposal(targetSnapshot);
+      next.proposalId = id;
+      next.lesson.expectedRevision = 3;
+      // Unchanged cards and exercises did not advance in the follow-up.
+      next.lesson.cards[0]!.expectedRevision = 2;
+      next.lesson.exercises[0]!.expectedRevision = 2;
+      next.lesson.content = "# A different lesson\n\nNo picture any more.\n";
+      Object.assign(next.lesson, lesson);
+      return next;
+    };
+    const revise = (candidate: ReturnType<typeof proposal>) =>
+      reviseCourseLesson({ studiesRoot, studyId: STUDY_ID, proposal: candidate });
+    expect(() => revise(replacement("asset-omitted", { assets: [] }))).toThrow(
+      /must still contain every existing ID/,
+    );
+    expect(() =>
+      revise(replacement("asset-unknown", { assets: [], retireAssetIds: ["not-here"] })),
+    ).toThrow(/not an asset of lesson/);
+    const kept = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest
+      .assets;
+    expect(() =>
+      revise(
+        replacement("asset-contradiction", { assets: kept, retireAssetIds: ["captured-screen"] }),
+      ),
+    ).toThrow(/both kept and retired/);
+    revise(replacement("asset-retired", { assets: [], retireAssetIds: ["captured-screen"] }));
+    expect(
+      readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID).manifest.assets,
+    ).toEqual([]);
   });
 
   it("refuses a revision whose newness claim disagrees with the lesson", () => {

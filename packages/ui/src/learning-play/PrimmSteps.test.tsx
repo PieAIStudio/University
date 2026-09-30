@@ -188,6 +188,40 @@ describe("a text-only request and a lesson's real-world lines", () => {
     expect(container.querySelector(".primm-steps__aside")).toBeNull();
   });
 
+  it("shows a text material where a photo would be, and names it in the chat", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    activity.materials = [
+      ...activity.materials,
+      { id: "notice", label: "团建通知（练习）", kind: "practice", text: "下周六公司团建！" },
+    ];
+    activity.starter = {
+      ...activity.starter,
+      assetIds: [],
+      materialIds: ["notice"],
+      operation: "text",
+    };
+    const choose = activity.steps.find((item) => item.kind === "choose")!;
+    const send = activity.steps.find((item) => item.kind === "send")!;
+    if (choose.kind !== "choose" || send.kind !== "send") throw Error();
+    activity.steps = [choose, { ...send, attachmentLabel: "团建通知" }];
+    await render({ activity });
+    expect(container.querySelector(".primm-steps__material")?.hasAttribute("open")).toBe(true);
+    expect(text()).toContain("下周六公司团建！");
+    await press("开始");
+    // Folded on the choice: a reminder, not a wall of text above the options.
+    expect(container.querySelector(".primm-steps__material")?.hasAttribute("open")).toBe(false);
+    await press(choose.options[0]!.label);
+    await press("就选这个");
+    await press("继续");
+    expect(container.querySelector(".primm-steps__composer .primm-steps__file")?.textContent).toBe(
+      "团建通知",
+    );
+    await press("发送");
+    expect(
+      container.querySelector(".primm-steps__bubble.is-me .primm-steps__file")?.textContent,
+    ).toBe("团建通知");
+  });
+
   it("ends with 你知道吗 and one thing to try today", async () => {
     const activity = structuredClone(primmStepsFixture);
     const choose = activity.steps.find((item) => item.kind === "choose")!;

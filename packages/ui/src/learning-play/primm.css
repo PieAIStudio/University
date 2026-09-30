@@ -955,6 +955,31 @@
   box-shadow: 0 6px 0 var(--game-ui-success);
 }
 /* 你知道吗: a real-world line with its source, while a request runs or at the end. */
+/* A text material. The element in the selector outranks `.primm details`. */
+details.primm-steps__material {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text);
+}
+.primm-steps__material > summary {
+  font-weight: 700;
+}
+.primm-steps__material > p {
+  margin: 8px 0 0;
+}
+/* A text attachment in the chat, in the photo's place. */
+.primm-steps__file {
+  max-inline-size: 96px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--game-ui-panel);
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--game-ui-text-muted);
+  overflow-wrap: anywhere;
+}
 .primm-steps__aside {
   display: grid;
   gap: 4px;

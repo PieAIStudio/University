@@ -541,6 +541,7 @@ describe("course lesson addition workflow", () => {
       "unitId",
       "expectedRevision", // there is no revision to expect yet
       "assetFiles", // paths copied in during a revision; creation has no source to copy from
+      "retireAssetIds", // a newborn lesson has no media to retire
     ]);
     /*
       Nobody has needed to be born with these yet. Fixing them unexercised would

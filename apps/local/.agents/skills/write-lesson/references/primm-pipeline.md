@@ -19,7 +19,7 @@ node scripts/primm-pipeline.mjs review   --lesson <unit>/<lesson> --version N --
 node scripts/primm-pipeline.mjs fix      --lesson <unit>/<lesson> --from N
 node scripts/primm-pipeline.mjs status   # every lesson: versions, writer, scores, best, manual notes
 # A hand-written version-3 step lesson (the line does not write steps yet):
-node scripts/primm-pipeline.mjs assemble-steps --lesson <unit>/<lesson> --input <file.json> [--apply]
+node scripts/primm-pipeline.mjs assemble-steps --lesson <unit>/<lesson> --input <file.json> [--replace] [--apply]
 ```
 
 Individual stages (`write`, `check`, `detect`, `fix`, `research`) can be run on
@@ -37,7 +37,7 @@ their own; each reads the latest `draft.vN.json`.
 | fix | Writer family | Returns the whole revised lesson plus a resolution for every finding (fixed, or rejected with a reason). | `draft.vN+1.json` |
 | polish | Polisher (Gemini Flash) | Spoken, 8–9-year-old-readable wording for every displayed string, with the rendered lesson as context; then faithful English. Gates: numbers, hedges, new absolutes, AI alias, growth, quoted text. A key failing a gate keeps the fixed wording; it is never hand-repaired and called polished. | `final.json`, `polish.vN.acceptance.json` |
 | assemble | script + native CLI | Builds and schema-validates the `CourseRevisionProposal`: activity with `locales.en.strings`, all prior evidence plus newly used verified sources, preserved card/exercise IDs, explain exercise with rubric, recap content. `--apply` opens the course for edit if needed, runs the native dry-run, then `course revise`. | `proposal.json`, `native-*.json` |
-| assemble-steps | person + native CLI | Lands a version-3 step lesson written by hand: `{ activity, exercise, cards }` with every display string already in English. Same evidence, card/exercise identities and native dry-run → revise path as `assemble` (both call one `nativeApply`). Logged as `MANUAL`. | `proposal.json`, `native-apply.json` |
+| assemble-steps | person + native CLI | Lands a version-3 step lesson written by hand: `{ activity, exercise, cards }` with every display string already in English. Same evidence, card/exercise identities and native dry-run → revise path as `assemble` (both call one `nativeApply`). `--replace` lands new content in an old lesson's identities: only its own sources, and the old media it no longer uses retired by name (`retireAssetIds`). Logged as `MANUAL`. | `proposal.json`, `native-apply.json` |
 | finish | native CLI | Once per batch after every `--apply`: reactivate the course, export the recovery package. Then `pnpm content` at the repository root. | `native-finish.json` |
 
 `run` loops check → detect → fix until the Detector returns `ready` with no

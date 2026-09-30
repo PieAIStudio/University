@@ -231,6 +231,19 @@ export function PrimmSteps({
   const asset = (id: string) => assets?.find((item) => item.id === id);
   const photoUrl = (id: string) => asset(id)?.url;
   const starterImage = activity.starter.assetIds[0];
+  // Text the learner works from, where a photo would be: open where it is read,
+  // folded where it only reminds.
+  const notes = (ids: readonly string[], open: boolean) =>
+    activity.materials
+      .filter((material) => ids.includes(material.id) && !material.assetId)
+      .map((material) => (
+        <PrimmNote
+          key={material.id}
+          material={material}
+          open={open}
+          source={activity.sources.find((source) => source.id === material.sourceId)}
+        />
+      ));
   const stepDone = step ? session.done.includes(step.id) : false;
 
   let body: ReactNode = null;
@@ -254,6 +267,7 @@ export function PrimmSteps({
         </p>
         <p className="primm-steps__lead">{activity.intro.situation}</p>
         <p>{activity.intro.need}</p>
+        {notes(activity.starter.materialIds, true)}
         <aside className="primm-steps__case">
           <p>{activity.intro.connection}</p>
           {activity.intro.sourceIds?.map((id) => (
@@ -425,6 +439,8 @@ export function PrimmSteps({
         <figure className="primm-steps__thumb">
           <img src={photoUrl(starterImage)} alt={asset(starterImage)?.alt ?? ""} />
         </figure>
+      ) : current.phase === "predict" ? (
+        notes(activity.starter.materialIds, false)
       ) : current.phase === "make" && session.runs.make ? (
         <div className="primm-steps__chat">
           <p className="primm-steps__bubble is-me">{session.runs.make.request.prompt}</p>
@@ -497,7 +513,11 @@ export function PrimmSteps({
           {work ? (
             <>
               <div className="primm-steps__bubble is-me">
-                {image ? <img src={photoUrl(image)} alt="" /> : null}
+                {image ? (
+                  <img src={photoUrl(image)} alt="" />
+                ) : current.attachmentLabel ? (
+                  <span className="primm-steps__file">{current.attachmentLabel}</span>
+                ) : null}
                 <p>{work.request.prompt}</p>
               </div>
               <div className="primm-steps__bubble is-ai" aria-live="polite">
@@ -524,6 +544,8 @@ export function PrimmSteps({
                     <span>{t("primm.steps.composerTarget")}</span>
                   )}
                 </div>
+              ) : current.attachmentLabel ? (
+                <span className="primm-steps__file">{current.attachmentLabel}</span>
               ) : null}
               <p className="primm-steps__composer-text">{request?.prompt}</p>
               <GameButton
@@ -883,6 +905,7 @@ export function PrimmSteps({
     return (
       <>
         <p className="primm-steps__context">{activity.make.scenario}</p>
+        {notes(activity.make.materialIds, true)}
         {image ? <PrimmAsset asset={asset(image)} /> : null}
         <div className="primm-steps__composer is-write" data-guide="step-make">
           <label className="primm-steps__visually-hidden" htmlFor={`${headingId}-make`}>
@@ -1406,6 +1429,7 @@ function SortStep({
         {(binary ? [no!, yes!] : step.buckets).map((bucket) => (
           <GameButton
             key={bucket.id}
+            data-bucket={bucket.id}
             variant={
               bucket.id === yes?.id
                 ? "success"
@@ -1429,6 +1453,25 @@ function SortStep({
 }
 
 /** A 你知道吗 line: something true from outside the lesson, with its source. */
+/** A text material: read where it is open, a reminder where it is folded. */
+function PrimmNote({
+  material,
+  source,
+  open,
+}: {
+  readonly material: PrimmStepsActivity["materials"][number];
+  readonly source: PrimmStepsActivity["sources"][number] | undefined;
+  readonly open: boolean;
+}) {
+  return (
+    <details className="primm-steps__material" open={open} data-material-id={material.id}>
+      <summary>{material.label}</summary>
+      <p className="primm__text">{material.text}</p>
+      <PrimmSource source={source} />
+    </details>
+  );
+}
+
 function PrimmAside({
   text,
   source,
