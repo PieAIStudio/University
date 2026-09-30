@@ -3,6 +3,7 @@
 // node docs/reference/interaction-components/lab/src/build-liquid.mjs
 import { LiquidGroup, LiquidSurface, liquidFormItem } from "@pieai/swimmer-ui-kit";
 import { useLayoutEffect, useRef, useState } from "react";
+import { softenGloss } from "./soft-gloss.js";
 import { createRoot } from "react-dom/client";
 
 /*
@@ -36,12 +37,10 @@ const settings = { mode: "light", motion: "act", weight: "lian" };
  * amplitude per named form, so a 涟 body is built from the same two public
  * parts LiquidSurface itself uses: one LiquidGroup and one LiquidGroup.Item.
  */
-// Gloss: 涟's own 3.5 left a white rim along the top that the Owner found too
-// strong, and any gloss at all comes from feSpecularLighting, which Chrome
-// renders at low resolution: at gloss 1 the rim shrank to a stair-stepped line.
-// So the body carries no specular layer (gloss 0, matte) and its light lives in
-// the fill: a narrow brighter band at the top, as in the Owner's reference.
-const LIAN = { blur: 5, contrast: 18, gloss: 0, amplitude: 3.5, lobes: 3 };
+// Gloss: 涟's 3.5 reads as a hard white line along a capsule's straight top, so
+// the beads keep a highlight at 1.5, the strength the Owner's reference shows,
+// kept one pixel inside the edge (soft-gloss.js) so the edge stays smooth.
+const LIAN = { blur: 5, contrast: 18, gloss: 1.5, amplitude: 3.5, lobes: 3 };
 /** The reference's soft contact shadow: the card reads about 7% darker under a body. */
 const LIAN_SHADOW = "0 6px 14px rgba(110, 85, 60, 0.13)";
 const lianGloss = (s) => s.gloss ?? LIAN.gloss;
@@ -113,7 +112,7 @@ defs.setAttribute("height", "0");
 defs.style.position = "absolute";
 defs.innerHTML = `<defs>${LIAN_STOPS.map(
   ([id, base]) =>
-    `<linearGradient id="lq-lian-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(base, 255, id === "cream" ? 0.8 : 0.5)}"/><stop offset="0.16" stop-color="${mix(base, 255, id === "cream" ? 0.6 : 0.24)}"/><stop offset="0.5" stop-color="${base}"/><stop offset="1" stop-color="${mix(base, 0, 0.05)}"/></linearGradient>`,
+    `<linearGradient id="lq-lian-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(base, 255, id === "cream" ? 0.7 : 0.3)}"/><stop offset="0.16" stop-color="${mix(base, 255, id === "cream" ? 0.5 : 0.12)}"/><stop offset="0.5" stop-color="${base}"/><stop offset="1" stop-color="${mix(base, 0, 0.05)}"/></linearGradient>`,
 ).join("")}</defs>`;
 document.body.appendChild(defs);
 const listeners = new Set();
@@ -499,6 +498,15 @@ function Palette() {
 }
 
 const SCREENS = { guess: Guess, round: Round, build: Build, palette: Palette };
+// Every body on the page is drawn by the kit; soften each gloss as it appears.
+// 厚 is the first draft exactly as the kit draws it, so it is left unsoftened.
+const soften = () => softenGloss(document.body, settings.weight !== "heavy");
+listeners.add(soften);
+soften();
+new MutationObserver(soften).observe(document.body, {
+  childList: true,
+  subtree: true,
+});
 document.querySelectorAll("[data-liquid]").forEach((el) => {
   const Screen = SCREENS[el.getAttribute("data-liquid")];
   if (Screen) createRoot(el).render(<Screen />);

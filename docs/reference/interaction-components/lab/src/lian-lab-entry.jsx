@@ -8,6 +8,7 @@
 // node docs/reference/interaction-components/lab/src/build-liquid.mjs
 import { LiquidGroup } from "@pieai/swimmer-ui-kit";
 import { createRoot } from "react-dom/client";
+import { softenGloss } from "./soft-gloss.js";
 
 /** Sampled from the current 涟 (assets/views/lian-now.jpg). */
 const NOW = { from: "#27cfd7", to: "#22c5b9", button: "#ef8248", close: "#f1f7ed" };
@@ -40,8 +41,8 @@ defs.setAttribute("width", "0");
 defs.setAttribute("height", "0");
 defs.style.position = "absolute";
 defs.innerHTML = `<defs>${[
-  ["now", NOW, 0.34],
-  ["soft", SOFT, 0.45],
+  ["now", NOW, 0.18],
+  ["soft", SOFT, 0.25],
 ]
   .map(
     ([key, c, sheen]) =>
@@ -63,8 +64,10 @@ function Body({ fill, radius, amplitude, className, children }) {
         className="game-ui-liquid-surface__body"
         blur={5}
         contrast={18}
-        // No specular layer: it renders stair-stepped in Chrome. Matte is gloss 0.
-        liquidFinish="matte"
+        // 涟's own gloss, kept one pixel inside the edge (soft-gloss.js) so the
+        // edge keeps its anti-aliasing.
+        liquidFinish="glossy"
+        gloss={3.5}
         fill={fill}
         filterPadding={36}
         shadow={SHADOW}
@@ -114,6 +117,11 @@ function Scene({ variant }) {
   );
 }
 
+softenGloss(document.body);
+new MutationObserver(() => softenGloss(document.body)).observe(document.body, {
+  childList: true,
+  subtree: true,
+});
 document.querySelectorAll("[data-lian]").forEach((el) => {
   createRoot(el).render(<Scene variant={el.getAttribute("data-lian")} />);
 });
