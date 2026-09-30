@@ -1,7 +1,7 @@
 // The 彩色液体 column of ui-compare.html, drawn with the real SwimmerUIKit
 // liquid components (LiquidSurface, LiquidGroup). Rebuild with
 // node docs/reference/interaction-components/lab/src/build-liquid.mjs
-import { LiquidGroup, LiquidSurface } from "@pieai/swimmer-ui-kit";
+import { LiquidGroup, LiquidSurface, liquidFormItem } from "@pieai/swimmer-ui-kit";
 import { useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -29,21 +29,57 @@ const settings = { mode: "light", motion: "act", weight: "lian" };
 
 /*
  * Two weights. 厚 is the glossy first draft the Owner found too heavy
- * (2026-09-30). 涟 copies the presence droplet in SwimmerUIKit's
- * liquid-presence: a two-stop gradient body, no cast shadow, and a gently
- * lobed outline (amplitude 3.5, three lobes; its filter uses contrast 18 and
- * gloss 3.5). LiquidSurface does not take gloss or amplitude, so its bodies
- * rest in `press` (blob 5, three lobes: the same gentle lobing, idle) with the
- * matte finish for the droplet's flat face; the two LiquidGroups (pools,
- * sentence) take the droplet's own numbers.
+ * (2026-09-30). 涟 is the presence droplet's own numbers, read from
+ * SwimmerUIKit's liquid-presence: its goo filter (blur 5, contrast 18,
+ * glossy at gloss 3.5, no cast shadow, no stroke), its outline (amplitude 3.5,
+ * three lobes) and its two-stop gradient. LiquidSurface fixes gloss and
+ * amplitude per named form, so a 涟 body is built from the same two public
+ * parts LiquidSurface itself uses: one LiquidGroup and one LiquidGroup.Item.
  */
+const LIAN = { blur: 5, contrast: 18, gloss: 3.5, amplitude: 3.5, lobes: 3 };
 const heavy = (s) => s.weight === "heavy";
-const finishOf = (s) => (heavy(s) ? "glossy" : "matte");
+// "matte" forces gloss to 0, which is what made the last try look paper-flat.
+const finishOf = () => "glossy";
 const fillOf = (colour, s) => (heavy(s) ? colour.fill : `url(#lq-lian-${colour.id})`);
-const restForm = () => "press";
-const glossOf = (s) => (heavy(s) ? undefined : 3.5);
-const contrastOf = (s) => (heavy(s) ? undefined : 18);
+const glossOf = (s) => (heavy(s) ? undefined : LIAN.gloss);
+const contrastOf = (s) => (heavy(s) ? undefined : LIAN.contrast);
+const blurOf = (s, own) => (heavy(s) ? own : LIAN.blur);
 const shadowOf = (s) => (heavy(s) ? undefined : "none");
+
+/** The press squash LiquidSurface gives an engaged `press`, on a 涟 body. */
+const PRESS_ITEM = liquidFormItem("press");
+const SQUASH = { scale: 1.05, scaleY: 0.9, y: 2 };
+const REST = { scale: 1, scaleY: 1, y: 0 };
+function LianSurface({ fill, radius = 999, pressed, style, children }) {
+  return (
+    <span className="game-ui-liquid-surface" data-liquid-form="lian" style={style}>
+      <LiquidGroup
+        aria-hidden="true"
+        className="game-ui-liquid-surface__body"
+        blur={LIAN.blur}
+        contrast={LIAN.contrast}
+        liquidFinish="glossy"
+        gloss={LIAN.gloss}
+        fill={fill}
+        filterPadding={28}
+        shadow="none"
+      >
+        <LiquidGroup.Item
+          className="game-ui-liquid-surface__shape"
+          blob={{ amplitude: LIAN.amplitude, lobes: LIAN.lobes }}
+          effect={PRESS_ITEM.effect}
+          morph={PRESS_ITEM.morph}
+          transition={PRESS_ITEM.transition}
+          radius={radius}
+          {...(pressed ? SQUASH : REST)}
+        >
+          <span className="game-ui-liquid-surface__fill" />
+        </LiquidGroup.Item>
+      </LiquidGroup>
+      <span className="game-ui-liquid-surface__content">{children}</span>
+    </span>
+  );
+}
 
 /** The droplet's gradient, lighter at the top left, once per page. */
 function mixWhite(hex, amount) {
@@ -95,18 +131,27 @@ function Bead({ colour, children, onClick, selected, radius = 999, big, pressed,
         ? CREAM
         : "url(#lq-lian-cream)";
   const touched = Boolean(pressed || down);
-  // 厚 swells the chosen one; 轻 says it with colour and the tick, and stays firm.
-  const form = touched ? "press" : selected && heavy(s) ? "swell" : restForm(s);
+  const bodyStyle = { display: "block", opacity: dim ? 0.35 : 1, ...style };
+  // 厚 swells the chosen one; 涟 says it with colour and the tick.
+  const Body = ({ children: inner }) =>
+    heavy(s) ? (
+      <LiquidSurface
+        form={touched ? "press" : selected ? "swell" : "press"}
+        active={Boolean(touched || selected)}
+        fill={fill}
+        radius={radius}
+        liquidFinish="glossy"
+        style={bodyStyle}
+      >
+        {inner}
+      </LiquidSurface>
+    ) : (
+      <LianSurface fill={fill} radius={radius} pressed={touched} style={bodyStyle}>
+        {inner}
+      </LianSurface>
+    );
   return (
-    <LiquidSurface
-      form={form}
-      active={Boolean(touched || (selected && heavy(s)))}
-      fill={fill}
-      shadow={shadowOf(s)}
-      radius={radius}
-      liquidFinish={finishOf(s)}
-      style={{ display: "block", opacity: dim ? 0.35 : 1, ...style }}
-    >
+    <Body>
       <button
         type="button"
         className={`lq-bead${big ? " lq-bead--big" : ""}${selected ? " is-selected" : ""}`}
@@ -117,10 +162,14 @@ function Bead({ colour, children, onClick, selected, radius = 999, big, pressed,
         onPointerLeave={() => setDown(false)}
         onPointerCancel={() => setDown(false)}
       >
-        {selected ? <span className="lq-tick" aria-hidden="true">✓</span> : null}
+        {selected ? (
+          <span className="lq-tick" aria-hidden="true">
+            ✓
+          </span>
+        ) : null}
         {children}
       </button>
-    </LiquidSurface>
+    </Body>
   );
 }
 
@@ -131,9 +180,22 @@ function Phases({ on, count }) {
       <div className="lq-phases">
         {["猜", "跑", "看", "改", "做"].map((p, i) =>
           i === on ? (
-            <LiquidSurface key={p} form="settle" active fill={fillOf(C.sun, s)} radius={999} liquidFinish={finishOf(s)} shadow={shadowOf(s)}>
-              <i className="on">{p}</i>
-            </LiquidSurface>
+            heavy(s) ? (
+              <LiquidSurface
+                key={p}
+                form="settle"
+                active
+                fill={C.sun.fill}
+                radius={999}
+                liquidFinish="glossy"
+              >
+                <i className="on">{p}</i>
+              </LiquidSurface>
+            ) : (
+              <LianSurface key={p} fill={fillOf(C.sun, s)} radius={999}>
+                <i className="on">{p}</i>
+              </LianSurface>
+            )
           ) : (
             <i key={p}>{p}</i>
           ),
@@ -203,7 +265,12 @@ function Pour({ from, colour, onDone }) {
       // Over the pool, out of the layout: a drop in flight takes no room.
       style={{ position: "absolute", left: "calc(50% - 60px)", top: "calc(50% - 22px)" }}
     >
-      <div ref={ref} className="lq-drop" style={{ background: "transparent" }} data-colour={colour.id} />
+      <div
+        ref={ref}
+        className="lq-drop"
+        style={{ background: "transparent" }}
+        data-colour={colour.id}
+      />
     </LiquidGroup.Item>
   );
 }
@@ -248,9 +315,16 @@ function Round() {
     const current = cards[at % cards.length];
     const box = card.current?.getBoundingClientRect();
     const right = current.bin === bin;
-    setFeedback(right ? { ok: true, text: "对了。" } : { ok: false, text: "照片只能看，不能尝，也看不到店名。" });
+    setFeedback(
+      right
+        ? { ok: true, text: "对了。" }
+        : { ok: false, text: "照片只能看，不能尝，也看不到店名。" },
+    );
     if (!right) return;
-    setPours((all) => ({ ...all, [bin]: [...all[bin], { key: ++serial.current, from: box ? { x: box.x, y: box.y } : null }] }));
+    setPours((all) => ({
+      ...all,
+      [bin]: [...all[bin], { key: ++serial.current, from: box ? { x: box.x, y: box.y } : null }],
+    }));
     setAt((n) => n + 1);
   };
   const current = cards[at % cards.length];
@@ -279,7 +353,9 @@ function Round() {
               label={label}
               pours={pours[id]}
               onAnswer={() => answer(id)}
-              onPoured={(key) => setPours((all) => ({ ...all, [id]: all[id].filter((p) => p.key !== key) }))}
+              onPoured={(key) =>
+                setPours((all) => ({ ...all, [id]: all[id].filter((p) => p.key !== key) }))
+              }
             />
           ))}
         </div>
@@ -320,11 +396,13 @@ function Build() {
           gloss={glossOf(s)}
           contrast={contrastOf(s)}
           shadow={shadowOf(s)}
-          blur={7}
+          blur={blurOf(s, 7)}
           waviness={s.motion === "always" ? 3 : 0}
         >
           {placed.length ? (
-            placed.map((piece) => <Placed key={piece.id} piece={piece} from={origin.current[piece.id]} />)
+            placed.map((piece) => (
+              <Placed key={piece.id} piece={piece} from={origin.current[piece.id]} />
+            ))
           ) : (
             <LiquidGroup.Item radius={16}>
               <span className="lq-slot">点下面的词块，拼进来</span>
@@ -333,7 +411,12 @@ function Build() {
         </LiquidGroup>
         <div className="lq-tray">
           {pieces.map((piece) => (
-            <TrayPiece key={piece.id} piece={piece} used={placed.some((p) => p.id === piece.id)} onPlace={place} />
+            <TrayPiece
+              key={piece.id}
+              piece={piece}
+              used={placed.some((p) => p.id === piece.id)}
+              onPlace={place}
+            />
           ))}
         </div>
         <div className="lq-row">
@@ -353,7 +436,12 @@ function TrayPiece({ piece, used, onPlace }) {
   const ref = useRef(null);
   return (
     <div ref={ref} className="lq-tray-piece">
-      <Bead colour={piece.colour} radius={14} dim={used} onClick={() => onPlace(piece, ref.current)}>
+      <Bead
+        colour={piece.colour}
+        radius={14}
+        dim={used}
+        onClick={() => onPlace(piece, ref.current)}
+      >
         {piece.text}
       </Bead>
     </div>
@@ -372,12 +460,7 @@ function Placed({ piece, from }) {
     return () => cancelAnimationFrame(t);
   }, []);
   return (
-    <LiquidGroup.Item
-      x={offset?.x ?? 0}
-      y={offset?.y ?? 0}
-      transition="bouncy"
-      radius={14}
-    >
+    <LiquidGroup.Item x={offset?.x ?? 0} y={offset?.y ?? 0} transition="bouncy" radius={14}>
       <span ref={ref} className="lq-word" style={{ color: INK }}>
         {piece.text}
       </span>
