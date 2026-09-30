@@ -162,3 +162,19 @@ textarea:focus-visible,input[type=text]:focus-visible{outline:2px solid var(--bl
 .tabs button{all:unset;box-sizing:border-box;cursor:pointer;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);font-size:14.5px;font-weight:700;background:var(--paper);color:var(--ink)}
 .tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .tabs button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* 09-30 picks for the lesson pages: pure flat (no lower edge), pastel fills carry dark ink (contrast ≥ 4.5) */
+.btn.go{background:#f0935f;color:#1f2b2a}
+.bins .yes{background:#8fd0b8;color:#1f2b2a}
+.bins .no{background:#f3a58a;color:#1f2b2a}
+:root{--ink3:#5f6967}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink3:#a7aeab}}
+:root[data-theme="dark"]{--ink3:#a7aeab}
+.material{border-radius:14px;background:var(--soft);border:1px solid var(--line);padding:10px 12px;display:grid;gap:6px}
+.material.compact{padding:8px 10px}
+.material .mlabel{font-size:12.5px;font-weight:700;color:var(--ink3)}
+.material .mline{background:var(--paper);border-radius:12px;padding:7px 10px;font-size:15px;line-height:1.55;justify-self:start;max-width:100%}
+.material .mbody{white-space:pre-wrap;font-size:14.5px;line-height:1.7;background:var(--paper);border-radius:12px;padding:10px 12px}
+.attach-note{display:block;font-size:13px;font-weight:500;color:var(--ink3);margin-top:2px}
+.composer .clip{font-size:14px}
+.atext{white-space:pre-wrap}

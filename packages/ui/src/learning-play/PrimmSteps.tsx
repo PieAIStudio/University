@@ -274,7 +274,7 @@ export function PrimmSteps({
             </button>
           ) : null}
         </div>
-        <h2 ref={heading} tabIndex={-1} id={headingId}>
+        <h2 ref={heading} tabIndex={-1} id={headingId} data-guide="step-title">
           {step.title}
         </h2>
       </div>
@@ -423,7 +423,12 @@ export function PrimmSteps({
     return (
       <>
         {context}
-        <div className="primm-steps__options" role="radiogroup" aria-labelledby={headingId}>
+        <div
+          className="primm-steps__options"
+          role="radiogroup"
+          aria-labelledby={headingId}
+          data-guide="step-options"
+        >
           {current.options.map((option) => (
             <button
               key={option.id}
@@ -507,6 +512,7 @@ export function PrimmSteps({
               <p className="primm-steps__composer-text">{request?.prompt}</p>
               <GameButton
                 variant="primary"
+                data-guide="step-send"
                 disabled={!attached || busy !== null || !request}
                 onClick={() => void send()}
               >
@@ -545,7 +551,10 @@ export function PrimmSteps({
     const done = session.done.includes(current.id);
     return (
       <>
-        <div className="primm-steps__bubble is-ai primm-steps__sentences">
+        <div
+          className="primm-steps__bubble is-ai primm-steps__sentences"
+          data-guide="step-sentences"
+        >
           {sentences.map((sentence, index) => (
             <button
               key={`${index}:${sentence}`}
@@ -669,7 +678,7 @@ export function PrimmSteps({
             </div>
           </div>
         ) : null}
-        <figure className="primm-steps__point">
+        <figure className="primm-steps__point" data-guide="step-point">
           <img
             src={photoUrl(current.assetId)}
             alt={asset(current.assetId)?.alt ?? ""}
@@ -751,6 +760,7 @@ export function PrimmSteps({
         {current.context ? <p className="primm-steps__context">{current.context}</p> : null}
         <div
           className={`primm-steps__line${placed.length ? "" : " is-empty"}`}
+          data-guide="step-line"
           aria-label={t("primm.steps.lineLabel")}
           data-empty={t("primm.steps.lineHint")}
         >
@@ -769,7 +779,7 @@ export function PrimmSteps({
             </button>
           ))}
         </div>
-        <div className="primm-steps__tiles">
+        <div className="primm-steps__tiles" data-guide="step-tiles">
           {current.pieces.map((piece) =>
             placed.includes(piece.id) ? (
               <span key={piece.id} className="primm-steps__tile is-used" aria-hidden="true">
@@ -845,7 +855,7 @@ export function PrimmSteps({
       <>
         <p className="primm-steps__context">{activity.make.scenario}</p>
         {image ? <PrimmAsset asset={asset(image)} /> : null}
-        <div className="primm-steps__composer is-write">
+        <div className="primm-steps__composer is-write" data-guide="step-make">
           <label className="primm-steps__visually-hidden" htmlFor={`${headingId}-make`}>
             {t("primm.request")}
           </label>
@@ -1079,6 +1089,7 @@ function AttachTile({
         ref={ref}
         type="button"
         className="primm-steps__attach"
+        data-guide="step-attach"
         data-attach={stepId}
         aria-label={label}
         title={hint}
@@ -1171,7 +1182,7 @@ function MatchStep({
   };
   return (
     <>
-      <div className="primm-steps__answers">
+      <div className="primm-steps__answers" data-guide="step-match">
         {order.map((id) =>
           placed[id] ? null : (
             <AnswerCard
@@ -1336,7 +1347,12 @@ function SortStep({
       </p>
       <div className="primm-steps__stack">
         {top ? (
-          <div ref={topRef} key={top.id} className="primm-steps__card is-top">
+          <div
+            ref={topRef}
+            key={top.id}
+            className="primm-steps__card is-top"
+            data-guide="step-card"
+          >
             {top.text}
           </div>
         ) : null}
@@ -1348,7 +1364,7 @@ function SortStep({
       >
         {note?.text ?? ""}
       </p>
-      <div className="primm-steps__buckets">
+      <div className="primm-steps__buckets" data-guide="step-buckets">
         {(binary ? [no!, yes!] : step.buckets).map((bucket) => (
           <GameButton
             key={bucket.id}

@@ -49,7 +49,9 @@ export function GameFrame({
       data-testid="game-frame"
     >
       <div className="game-frame__stage">
-        <div className="game-frame__canvas">{stage}</div>
+        <div className="game-frame__canvas" data-guide="stage">
+          {stage}
+        </div>
         {notice ? <div className="game-frame__notice">{notice}</div> : null}
         {overlay ? <div className="game-frame__overlay">{overlay}</div> : null}
       </div>
@@ -109,6 +111,30 @@ export function ScoreChip({ score, combo }: { score: number; combo: number }) {
   );
 }
 
+/**
+ * Time left for the thing on the clock (a link before the tide, a word before
+ * the snake is hungry), as a slim bar under the question. The scene shows the
+ * same clock in the world; this is the one a screen reader and a glance can
+ * read. It sits under the question rather than among the chips, which have no
+ * room left on a phone.
+ */
+export function ClockMeter({ fraction, label }: { fraction: number; label: string }) {
+  const value = Math.round(Math.max(0, Math.min(1, fraction)) * 100);
+  return (
+    <span
+      className="game-frame__clock"
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={value}
+      data-low={value < 25 ? "true" : undefined}
+    >
+      <span className="game-frame__clock-fill" style={{ inlineSize: `${value}%` }} />
+    </span>
+  );
+}
+
 export function ChipGroup({ children }: { children: ReactNode }) {
   return <div className="game-frame__chips">{children}</div>;
 }
@@ -123,14 +149,17 @@ export function AnswerButtons({
   bins,
   disabled,
   onAnswer,
+  describe,
 }: {
   bins: readonly AnswerBin[];
   disabled: boolean;
   onAnswer: (binId: string) => void;
+  /** What pressing a button does, for a screen reader; 庭院拦截's throw by default. */
+  describe?: (label: string) => string;
 }) {
   const { t } = useI18n();
   return (
-    <div className="game-frame__answers" data-count={bins.length}>
+    <div className="game-frame__answers" data-count={bins.length} data-guide="answers">
       {bins.map((bin, index) => (
         <GameButton
           key={bin.id}
@@ -140,13 +169,46 @@ export function AnswerButtons({
           className="game-frame__answer"
           style={{ background: binColour(index), color: BIN_INK }}
           disabled={disabled}
-          aria-label={t("gameKit.throw", { bin: bin.label })}
+          aria-label={describe ? describe(bin.label) : t("gameKit.throw", { bin: bin.label })}
           aria-keyshortcuts={String(index + 1)}
           data-testid={`game-answer-${index}`}
           onClick={() => onAnswer(bin.id)}
         >
           <kbd aria-hidden="true">{index + 1}</kbd>
           <span>{bin.label}</span>
+        </GameButton>
+      ))}
+    </div>
+  );
+}
+
+export type PadDirection = "up" | "down" | "left" | "right";
+const PAD_ARROWS: Record<PadDirection, string> = { up: "↑", down: "↓", left: "←", right: "→" };
+
+/** Four arrows for a grid game: the thumb's version of the arrow keys. */
+export function DirectionPad({
+  disabled,
+  onTurn,
+}: {
+  disabled: boolean;
+  onTurn: (dir: PadDirection) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="game-frame__pad" data-testid="game-pad" data-guide="pad">
+      {(["up", "left", "down", "right"] as const).map((dir) => (
+        <GameButton
+          key={dir}
+          static
+          sound={false}
+          variant="secondary"
+          style={{ gridArea: dir }}
+          disabled={disabled}
+          aria-label={t(`gameKit.dir.${dir}`)}
+          data-testid={`game-pad-${dir}`}
+          onClick={() => onTurn(dir)}
+        >
+          <span aria-hidden="true">{PAD_ARROWS[dir]}</span>
         </GameButton>
       ))}
     </div>

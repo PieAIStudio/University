@@ -2,7 +2,7 @@ import { toPath, type ActivityKind } from "@pieai/university-core";
 import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
 import type { PlainMessageKey } from "../i18n/types.js";
 import { SAMPLE_PATHS } from "./sample-paths.js";
-import { THREE_GAMES, type ThreeGame } from "./three-games.js";
+import { KIT_THREE_GAMES, THREE_GAMES, type ThreeGame } from "./three-games.js";
 export { THREE_GAMES, type ThreeGame } from "./three-games.js";
 
 export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "three", "history"] as const;
@@ -108,21 +108,30 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
   }));
   // Assembled from the game kit (ADR-0011): content from the lessons, the
   // learner's avatar as the hero.
-  const kit: CatalogEntry[] = [
-    {
-      id: "three:courtyard",
-      group: "three",
-      threeMode: "courtyard",
-      inspiredBy: "arcade:invaders",
-      name: "arcade3d.courtyard",
-      action: "gallery.three.courtyard",
-      controls: "intercept.controls",
-      scope: "gameKit.result.boundary",
-      rhythm: "session",
-      retained: false,
-    },
-  ];
-  const upgraded: CatalogEntry[] = THREE_GAMES.filter((mode) => mode !== "courtyard")
+  const kit: CatalogEntry[] = (
+    [
+      ["courtyard", "arcade:invaders", "intercept.controls"],
+      ["links", "blocks:wire", "links.controls"],
+      ["snake", "blocks:rank", "snake.controls"],
+      ["moles", "arcade:slice", "moles.controls"],
+      ["runner", "arcade:chase", "runner.controls"],
+      ["blocks", "arcade:stack", "blocks.controls"],
+    ] as const
+  ).map(([mode, inspiredBy, controls]) => ({
+    id: `three:${mode}`,
+    group: "three",
+    threeMode: mode,
+    inspiredBy,
+    name: `arcade3d.${mode}`,
+    action: `gallery.three.${mode}`,
+    controls,
+    scope: "gameKit.result.boundary",
+    rhythm: "session",
+    retained: false,
+  }));
+  const upgraded: CatalogEntry[] = THREE_GAMES.filter(
+    (mode) => !(KIT_THREE_GAMES as readonly string[]).includes(mode),
+  )
     .slice(0, 6)
     .map((mode) => ({
       id: `three:${mode}`,

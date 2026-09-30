@@ -9,6 +9,11 @@
  * it refuses to let a fourth join them unnoticed. */
 export const THREE_GAMES = [
   "courtyard",
+  "links",
+  "snake",
+  "moles",
+  "runner",
+  "blocks",
   "sky-invaders",
   "factory-stack",
   "press-words",
@@ -20,3 +25,14 @@ export const THREE_GAMES = [
   "cloze-tetris",
 ] as const;
 export type ThreeGame = (typeof THREE_GAMES)[number];
+
+/** Assembled from the game kit (ADR-0011): questions from the lessons, the learner's avatar plays. */
+export const KIT_THREE_GAMES = [
+  "courtyard",
+  "links",
+  "snake",
+  "moles",
+  "runner",
+  "blocks",
+] as const satisfies readonly ThreeGame[];
+export type KitThreeGame = (typeof KIT_THREE_GAMES)[number];

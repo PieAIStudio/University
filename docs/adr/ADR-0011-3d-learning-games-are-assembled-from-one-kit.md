@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-09-24
-last_reviewed: 2026-09-24
+last_reviewed: 2026-09-30
 domain: learning
 tags:
   - 3d-games
@@ -105,3 +105,47 @@ Rules that follow:
 - Longer cards (backs of 28–47 characters in the first course) do not ride on
   boats. A per-card short key would let them, and belongs to the course-writing
   skill.
+
+## Amendment 2026-09-30: six island games, one runner, guided first use
+
+The Owner asked for the island games to be games people recognise and left
+the roster to the build (「你自己确定」). Six are now assembled from the kit,
+each drilling one judgement the lessons teach:
+
+| Game | Judgement | Content projected from |
+| --- | --- | --- |
+| 庭院拦截 | sort | `sort` activities and steps (`gameRoundsFromLesson`) |
+| 俄罗斯方块 | sort, a second shape | the same sorts |
+| 连连看 | connect | `connect` activities (`linkRoundsFromLesson`) |
+| 贪吃蛇 | order | v3 `build` steps and `connect` probe paths (`sequenceRoundsFromLesson`) |
+| 打地鼠 | point out a sentence | `evidence` steps of an `interaction-path` (`spotRoundsFromLesson`) |
+| 三岔路 | choose | `weigh` boards and `decision` steps (`choiceRoundsFromLesson`) |
+
+三岔路 (an endless-runner fork) replaced the 抢答器 candidate because a quiz
+buzzer is not a game anyone recognises; the rejected flat v3 `match` step is
+not projected, because its answers are live model output with no stored key.
+
+What changed in the layers, without changing the rules above:
+
+- **Rules.** Every game stands on one round runner
+  (`game-kit/rules/round-game.ts`): intro, briefing, countdown, hearts,
+  upgrades, the review pass and the log mean the same thing in each game; a
+  game file supplies only its mechanic. 庭院拦截 moved onto it unchanged.
+- **Assembly.** One shell (`apps/university/src/game/RoundGameShell.tsx`)
+  owns pause-on-look-away, the panels, verdict timing and reporting a real
+  win; each game supplies its scene, controls and how its items read.
+- **Map.** A challenge node projects all six games from the same practised
+  lessons and plays one with at least two rounds; when several qualify, nodes
+  take turns in a fixed order (`pickIslandGame`). The 2D matching game stays
+  the fallback.
+- **No rules text.** The intro panel is one line and Start. The first time a
+  round is on screen, time stands still and 涟 — Nerve's guidance walk, drawn
+  by UIKit's LiquidPresence, the same droplet as on the map — points at one
+  place at a time. Its do steps wait for the learner to use a control that
+  costs nothing (a first pick, a turn, a lane), never an answer. Seen guides
+  are account history (`preferences.guided`, merged by union). The same walk
+  covers the eight lesson step kinds.
+- **Lab samples.** Content for some games is scarce until lessons 1–3 and the
+  lessons after them are rewritten. The play lab tops a game up with labelled
+  sample rounds (`apps/university/src/game/lab-samples.json`); the map never
+  plays them, so content still has one producer.

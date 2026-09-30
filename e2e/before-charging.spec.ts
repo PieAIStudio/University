@@ -128,6 +128,20 @@ for (const [mode, origin] of [
         path: join(SHOTS, `${mode}-${locale}-plans-phone.png`),
         fullPage: true,
       });
+      // A full-page capture places fixed navigation across the stitched image.
+      // Prove the narrow-screen action with a real pointer after scrolling,
+      // then retain the actual viewport rather than mistaking that stitch for
+      // either an actionable control or an obstruction.
+      await humanClick(
+        page,
+        page.locator(".plan-card--featured button.university-cta"),
+        "check the unavailable purchase without an order or charge",
+      );
+      await expect(page.locator(".payment-order__error")).toHaveText(
+        t.t("product.billing.purchaseFailed"),
+      );
+      await expect(page.locator(".payment-order__line")).toHaveCount(0);
+      await page.screenshot({ path: join(SHOTS, `${mode}-${locale}-plans-phone-action.png`) });
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.screenshot({
         path: join(SHOTS, `${mode}-${locale}-plans-desktop.png`),

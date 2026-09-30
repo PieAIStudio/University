@@ -164,6 +164,25 @@ experience-ledger descriptions were reconciled afterward; neither legal nor
 real-cancellation debt is marked fixed. The normal pre-push is still required,
 and its terminal receipt is the source-delivery boundary.
 
+### Integration with the independently delivered game lane
+
+Before this page candidate was pushed, remote `main` advanced from `cf6a1f62`
+to `6302f5e2` through the other lane's 31 commits. The verified page work was
+preserved as `29068f33`, then integrated by an ordinary merge; no incoming
+game, lesson guide, catalogue or reference work was discarded or rewritten.
+The sole textual conflict was the generated documentation manifest, rebuilt
+from both sides. Core exports retain both the support routes and new game
+content; interface contracts were regenerated from the merged catalogs.
+The pre-merge verification above does not verify this integrated candidate.
+Fresh complete source and normal pre-push checks are required below.
+
+The combined source passed `before-charging-integrated-verify.log` with
+`VERIFY_EXIT=0` (`wc_job_0e03fLLvUQEoJltD`). The ordinary push still owns full
+browser acceptance. The phone purchase probe additionally presses the actual
+unavailable CTA after scrolling and captures the real viewport; a fixed bottom
+bar across a stitched full-page image is not itself evidence of a blocked click.
+No ordering, billing, legal approval or service switch is changed by that probe.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |

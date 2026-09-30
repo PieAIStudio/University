@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>游戏化与产品生态</title>
+<style>
+:root{
+  --bg:#F4F4F1; --paper:#FFFFFF; --ink:#1C1D21; --ink2:#4E525B; --ink3:#80858F;
+  --line:#DCDDD8; --soft:#F7F7F4;
+  --orange:#D9621E; --orange-bg:#FCEBDD;
+  --green:#12835A; --green-bg:#E0F3EA;
+  --blue:#2B63C8; --blue-bg:#E6EEFB;
+  --purple:#5A43C8; --purple-bg:#ECE8FB;
+  --gone:#9B9FA7;
+  --wire:#8F959F; --wfill:#F8F8F6; --wdot:#E4E4E0; --wdark:#2A2D33;
+  --shadow:0 1px 2px rgba(25,25,20,.05),0 8px 28px rgba(25,25,20,.06);
+  --sans:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --orange:#F0894B; --orange-bg:#3A2519; --green:#3DC48D; --green-bg:#16332A;
+  --blue:#76A2F2; --blue-bg:#1C2843; --purple:#A18EF4; --purple-bg:#282247; --gone:#6E737C;
+  --wire:#7D838E; --wfill:#202328; --wdot:#2B2E34; --wdark:#DADCE0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --orange:#F0894B; --orange-bg:#3A2519; --green:#3DC48D; --green-bg:#16332A;
+  --blue:#76A2F2; --blue-bg:#1C2843; --purple:#A18EF4; --purple-bg:#282247; --gone:#6E737C;
+  --wire:#7D838E; --wfill:#202328; --wdot:#2B2E34; --wdark:#DADCE0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.85;padding-inline:16px;padding-block:0 80px}
+.page{max-width:1000px;margin:0 auto}
+.col{max-width:720px;margin-inline:auto}
+h1,h2,h3{text-wrap:balance;line-height:1.3;margin:0}
+p{margin:0}
+b{font-weight:700}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.stack-lg{display:grid;gap:28px}
+
+/* cover */
+.cover{padding-block:56px 24px;display:grid;gap:18px}
+.kicker{font-size:13px;letter-spacing:.14em;color:var(--ink3);font-weight:500}
+.cover h1{font-size:clamp(32px,6vw,52px);font-weight:900;letter-spacing:-.01em}
+.cover .sub{font-size:19px;color:var(--ink2)}
+.howto{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:22px 24px;display:grid;gap:12px}
+.howto h2{font-size:17px}
+.howto ol{margin:0;padding-left:1.3em;display:grid;gap:4px;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;color:var(--ink2)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+.lg-new{background:var(--green-bg);border:2px solid var(--green)}
+.lg-chg{background:var(--orange-bg);border:2px solid var(--orange)}
+.lg-gone{border:2px dashed var(--gone)}
+.lg-chal{background:var(--purple-bg);border:2px solid var(--purple)}
+
+/* persona */
+.persona{display:grid;grid-template-columns:72px 1fr;gap:16px;align-items:center;background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:18px 20px}
+.face{width:64px;height:64px;border-radius:50%;background:var(--orange-bg);display:grid;place-items:center;font-weight:900;font-size:24px;color:var(--orange);border:2px solid var(--orange)}
+.persona p{color:var(--ink2);font-size:16px}
+.persona b{color:var(--ink)}
+
+/* route */
+.route{list-style:none;margin:0;padding:0;display:grid;gap:0;position:relative}
+.route li{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:start;padding-bottom:14px;position:relative}
+.route li::before{content:"";position:absolute;left:19px;top:34px;bottom:0;border-left:2px dashed var(--line)}
+.route li:last-child::before{display:none}
+.route .dot{width:40px;height:40px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:grid;place-items:center;font-weight:900;font-size:16px}
+.route li.hot .dot{background:var(--orange);border-color:var(--orange);color:#fff}
+.route a{color:var(--ink);text-decoration:none;font-weight:700}
+.route a:hover{text-decoration:underline}
+.route span{display:block;color:var(--ink3);font-size:15px;line-height:1.5}
+
+/* section headers */
+.part{padding-top:72px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px;scroll-margin-top:24px}
+.part-h{display:grid;gap:8px}
+.part-h .no{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--paper);font-weight:900;font-size:20px}
+.part-h h2{font-size:clamp(26px,4.2vw,36px);font-weight:900}
+.part-h .lead{font-size:18px;color:var(--ink2)}
+.guide{font-size:17px;color:var(--ink2);border-left:3px solid var(--line);padding-left:14px}
+
+/* step labels */
+.step{display:grid;gap:10px}
+.label{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;letter-spacing:.06em;color:var(--ink3)}
+.label::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink3)}
+.label.now::before{background:var(--gone)}
+.label.think::before{background:var(--orange)}
+.label.prob::before{background:#C23B3B}
+.label.fix::before{background:var(--green)}
+.label.why::before{background:var(--blue)}
+.label.you::before{background:var(--purple)}
+
+/* screenshots with callouts */
+figure{margin:0}
+.annot{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--paper);box-shadow:var(--shadow)}
+.annot img{display:block;width:100%}
+.annot.phone{max-width:300px;margin-inline:auto;border-radius:26px}
+.co{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:#C23B3B;color:#fff;font-weight:900;font-size:15px;display:grid;place-items:center;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 2px 6px rgba(0,0,0,.3)}
+.cap{font-size:14px;color:var(--ink3);margin-top:8px}
+.keys{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.keys li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:16px}
+.keys li i{width:24px;height:24px;border-radius:50%;background:#C23B3B;color:#fff;font-style:normal;font-weight:900;font-size:13px;display:grid;place-items:center;margin-top:3px}
+.keys.fix li i{background:var(--green)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.two-shots{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+
+/* bubble */
+.bubble{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:start}
+.bubble .face{width:44px;height:44px;font-size:16px}
+.bubble .say{position:relative;background:var(--paper);border:2px solid var(--orange);border-radius:18px;padding:12px 16px;font-size:17px;box-shadow:var(--shadow)}
+.bubble .say::before{content:"";position:absolute;left:-10px;top:14px;border:8px solid transparent;border-right-color:var(--orange);border-left:0}
+.bubble .say p+p{margin-top:6px}
+
+/* boxes */
+.box{border-radius:16px;padding:16px 18px;display:grid;gap:8px}
+.box h4{margin:0;font-size:14px;letter-spacing:.08em;font-weight:900}
+.box.analogy{background:var(--blue-bg)}
+.box.analogy h4{color:var(--blue)}
+.box.principle{background:var(--soft);border:1px solid var(--line)}
+.box.principle h4{color:var(--ink2)}
+.box.owner{background:var(--purple-bg)}
+.box.owner h4{color:var(--purple)}
+.box p{font-size:16.5px}
+.problem{font-size:18px;font-weight:700}
+
+details.small{border-top:1px dashed var(--line);padding-top:10px}
+details.small summary{cursor:pointer;color:var(--ink3);font-size:15px}
+details.small .in{padding-top:10px;display:grid;gap:8px;font-size:15.5px;color:var(--ink2)}
+
+/* wireframes */
+.frame{position:relative;border:1.5px solid var(--wire);background-color:var(--wfill);background-image:radial-gradient(var(--wdot) 1px,transparent 1px);background-size:12px 12px;overflow:hidden;font-size:11px;line-height:1.4;color:var(--ink2)}
+.frame.desk{aspect-ratio:16/10;border-radius:12px;width:100%}
+.frame.phone{aspect-ratio:9/19;border-radius:26px;width:100%;max-width:240px;margin:0 auto}
+.w{position:relative;border:1.2px solid var(--wire);border-radius:7px;background:var(--paper);padding:5px 8px}
+.w.new{border:1.8px solid var(--green);background:var(--green-bg);color:var(--green)}
+.w.chg{border:1.8px solid var(--orange);background:var(--orange-bg);color:var(--orange)}
+.w.gone{border:1.5px dashed var(--gone);background:transparent;color:var(--gone);text-decoration:line-through}
+.btn{border-radius:999px;text-align:center;font-weight:700;padding:6px 8px}
+.btn.pri{background:var(--wdark);color:var(--paper);border-color:var(--wdark)}
+.btn.pri.new{background:var(--green);color:#fff;border-color:var(--green)}
+.ln{height:5px;border-radius:3px;background:var(--line);margin:3px 0}
+.img{background:repeating-linear-gradient(45deg,var(--line) 0 2px,transparent 2px 7px);border:1.2px solid var(--wire);border-radius:6px}
+.isl{position:absolute;border-radius:48% 52% 40% 45%/55% 50% 45% 40%;background:color-mix(in srgb,var(--green) 22%,var(--wfill));border:1.2px solid var(--wire)}
+.av{position:absolute;width:15px;height:15px;border-radius:50%;background:var(--orange-bg);border:1.2px solid var(--orange)}
+.pos{position:absolute}
+.fcol{display:flex;flex-direction:column;gap:6px}
+.frow{display:flex;gap:6px;align-items:center}
+.grow{flex:1}
+.tiny{font-size:9.5px;color:var(--ink3)}
+.bold{font-weight:700;color:var(--ink)}
+.rail{position:absolute;left:2%;top:3%;bottom:3%;width:17%;padding:6px}
+.rail .it{padding:3px 6px;border-radius:5px;margin-bottom:3px}
+.rail .it.on{background:var(--orange-bg);color:var(--orange)}
+.rrail{position:absolute;right:2%;top:3%;bottom:3%;width:19%;padding:6px}
+.tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:6px 4px 10px;background:var(--paper);border-top:1.2px solid var(--wire)}
+.tabbar .tb{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:9.5px}
+.tabbar .tb i{width:13px;height:13px;border-radius:3px;background:var(--line);display:block}
+.tabbar .tb.on{color:var(--orange);font-weight:700}
+.tabbar .tb.on i{background:var(--orange)}
+.tabbar.new{border-top:1.8px solid var(--green);background:var(--green-bg)}
+.topbar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;padding:9px 10px 6px}
+.mk{position:absolute;z-index:3;left:-8px;top:-8px;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;font-weight:900;font-style:normal;text-decoration:none;box-shadow:0 0 0 2px var(--paper)}
+.nw{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-cap{font-size:14px;color:var(--ink3);text-align:center;margin-top:8px}
+
+/* floor plan */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.plan{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:18px;display:grid;gap:12px;align-content:start}
+.plan h3{font-size:17px}
+.rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.room{border:2px solid var(--ink);border-radius:10px;padding:10px 8px;min-height:74px;display:grid;align-content:start;gap:4px;font-size:15px;font-weight:700;position:relative;background:var(--soft)}
+.room small{font-weight:400;font-size:12.5px;color:var(--ink3);line-height:1.45}
+.room.big{grid-column:span 2}
+.room.closet{grid-column:span 4;border-style:dashed;background:transparent}
+.room.closet .inner{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.room.closet .inner span{border:1.5px solid var(--ink3);border-radius:8px;padding:2px 8px;font-size:13.5px;font-weight:500}
+.today{position:absolute;right:6px;top:-9px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:0 6px;line-height:18px}
+.inner .today{position:static;margin-left:4px}
+.room small.today{color:#fff;font-weight:700;font-size:11px}
+.room.after{border-color:var(--green);background:var(--green-bg)}
+.strip{grid-column:span 4;border:2px solid var(--green);border-radius:10px;padding:6px 10px;font-size:14px;background:var(--green-bg);color:var(--green);font-weight:700}
+.rooms5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.rooms5 .strip{grid-column:span 5}
+
+/* loops */
+.loops{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.loopcard{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:16px;display:grid;gap:8px;justify-items:center}
+.loopcard h3{font-size:16px}
+.loopcard svg{width:100%;max-width:320px;height:auto}
+.loopcard p{font-size:15px;color:var(--ink2);text-align:center}
+
+/* comic */
+.comic{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.panel{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:14px;display:grid;gap:8px;align-content:start}
+.panel .t{font-size:13px;color:var(--ink3);font-weight:700}
+.panel .scene{height:92px;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;font-size:14px;color:var(--ink2);text-align:center;padding:6px}
+.panel p{font-size:15px}
+
+/* decisions */
+.q{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:20px;display:grid;gap:12px}
+.q h3{font-size:19px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.q h3 .qid{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--purple);color:#fff;font-size:15px}
+.q .ctx{color:var(--ink2);font-size:16px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;border:2px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;align-content:start;background:var(--soft);color:var(--ink)}
+.opt:hover{border-color:var(--wire)}
+.opt:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.opt b{font-size:16px}
+.opt .d{color:var(--ink2);font-size:14.5px;line-height:1.65}
+.opt .rec{justify-self:start;background:var(--green-bg);color:var(--green);font-size:12.5px;border-radius:999px;padding:1px 9px;font-weight:700}
+.opt[aria-pressed="true"]{border-color:var(--purple);background:var(--purple-bg)}
+.opt[aria-pressed="true"] b::after{content:"  ✓ 你选的";color:var(--purple);font-size:13px}
+.picks{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--purple-bg);color:var(--purple);border-radius:16px;padding:14px 18px;font-size:16px}
+.picks code{font-family:ui-monospace,Menlo,monospace;background:var(--paper);color:var(--ink);padding:3px 9px;border-radius:7px;font-size:14px}
+.picks button{all:unset;cursor:pointer;background:var(--purple);color:#fff;border-radius:999px;padding:7px 16px;font-weight:700;font-size:14px}
+.picks button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* lists */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:15px}
+.chip.x{text-decoration:line-through;color:var(--ink3);border-style:dashed;background:transparent}
+.card{background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.minus{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.minus li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.minus li i{font-style:normal;font-weight:900;font-size:20px;line-height:1.4}
+.minus li i.m{color:#C23B3B}
+.minus li i.p{color:var(--green)}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:16px 18px;display:grid;grid-template-columns:56px 1fr;gap:14px}
+.steps .n{font-weight:900;font-size:15px;color:var(--orange);line-height:1.5}
+.steps .n small{display:block;color:var(--ink3);font-weight:500;font-size:13px}
+.steps p{font-size:16px}
+.steps .ok{font-size:14.5px;color:var(--ink3);margin-top:6px}
+
+.tblwrap{overflow-x:auto;background:var(--paper);border-radius:14px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px;line-height:1.6}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--ink3);font-weight:500}
+tr:last-child td{border-bottom:0}
+
+/* prototype */
+.proto{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start}
+.device{width:300px;height:620px;border-radius:40px;border:10px solid var(--wdark);background:var(--paper);position:relative;overflow:hidden;box-shadow:var(--shadow);font-size:13.5px;line-height:1.6}
+.device .scr{position:absolute;inset:0;display:flex;flex-direction:column;padding:26px 16px 70px;gap:10px;overflow:auto}
+.device .pbtn{all:unset;box-sizing:border-box;cursor:pointer;display:block;text-align:center;border-radius:999px;padding:11px 14px;font-weight:700;background:var(--orange);color:#fff;font-size:14.5px}
+.device .pbtn.sec{background:transparent;color:var(--ink2);border:1.5px solid var(--line)}
+.device .pbtn.ghost{background:transparent;color:var(--ink3);padding:6px;font-weight:500}
+.device .pbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.device h4{font-size:20px;font-weight:900;margin:0;line-height:1.3}
+.device .sm{font-size:12.5px;color:var(--ink2)}
+.device .bx{border:1.5px solid var(--line);border-radius:14px;padding:11px;display:grid;gap:5px;background:var(--soft)}
+.device .bx.sel{border-color:var(--orange);background:var(--orange-bg)}
+.device .ptab{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:8px 4px 12px;border-top:1px solid var(--line);background:var(--paper)}
+.device .ptab button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink3);padding:2px 6px;border-radius:8px}
+.device .ptab button i{width:18px;height:18px;border-radius:5px;background:var(--line);display:block}
+.device .ptab button[aria-current="page"]{color:var(--orange);font-weight:700}
+.device .ptab button[aria-current="page"] i{background:var(--orange)}
+.device .ptop{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.device .ptop .sp{flex:1}
+.device .mapbox{flex:1;min-height:260px;border-radius:16px;position:relative;background:linear-gradient(#cfe3f5,#9dbfe6);overflow:hidden}
+.device .mapbox .isl{border-color:#6f8fb0}
+.device .pill{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);white-space:nowrap}
+.device .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.device .tiles div{border:1.5px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;background:var(--soft)}
+.device .tiles div.lock{opacity:.45;border-style:dashed}
+.device .week{display:flex;gap:4px}
+.device .week span{flex:1;height:26px;border-radius:6px;background:var(--line);display:grid;place-items:center;font-size:10px;color:var(--ink3)}
+.device .week span.on{background:var(--orange);color:#fff}
+.proto-side{display:grid;gap:12px;align-content:start}
+.proto-side ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink2);font-size:16px}
+.proto-side ol li.cur{color:var(--ink);font-weight:700}
+.toast{position:absolute;left:12px;right:12px;bottom:78px;background:var(--wdark);color:var(--paper);border-radius:12px;padding:10px 12px;font-size:12.5px}
+
+.handoff{font-size:17px;color:var(--ink2);display:flex;gap:10px;align-items:flex-start;padding-top:6px}
+.handoff::before{content:"→";font-weight:900;color:var(--orange)}
+.minute{background:var(--ink);color:var(--paper);border-radius:18px;padding:22px 24px;display:grid;gap:10px}
+.minute h2{font-size:18px}
+.minute ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.minute p{opacity:.8;font-size:15px}
+.recap{background:var(--paper);border:2px dashed var(--orange);border-radius:18px;padding:20px 22px;display:grid;gap:10px}
+.recap h3{font-size:19px}
+.faq{display:grid;gap:12px}
+.faq .card{display:grid;gap:6px}
+.faq .card b{font-size:17px}
+.faq .card p{color:var(--ink2);font-size:16px}
+.signs{display:flex;justify-content:center}
+.signs svg{width:100%;max-width:420px;height:auto}
+footer{margin-top:72px;color:var(--ink3);font-size:14px;border-top:1px solid var(--line);padding-top:18px;display:grid;gap:6px}
+
+@media (max-width:760px){
+  body{font-size:16.5px}
+  .two-shots,.plans,.loops{grid-template-columns:1fr}
+  .comic{grid-template-columns:1fr 1fr}
+  .rooms5{grid-template-columns:repeat(3,1fr)}
+  .rooms5 .strip{grid-column:span 3}
+  .proto{grid-template-columns:1fr}
+  .device{margin:0 auto;width:min(300px,100%)}
+  .co{width:22px;height:22px;font-size:12px}
+  .trio{grid-template-columns:repeat(3,190px);overflow-x:auto;padding-bottom:6px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .device .scr:not([hidden]){animation:fade .25s ease}
+  @keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+
+.echo{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.echo li{display:grid;grid-template-columns:30px 1fr;gap:10px;background:var(--paper);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px}
+.echo li>i{font-style:normal;font-weight:900;color:var(--purple);font-size:16px}
+.echo .where{display:block;font-size:14px;color:var(--ink3)}
+.ruled{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ruled li{display:grid;grid-template-columns:110px 1fr;gap:10px;background:var(--paper);border-radius:12px;box-shadow:var(--shadow);padding:10px 14px;font-size:15.5px}
+.ruled li b{color:var(--purple)}
+.mats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.mats div{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14.5px;line-height:1.6}
+.mats b{display:block;font-size:15px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.three .card{display:grid;gap:6px;align-content:start}
+.three .card h4{margin:0;font-size:16px}
+.three .card .tag{justify-self:start;font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;background:var(--orange-bg);color:var(--orange)}
+.annot img[src$=".webp"]{background:#f3ece0}
+@media (max-width:760px){.three{grid-template-columns:1fr}.ruled li{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="cover col">
+  <div class="kicker">University × OwnMySpace · 游戏化系统与产品生态 · 讨论稿 · 2026 年 9 月 30 日</div>
+  <h1>让人一门一门学下去：升级、血量、装备、道具，和一座两个产品共用的岛</h1>
+  <p class="sub">你想用游戏的办法，让学的人一直学下去、去学各种各样的课；还想让 University 和 OwnMySpace 连成一个生态：学习得来的东西，能摆到自己在 OwnMySpace 的岛上。这一份先看清两边已经有什么，再说我的建议，最后是要你拍板的事。</p>
+
+  <div class="howto">
+    <h2>这份报告怎么读</h2>
+    <p>还是那位虚构的学员「小林」。这次跟着她学完第一门课、打开宝箱、上岛玩游戏，最后走进 OwnMySpace 里自己的岛。</p>
+    <p>每一站都按同样的五步来讲：</p>
+    <ol>
+      <li><b>现在是什么样</b>：真实截图，红色数字告诉你看哪儿。</li>
+      <li><b>小林会怎么想</b>：一个学员的第一反应。</li>
+      <li><b>问题出在哪</b>：一句话说清。</li>
+      <li><b>建议改成这样</b>：新样子的说明和草图。</li>
+      <li><b>为什么</b>：打个比方，再讲道理。</li>
+    </ol>
+    <p>最后有 7 件事要你拍板，点一下就行，底部生成一行字，复制发给我。</p>
+    <div class="legend" aria-label="颜色说明">
+      <span><i class="lg-new"></i>新加的、推荐的</span><span><i class="lg-chg"></i>改过的、要注意的</span><span><i class="lg-gone"></i>拿掉的</span><span><i class="lg-chal"></i>你说过的话、要你决定的</span>
+    </div>
+  </div>
+
+  <div class="persona">
+    <div class="face" aria-hidden="true">林</div>
+    <p><b>小林（虚构）。</b>35 岁，公司行政，想学会用 AI 干活。每天通勤 10 分钟用手机学。小时候玩过《摩尔庄园》，也在 QQ 农场里偷过菜。</p>
+  </div>
+
+  <div class="minute">
+    <h2>如果你只有一分钟</h2>
+    <ol>
+      <li><b>第 7 版已经做了大半：</b>经验和等级、四种宝箱、图鉴卡、段位、徽章、每周大怪、只出装扮的卡包、衣橱。新设计全部接在它上面，不另起一套。</li>
+      <li><b>升级：</b>等级照旧，再加一层「本事星级」。每一关教一个本事，在别的课里再用上一次，这个本事就多一颗星。想升星，就得去学别的课。</li>
+      <li><b>血量：</b>只放在岛上的游戏和每周大怪里，课里永远不扣。心的上限由「记牢了多少张卡」决定；游戏里掉光了，复习一张快忘的卡就回一颗心。</li>
+      <li><b>装备和道具：</b>装扮只好看（第 7 版已有）；另加 6 件「工具」，本事练到三星才拿得到，只在岛上的游戏里帮你一把。宝箱里拿到的摆件，放进你自己的「家园岛」。</li>
+      <li><b>生态：</b>家园岛就是你在 OwnMySpace 的那座岛：同一个账号、同一只小兔子、同一份摆件清单。University 里能摆、能看；到了 OwnMySpace 能改地形、用 AI 生成东西、去朋友岛上串门。</li>
+      <li><b>有一条要你先定：</b>OwnMySpace 现在被总部排在「慢线」，不许任何 AI 在那边做收费相关的事。「会员送岛」碰的正是这条线，要你决定改不改排期。</li>
+    </ol>
+    <p>从头读完大约 25 分钟。</p>
+  </div>
+</header>
+
+<section class="part col" id="echo">
+  <div class="part-h">
+    <h2>先对一遍：你的意思，我是这样听懂的</h2>
+    <p class="lead">都是你 9 月 30 日说的。听错了，告诉我第几条。</p>
+  </div>
+  <ul class="echo">
+    <li><i>1</i><span>用游戏的方式，让人<b>一直学各种课</b>，游戏里让人玩下去的好东西都学过来。<span class="where">第 0、1 站：先看第 7 版已经有的，再补「学别的课」的理由。</span></span></li>
+    <li><i>2</i><span>升级系统，<b>可能需要血量</b>。<span class="where">第 2 站。血量我建议要，但放的位置有讲究。</span></span></li>
+    <li><i>3</i><span>装备：<b>现在小兔子装备不上</b>，不知道怎么设计。<span class="where">第 3 站：分成「好看的装扮」和「有用的工具」两种。</span></span></li>
+    <li><i>4</i><span>道具：第 7 版的宝箱会爆战利品，<b>放到哪儿，是不是就是道具系统</b>。<span class="where">第 4 站：是。东西分四类，各有去处。</span></span></li>
+    <li><i>5</i><span>和 OwnMySpace <b>联合</b>：宝箱里的家具、房子，能摆到自己的岛上；付费用户有一座漂亮的岛，两边是同一座。<span class="where">第 5 站。</span></span></li>
+    <li><i>6</i><span>两个产品形成<b>生态</b>，产品线打通，后端本来就能通。<span class="where">第 5 站和「先后顺序」。账号能通；小人和岛的格式还要对齐，已经查过两边的代码。</span></span></li>
+    <li><i>7</i><span>顺便想想 <b>OwnMySpace 下一步怎么做得牛</b>。<span class="where">第 6 站。</span></span></li>
+  </ul>
+</section>
+
+<section class="part col" id="ruled">
+  <div class="part-h">
+    <h2>已经定下的，这份照着做</h2>
+    <p class="lead">有的是你拍板的，有的是 OwnMySpace 自己文档里的护栏。新设计一条都不碰。</p>
+  </div>
+  <ul class="ruled">
+    <li><b>9 月 27 日</b><span>第 7 版旅程：宝箱、经验、图鉴卡、段位、徽章是一个圈，全部从学习记录里算出来。卡包只出装扮，只能靠学习拿到，不能买。</span></li>
+    <li><b>9 月 27 日</b><span>第 7 版「不做的三件事」：花钱抽卡；答错扣命、不让继续学；用内疚和吓唬写提醒。</span></li>
+    <li><b>OwnMySpace</b><span>护栏：不低幼；不做操纵人的上瘾套路；岛要能完整导出、带走；写运行代码、用云资源、付费生成、公开发布之前，要你明确说开工。</span></li>
+    <li><b>7 月 2 日</b><span>总部排期：OwnMySpace 是慢线，不参加今年下半年的商业化冲刺；在排期改之前，AI 不得在那边做定价、支付、推广、变现。它有两道门：先做出「眼前一亮」的岛，再跑通 AI 生成。</span></li>
+  </ul>
+  <p class="handoff">规矩对齐了。先看第 7 版已经给小林准备了什么。</p>
+</section>
+
+<section class="part col" id="route">
+  <div class="part-h">
+    <h2>我们要走的路线</h2>
+    <p class="lead">橙色的两站最要紧。</p>
+  </div>
+  <ol class="route">
+    <li><span class="dot">0</span><div><a href="#s0">先认识：第 7 版已经有的奖励圈</a><span>一关里转得很好，学完一门就没了往下走的理由</span></div></li>
+    <li class="hot"><span class="dot">1</span><div><a href="#s1">升级：本事也能升星</a><span>等级只看做了多少，看不出会了什么</span></div></li>
+    <li><span class="dot">2</span><div><a href="#s2">血量：只在游戏里有</a><span>有心的地方不多，心和学习也没关系</span></div></li>
+    <li><span class="dot">3</span><div><a href="#s3">装备：小兔子穿得上的工具</a><span>装扮只能换颜色，手里拿不了东西</span></div></li>
+    <li><span class="dot">4</span><div><a href="#s4">道具：宝箱里的东西放哪</a><span>摆件没有自己的地方</span></div></li>
+    <li class="hot"><span class="dot">5</span><div><a href="#s5">一座岛，两个产品</a><span>两边各有岛，谁也不认识谁</span></div></li>
+    <li><span class="dot">6</span><div><a href="#s6">OwnMySpace 下一步</a><span>现在更像调试台，不像一个家</span></div></li>
+  </ol>
+</section>
+
+<!-- s0 -->
+<section class="part col" id="s0">
+  <div class="part-h"><span class="no">0</span><h2>先认识：第 7 版已经有的奖励圈</h2>
+    <p class="lead">小林学完第一关，镜头推近，宝箱打开；下一关门口站着一只小怪，等她扔星星把它赶走。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot"><img src="assets/isle-map.jpg" alt="课程岛：小路、宝箱和守着下一关的小怪">
+      <span class="co" style="left:8%;top:44%">1</span><span class="co" style="left:42%;top:57%">2</span><span class="co" style="left:76%;top:40%">3</span></div>
+      <figcaption class="cap">第 7 版的课程岛（第 7 版旅程文档里的图）。</figcaption></figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>小兔子沿着小路一关一关走。</b></span></li>
+      <li><i>2</i><span><b>每一关旁边有宝箱：</b>经验、复习卡、图鉴卡、卡包都从这里来。四种箱子，庆祝的大小不一样。</span></li>
+      <li><i>3</i><span><b>没开的关站着小怪：</b>学完上一关，扔知识之星把它赶走。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>这门课挺好玩的……学完以后呢？我为什么要去学下一门？</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">第 7 版的圈，在「一关、一天、一周」里转得很好；可是一门课学完，往下走的理由就断了。学到的东西也只留在这门课的岛上，带不到别处。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：不拆第 7 版，给它接上三根线</span>
+    <div class="plan">
+      <div class="mats">
+        <div><b>本事星级（第 1 站）</b>用到别的课里才升星，给「学下一门」一个理由。</div>
+        <div><b>心和工具（第 2、3 站）</b>学得越牢，岛上的游戏越好玩。</div>
+        <div><b>家园岛（第 4、5 站）</b>一路拿到的东西，都摆进一座属于你的岛；这座岛在 OwnMySpace 里也在。</div>
+      </div>
+      <p class="guide">第 7 版原来的奖励一样不减，只是多了它们要去的地方。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>超市的积分卡：只能在这一家用的积分，逛完就忘；能在一整条街的店里用、还能换成家里真用得上的东西，人才会一直攒。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>让人一直回来的，除了下一次的惊喜，还有「攒下来的东西越来越多，舍不得走」。第 7 版有了前者；后者要靠一个能一直往里放东西的地方。</p></div>
+  </div>
+  <p class="handoff">先说第一根线：升级。</p>
+</section>
+
+<!-- s1 -->
+<section class="part col" id="s1">
+  <div class="part-h"><span class="no">1</span><h2>升级：本事也能升星</h2>
+    <p class="lead">学了一周，小林点开「我」，看自己的等级和段位。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot"><img src="assets/desk-19-me.jpg" alt="「我」页面：头像、等级、经验和徽章墙">
+      <span class="co" style="left:15%;top:84%">1</span><span class="co" style="left:47%;top:90%">2</span></div>
+      <figcaption class="cap">第 7 版改之前的「我」页面（第 7 版旅程文档里的截图）。</figcaption></figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>等级和经验：</b>读完一关给 15，第一次答对给 25。第 7 版把它和段位（按记牢了几张卡分五级）放在头像旁边。</span></li>
+      <li><i>2</i><span><b>徽章墙：</b>第 7 版定了 17 枚，每枚要「做到一件事」才拿得到。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>我 5 级了……可我到底会了什么？</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">等级只数「做了多少」，段位只数「记牢了多少张卡」。两个数都看不出「我会了什么本事」，也没有一个数在催她去学另一门课。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：等级照旧，再加「本事星级」</span>
+    <div class="plan">
+      <p>每一关教一个本事。比如新写的前三关：<b>给例子</b>（让 AI 照你的说法写）、<b>要候选</b>（一句一句要，你来挑）、<b>先列事</b>（长邮件先列要做的事）。</p>
+      <div class="mats">
+        <div><b>★ 一星</b>学完教这个本事的那一关。</div>
+        <div><b>★★ 二星</b>在<b>另一门课</b>的「自己做」里，又用上了这个本事。</div>
+        <div><b>★★★ 三星</b>隔了一周，还能在复习或岛上的游戏里用对。三星本事换一件工具（第 3 站）。</div>
+      </div>
+      <p>「本事墙」按本事排，不按课排。小林会看到：「给例子」已经两星，第三颗星要去「工作写作」那门课里拿。</p>
+      <p class="guide">判断「用上了没有」，先用固定规则看她的请求里有没有这个动作（比如贴了例子），不花钱；拿不准再交给小模型。和现在的打分三档一样。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>考驾照：开了多少公里是一回事，驾照上写着「能开手动挡、能开大车」是另一回事。后者才说明你会什么。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>在新的地方用出来，才算真会了。星星只能在「换一门课、隔一段时间」之后拿到，正好把「学新课」和「复习」都变成了升星的路。</p></div>
+  </div>
+  <p class="handoff">本事越强，游戏里也该越强。这就说到血量。</p>
+</section>
+
+<!-- s2 -->
+<section class="part col" id="s2">
+  <div class="part-h"><span class="no">2</span><h2>血量：只在游戏里有</h2>
+    <p class="lead">周末，小林上岛玩庭院拦截。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot phone"><img src="assets/courtyard-hearts.jpg" alt="庭院拦截：左上角三颗心、小兔子和两个篮子">
+      <span class="co" style="left:20%;top:15.5%">1</span></div>
+      <figcaption class="cap">岛上的庭院拦截（9 月 28 日拍的）。</figcaption></figure>
+    <ol class="keys"><li><i>1</i><span><b>已经有三颗心：</b>放错了掉一颗。可这三颗心谁都一样，和学了多少没有关系。</span></li></ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>三颗心掉光了……那就这样吧，不玩了。</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">心和学习没连上：学得再好，心也是三颗；掉光了，除了退出，没有别的路。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：心的上限来自记牢的卡，掉光了靠复习回血</span>
+    <div class="plan">
+      <div class="mats">
+        <div><b>上限</b>一开始 3 颗；段位每升一级多 1 颗，最多 7 颗。记牢的卡越多，心越多。</div>
+        <div><b>掉心</b>只在岛上的游戏和每周大怪里。放错、接错，掉一颗。</div>
+        <div><b>回血</b>心掉光了，这局结束；弹出一张快忘的复习卡，答对回一颗心，可以接着来。</div>
+        <div><b>大怪的血条</b>每周大怪有自己的血条：你每答对一道这周学过的题，打掉它一格。</div>
+      </div>
+      <p class="guide">课里永远不扣心、不挡路。第 7 版定过「答错扣命、不让继续学」不做，这里一条都没碰。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>游乐园的投篮机：投不进可以再投一局，可「再来一局」的币，得去旁边的练习区练几下才能拿到。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>血量让游戏有紧张感；把「回血」换成「复习一张卡」，输了就不只是输了，而是正好去复习。学得越牢，游戏里越能扛，学和玩就绑在一起了。</p></div>
+  </div>
+  <p class="handoff">能扛之外，还想让小兔子手里有点东西。</p>
+</section>
+
+<!-- s3 -->
+<section class="part col" id="s3">
+  <div class="part-h"><span class="no">3</span><h2>装备：小兔子穿得上的工具</h2>
+    <p class="lead">小林开到一件新装扮，想给小兔子戴上。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot phone"><img src="assets/avatar-face.jpg" alt="小兔子头像">
+      <span class="co" style="left:88%;top:50%">1</span></div>
+      <figcaption class="cap">现在的小兔子（第 7 版旅程文档里的头像）。</figcaption></figure>
+    <ol class="keys"><li><i>1</i><span><b>装扮只能换配色、材质和小部件。</b>第 7 版的衣橱 Codex 正在做；可小兔子手里、背上还挂不了东西。</span></li></ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>换了个颜色……挺好看，但也就这样。</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">装扮只管好看，没有一件东西是「我练出来的、用得上的」；小兔子身上也没有能挂东西的地方。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：装扮照旧；另加 6 件工具，本事三星才拿得到</span>
+    <div class="plan">
+      <p>工具和岛上的 6 个游戏一一对应，只在游戏里帮你一把，课里不起作用，也不影响成绩。</p>
+      <div class="mats">
+        <div><b>大篮子</b>庭院拦截：篮口大一圈。</div>
+        <div><b>连线手套</b>连连看：一局提示一次。</div>
+        <div><b>火车头</b>贪吃蛇：转弯慢半拍，更稳。</div>
+        <div><b>放大镜</b>打地鼠：地鼠冒头时先闪一下。</div>
+        <div><b>方块托盘</b>俄罗斯方块：能看到下一块。</div>
+        <div><b>抢答铃</b>抢答器：多 1 秒想。</div>
+      </div>
+      <p>小兔子身上加三个挂点：头上、手里、背上。装扮挂头上，工具拿在手里或背在背上，进游戏自动带着。</p>
+      <p class="guide">小兔子来自公司共用的「小人工具包」。加挂点要改这个包、发新版本，University 和 OwnMySpace 用的是同一只兔子，两边一起受益。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>考了驾照，才发给你车钥匙。钥匙不是买来的，是练出来的，所以你会珍惜它。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>靠运气拿的（装扮）让人开心；靠本事拿的（工具）让人自豪。工具只在游戏里有用，就不会变成「花钱变强」，也不会影响学习本身的公平。</p></div>
+  </div>
+  <p class="handoff">工具有了去处，宝箱里其他的东西呢？</p>
+</section>
+
+<section class="recap col" id="recap">
+  <h3>走到一半，小结一下</h3>
+  <p><b>升级：</b>等级照旧，加「本事星级」；在别的课里用上才升星。</p>
+  <p><b>血量：</b>只在游戏和大怪里；上限来自记牢的卡；掉光了复习回血。</p>
+  <p><b>装备：</b>装扮只好看；工具靠三星本事拿，只在游戏里有用；小兔子加三个挂点。</p>
+  <p>后半程说：东西放哪，以及那座两个产品共用的岛。</p>
+</section>
+
+<!-- s4 -->
+<section class="part col" id="s4">
+  <div class="part-h"><span class="no">4</span><h2>道具：宝箱里的东西放哪</h2>
+    <p class="lead">小林打开一个紫色宝箱，里面有卡包，卡包里开出一张小木椅。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot"><img src="assets/hero-epic.webp" alt="紫色宝箱">
+      <span class="co" style="left:84%;top:26%">1</span></div>
+      <figcaption class="cap">第 7 版的紫色宝箱（第 7 版旅程文档里的图）。</figcaption></figure>
+    <ol class="keys"><li><i>1</i><span><b>宝箱里有：</b>经验、复习卡、图鉴卡、小结卡、卡包（卡面、卡背、头像配饰、岛上的小摆设）、碎片、徽章。第 7 版说小摆设「摆在岛上」，可没说摆在哪座岛、怎么摆。</span></li></ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>一张小木椅……我放哪？课程岛上吗？学完这门课，它就留在那儿了？</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">东西很多，却没有一个统一的口袋；摆件摆在课程岛上，学完一门课就等于留在了别人家。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：一个口袋，四格；摆件进你自己的家园岛</span>
+    <div class="plan">
+      <div class="mats">
+        <div><b>卡</b>复习卡、图鉴卡、小结卡。放在图鉴里（第 7 版已有）。</div>
+        <div><b>穿的</b>装扮。放在衣橱里（第 7 版在做）。</div>
+        <div><b>用的</b>6 件工具。也在衣橱里，单独一格。</div>
+        <div><b>摆的</b>椅子、灯笼、小房子。放进你的家园岛。</div>
+      </div>
+      <p><b>家园岛</b>是每个人一座、只属于自己的岛，和课程岛分开。地图上，它在所有课程岛的中间；每学完一门课，课程岛上会搭起一座小桥连到它。</p>
+      <p>在 University 里，摆件只能放在岛上现成的空位上，点一下就放好，不用学编辑器。</p>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>出差带回来的纪念品：放在酒店房间里，退房就没了；带回自己家，摆在柜子上，每次看到都想起那一趟。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>一个只属于自己、一直在长的地方，是人舍不得离开的原因。家园岛把每一门课拿到的东西都收在一起，学得越多，家越像样。</p></div>
+  </div>
+  <p class="handoff">这座家园岛，正好就是你想和 OwnMySpace 共用的那座。</p>
+</section>
+
+<!-- s5 -->
+<section class="part col" id="s5">
+  <div class="part-h"><span class="no">5</span><h2>一座岛，两个产品</h2>
+    <p class="lead">小林在家园岛上摆满了东西，想再往上盖一座自己设计的小房子。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot phone"><img src="assets/phone-01-world.jpg" alt="University 的飞岛地图：两座课程岛和坐在云上的小兔子">
+      <span class="co" style="left:44%;top:36%">1</span><span class="co" style="left:11%;top:40%">2</span></div>
+      <figcaption class="cap">University 现在的飞岛地图（第 7 版旅程文档里的截图）。</figcaption></figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>只有课程岛。</b>没有一座「自己的」岛。</span></li>
+      <li><i>2</i><span><b>小兔子是 University 的。</b>OwnMySpace 里走的是另一个小人，两边的账号、岛、东西都不通。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>要是能在这座岛上随便盖房子、请朋友来玩就好了。</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">University 不该变成一个盖房子的游戏；可 OwnMySpace 本来就是干这个的。两边各有岛，却谁也不认识谁。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：同一个账号、同一只兔子、同一座岛</span>
+    <div class="plan">
+      <div class="three">
+        <div class="card"><span class="tag">两边共用</span><h4>底下的三样</h4><p>公司共用的账号；共用的小人工具包（一段配方画出同一只兔子）；一份「物品清单」：每件摆件一个编号、一个模型、占多大地方。</p></div>
+        <div class="card"><span class="tag">University 里</span><h4>学、拿、摆</h4><p>学习拿到摆件；在家园岛的空位上摆；岛上有一扇传送门，写着「去 OwnMySpace 自由布置」。</p></div>
+        <div class="card"><span class="tag">OwnMySpace 里</span><h4>改、造、串门</h4><p>同一座岛，能改地形、用 AI 生成自己的东西、去朋友岛上串门；岛上也有一扇门，写着「去 University 学一门课，拿新家具」。</p></div>
+      </div>
+      <h3>三处要先说实话的冲突</h3>
+      <ol class="keys fix">
+        <li><i>1</i><span><b>美术风格：</b>University 是可爱的小兔子和庭院；OwnMySpace 的护栏写着「不低幼」。建议两边的摆件按同一本「手作玩具」美术规矩来做：温暖的自然材质、圆润但不幼稚。University 拿到的东西，在 OwnMySpace 里算一个「学院系列」。</span></li>
+        <li><i>2</i><span><b>上瘾套路：</b>OwnMySpace 明确反对操纵人的上瘾玩法。所以学习拿到的东西搬过去以后，在 OwnMySpace 里不再用倒计时、限时卡池催人；那边只管「住」和「造」。</span></li>
+        <li><i>3</i><span><b>收费边界：</b>OwnMySpace 在总部排期里是慢线，不许 AI 在那边做收费相关的事。「University 会员送一座漂亮的岛」要你先决定改不改排期（第 X5 件）。不改也不耽误：账号、小人、物品清单、传送门都不涉及收费，可以先做。</span></li>
+      </ol>
+      <details class="small"><summary>两边代码现在的情况（给动手的人）</summary><div class="in">
+        <p>University 已经用上公司共用的账号客户端 0.6.0 和小人工具包 0.7.0；OwnMySpace 还没有，它的界面包是 1.3.0，比 University 的 2.12.0 老很多。OwnMySpace 已经有岛的存档格式 <code>island.json</code> 和物件清单，这正好可以当「一座岛」的共同格式。它自己的路线图里，账号云存档排在 P1.5，传送门排在 P3。</p>
+      </div></details>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>商场里的会员：在书店买书攒的积分，能在楼下的家居店换一盏台灯。两家店各做各的生意，却都因为对方多了回头客。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>University 给人「一直学」的理由，OwnMySpace 给这些收获一个「一直住」的家。一个把人带进来，一个把人留下来。两边不用互相变成对方。</p></div>
+  </div>
+  <p class="handoff">要让这扇门两边都值得走，OwnMySpace 自己也得先好看起来。</p>
+</section>
+
+<!-- s6 -->
+<section class="part col" id="s6">
+  <div class="part-h"><span class="no">6</span><h2>OwnMySpace 下一步</h2>
+    <p class="lead">小林顺着传送门，第一次走进 OwnMySpace。</p></div>
+  <div class="step"><span class="label now">现在是什么样</span>
+    <figure><div class="annot"><img src="assets/oms-now.jpg" alt="OwnMySpace 线上版：左边一排英文状态条，中间是岛和骑士小人">
+      <span class="co" style="left:43%;top:20%">1</span><span class="co" style="left:57%;top:48%">2</span><span class="co" style="left:68%;top:89%">3</span></div>
+      <figcaption class="cap">OwnMySpace 线上版（9 月 30 日在电脑宽度打开拍的）。</figcaption></figure>
+    <ol class="keys">
+      <li><i>1</i><span><b>左边一排状态条：</b>坐标、边界、物件数、循环进度……全是英文，像开发时的调试台。</span></li>
+      <li><i>2</i><span><b>小人是一个骑士，</b>不是公司共用的那只兔子。</span></li>
+      <li><i>3</i><span><b>底下是「放下、保存、重载、重置」</b>，操作是对的，可看着像编辑器。</span></li>
+    </ol>
+  </div>
+  <div class="step"><span class="label think">小林会怎么想</span><div class="bubble"><div class="face" aria-hidden="true">林</div><div class="say"><p>这是……测试版？我的小兔子呢？</p></div></div></div>
+  <div class="step"><span class="label prob">问题出在哪</span><p class="problem">OwnMySpace 自己定的第一道门是「做出一个让人眼前一亮、愿意转发的岛」。现在满屏调试信息，岛本身反而成了背景。</p></div>
+  <div class="step"><span class="label fix">建议改成这样：按它自己的两道门，分四步走</span>
+    <div class="plan">
+      <ol class="keys fix">
+        <li><i>1</i><span><b>先过「眼前一亮」：</b>调试条全部收进一个开关；换上共用的小兔子；做一座精心布置的样板岛，拍一段 30 秒能转发的视频。由你判定过没过。</span></li>
+        <li><i>2</i><span><b>接上共用账号和岛的格式：</b>这是它路线图里本来就排着的「账号云存档」；同时把 University 的物品清单接进来。</span></li>
+        <li><i>3</i><span><b>串门先做最简单的：</b>发一个链接，朋友点开就能在网页里看你的岛、留一句话。先不做实时多人，避开「空世界没人去」的坑。</span></li>
+        <li><i>4</i><span><b>再冲第二道门：</b>「一句话生成一件东西，放进岛里」在正式的服务器上跑通，并且有成本上限。</span></li>
+      </ol>
+    </div>
+  </div>
+  <div class="step"><span class="label why">为什么</span>
+    <div class="box analogy"><h4>打个比方</h4><p>开民宿，先把一间房布置到让人想拍照，再去想连锁、会员和线上预订。</p></div>
+    <div class="box principle"><h4>背后的道理</h4><p>OwnMySpace 的赌注是「拥有一个地方」本身让人心动。心动要靠第一眼；第一眼被调试条挡住，后面的功能再多也没人走进去。</p></div>
+  </div>
+</section>
+
+<section class="part col" id="decide">
+  <div class="part-h"><h2>需要你拍板的 7 件事</h2><p class="lead">每件只标一个推荐。点选后，底部生成一行字，复制发给我。</p></div>
+  <div class="stack" id="decisions">
+    <div class="q" data-q="X1"><h3><span class="qid">X1</span>血量放在哪？</h3><div class="opts">
+      <button class="opt" data-v="X1a"><b>只在岛上的游戏和每周大怪里；上限看记牢的卡；复习回血</b><span class="d">课里永远不扣。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X1b"><b>课里答错也扣</b><span class="d">和第 7 版「答错扣命不做」冲突。</span></button>
+      <button class="opt" data-v="X1c"><b>不要血量</b><span class="d">游戏少一点紧张感。</span></button></div></div>
+    <div class="q" data-q="X2"><h3><span class="qid">X2</span>装备要不要有用？</h3><div class="opts">
+      <button class="opt" data-v="X2a"><b>装扮只好看；另加 6 件工具，只在游戏里有用</b><span class="d">工具靠三星本事拿，不能买。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X2b"><b>只有装扮</b><span class="d">最省事。</span></button>
+      <button class="opt" data-v="X2c"><b>装备在课里也有用（比如多一次提示）</b><span class="d">会影响学习的公平和成绩。</span></button></div></div>
+    <div class="q" data-q="X3"><h3><span class="qid">X3</span>要不要「本事星级」？</h3><div class="opts">
+      <button class="opt" data-v="X3a"><b>要：每关一个本事，在别的课里用上才升星</b><span class="d">给「学下一门课」一个理由。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X3b"><b>不要，只用等级和段位</b><span class="d">少一套东西。</span></button></div></div>
+    <div class="q" data-q="X4"><h3><span class="qid">X4</span>摆件放哪？</h3><div class="opts">
+      <button class="opt" data-v="X4a"><b>University 里有一座家园岛，和 OwnMySpace 是同一座</b><span class="d">点空位就能摆；想自由布置去 OwnMySpace。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X4b"><b>摆在课程岛上</b><span class="d">学完一门就留在那儿。</span></button>
+      <button class="opt" data-v="X4c"><b>只能在 OwnMySpace 里摆</b><span class="d">University 里看不到，吸引力弱。</span></button></div></div>
+    <div class="q" data-q="X5"><h3><span class="qid">X5</span>「会员送岛」和总部排期</h3><div class="opts">
+      <button class="opt" data-v="X5a"><b>先做不收费的连接；会员送什么，等你调了总部排期再定</b><span class="d">账号、小人、物品清单、传送门先做。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X5b"><b>现在就改排期，把「会员送岛」写进 University 会员</b><span class="d">要先改总部的排期文档。</span></button>
+      <button class="opt" data-v="X5c"><b>暂时不连</b><span class="d">两边各做各的。</span></button></div></div>
+    <div class="q" data-q="X6"><h3><span class="qid">X6</span>OwnMySpace 下一步先做什么？</h3><div class="opts">
+      <button class="opt" data-v="X6a"><b>先过「眼前一亮」：收起调试条、换上共用兔子、一段能转发的视频</b><span class="d">它自己定的第一道门。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X6b"><b>先接账号和岛的格式</b><span class="d">生态先通，好不好看后说。</span></button>
+      <button class="opt" data-v="X6c"><b>先跑通 AI 生成</b><span class="d">它的第二道门，成本和审核最难。</span></button></div></div>
+    <div class="q" data-q="X7"><h3><span class="qid">X7</span>两边的物品风格</h3><div class="opts">
+      <button class="opt" data-v="X7a"><b>一本共用的「手作玩具」美术规矩</b><span class="d">温暖、圆润、不幼稚；University 的东西在那边算「学院系列」。</span><span class="rec">推荐</span></button>
+      <button class="opt" data-v="X7b"><b>各做各的</b><span class="d">摆在一起可能不搭。</span></button></div></div>
+    <div class="picks" aria-live="polite"><span>你的选择：</span><code id="picks-code">还没选</code><button type="button" id="copy-picks">复制给我</button><span id="copy-msg"></span></div>
+  </div>
+</section>
+
+<section class="part col" id="order">
+  <div class="part-h"><h2>先做什么，后做什么</h2><p class="lead">和 University 主线（新课、互动组件、6 个游戏）排在一起，不抢它的道。</p></div>
+  <ol class="steps">
+    <li><div class="n">第 1 步<small>等</small></div><div><p>Codex 把第 7 版的衣橱和卡包做完（它的任务 06）。</p><p class="ok">做到这样算好：宝箱能开出装扮和摆件，衣橱里看得到。</p></div></li>
+    <li><div class="n">第 2 步<small>定格式</small></div><div><p>写下「物品清单」和「一座岛」的共同格式，两边都照它来。</p><p class="ok">做到这样算好：同一件摆件，两边都能认出来。</p></div></li>
+    <li><div class="n">第 3 步<small>University</small></div><div><p>家园岛、本事星级、6 个游戏的心和工具。游戏本来就在主线里，这一步只是把心和工具加进去。</p><p class="ok">做到这样算好：小林学完一门课，家园岛上多了东西；游戏里心的数目跟着段位涨。</p></div></li>
+    <li><div class="n">第 4 步<small>小人工具包</small></div><div><p>给小兔子加头上、手里、背上三个挂点，发新版本。</p><p class="ok">做到这样算好：两边都能给兔子戴帽子、拿工具。</p></div></li>
+    <li><div class="n">第 5 步<small>OwnMySpace</small></div><div><p>先过「眼前一亮」，再接账号和岛的格式，再做传送门和串门链接。每一步都等你说开工。</p><p class="ok">做到这样算好：从 University 的家园岛走进传送门，到 OwnMySpace 看到的是同一座岛、同一只兔子。</p></div></li>
+  </ol>
+</section>
+
+<section class="part col" id="faq">
+  <div class="part-h"><h2>你可能会问</h2></div>
+  <div class="faq">
+    <div class="card"><b>这么多系统，会不会太复杂？</b><p>对学员来说，平时只看得到两样：头像旁的火苗和段位（第 7 版定的）。本事墙、工具、家园岛，都在「我」和地图里，想看才看。</p></div>
+    <div class="card"><b>血量会不会让人怕学？</b><p>不会碰到课：课里一颗心都不扣。心只在游戏里，掉光了去复习就能回来。</p></div>
+    <div class="card"><b>工具会不会变成花钱变强？</b><p>不会。工具只能靠三星本事拿，不能买；而且只在游戏里有用，不影响课和成绩。</p></div>
+    <div class="card"><b>OwnMySpace 还没做好，现在连有什么用？</b><p>先定两边都认的格式，University 这边先把家园岛做起来。等 OwnMySpace 过了「眼前一亮」，门一开，东西就都在。</p></div>
+    <div class="card"><b>后端真的能通吗？</b><p>账号能：University 已经用公司共用的账号客户端，OwnMySpace 要接上同一个。岛和物品要新加两张表，放在公司后端里，跟着账号走。</p></div>
+  </div>
+</section>
+
+<section class="part col" id="ledger">
+  <div class="part-h"><h2>一个都没丢：第 7 版的东西，各去哪</h2></div>
+  <div class="tblwrap"><table>
+    <thead><tr><th>第 7 版里的东西</th><th>现在</th><th>这份建议以后</th></tr></thead>
+    <tbody>
+      <tr><td>经验和等级</td><td>每个宝箱</td><td>不变</td></tr>
+      <tr><td>段位（按记牢的卡）</td><td>头像旁</td><td>不变；另外决定游戏里心的上限</td></tr>
+      <tr><td>徽章 17 枚</td><td>「我 → 成长」</td><td>不变</td></tr>
+      <tr><td>复习卡、图鉴卡、小结卡</td><td>宝箱、图鉴</td><td>口袋的「卡」这一格</td></tr>
+      <tr><td>头像装扮、卡面、卡背</td><td>卡包、衣橱</td><td>口袋的「穿的」这一格</td></tr>
+      <tr><td>岛上的小摆设</td><td>卡包</td><td>口袋的「摆的」这一格，摆进家园岛；OwnMySpace 里也在</td></tr>
+      <tr><td>每周大怪</td><td>岛边，五道题</td><td>加一条血条：答对一题打掉一格</td></tr>
+      <tr><td>小怪、知识之星、小精灵</td><td>课程岛</td><td>不变</td></tr>
+      <tr><td>庭院拦截的三颗心</td><td>岛上的游戏</td><td>心的数目跟段位走；复习回血</td></tr>
+      <tr><td>（新）本事星级、6 件工具、家园岛</td><td>没有</td><td>这份新加</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="part col" id="appendix">
+  <div class="part-h"><h2>附录</h2></div>
+  <details class="small"><summary>这份是怎么做出来的</summary><div class="in">
+    <p>读了 University 第 7 版旅程（奖励圈、上瘾招数、段位徽章、不做的三件事）和 Codex 9 月 30 日的衣橱提交；读了 OwnMySpace 的北极星愿景、第一阶段范围、商业里程碑（慢线定位和两道门）；在线打开了 OwnMySpace 的演示版拍了截图；查了两边用的公司共用包（账号客户端、小人工具包、界面包）的版本。</p>
+    <p>没有做的：没改任何代码；没在 OwnMySpace 仓库里写任何东西；心和工具的具体数值是建议，要在游戏里试玩后再调。</p>
+  </div></details>
+</section>
+
+<footer class="col">
+  <span>University × OwnMySpace · 游戏化系统与生态（讨论稿）</span>
+  <span>「小林」是为了讲清楚而虚构的学员</span>
+</footer>
+</div>
+
+<script>
+/* 讲解旅程页面脚本：小样机 + 拍板选择。任何零件缺了都跳过，不让一处出错拖垮整页。 */
+(function(){
+  var dev=document.getElementById('device');
+  if(dev){
+    var screens=[].slice.call(dev.querySelectorAll('.scr'));
+    var tab=document.getElementById('ptab');
+    var toast=document.getElementById('toast');
+    var steps=[].slice.call(document.querySelectorAll('#steps li'));
+    var tabbed={};screens.forEach(function(s){if(s.hasAttribute('data-tabbed'))tabbed[s.getAttribute('data-s')]=1;});
+    var tt;
+    var show=function(id){
+      if(!screens.some(function(s){return s.getAttribute('data-s')===id;}))return;
+      screens.forEach(function(s){s.hidden=s.getAttribute('data-s')!==id;});
+      if(tab){
+        tab.hidden=!tabbed[id];
+        [].forEach.call(tab.querySelectorAll('button'),function(b){
+          if(b.getAttribute('data-go')===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+        });
+      }
+      steps.forEach(function(li){li.classList.toggle('cur',li.getAttribute('data-for')===id);});
+    };
+    var say=function(msg){if(!toast)return;toast.textContent=msg;toast.hidden=false;clearTimeout(tt);tt=setTimeout(function(){toast.hidden=true;},2600);};
+    dev.addEventListener('click',function(e){
+      var b=e.target.closest('[data-go],[data-toast]');if(!b)return;
+      if(b.hasAttribute('data-toast'))say(b.getAttribute('data-toast'));
+      if(b.hasAttribute('data-go'))show(b.getAttribute('data-go'));
+    });
+    var restart=document.getElementById('restart');
+    if(restart&&screens[0])restart.addEventListener('click',function(){show(screens[0].getAttribute('data-s'));});
+    if(screens[0])show(screens[0].getAttribute('data-s'));
+  }
+
+  var box=document.getElementById('decisions');
+  var code=document.getElementById('picks-code');
+  if(box&&code){
+    var KEY='walkthrough-picks:'+document.title;
+    var picks={};
+    try{picks=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(err){picks={};}
+    var ORDER=[].map.call(document.querySelectorAll('.q'),function(q){return q.getAttribute('data-q');});
+    var render=function(){
+      [].forEach.call(document.querySelectorAll('.q'),function(q){
+        var k=q.getAttribute('data-q');
+        [].forEach.call(q.querySelectorAll('.opt'),function(o){o.setAttribute('aria-pressed',picks[k]===o.getAttribute('data-v')?'true':'false');});
+      });
+      var keys=ORDER.filter(function(k){return picks[k];});
+      code.textContent=keys.length?(document.body.getAttribute('data-picks-prefix')||'拍板：')+keys.map(function(k){return picks[k];}).join(' '):'还没选';
+    };
+    box.addEventListener('click',function(e){
+      var o=e.target.closest('.opt');if(!o)return;
+      var k=o.closest('.q').getAttribute('data-q');
+      picks[k]=picks[k]===o.getAttribute('data-v')?undefined:o.getAttribute('data-v');
+      try{localStorage.setItem(KEY,JSON.stringify(picks));}catch(err){}
+      render();
+    });
+    var copy=document.getElementById('copy-picks'),msg=document.getElementById('copy-msg');
+    if(copy)copy.addEventListener('click',function(){
+      var text=code.textContent;
+      var note=function(t){if(msg)msg.textContent=t;};
+      var fallback=function(){var r=document.createRange();r.selectNodeContents(code);var s=getSelection();s.removeAllRanges();s.addRange(r);note('已选中，按 ⌘C 复制');};
+      try{navigator.clipboard.writeText(text).then(function(){note('已复制');},fallback);}catch(err){fallback();}
+    });
+    render();
+  }
+})();
+</script>
+</body>
+</html>

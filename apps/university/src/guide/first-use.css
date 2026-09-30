@@ -1,0 +1,86 @@
+/*
+  A first-use guide: 涟's droplet waits in the corner of whatever it is guiding
+  and flies to one place at a time. Only the droplet and its bubble take
+  pointer events; everything it points at stays usable.
+*/
+.first-use {
+  position: absolute;
+  z-index: 6;
+  inset-inline-end: 14px;
+  /* Above a game's answer row, so the resting droplet never sits on a button. */
+  bottom: 108px;
+  display: flex;
+  pointer-events: none;
+}
+
+.first-use--page {
+  position: fixed;
+  z-index: 60;
+  inset-inline-end: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+.first-use > * {
+  pointer-events: auto;
+}
+
+/* Said beside the droplet when the place it wanted stays hidden. */
+.first-use__fallback {
+  position: absolute;
+  inset-inline-end: 52px;
+  bottom: 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  /* The kit's own presence label, so the fallback reads as 涟 speaking. */
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+  box-shadow: var(--game-ui-shadow-button);
+}
+
+.first-use__bubble {
+  display: grid;
+  gap: 8px;
+  max-inline-size: 280px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.first-use__bubble p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.first-use__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.first-use__try {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.first-use__skip {
+  all: unset;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  opacity: 0.75;
+}
+
+.first-use__skip:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.first-use__count {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* The guide places itself in its host's corner. */
+.round-game {
+  position: relative;
+}

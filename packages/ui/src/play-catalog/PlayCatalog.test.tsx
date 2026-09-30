@@ -26,7 +26,7 @@ describe("one courseware catalogue, with author diagnostics only in the lab", ()
   it("the learner's Library keeps the actual activities but no lab links, code identifiers or layout rationale", () => {
     const node = render(true);
     // Three historical layout comparisons remain in the author lab, not the learner gallery.
-    expect(node.querySelectorAll("[data-entry-id]")).toHaveLength(57);
+    expect(node.querySelectorAll("[data-entry-id]")).toHaveLength(62);
     expect(node.querySelector('[data-entry-id^="history:"]')).toBeNull();
     expect(node.querySelector(".learning-activity")).not.toBeNull();
     expect(node.querySelector('a[href^="/play-lab"]')).toBeNull();
@@ -35,7 +35,7 @@ describe("one courseware catalogue, with author diagnostics only in the lab", ()
   });
   it("the retained laboratory keeps its same diagnostic links and entry identities", () => {
     const node = render(false);
-    expect(node.querySelectorAll("[data-entry-id]")).toHaveLength(60);
+    expect(node.querySelectorAll("[data-entry-id]")).toHaveLength(65);
     expect(node.querySelector('a[href="/play-lab"]')).not.toBeNull();
     expect(node.querySelector(".play-catalog__rationale")).not.toBeNull();
     expect(node.textContent).toContain("native:connect");

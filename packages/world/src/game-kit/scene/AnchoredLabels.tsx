@@ -19,6 +19,8 @@ export interface AnchoredLabel {
   readonly ariaLabel?: string;
   readonly selected?: boolean;
   readonly onPick?: () => void;
+  /** A first-use guide may point at this label (`data-guide`). */
+  readonly guide?: string;
   /** Higher is placed first and keeps its natural spot. */
   readonly priority: number;
 }
@@ -111,6 +113,7 @@ export function AnchoredLabels({
             className={className}
             style={{ pointerEvents: "auto" }}
             data-target={label.selected ? "true" : undefined}
+            data-guide={label.guide}
             aria-label={label.ariaLabel}
             aria-pressed={label.selected ?? false}
             onClick={label.onPick}
@@ -118,7 +121,13 @@ export function AnchoredLabels({
             {label.content}
           </button>
         ) : (
-          <div key={label.id} ref={register} className={className} aria-label={label.ariaLabel}>
+          <div
+            key={label.id}
+            ref={register}
+            className={className}
+            aria-label={label.ariaLabel}
+            data-guide={label.guide}
+          >
             {label.content}
           </div>
         );
