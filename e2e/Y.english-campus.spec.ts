@@ -169,7 +169,15 @@ for (const [mode, origin] of [
           await page.screenshot({ path: info.outputPath(`english-tools-${width}.png`) });
         }
         await page.goto(`${origin}/settings?lang=en`);
+        await expect(page.locator("#settings-language")).toBeVisible();
+        // This is a new document. The earlier lesson's font-ready receipt
+        // cannot establish the settings page's final line wrapping.
+        await page.evaluate(() => document.fonts.ready);
         await humanClick(page, page.locator("#settings-language"), "open optional reading aids");
+        await expect(page.locator('details[aria-labelledby="settings-language"]')).toHaveAttribute(
+          "open",
+          "",
+        );
         await expectEnglish(page.locator(".foreign-settings"));
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
           321,

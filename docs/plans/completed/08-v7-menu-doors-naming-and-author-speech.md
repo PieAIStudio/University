@@ -228,3 +228,18 @@ mail subscription; physical phone permissions and real backend accounts were not
 validated here. No author-note content exceptions were introduced. No course
 prose, published package, production deployment or payment switch was changed.
 
+### Resumed normal-push check
+
+The first push of `9f73c07e` ended `1 failed / 459 passed (28.2m)`,
+`PUSH_EXIT=1`: one English authoring reading-tools scenario left the native
+settings disclosure closed. Its unchanged isolated case passed `1 passed
+(37.9s)`; four concurrent diagnostic repeats also passed, with trusted down,
+up and click on the same summary. Those receipts do not reproduce the original
+failure or establish a product defect. The test now waits for this new
+document's fonts (the prior lesson's font receipt was insufficient), then
+requires the actual disclosure's open state as well as the original visible
+English contents and width limit. There is no second click or synthetic open.
+Both modes and lesson shapes passed eight guarded repeats (`8 passed (1.2m)`).
+Temporary event instrumentation was removed; the final complete verification
+and ordinary push still have to judge the resulting candidate.
+
