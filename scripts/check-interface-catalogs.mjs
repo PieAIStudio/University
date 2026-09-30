@@ -1,3 +1,4 @@
+import { assertLearnerSpeech } from "./learner-speech.mjs";
 import { mkdtempSync, readFileSync, readdirSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -25,6 +26,9 @@ try {
   mkdirSync(join(temporary, "catalogs"));
   for (const locale of ["zh-CN", "en"]) {
     const { messages } = await import(pathToFileURL(join(modules, `${locale}.js`)).href);
+    // Type generation may be run while copy is being edited. Ordinary checks,
+    // verify and publication must refuse leaked author speech and old nouns.
+    if (!process.argv.includes("--write-types")) assertLearnerSpeech(messages, locale);
     mkdirSync(join(temporary, "catalogs", locale));
     writeFileSync(join(temporary, "catalogs", locale, "messages.json"), JSON.stringify(messages));
   }

@@ -84,6 +84,6 @@ describe("shell vs bare routes", () => {
     expect(isBareView({ kind: "world" })).toBe(false);
     expect(activeIdForView({ kind: "world" })).toBe("learn");
     expect(activeIdForView({ kind: "me" })).toBe("profile");
-    expect(activeIdForView({ kind: "favourites" })).toBe("favourites");
+    expect(activeIdForView({ kind: "favourites" })).toBe("library");
   });
 });

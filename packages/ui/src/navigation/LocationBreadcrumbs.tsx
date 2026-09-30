@@ -13,9 +13,12 @@ export interface LocationCrumb {
 export function LocationBreadcrumbs({
   items,
   className = "",
+  compactTitle,
 }: {
   readonly items: readonly LocationCrumb[];
   readonly className?: string;
+  /** A meaningful parent name replaces an anonymous ellipsis in a narrow path. */
+  readonly compactTitle?: string;
 }) {
   const interfaceTranslator = useI18n();
   const details = useRef<HTMLDetailsElement>(null);
@@ -67,7 +70,13 @@ export function LocationBreadcrumbs({
                 }
               }}
             >
-              <summary aria-label={interfaceTranslator.t("map.fullPath")}>…</summary>
+              <summary
+                title={compactTitle ?? items[0]?.title}
+                aria-label={`${compactTitle ?? items[0]?.title ?? ""} · ${interfaceTranslator.t("map.fullPath")}`}
+              >
+                {compactTitle ?? items[0]?.title}
+                <span aria-hidden="true"> ▾</span>
+              </summary>
               <ul>
                 {items.slice(0, -1).map((item) => (
                   <li key={item.id}>{link(item)}</li>

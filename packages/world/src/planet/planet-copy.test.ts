@@ -50,7 +50,7 @@ describe("studyCounts", () => {
     expect(studyCourseList(TURING, 5).restLabel).toBe("1 more course");
     setInterfaceLocale("zh-CN");
     expect(STUDY_STAGE_LABEL.learning).toBe("学习中");
-    expect(studyCounts(TURING)).toBe("31 门课 · 41 节");
+    expect(studyCounts(TURING)).toBe("31 门课 · 41 关");
   });
 
   it("reports how big a series is, and nothing about where you stand in it", () => {
@@ -59,8 +59,8 @@ describe("studyCounts", () => {
       third statement of the same fact in a third shape was noise — see
       `studyCounts`. Where you stand is `studyStage` and `studyPercent`.
     */
-    expect(studyCounts(TURING)).toBe("31 门课 · 41 节");
-    expect(studyCounts(BUZZ)).toBe("5 门课 · 12 节");
+    expect(studyCounts(TURING)).toBe("31 门课 · 41 关");
+    expect(studyCounts(BUZZ)).toBe("5 门课 · 12 关");
   });
 
   it("does not invent a slogan: every token is a number the data earned", () => {

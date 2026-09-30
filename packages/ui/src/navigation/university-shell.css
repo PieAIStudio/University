@@ -1,5 +1,103 @@
 @import "@pieaistudio/swimmer-auth-kit/styles.css";
 
+/* Secondary destinations belong inside one of V7's four primary doors. */
+.learner-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-block: 0.75rem 1.1rem;
+}
+.learner-destinations > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--game-ui-radius-control);
+  background: var(--game-ui-surface-raised);
+  color: var(--game-ui-text);
+  text-decoration: none;
+}
+.learner-destinations > a:hover {
+  text-decoration: underline;
+}
+.learner-destinations > a:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  outline-offset: 3px;
+}
+.profile-screen__account,
+.profile-screen__help {
+  scroll-margin-block-start: 1rem;
+}
+.university-shell__commands {
+  display: grid;
+  width: 100%;
+  margin-block-start: 0.5rem;
+}
+.review-page {
+  padding: 1rem;
+}
+.review-door__heading {
+  grid-column: 1 / -1;
+}
+.review-door__heading h1 {
+  font-size: var(--game-ui-font-xl);
+}
+.review-door__practice {
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-surface);
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .university-shell__commands {
+  display: none;
+}
+
+/* Standalone rehearsal must not inherit the reader's .lesson-practice section. */
+.native-practice {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+.native-practice .game-ui-panel {
+  min-width: 0;
+}
+.native-practice [data-practice-ordinal] {
+  margin-block: 0 0.5rem;
+}
+.native-practice[data-practice-state="asking"] {
+  gap: 0.5rem;
+}
+.native-practice .question-step__prompt {
+  margin-block: 0.25rem 0.75rem;
+}
+.native-practice [data-question-action="submit"]:disabled {
+  color: var(--game-ui-text-muted);
+  background: var(--game-ui-surface-raised);
+  opacity: 1;
+  cursor: not-allowed;
+}
+.native-practice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+.native-practice__actions > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--game-ui-accent-ink);
+}
+.native-practice__boundary {
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm);
+  line-height: 1.6;
+}
+
 .product-details {
   color: var(--game-ui-text-muted);
   font-size: 0.875rem;
@@ -269,6 +367,20 @@ a.linkish {
   border-radius: var(--game-ui-radius-panel, 14px);
   overflow: hidden;
   background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 18%, #12332f);
+}
+
+.profile-screen__hero:has(.avatar-panel) {
+  width: min(100%, 24rem);
+  margin-inline: auto;
+  padding: 1.25rem;
+  overflow: visible;
+  background: var(--game-ui-surface-raised);
+}
+.profile-screen__hero .avatar-panel {
+  gap: 0.5rem;
+}
+.profile-screen__hero .avatar-panel__rest {
+  width: 100%;
 }
 
 .profile-screen__hero:empty {

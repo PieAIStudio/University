@@ -158,7 +158,7 @@ describe("read confirmation stays an explicit remaining step", () => {
     expect(
       container.querySelectorAll("section.lesson-completion button.lesson-completion__action"),
     ).toHaveLength(1);
-    expect(container.textContent).toContain("题目过了。还差确认你读过这一版，这节才会计入进度。");
+    expect(container.textContent).toContain("题目过了。还差确认你读过这一版，这一关才会计入进度。");
   });
 
   it("records the read only when the learner presses the remaining confirm", async () => {

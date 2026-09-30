@@ -146,7 +146,7 @@ export function LearningPlayLab({
         {interfaceTranslator.t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
       </h1>
       <div className="learning-play-lab__top">
-        <a href="/practice">{interfaceTranslator.t("play.lab.back")}</a>
+        <a href="/library/courseware">{interfaceTranslator.t("play.lab.back")}</a>
         <SoundToggle />
       </div>
       <nav

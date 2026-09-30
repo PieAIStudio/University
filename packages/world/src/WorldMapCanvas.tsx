@@ -381,7 +381,9 @@ export function WorldMapCanvas({
             : undefined;
           const content =
             marker.kind === "icon" ? (
-              marker.text
+              <span className="scene-label__icon-face" aria-hidden="true">
+                {marker.text}
+              </span>
             ) : (
               <SceneLabelText
                 title={marker.text}
@@ -404,6 +406,7 @@ export function WorldMapCanvas({
             "label scene-label",
             `label--${marker.kind}`,
             marker.quiet ? "label--quiet" : "",
+            marker.kind === "icon" && marker.lessonState ? "label--lesson-medallion" : "",
             marker.locked ? "is-locked" : "",
           ]
             .filter(Boolean)

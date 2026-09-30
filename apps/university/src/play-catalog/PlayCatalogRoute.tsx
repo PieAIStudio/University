@@ -14,10 +14,11 @@ const sources = { blocks, arcade, index, remade, compare };
 const ArcadePlayer = lazy(() =>
   import("./ThreePlayer.js").then((m) => ({ default: m.ThreePlayer })),
 );
-export default function PlayCatalogRoute() {
+export default function PlayCatalogRoute({ learner = false }: { readonly learner?: boolean }) {
   const { t } = useI18n();
   return (
     <PlayCatalog
+      learner={learner}
       sources={sources}
       presentation={presentation}
       renderThree={(mode) => (

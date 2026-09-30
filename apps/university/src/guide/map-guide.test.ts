@@ -64,17 +64,19 @@ describe("涟 answers from the map, and names the place the answer is about", ()
   it("a road whose challenges are all locked still points at the first, and says why", () => {
     const answer = mapGuideAnswer("challenge", course(markers.slice(0, 4)), () => {});
     expect(answer.place).toMatchObject({ markerId: "c1" });
-    expect(answer.text).toMatch(/学到它旁边那一节/);
+    expect(answer.text).toMatch(/学到它旁边那一关/);
   });
 
   it("review and shortcuts point at the navigation's own entries", () => {
     const onShortcuts = vi.fn();
     expect(mapGuideAnswer("review", course(markers), onShortcuts).place).toMatchObject({
       kind: "nav",
-      navId: "practice",
+      navId: "review",
     });
     const shortcuts = mapGuideAnswer("shortcuts", course(markers), onShortcuts);
-    expect(shortcuts.place).toMatchObject({ kind: "nav", navId: "more" });
+    expect(shortcuts.place).toMatchObject({ kind: "nav", navId: "map-shortcuts" });
+    expect(placeTargetIds(shortcuts.place!)).toEqual(["nav:command:map-shortcuts"]);
+    expect(shortcuts.text).not.toContain("更多");
     shortcuts.go?.run();
     expect(onShortcuts).toHaveBeenCalledOnce();
   });
@@ -115,9 +117,9 @@ describe("涟 answers from the map, and names the place the answer is about", ()
 describe("places are registered by identity, never by position", () => {
   it("a label's id is its marker's; a navigation entry has one id per surface", () => {
     expect(placeTargetIds({ kind: "marker", markerId: "l2", label: "x" })).toEqual(["marker:l2"]);
-    expect(placeTargetIds({ kind: "nav", navId: "practice", label: "练习" })).toEqual([
-      "nav:rail:practice",
-      "nav:tabs:practice",
+    expect(placeTargetIds({ kind: "nav", navId: "review", label: "练习" })).toEqual([
+      "nav:rail:review",
+      "nav:tabs:review",
     ]);
   });
 

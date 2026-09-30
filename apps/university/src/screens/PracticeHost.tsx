@@ -1,64 +1,46 @@
-import { useI18n } from "@pieai/university-ui/i18n.js";
-import {
-  EntryPage,
-  PracticeSurface,
-  createProgressPracticeRecentStore,
-} from "@pieai/university-ui";
-import { conceptHeadToMarkdown } from "@pieai/university-core";
-
-import { WORLD, type View } from "@pieai/university-core";
-import { CONCEPT_POINTERS } from "./concept-pointers";
-import { LEXICON_BY_SENSE } from "./lexicon-by-sense";
+import { useMemo, useSyncExternalStore } from "react";
+import { LessonPracticeSurface } from "@pieai/university-ui";
+import type { View } from "@pieai/university-core";
+import type { Shelf } from "@pieai/university-ui/content/port.js";
 import { progressPort } from "../progress/store";
-import { LEXICON } from "../lesson/language";
+import { contentPort } from "../ports/index.js";
 
-/**
- * The endless sitting, drawing on the questions the concept entries already
- * carry.
- *
- * There is no second question bank and there is not going to be one. Every
- * question here is the same record the entry's own 「小测」 renders, which is
- * the architecture worth copying from the site this catalogue came from: their
- * question ids prove the practice bank *is* the per-entry quiz. A separate
- * corpus would drift from the entries within one authoring pass.
- *
- * The reward is the concept page itself, passed as a render prop, because
- * SPEC-0004 forbids a second detail page for a collection that already has one.
- */
-export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
-  const interfaceTranslator = useI18n();
+/** Practice reads the already-loaded, shared course shelf. It never imports
+ * the global concept-quiz catalogue, nor fetches a second catalogue. */
+export function PracticeHost({
+  onOpen,
+  studies,
+  ready,
+}: {
+  readonly onOpen: (view: View) => void;
+  readonly studies: Shelf["studies"];
+  readonly ready: boolean;
+}) {
+  useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
+  const owner = progressPort.syncState().userId;
+  const courses = useMemo(
+    () =>
+      studies.flatMap((study) =>
+        study.courses.map((course) => ({
+          studyId: study.id,
+          id: course.id,
+          title: course.title,
+          units: course.units,
+        })),
+      ),
+    [studies],
+  );
+  const mode = new URLSearchParams(location.search).get("mode") === "free" ? "free" : "round";
   return (
-    <PracticeSurface
-      store={PRACTICE_STORE}
+    <LessonPracticeSurface
+      key={owner ?? "guest"}
+      courses={courses}
+      ready={ready}
       progress={progressPort}
-      lexicon={LEXICON}
-      onOpenWorld={() => onOpen(WORLD)}
-      onBrowse={() => onOpen({ kind: "concepts" })}
-      onOpenReview={() => onOpen({ kind: "review" })}
-      renderReward={(question) => (
-        <EntryPage
-          breadcrumb={[
-            {
-              label: interfaceTranslator.t("app.screens.practiceHost.copy.概念图解"),
-              href: "/concepts",
-            },
-            { label: question.entry.head.zh },
-          ]}
-          head={
-            <>
-              <h1>{question.entry.head.zh}</h1>
-              <p className="reference-panel__gloss">{question.entry.head.tagline}</p>
-            </>
-          }
-          sections={question.entry.sections}
-          headMarkdown={conceptHeadToMarkdown(question.entry.head)}
-          lexicon={LEXICON_BY_SENSE}
-          {...CONCEPT_POINTERS(onOpen)}
-        />
-      )}
+      content={contentPort}
+      initialMode={mode}
+      onOpenLesson={(locator) => onOpen({ kind: "lesson", ...locator })}
+      onBack={() => onOpen({ kind: "review" })}
     />
   );
 }
-
-/** One store for the whole session, same shape as the favourites store. */
-const PRACTICE_STORE = createProgressPracticeRecentStore(progressPort);

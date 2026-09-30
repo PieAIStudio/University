@@ -29,6 +29,7 @@ import {
 } from "./LeagueEmpty.js";
 import { NextStepEmpty } from "./NextStepEmpty.js";
 import { ProfileScreen } from "./ProfileScreen.js";
+import { LevelProgress } from "../screens/LevelProgress.js";
 import {
   QuestsEmpty,
   QUESTS_EMPTY_ACTION,
@@ -102,9 +103,10 @@ describe("empty destinations", () => {
     expect(markup).toContain("4");
     expect(markup).toContain("2");
     expect(markup).toContain("读过真实代码");
-    expect(markup).toContain("徽章墙");
-    expect(markup).toContain("/practice");
-    expect(markup).toContain("/review");
+    expect(markup).toContain("成长");
+    expect(markup).toContain("/league");
+    expect(markup).toContain("/plans");
+    expect(markup).toContain("profile-feedback-host");
   });
 
   it("turns a zero into an invitation that points at the next lesson", () => {
@@ -119,17 +121,13 @@ describe("empty destinations", () => {
       ),
     );
     expect(markup).toContain("头像");
-    expect(markup).toContain("学一点，再用自己的话留下一张复习卡");
-    expect(markup).not.toContain("第一节里就有");
-    expect(markup).toContain("还没学完一节 —— 从这里开始");
+    expect(markup).toContain("复习卡");
+    expect(markup).not.toMatch(/第一[节关]里就有/);
+    expect(markup).toContain("还没学完一关 —— 从这里开始");
     expect(markup).toContain("/turing-pact/foundations-before-zero");
-    /*
-      The wall is a real screen now (navigation/screens/BadgeWall), and it needs
-      the progress document. Both shells pass it in. This fallback is what a
-      caller that has not still shows, and it points at the door rather than
-      promising a feature that already exists elsewhere.
-    */
-    expect(markup).toContain("徽章长在投放端");
+    // V7 moves the actual wall to Growth, never promises a missing wall.
+    expect(markup).toContain("/league");
+    expect(markup).not.toContain("徽章长在投放端");
     expect(markup).not.toContain("<span>段</span>");
     expect(markup).not.toContain("<span>节</span>");
   });
@@ -143,13 +141,9 @@ describe("empty destinations", () => {
     expect(markup).toContain("登录入口");
   });
 
-  it("shows the shared level badge and a linear XP bar", () => {
+  it("keeps the shared level badge and linear XP bar used by the Growth detail", () => {
     const totalXp = XP_READ_LESSON + XP_EXERCISE_FIRST_TRY;
-    const markup = renderToStaticMarkup(
-      withInterfaceLocale(
-        <ProfileScreen passagesRead={0} lessonsCompleted={0} totalXp={totalXp} />,
-      ),
-    );
+    const markup = renderToStaticMarkup(withInterfaceLocale(<LevelProgress totalXp={totalXp} />));
     expect(markup).toContain(`Lv. ${levelOf(totalXp).level}`);
     expect(markup).toContain("XP");
     expect(markup).toContain('role="progressbar"');

@@ -11,13 +11,15 @@ export function TabBar({
   label,
   items,
   activeId,
+  inert = false,
 }: {
   readonly label: string;
   readonly items: readonly ShellNavItem[];
   readonly activeId: string;
+  readonly inert?: boolean;
 }) {
   return (
-    <nav className="tab-bar" aria-label={label}>
+    <nav className="tab-bar" aria-label={label} inert={inert}>
       <ul className="tab-bar__list">
         {items.map((item) => (
           <li key={item.id} className="tab-bar__slot" data-nav-id={item.id}>

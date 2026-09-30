@@ -203,12 +203,12 @@ async function walkToNodeCard(page: Page, origin: string) {
   return {
     courseNamed: courseName.length > 0,
     cardStarts,
-    cardPreviewsUnit: await card.getByRole("button", { name: /从第 1 节开始/ }).isVisible(),
+    cardPreviewsUnit: await card.getByRole("button", { name: /从第 1 关开始/ }).isVisible(),
   };
 }
 
 async function revealUnitPreview(card: Locator) {
-  const unitStart = card.getByRole("button", { name: /从第 1 节开始/ });
+  const unitStart = card.getByRole("button", { name: /从第 1 关开始/ });
   await expect(unitStart).toBeVisible();
 }
 

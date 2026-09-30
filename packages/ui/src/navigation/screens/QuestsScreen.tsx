@@ -18,6 +18,22 @@ import {
  */
 export const QUESTS_TITLE = interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.今天");
 
+function questCopy(quest: Quest, t: ReturnType<typeof useI18n>) {
+  if (quest.id === "lesson")
+    return {
+      title: t.t("doors.goal.count", { count: quest.goal }),
+      detail: t.t("doors.quest.lessonDetail"),
+    };
+  if (quest.id === "review")
+    return {
+      title: t.t(quest.informational ? "doors.quest.noReview" : "doors.quest.review"),
+      detail: t.t(quest.informational ? "doors.quest.noReviewDetail" : "doors.quest.reviewDetail"),
+    };
+  if (quest.id === "streak")
+    return { title: t.t("doors.quest.streak"), detail: t.t("doors.quest.streakDetail") };
+  return quest;
+}
+
 function QuestRow({
   quest,
   learnHref,
@@ -29,12 +45,13 @@ function QuestRow({
 }) {
   const interfaceTranslator = useI18n();
   const done = questComplete(quest);
+  const copy = questCopy(quest, interfaceTranslator);
   return (
     <li
       className={`quest${done ? " quest--done" : ""}${quest.informational ? " quest--info" : ""}`}
     >
       <div className="quest__head">
-        <span className="quest__title">{quest.title}</span>
+        <span className="quest__title">{copy.title}</span>
         <GameBadge tone={quest.informational ? "neutral" : done ? "success" : "neutral"}>
           {quest.informational
             ? interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.不计分")
@@ -45,7 +62,7 @@ function QuestRow({
       </div>
       {quest.goal > 1 && !quest.informational ? (
         <GameProgress
-          label={quest.title}
+          label={copy.title}
           value={questProgress(quest)}
           max={1}
           tone={done ? "success" : "accent"}
@@ -116,7 +133,8 @@ export function QuestsScreen({
         <summary>{interfaceTranslator.t("product.quest.details")}</summary>
         {quests.map((quest) => (
           <p key={quest.id}>
-            <strong>{quest.title}</strong> · {quest.detail}
+            <strong>{questCopy(quest, interfaceTranslator).title}</strong> ·{" "}
+            {questCopy(quest, interfaceTranslator).detail}
           </p>
         ))}
       </details>

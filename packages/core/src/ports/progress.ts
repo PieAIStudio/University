@@ -92,6 +92,9 @@ export interface StoredReaderMark extends ReaderMark {
  * never create a second copy of one answer in the cloud document.
  */
 export interface ExerciseAttemptRecord {
+  /** Rehearsal uses the same question and mistake log, but never changes
+   * a lesson verdict, first-try reward or XP. Absent means the original lesson. */
+  readonly purpose?: "practice";
   readonly commandId: string;
   readonly locator: LessonRef;
   readonly exerciseId: string;

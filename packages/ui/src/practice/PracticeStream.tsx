@@ -1,6 +1,6 @@
 import { interfaceTranslator, useI18n } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { GameAssetIcon, GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
   idOfPracticeQuestion,
@@ -13,6 +13,7 @@ import {
 } from "@pieai/university-core";
 
 import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js";
+import { PracticeRoundComplete } from "./PracticeRoundComplete.js";
 import { PracticeRewardPanel, PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
@@ -246,34 +247,13 @@ export function PracticeStream<Head = unknown>({
 
   if (currentPhase === "complete") {
     return (
-      <section
-        className="practice-stream"
-        data-practice-phase="complete"
-        data-practice-round-complete
-      >
-        <GamePanel>
-          <h1 ref={focusRef} tabIndex={-1} data-practice-focus className="practice-stream__heading">
-            {interfaceTranslator.t("product.practice.roundDone")}
-          </h1>
-          <div className="practice-stream__celebrate" aria-hidden="true">
-            <GameAssetIcon icon="trophy" size="xl" />
-          </div>
-          <p>
-            {interfaceTranslator.t("product.practice.roundReceipt", { count: solvedIds.length })}
-          </p>
-          <div className="practice-stream__actions">
-            <GameButton variant="primary" static data-practice-finish onClick={finish}>
-              {interfaceTranslator.t("product.practice.stop")}
-            </GameButton>
-            <GameButton variant="secondary" static onClick={() => start("free")}>
-              {interfaceTranslator.t("product.practice.free")}
-            </GameButton>
-            <GameButton variant="ghost" static onClick={() => start("round")}>
-              {interfaceTranslator.t("product.practice.another")}
-            </GameButton>
-          </div>
-        </GamePanel>
-      </section>
+      <PracticeRoundComplete
+        count={solvedIds.length}
+        focusRef={focusRef}
+        onFinish={finish}
+        onFree={() => start("free")}
+        onRound={() => start("round")}
+      />
     );
   }
 

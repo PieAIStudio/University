@@ -5,7 +5,6 @@ import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { makeDroppedCardsDue, walkFirstOnlineLesson } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
-import { assertVisibleText } from "./harness/assert.js";
 
 // The shared card's four ratings. FSRS reads them as "how hard was the recall".
 const GRADES = ["重来", "困难", "良好", "简单"] as const;
@@ -64,7 +63,7 @@ test.describe("B 同一个人回来复习", () => {
         the button would type into the previous card's receipt.
       */
       const box = page.getByPlaceholder(/先写下自己的答案/);
-      const empty = page.getByText("今天没有到期卡片");
+      const empty = page.locator('[data-review-due="0"]');
       const guard = Date.now() + 90_000;
       while (Date.now() < guard) {
         if (await empty.isVisible().catch(() => false)) return;
@@ -86,7 +85,8 @@ test.describe("B 同一个人回来复习", () => {
     });
 
     await namedStep(page, "复习完的空态", async () => {
-      await assertVisibleText(page, "今天没有到期卡片");
+      await expect(page.locator('[data-review-due="0"]')).toBeVisible();
+      await expect(page.locator(".review-card")).toHaveCount(0);
     });
 
     consoleErrors.assertClean();

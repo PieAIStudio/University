@@ -1,3 +1,5 @@
+export * from "./practice/lesson-practice.js";
+export * from "./progress/learner-preferences.js";
 export {
   knowledgeAlbum,
   knowledgeRevealOrder,

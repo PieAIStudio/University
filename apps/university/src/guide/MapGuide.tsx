@@ -172,14 +172,19 @@ export function MapGuide({
           available: placedByEngine,
         });
     }
-    for (const navId of ["practice", "more"] as const) {
-      const [railId, tabsId] = navTargetIds(navId);
-      const label = interfaceTranslator.t(`map.guide.place.${navId}`);
-      const rail = shell.querySelector(`.nav-rail [data-nav-id="${navId}"]`);
-      const tabs = shell.querySelector(`.tab-bar [data-nav-id="${navId}"]`);
-      if (rail) next.push({ id: railId!, element: rail, label });
-      if (tabs) next.push({ id: tabsId!, element: tabs, label });
-    }
+    const [reviewRailId, reviewTabsId] = navTargetIds("review");
+    const reviewLabel = interfaceTranslator.t("map.guide.place.practice");
+    const reviewRail = shell.querySelector('.nav-rail [data-nav-id="review"]');
+    const reviewTabs = shell.querySelector('.tab-bar [data-nav-id="review"]');
+    if (reviewRail) next.push({ id: reviewRailId!, element: reviewRail, label: reviewLabel });
+    if (reviewTabs) next.push({ id: reviewTabsId!, element: reviewTabs, label: reviewLabel });
+    const command = shell.querySelector('[data-shell-command="map-shortcuts"]');
+    if (command)
+      next.push({
+        id: navTargetIds("map-shortcuts")[0]!,
+        element: command,
+        label: interfaceTranslator.t("map.guide.place.more"),
+      });
     const changed = reconcileTargets(registry, registered.current, next);
     // A replaced island is not the one the learner chose: the kit's
     // selection sees it on refresh and expires the comparison.

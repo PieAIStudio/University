@@ -235,8 +235,8 @@ for (const { name, viewport } of VIEWPORTS) {
       await namedStep(page, "点击重试课程资料并恢复正文", async () => {
         await humanClick(
           page,
-          contentState.getByRole("button", { name: "重试这节课" }),
-          "重试这节课",
+          contentState.getByRole("button", { name: "重试这一关" }),
+          "重试这一关",
         );
         await assertVisibleText(page, FIRST_LESSON_TITLE);
       });

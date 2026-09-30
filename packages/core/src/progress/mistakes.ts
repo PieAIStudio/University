@@ -25,7 +25,13 @@ export interface Mistake {
  * still checks that revision against the current ContentPort response before it
  * renders the question.
  */
-export function mistakesOf(document: ProgressDocument): readonly Mistake[] {
+export function mistakesOf(
+  document: ProgressDocument,
+  /** When the caller has actually loaded current question content, that
+   * revision outranks the log's largest-number fallback. Undefined excludes
+   * questions outside that explicit content scope. No history is rewritten. */
+  currentRevision?: (locator: LessonRef, exerciseId: string) => number | undefined,
+): readonly Mistake[] {
   const byExercise = new Map<string, ExerciseAttemptRecord[]>();
 
   for (const attempt of Object.values(document.exerciseAttempts)) {
@@ -37,7 +43,10 @@ export function mistakesOf(document: ProgressDocument): readonly Mistake[] {
 
   const mistakes: Mistake[] = [];
   for (const attempts of byExercise.values()) {
-    const contentRevision = Math.max(...attempts.map((attempt) => attempt.contentRevision));
+    const contentRevision = currentRevision
+      ? currentRevision(attempts[0]!.locator, attempts[0]!.exerciseId)
+      : Math.max(...attempts.map((attempt) => attempt.contentRevision));
+    if (contentRevision === undefined) continue;
     const currentAttempts = attempts.filter(
       (attempt) => attempt.contentRevision === contentRevision,
     );

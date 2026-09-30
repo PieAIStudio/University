@@ -256,7 +256,7 @@ test("AA scene labels share one complete surface and keep their object-relative 
 
   const unpublished = page.locator('button[data-domain-id="ai-games"].scene-label');
   await expect(unpublished).toBeVisible();
-  await expect(unpublished.locator(".label__course-status")).toContainText("未发布");
+  await expect(unpublished.locator(".label__course-status")).toContainText("即将开放");
   expect(
     await unpublished.evaluate((element) => {
       const box = element.getBoundingClientRect();
@@ -330,8 +330,7 @@ test("AA touch-sized navigation has one modal drawer, preserves map selection an
   await expect(page.locator(".app-shell__collapse--aside")).toBeFocused();
   await expect(entry(page)).toHaveCount(1);
   await page.locator(".app-shell__collapse--rail").click();
-  await page.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Quick actions", exact: true }).click();
+  await page.locator('[data-shell-command="map-shortcuts"]').click();
   await expect(page.locator(".map-quick-actions")).toBeVisible();
   await expect(page.locator(".app-shell[data-mobile-panel]")).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -355,8 +354,7 @@ test("AA touch-sized navigation has one modal drawer, preserves map selection an
   // Touch cancellation must stay reachable even when there is no empty sky
   // to tap. This replaces the old modal card's close control (ledger d6cab639f3e9).
   await page.locator(".app-shell__collapse--rail").click();
-  await page.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Quick actions", exact: true }).click();
+  await page.locator('[data-shell-command="map-shortcuts"]').click();
   await pointerHit(page, page.locator('[data-map-command="clear"]'));
   await expect(page.locator(".map-quick-actions")).toBeHidden();
   await expect(entry(page)).toHaveCount(0);

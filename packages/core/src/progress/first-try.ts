@@ -23,6 +23,7 @@ function firstAttemptsByLesson(
 ): Map<string, { locator: LessonRef; first: Map<string, FirstAttempt> }> {
   const lessons = new Map<string, { locator: LessonRef; first: Map<string, FirstAttempt> }>();
   for (const attempt of Object.values(document.exerciseAttempts)) {
+    if (attempt.purpose === "practice") continue;
     const key = lessonRefKey(attempt.locator);
     let lesson = lessons.get(key);
     if (!lesson) {

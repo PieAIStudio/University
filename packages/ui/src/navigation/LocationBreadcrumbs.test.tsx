@@ -29,6 +29,8 @@ it("keeps real ancestor addresses, a single current page and an expandable compl
   expect(element.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   expect(element.querySelector('[aria-current="page"]')?.textContent).toBe("Real lesson");
   const details = element.querySelector("details")!;
+  expect(details.querySelector("summary")?.textContent).toContain("Planets");
+  expect(details.querySelector("summary")?.textContent).not.toContain("…");
   expect(details.querySelectorAll("a[href]")).toHaveLength(3);
   const first = details.querySelector("a")!;
   act(() =>
@@ -87,6 +89,7 @@ it("retains an expandable parent even when a narrow map has only two crumbs", ()
       withInterfaceLocale(
         <LocationBreadcrumbs
           className="map-breadcrumbs"
+          compactTitle="A named course"
           items={[
             { id: "planets", title: "Learning planets", href: "/planet" },
             { id: "study", title: "A real study" },
@@ -96,5 +99,6 @@ it("retains an expandable parent even when a narrow map has only two crumbs", ()
     ),
   );
   expect(element.querySelector("details a")?.getAttribute("href")).toBe("/planet");
+  expect(element.querySelector("summary")?.textContent).toContain("A named course");
   expect(element.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
 });

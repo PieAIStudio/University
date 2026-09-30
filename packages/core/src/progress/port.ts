@@ -473,6 +473,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     if (current && Date.parse(current.occurredAt) >= Date.parse(record.occurredAt)) return;
     const firstTry = !Object.values(state.exerciseAttempts).some(
       (attempt) =>
+        attempt.purpose !== "practice" &&
         attempt.commandId !== record.commandId &&
         attempt.exerciseId === record.exerciseId &&
         attempt.contentRevision === record.contentRevision &&
@@ -480,6 +481,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     );
     state.exerciseAttempts[record.commandId] = { ...record, locator: { ...record.locator } };
     if (
+      record.purpose !== "practice" &&
       record.hostGrade &&
       exerciseGradeOutcome(record.hostGrade) === "pass" &&
       record.maxScore > 0 &&
@@ -505,6 +507,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     return Object.values(state.exerciseAttempts)
       .filter(
         (attempt) =>
+          attempt.purpose !== "practice" &&
           attempt.exerciseId === exerciseId &&
           attempt.contentRevision === contentRevision &&
           attempt.locator.studyId === locator.studyId &&
@@ -668,6 +671,8 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       "worldStyle",
       "journey",
       "reviewEmail",
+      "dailyLessonGoal",
+      "domainInterests",
     ] as const) {
       if (JSON.stringify(current[key]) !== JSON.stringify(next[key])) updatedAt[key] = now;
     }

@@ -1,95 +1,83 @@
-import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 // @vitest-environment jsdom
-
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-
-import { IslandIcon } from "../shell/icons.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { InterfaceLanguageProvider } from "../i18n/react.js";
 import { UniversityShell } from "./UniversityShell.js";
-import { MORE_CHILDREN, RAIL_ITEMS, TAB_ITEMS } from "./slots.js";
 
 let container: HTMLDivElement;
 let root: Root;
-
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
 });
-
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
 });
-
-async function renderShell(
-  props: Partial<Parameters<typeof UniversityShell>[0]> = {},
-): Promise<void> {
-  await act(async () => {
+async function show(props: Partial<Parameters<typeof UniversityShell>[0]> = {}, locale = "zh-CN") {
+  await act(async () =>
     root.render(
-      withInterfaceLocale(
+      <InterfaceLanguageProvider locale={locale}>
         <UniversityShell activeId="learn" identity={null} {...props}>
-          <p>主体</p>
-        </UniversityShell>,
-      ),
-    );
-  });
+          <input aria-label="draft" defaultValue="unfinished" />
+        </UniversityShell>
+      </InterfaceLanguageProvider>,
+    ),
+  );
 }
+const rail = () => [...container.querySelectorAll<HTMLAnchorElement>(".nav-rail__list a")];
+const tabs = () => [...container.querySelectorAll<HTMLAnchorElement>(".tab-bar a")];
 
 describe("UniversityShell", () => {
-  it("mounts the eight rail slots and seven tabs in product order", async () => {
-    await renderShell();
-    const rail = document.querySelector("nav.nav-rail");
-    const tabs = document.querySelector("nav.tab-bar");
-    expect(RAIL_ITEMS.map((item) => item.id)).toEqual([
-      "learn",
-      "library",
-      "practice",
-      "league",
-      "quests",
-      "plan",
-      "profile",
-      "more",
-    ]);
-    expect(TAB_ITEMS.map((item) => item.id)).toEqual([
-      "learn",
-      "practice",
-      "quests",
-      "league",
-      "library",
-      "plan",
-      "profile",
-    ]);
-    expect(rail?.textContent).toContain("学习");
-    expect(rail?.textContent).toContain("个人档案");
-    expect(tabs?.textContent).toContain("我");
-    expect(document.querySelectorAll(".counter-row")).toHaveLength(1);
+  it("mounts the same four labelled doors in the approved order at both placements", async () => {
+    await show();
+    const hrefs = ["/", "/review", "/library", "/me"];
+    expect(rail().map((node) => node.getAttribute("href"))).toEqual(hrefs);
+    expect(tabs().map((node) => node.getAttribute("href"))).toEqual(hrefs);
+    expect(rail().map((node) => node.textContent)).toEqual(["学习", "复习", "图鉴", "我"]);
+    expect(tabs().map((node) => node.textContent)).toEqual(["学习", "复习", "图鉴", "我"]);
+    expect(container.querySelector(".nav-rail__flyout-trigger")).toBeNull();
   });
-
-  it("appends extra more-items to the flyout rather than forking the list", async () => {
-    await renderShell({
-      extraMoreItems: [
-        { id: "studio", label: "作者工作台", icon: <IslandIcon />, href: "/studio" },
+  it("keeps contextual commands outside the four doors and invokes the real command", async () => {
+    const command = vi.fn();
+    await show({
+      contextActions: [
+        {
+          id: "map-shortcuts",
+          label: "快捷操作",
+          icon: null,
+          href: "#map-shortcuts",
+          onActivate: command,
+        },
       ],
     });
-    const trigger = document.querySelector<HTMLButtonElement>(".nav-rail__flyout-trigger");
-    await act(async () => {
-      trigger?.click();
-    });
-    const hrefs = [...document.querySelectorAll(".nav-rail__flyout-item")].map((item) =>
-      item.getAttribute("href"),
-    );
-    expect(hrefs).toEqual([...MORE_CHILDREN.map((item) => item.href), "/studio"]);
-    expect(document.querySelector("[role='menu']")?.textContent).toContain("作者工作台");
+    const button = container.querySelector<HTMLButtonElement>(
+      "[data-shell-command=map-shortcuts]",
+    )!;
+    await act(async () => button.click());
+    expect(command).toHaveBeenCalledOnce();
+    expect(rail()).toHaveLength(4);
+    expect(tabs()).toHaveLength(4);
+    expect(button.closest(".nav-rail__list")).toBeNull();
   });
-
-  it("keeps one counter row and two landmarks", async () => {
-    await renderShell({
+  it("keeps one counter row and two navigation landmarks", async () => {
+    await show({
       counters: [{ id: "streak", icon: "🔥", value: "0", label: "连击", muted: true }],
     });
-    expect(document.querySelectorAll("nav")).toHaveLength(2);
-    expect(document.querySelectorAll(".counter-row")).toHaveLength(1);
+    expect(container.querySelectorAll("nav")).toHaveLength(2);
+    expect(container.querySelectorAll(".counter-row")).toHaveLength(1);
+  });
+  it("changes all four labels without replacing the learner input or destinations", async () => {
+    await show();
+    const input = container.querySelector("input")!;
+    input.value = "not finished";
+    await show({}, "en");
+    expect(rail().map((node) => node.textContent)).toEqual(["Learn", "Review", "Library", "Me"]);
+    expect(tabs().map((node) => node.textContent)).toEqual(["Learn", "Review", "Library", "Me"]);
+    expect(container.querySelector("input")).toBe(input);
+    expect(input.value).toBe("not finished");
   });
 });

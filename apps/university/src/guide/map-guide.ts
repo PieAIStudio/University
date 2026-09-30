@@ -14,7 +14,7 @@ export type MapGuideQuestion = "start" | "challenge" | "review" | "compare" | "s
 /** A place the guide may point at. Ids are the map's and the rail's own. */
 export type MapGuidePlace =
   | { readonly kind: "marker"; readonly markerId: string; readonly label: string }
-  | { readonly kind: "nav"; readonly navId: "practice" | "more"; readonly label: string };
+  | { readonly kind: "nav"; readonly navId: "review" | "map-shortcuts"; readonly label: string };
 
 export interface MapGuideAnswer {
   readonly question: MapGuideQuestion;
@@ -63,6 +63,8 @@ export function markerTargetId(markerId: string): string {
 
 /** The navigation entry exists twice — the rail at a desk, the tab bar below. */
 export function navTargetIds(navId: string): readonly string[] {
+  // A contextual command has no second copy in the four-tab navigation.
+  if (navId === "map-shortcuts") return ["nav:command:map-shortcuts"];
   return [`nav:rail:${navId}`, `nav:tabs:${navId}`];
 }
 
@@ -175,7 +177,7 @@ export function mapGuideAnswer(
       text: interfaceTranslator.t("map.guide.a.review"),
       place: {
         kind: "nav",
-        navId: "practice",
+        navId: "review",
         label: interfaceTranslator.t("map.guide.place.practice"),
       },
       go: null,
@@ -184,7 +186,11 @@ export function mapGuideAnswer(
   return {
     question,
     text: interfaceTranslator.t("map.guide.a.shortcuts"),
-    place: { kind: "nav", navId: "more", label: interfaceTranslator.t("map.guide.place.more") },
+    place: {
+      kind: "nav",
+      navId: "map-shortcuts",
+      label: interfaceTranslator.t("map.guide.place.more"),
+    },
     go: { label: interfaceTranslator.t("map.guide.go.shortcuts"), run: onShortcuts },
   };
 }

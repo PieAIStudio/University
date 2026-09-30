@@ -202,8 +202,10 @@ describe("NodeCard", () => {
       preview?.click();
     });
     expect(dialog().textContent).toContain(UNIT.objective);
+    const start = buttonWith("从第 1 关开始");
+    expect(start).toBeTruthy();
     await act(async () => {
-      buttonWith("从第 1 节开始")?.click();
+      start!.click();
     });
     expect(onStartUnit).toHaveBeenCalledTimes(1);
     expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);

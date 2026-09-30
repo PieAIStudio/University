@@ -340,16 +340,13 @@ export function activeIdForView(view: View): string {
     case "anti-pattern-entry":
       return "library";
     case "favourites":
-      return "favourites";
+      return "library";
     case "practice":
+      return "review";
     case "play-lab":
-      return "practice";
     case "league":
-      return "league";
     case "quests":
-      return "quests";
     case "plans":
-      return "plan";
     case "wardrobe":
     case "me":
     case "auth-callback":
@@ -357,14 +354,13 @@ export function activeIdForView(view: View): string {
     case "avatar-lab":
       return "profile";
     case "catalog":
-      return "catalog";
+      return "learn";
     case "review":
     case "mistakes":
       return "review";
     case "settings":
-      return "settings";
     case "studio":
-      return "studio";
+      return "profile";
     case "lesson":
       return "learn";
   }

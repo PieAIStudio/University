@@ -4,6 +4,9 @@ type Hit = { readonly hittable: boolean; readonly describe: string };
 
 export interface HumanClickOptions {
   readonly beforePress?: () => void | Promise<void>;
+  /** Run an account/DOM transition after the one real press. The pointer
+   * never moves or presses again while waiting, and is released even on error. */
+  readonly whilePressed?: () => void | Promise<void>;
 }
 
 /**
@@ -118,8 +121,12 @@ export async function humanClick(
     if (!afterHover.hittable) continue;
     await options?.beforePress?.();
     await page.mouse.down({ button: "left" });
-    await page.waitForTimeout(40);
-    await page.mouse.up({ button: "left" });
+    try {
+      await options?.whilePressed?.();
+      await page.waitForTimeout(40);
+    } finally {
+      await page.mouse.up({ button: "left" });
+    }
     return;
   }
 

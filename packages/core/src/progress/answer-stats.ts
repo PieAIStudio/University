@@ -80,6 +80,7 @@ export function answerStatsOf(
 ): LessonAnswerStats {
   const attempts = Object.values(document.exerciseAttempts).filter(
     (attempt) =>
+      attempt.purpose !== "practice" &&
       attempt.contentRevision === contentRevision &&
       attempt.locator.studyId === locator.studyId &&
       attempt.locator.courseId === locator.courseId &&

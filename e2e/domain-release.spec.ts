@@ -127,22 +127,18 @@ test.describe("P 正式领域目录与未发布星球", () => {
         if (width === 375) {
           await page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`).click();
           const enter = await mapEntryButton(page).boundingBox();
-          const feedback = await page
-            .getByRole("button", { name: "提意见", exact: true })
-            .boundingBox();
           expect(enter).not.toBeNull();
-          expect(feedback).not.toBeNull();
-          const overlapX = Math.max(
-            0,
-            Math.min(enter!.x + enter!.width, feedback!.x + feedback!.width) -
-              Math.max(enter!.x, feedback!.x),
-          );
-          const overlapY = Math.max(
-            0,
-            Math.min(enter!.y + enter!.height, feedback!.y + feedback!.height) -
-              Math.max(enter!.y, feedback!.y),
-          );
-          expect(overlapX * overlapY, "feedback must not cover the domain entry action").toBe(0);
+          // V7 moves mobile feedback into Me. It must not leave a floating
+          // hit target over the map, and the domain entry remains a real tap.
+          await expect(page.locator(".feedback-note__open--float")).toBeHidden();
+          expect(
+            await mapEntryButton(page).evaluate((node) => {
+              const box = node.getBoundingClientRect();
+              return node.contains(
+                document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2),
+              );
+            }),
+          ).toBe(true);
           await expect(page.locator(".planet-domain-label")).toHaveCount(4);
           const clipped = await page
             .locator(".planet-domain-label")
@@ -196,7 +192,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
           const info = page.locator("#app-shell-aside [data-map-information]");
           if (width < 768) await page.locator(".app-shell__collapse--aside").click();
           await expect(info).toContainText(
-            `${studies[0]!.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
+            `${studies[0]!.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 关`,
           );
           if (width < 768) await page.keyboard.press("Escape");
         }
@@ -205,7 +201,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
         )) {
           await humanClick(page, page.locator(`button[data-domain-id="${id}"]`), `select ${id}`);
           await expect(page.locator(`[data-planet-domain-label="${id}"]`)).toContainText(
-            "暂未发布",
+            "即将开放",
           );
           await expect(page.locator("[data-study-id]")).toHaveCount(0);
           await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);

@@ -192,7 +192,7 @@ export const messages = {
   "primm.steps.choose": "就选这个",
   "primm.steps.tryAgain": "再试试",
   "primm.steps.demo": "看演示",
-  "primm.steps.progress": "这节课的五个阶段",
+  "primm.steps.progress": "这一关的五个阶段",
   "primm.steps.phase.predict": "猜",
   "primm.steps.phase.run": "跑",
   "primm.steps.phase.investigate": "看",

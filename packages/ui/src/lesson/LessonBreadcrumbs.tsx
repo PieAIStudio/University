@@ -43,6 +43,7 @@ export function LessonBreadcrumbs({
   return (
     <LocationBreadcrumbs
       className="lesson-breadcrumb"
+      compactTitle={courseTitle}
       items={[
         { id: `study:${locator.studyId}`, title: studyTitle, href: toPath(WORLD) },
         {

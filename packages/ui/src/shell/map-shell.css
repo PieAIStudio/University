@@ -175,7 +175,7 @@
     height: 100%;
   }
   .app-shell[data-map-shell="true"] .tab-bar {
-    display: none;
+    display: flex;
   }
   .app-shell[data-map-shell="true"] .app-shell__west,
   .app-shell[data-map-shell="true"] .app-shell__east {

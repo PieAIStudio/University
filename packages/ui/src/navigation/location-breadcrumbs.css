@@ -60,14 +60,16 @@
 }
 .location-breadcrumb .location-breadcrumb__overflow {
   display: none;
-  flex: 0 0 44px;
+  flex: 0 1 auto;
+  max-width: 28ch;
 }
 .location-breadcrumb__list > .location-breadcrumb__overflow + li::before {
   content: none;
 }
 .location-breadcrumb summary {
-  width: 44px;
-  text-align: center;
+  min-width: 44px;
+  max-width: 28ch;
+  text-align: start;
   cursor: pointer;
   list-style: none;
 }
@@ -133,6 +135,12 @@
 @media (max-width: 767px) {
   .location-breadcrumb {
     font-size: 0.76rem;
+  }
+  .location-breadcrumb__overflow {
+    max-width: 35%;
+  }
+  .location-breadcrumb summary {
+    max-width: 100%;
   }
   .location-breadcrumb__list,
   .location-breadcrumb__list > li {

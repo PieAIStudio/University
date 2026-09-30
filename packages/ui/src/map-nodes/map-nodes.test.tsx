@@ -73,7 +73,7 @@ describe("map node sessions", () => {
       { lessonId: "one", answer: "wrong" },
       { lessonId: "two", answer: "right" },
     ]);
-    expect(host.textContent).toContain("可以跳过 1 节");
+    expect(host.textContent).toContain("可以跳过 1 关");
     expect(host.textContent).toContain("这些还值得学一遍");
   });
   it("retains answers on a failed commit and supports a safe retry", async () => {

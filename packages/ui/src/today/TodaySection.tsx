@@ -16,6 +16,7 @@ export interface TodaySectionData {
   readonly card: TodayCard | null;
   readonly nextLesson: NextLesson | null;
   readonly dueCount: number;
+  readonly cardState?: "loading" | "ready" | "failed";
   readonly issues: readonly string[];
 }
 
@@ -70,6 +71,7 @@ export function TodaySection({
   review,
   readEntitlements,
   vocabularyReview,
+  reviewOnly = false,
 }: {
   readonly data: TodaySectionData;
   readonly onOpenLesson: (locator: LessonRef) => void;
@@ -83,47 +85,62 @@ export function TodaySection({
   /** Reads the server-selected AI plan for open tutoring controls. */
   readonly readEntitlements?: EntitlementReader;
   readonly vocabularyReview?: VocabularyReviewPort;
+  /** The dedicated review door gives due cards priority over the next lesson. */
+  readonly reviewOnly?: boolean;
 }) {
   const interfaceTranslator = useI18n();
   const card = data.card;
   const next = data.nextLesson;
   return (
     <div className="today-layout">
-      <section className="today-hero">
-        <p className="eyebrow">
-          {next
-            ? interfaceTranslator.t("ui.today.todaySection.copy.今天的第一件事")
-            : interfaceTranslator.t("ui.today.todaySection.copy.今天-从回忆开始")}
-        </p>
-        {next ? (
-          <>
-            <h2>{next.lessonTitle}</h2>
-            <div className="today-hero__context-row">
-              <p className="today-hero__meta">
-                {next.studyTitle} · {next.courseTitle}
-              </p>
-              {contextAction ? (
-                <div className="today-hero__context-action">{contextAction}</div>
-              ) : null}
-            </div>
-            <div className="today-hero__action">
-              <GameButton variant="primary" static onClick={() => onOpenLesson(next)}>
-                {todayCtaLabel(next.progress)}
-              </GameButton>
-              <GameBadge tone="warning">
-                {progressLabel(next.progress, next.contentRevision)}
-              </GameBadge>
-            </div>
-          </>
-        ) : (
-          <h2>{interfaceTranslator.t("ui.today.todaySection.copy.课程这边暂时没有待办")}</h2>
-        )}
-        <p className="today-hero__note">
-          {interfaceTranslator.t(
-            "ui.today.todaySection.copy.课程负责建立理解-卡片只负责把重要知识留在长期记忆里",
+      {reviewOnly ? (
+        <header className="review-door__heading" data-review-due={data.dueCount}>
+          <h1>{interfaceTranslator.t("doors.review.due", { count: data.dueCount })}</h1>
+          <p>
+            {data.dueCount > 0
+              ? interfaceTranslator.t("doors.review.duration", {
+                  minutes: Math.max(1, Math.ceil((data.dueCount * 40) / 60)),
+                })
+              : interfaceTranslator.t("doors.review.none")}
+          </p>
+        </header>
+      ) : (
+        <section className="today-hero">
+          <p className="eyebrow">
+            {next
+              ? interfaceTranslator.t("ui.today.todaySection.copy.今天的第一件事")
+              : interfaceTranslator.t("ui.today.todaySection.copy.今天-从回忆开始")}
+          </p>
+          {next ? (
+            <>
+              <h2>{next.lessonTitle}</h2>
+              <div className="today-hero__context-row">
+                <p className="today-hero__meta">
+                  {next.studyTitle} · {next.courseTitle}
+                </p>
+                {contextAction ? (
+                  <div className="today-hero__context-action">{contextAction}</div>
+                ) : null}
+              </div>
+              <div className="today-hero__action">
+                <GameButton variant="primary" static onClick={() => onOpenLesson(next)}>
+                  {todayCtaLabel(next.progress)}
+                </GameButton>
+                <GameBadge tone="warning">
+                  {progressLabel(next.progress, next.contentRevision)}
+                </GameBadge>
+              </div>
+            </>
+          ) : (
+            <h2>{interfaceTranslator.t("ui.today.todaySection.copy.课程这边暂时没有待办")}</h2>
           )}
-        </p>
-      </section>
+          <p className="today-hero__note">
+            {interfaceTranslator.t(
+              "ui.today.todaySection.copy.课程负责建立理解-卡片只负责把重要知识留在长期记忆里",
+            )}
+          </p>
+        </section>
+      )}
 
       {card ? (
         <ReviewCard
@@ -135,11 +152,17 @@ export function TodaySection({
           liquidPrimary
           remaining={data.dueCount}
         />
-      ) : (
+      ) : reviewOnly && data.dueCount > 0 ? (
+        <p role="status">
+          {interfaceTranslator.t(
+            data.cardState === "loading" ? "doors.review.loading" : "doors.review.unavailable",
+          )}
+        </p>
+      ) : !reviewOnly ? (
         <GameCallout heading={REVIEW_EMPTY_TITLE} tone="success" className="today-empty">
           {reviewEmptyDescription(Boolean(next))}
         </GameCallout>
-      )}
+      ) : null}
 
       <VocabularyReview requestToken={requestToken} review={vocabularyReview} />
 

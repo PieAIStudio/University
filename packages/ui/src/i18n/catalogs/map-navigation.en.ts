@@ -119,11 +119,11 @@ export const messages = {
     "⚡ is a game challenge. It opens once you reach the lesson beside it.",
   "map.guide.a.challengeNone": "This course has no game challenge on its road yet.",
   "map.guide.a.review":
-    "Cards you learned come back to Practice just before you would forget them. A few a day is enough.",
+    "Cards you learned come back to Review just before you would forget them. A few a day is enough.",
   "map.guide.a.shortcuts":
-    "Press Space, or choose Quick actions under More: search destinations, see the whole route and get help.",
-  "map.guide.place.practice": "Practice",
-  "map.guide.place.more": "More",
+    "Press Space on the map, or expand the top-left navigation and choose Quick actions: search destinations, see the whole route and get help.",
+  "map.guide.place.practice": "Review",
+  "map.guide.place.more": "Quick actions",
   "map.guide.go.select": "Select it for me",
   "map.guide.go.look": "Take a look",
   "map.guide.go.shortcuts": "Open quick actions",

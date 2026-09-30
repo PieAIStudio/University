@@ -112,6 +112,15 @@ describe("the shared browser route", () => {
     },
   );
 
+  it("keeps free practice selection local to practice and preserves language on exit", async () => {
+    history.replaceState(null, "", "/practice?mode=free&lang=en");
+    await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
+    expect(new URLSearchParams(location.search).get("mode")).toBe("free");
+    await act(async () => container.querySelector("button")!.click());
+    expect(location.pathname).toBe("/");
+    expect(location.search).toBe("?lang=en");
+  });
+
   it("preserves language when leaving an auth callback", async () => {
     const fragment = "#access_token=test-only&type=magiclink";
     history.replaceState(null, "", `/auth/callback?lang=en&code=test-only${fragment}`);

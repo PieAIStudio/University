@@ -12,7 +12,7 @@ for (const hasTouch of [false, true]) {
       await page.goto(`${ONLINE_ORIGIN}${FIRST_LESSON_ROUTE}`, { waitUntil: "domcontentloaded" });
       const next = page
         .locator('.lesson-next[data-state="unfinished"]')
-        .getByRole("button", { name: "先去下一节", exact: true });
+        .getByRole("button", { name: "先去下一关", exact: true });
       await expect(next).toBeVisible();
       await scrollIntoView(next);
       expect(

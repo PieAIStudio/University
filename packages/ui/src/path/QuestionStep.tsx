@@ -18,6 +18,7 @@ export function QuestionStep({
   blank,
   inputId,
   submitLabel,
+  disableEmpty = false,
   onAnswer,
   onSubmit,
 }: {
@@ -27,10 +28,22 @@ export function QuestionStep({
   readonly blank: boolean;
   readonly inputId: string;
   readonly submitLabel: string;
+  /** A native rehearsal may keep submission disabled until it has an answer. */
+  readonly disableEmpty?: boolean;
   readonly onAnswer: (answer: string) => void;
   readonly onSubmit: () => void;
 }) {
   const interfaceTranslator = useI18n();
+  const submit = (
+    <GameButton
+      variant="primary"
+      disabled={disableEmpty && !answer.trim()}
+      onClick={onSubmit}
+      data-question-action="submit"
+    >
+      {submitLabel}
+    </GameButton>
+  );
   return (
     <>
       <p className="question-step__prompt">{question.prompt}</p>
@@ -57,9 +70,7 @@ export function QuestionStep({
             : interfaceTranslator.t("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
         </p>
       ) : null}
-      <GameButton variant="primary" onClick={onSubmit} data-question-action="submit">
-        {submitLabel}
-      </GameButton>
+      {disableEmpty ? <div className="choice-block__submit">{submit}</div> : submit}
     </>
   );
 }

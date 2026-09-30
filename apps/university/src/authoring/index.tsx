@@ -25,7 +25,7 @@ import { localBootstrap } from "../ports/local/bootstrap.js";
 import { progressPort } from "../progress/store.js";
 import { feedbackReviewSource } from "./feedback-source.js";
 import { StudioSection } from "./StudioSection.js";
-import { AirlockClocks, StudyDetail } from "./StudyDetail.js";
+import { StudyDetail } from "./StudyDetail.js";
 import { shortenHomePath } from "./studies-root.js";
 
 export { shortenHomePath } from "./studies-root.js";
@@ -131,17 +131,5 @@ export function StudioScreen({
   );
 }
 
-/**
- * The two authoring facts that belong on the map rather than behind a door.
- *
- * Which version of the project this campus is teaching, and the way into the UA
- * graph. Both are about the series on screen, so they sit with it.
- */
-export function AuthoringMapNotes({ studyId }: { readonly studyId: string | null }) {
-  if (!studyId) return null;
-  return (
-    <div className="world-landing__authoring">
-      <AirlockClocks studyId={studyId} />
-    </div>
-  );
-}
+// V7 keeps AirlockClocks in StudyDetail inside this workbench. The learner's
+// world map no longer embeds author-only revision clocks beneath its islands.

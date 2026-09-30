@@ -131,8 +131,8 @@ describe("the four screens that read the progress document", () => {
       root.render(withInterfaceLocale(<App />));
     });
     const text = container.textContent ?? "";
-    expect(text).toContain("学一节新课");
-    expect(text).toContain("把连击接上");
+    expect(text).toContain("每天 1 关");
+    expect(text).toContain("接上学习的日子");
     expect(text).not.toContain("任务还没开张");
   });
 
@@ -164,11 +164,19 @@ describe("the four screens that read the progress document", () => {
   // widget: measured at 3.4s alone and 10.2s alongside the whole app suite.
   // Budget this integration work explicitly; keep every DOM assertion. Real
   // browser journeys, not jsdom wall time, cover learner-visible behavior.
-  it("renders the badge wall on /me, not the door that said badges live elsewhere", async () => {
+  it("reaches the shared badge wall from Me through Growth, without a placeholder or a second wall", async () => {
     history.replaceState(null, "", "/me");
     await act(async () => {
       root.render(withInterfaceLocale(<App />));
     });
+    const growth = container.querySelector<HTMLAnchorElement>('[data-me-door="growth"]');
+    expect(growth?.getAttribute("href")).toBe("/league");
+    expect(container.querySelector(".badge-wall")).toBeNull();
+    await act(async () => {
+      history.pushState(null, "", growth!.getAttribute("href")!);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(container.querySelectorAll(".badge-tile")).toHaveLength(17);
     const text = container.textContent ?? "";
     expect(text).toContain("连续学习达到 7 天");
     expect(text).not.toContain("徽章长在投放端");
@@ -182,7 +190,14 @@ describe("the four screens that read the progress document", () => {
     });
     const text = container.textContent ?? "";
     expect(text).toContain("学完");
-    expect(text).toContain("已获得");
-    expect(text).not.toContain("还没学完一节");
+    expect(container.querySelector(".profile-screen__stats > div:last-child dd")?.textContent).toBe(
+      "1 关",
+    );
+    expect(text).not.toContain("还没学完一关");
+    await act(async () => {
+      history.pushState(null, "", "/league");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(container.querySelectorAll(".badge-tile--earned").length).toBeGreaterThan(0);
   }, 15_000);
 });

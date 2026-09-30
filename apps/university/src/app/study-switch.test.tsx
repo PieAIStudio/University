@@ -157,9 +157,9 @@ describe("study context", () => {
     expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
   });
 
-  it("updates the retained review recommendation and subsequent map context when the study changes", async () => {
-    // The recommendation remains in Review; the map's right side now describes
-    // a selection rather than repeating a competing Start button.
+  it("retains the chosen study across Review and its subsequent map without quizzing unseen lessons", async () => {
+    // Review owns due cards, not an unrelated next-lesson recommendation.
+    // Its study switch still changes the subsequent learning-map context.
     history.replaceState(null, "", "/review");
     await act(async () => {
       root.render(withInterfaceLocale(<App />));
@@ -169,8 +169,9 @@ describe("study context", () => {
     expect(
       container.querySelector<HTMLButtonElement>("[aria-label='当前系列 Alpha']"),
     ).toBeTruthy();
-    expect(container.textContent).toContain("Alpha · Alpha Course");
-    expect(container.textContent).toContain("Alpha Lesson");
+    expect(container.querySelector("[data-review-due]")?.getAttribute("data-review-due")).toBe("0");
+    expect(container.querySelector("[data-review-practice-entry]")).not.toBeNull();
+    expect(container.textContent).not.toContain("Alpha Lesson");
 
     const trigger = container.querySelector<HTMLButtonElement>("[aria-label='当前系列 Alpha']");
     expect(trigger).not.toBeNull();
@@ -183,8 +184,9 @@ describe("study context", () => {
     await act(async () => betaOption!.click());
 
     expect(container.querySelector<HTMLButtonElement>("[aria-label='当前系列 Beta']")).toBeTruthy();
-    expect(container.textContent).toContain("Beta · Beta Course");
-    expect(container.textContent).toContain("Beta Lesson");
+    expect(location.pathname).toBe("/review");
+    expect(container.querySelector("[data-review-due]")?.getAttribute("data-review-due")).toBe("0");
+    expect(container.textContent).not.toContain("Beta Lesson");
     expect(container.textContent).not.toContain("Alpha · Alpha Course");
     await act(async () => {
       history.pushState(null, "", "/");

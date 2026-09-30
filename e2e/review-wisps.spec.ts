@@ -50,6 +50,9 @@ test("a wisp comes back to the finished stone once its cards are due", async ({ 
       history.pushState(null, "", "/review");
       dispatchEvent(new PopStateEvent("popstate"));
     });
+    await expect(page.locator("[data-review-due]")).toHaveAttribute("data-review-due", String(due));
+    mkdirSync("SCRATCH/e2e/menu-doors", { recursive: true });
+    await page.screenshot({ path: "SCRATCH/e2e/menu-doors/review-real-due-cards.png" });
     for (let index = 0; index < due; index++) {
       const answer = page.getByPlaceholder(/先写下自己的答案/);
       await expect(answer).toBeEnabled();
@@ -60,7 +63,8 @@ test("a wisp comes back to the finished stone once its cards are due", async ({ 
       // The label includes the actual next interval; the fourth rating is Easy.
       await ratings.nth(3).click();
     }
-    await expect(page.getByText("今天没有到期卡片", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-review-due]")).toHaveAttribute("data-review-due", "0");
+    await expect(page.locator(".review-card")).toHaveCount(0);
     await page.evaluate((path) => {
       history.pushState(null, "", path);
       dispatchEvent(new PopStateEvent("popstate"));

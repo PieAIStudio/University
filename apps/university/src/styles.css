@@ -2058,19 +2058,6 @@ button.block {
     min-height: 100dvh;
     border-radius: 0;
   }
-
-  .app-shell__main:has(.stagewrap:not([hidden])) .world-landing__authoring {
-    position: absolute;
-    z-index: 4;
-    inset-inline-start: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-    /* Keep the helper text above the map's fixed control hint. */
-    bottom: 96px;
-  }
-}
-
-.world-landing__authoring {
-  display: grid;
-  gap: 12px;
 }
 
 .world-landing .picked > button,

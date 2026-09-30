@@ -86,7 +86,6 @@ const AUTHORING_CSS_BASELINE = Object.freeze({
   "unit-card__body": 2,
   "unit-card__number": 2,
   "unit-list": 1,
-  "world-landing__authoring": 2,
 });
 
 /**

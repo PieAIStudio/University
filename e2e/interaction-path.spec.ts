@@ -244,17 +244,19 @@ for (const width of [320, 390, 768, 1440]) {
       ratio: 1,
     });
     const feedback = page.locator(".feedback-note__open--lesson");
-    await expect(feedback).toBeInViewport();
-    // The reserved slot stays readable and clickable even during the entry scroll.
-    await expect(feedback).toHaveCSS("opacity", "1");
-    const isReachable = await feedback.evaluate((node) => {
-      const box = node.getBoundingClientRect();
-      return node.contains(
-        document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2),
-      );
-    });
-    expect(isReachable).toBe(true);
-    expect((await feedback.boundingBox())!.y).toBeLessThan(80);
+    if (width >= 768) {
+      // The desktop reserved slot remains readable during the entry scroll.
+      await expect(feedback).toBeInViewport();
+      await expect(feedback).toHaveCSS("opacity", "1");
+      const isReachable = await feedback.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return node.contains(
+          document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2),
+        );
+      });
+      expect(isReachable).toBe(true);
+      expect((await feedback.boundingBox())!.y).toBeLessThan(80);
+    } else await expect(feedback).toBeHidden();
     await page.screenshot({ path: info.outputPath("toolbar-ready.png") });
     const activity = localizeActivity(sample.activity, "en");
     for (const step of activity.steps) {
@@ -285,8 +287,22 @@ for (const width of [320, 390, 768, 1440]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     );
-    await expect(feedback).toBeInViewport();
-    await expect(feedback).toHaveCSS("opacity", "1");
+    if (width >= 768) {
+      await expect(feedback).toBeInViewport();
+      await expect(feedback).toHaveCSS("opacity", "1");
+    } else await expect(feedback).toBeHidden();
     await page.screenshot({ path: info.outputPath("keyboard-workbench.png") });
+    if (width < 768) {
+      // V7 relocates mobile feedback to Me, rather than removing the feature.
+      await page.locator(".lesson-toolbar__close").click();
+      await page.locator('.tab-bar a[href="/me"]').click();
+      await page.locator('[data-me-door="help"]').click();
+      const entry = page.locator("#profile-feedback-host button");
+      await humanClick(page, entry, "mobile feedback inside Me");
+      await expect(page.locator(".feedback-note__text")).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(entry).toBeFocused();
+      await page.screenshot({ path: info.outputPath("mobile-feedback-in-me.png") });
+    }
   });
 }

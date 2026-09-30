@@ -161,6 +161,16 @@ The existing registered avatar viewport also supplies the completion portrait;
 there is no additional canvas implementation. Browser evidence and the deliberately
 closed remote-release boundary belong to task 06, not to this technique lock.
 
+### V7-08: smaller mobile medallion paint, unchanged picking and projection
+
+The approved mobile correction halves only an unselected lesson's DOM icon face.
+The original projected button remains at least 44×44; selection restores full
+paint. Text stays DOM, markers retain their shared positions, and focus stays on
+the real button. No scene, geometry, material, canvas or terrain rule is added.
+Browser checks measure actual face/target ratios and selection. The same mobile
+shell retains four named doors, and the original label-avoidance system accounts
+for their occupied rectangles. Task 08 owns the final acceptance receipt.
+
 ### R59-02 to R59-05: every stop is the lesson stone; a gate every segment
 
 Owner, 2026-09-23 (second review): the learning nodes' gold and lavender pads were

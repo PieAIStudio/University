@@ -2,7 +2,7 @@ export const messages = {
   "play.lab.title": "学一下，玩一下。",
   "play.lab.intro": "接通一个想法，试坏一条规则，或让小邮差跑起来。挑一种，动手就会有发现。",
   "play.lab.entry": "体验互动课件",
-  "play.lab.back": "回到练习",
+  "play.lab.back": "回到互动课件",
   "play.lab.mix": "连玩 {total} 种",
   "play.lab.mixing": "连玩进行中",
   "play.lab.cancelMix": "自由试玩",

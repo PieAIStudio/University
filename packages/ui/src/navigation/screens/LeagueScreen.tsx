@@ -101,7 +101,7 @@ export function LeagueScreen({
           ))}
         </ol>
       </details>
-      <a className="linkish" href="/practice">
+      <a className="linkish" href="/review">
         {interfaceTranslator.t("product.growth.action")}
       </a>
     </section>

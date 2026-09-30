@@ -13,6 +13,32 @@
   text-align: start;
 }
 
+.feedback-note__open--profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-control);
+  color: var(--game-ui-text);
+  background: var(--game-ui-surface-raised);
+  font: inherit;
+  cursor: pointer;
+}
+.feedback-note__open--profile .nav-rail__label {
+  display: inline;
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  overflow: visible;
+}
+.feedback-note__open--profile:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  outline-offset: 3px;
+}
+
 .feedback-note__open {
   position: fixed;
   inset-inline-start: 12px;
@@ -45,9 +71,10 @@
   never wanted goes.
 */
 @media (max-width: 767px) {
-  .feedback-note__open--float {
-    inset-inline-start: auto;
-    inset-inline-end: 12px;
+  /* V7: the phone's feedback entry lives in Me, never over a lesson or map. */
+  .feedback-note__open--float,
+  .feedback-note__open--docked {
+    display: none;
   }
 
   /*
@@ -68,11 +95,6 @@
   .feedback-note__open--float.feedback-note__open--account .nav-rail__label,
   .feedback-note__open--float.feedback-note__open--lesson .nav-rail__label {
     display: none;
-  }
-
-  .app--account .account-panel__form form,
-  .app--lesson .lesson-main > :not(.lesson-reader__header) {
-    padding-inline-end: 56px;
   }
 }
 
@@ -179,6 +201,8 @@ body:has(.map-guide[data-map-guide="open"]) .feedback-note__open:not([aria-expan
 
 .feedback-note__copy,
 .feedback-note__close {
+  min-width: 44px;
+  min-height: 44px;
   padding: 7px 12px;
   border-radius: 999px;
   font: inherit;
