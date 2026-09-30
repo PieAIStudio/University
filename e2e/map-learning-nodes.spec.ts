@@ -6,6 +6,7 @@ import {
   judgeCheckpointAnswer,
   planCheckpoint,
   localizeLearnerContent,
+  courseChallengeEventId,
   type CheckpointLesson,
   type LearningSegment,
 } from "../packages/core/dist/index.js";
@@ -320,6 +321,55 @@ for (const [mode, origin] of [
       const geometry = await dialog.boundingBox();
       expect(geometry!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
       expect(geometry!.x).toBeGreaterThanOrEqual(0);
+      const eventId = courseChallengeEventId(course.studyId, course.id, segment.id);
+      // The earlier pause/partial round must not become a reward. Finish the
+      // actual remaining boards using their real paired identities now.
+      expect(
+        await page.evaluate(
+          (id) =>
+            Object.hasOwn(
+              JSON.parse(localStorage.getItem("university.progress.v2") ?? "{}").xpEvents ?? {},
+              id,
+            ),
+          eventId,
+        ),
+      ).toBe(false);
+      let finished = false;
+      for (let board = 0; board < 20; board++) {
+        const remaining = await page
+          .locator("[data-match-front]:not(:disabled)")
+          .evaluateAll((elements) =>
+            elements.map((element) => element.getAttribute("data-match-front")!),
+          );
+        for (const id of remaining) {
+          await humanClick(
+            page,
+            page.locator(`[data-match-front="${id}"]`),
+            "choose remaining prompt",
+          );
+          await humanClick(
+            page,
+            page.locator(`[data-match-back="${id}"]`),
+            "match the actual answer",
+          );
+        }
+        const advance = dialog.locator("[data-match-next]");
+        await expect(advance).toBeVisible();
+        finished = (await advance.getAttribute("data-match-next")) === "finish";
+        await humanClick(page, advance, "finish this actual board");
+        if (finished) break;
+      }
+      expect(finished).toBe(true);
+      await expect
+        .poll(() =>
+          page.evaluate(
+            (id) =>
+              JSON.parse(localStorage.getItem("university.progress.v2") ?? "{}").xpEvents?.[id],
+            eventId,
+          ),
+        )
+        .toBe(0);
+      expect(await progress(page)).toEqual(afterProof);
       await info.attach("proof-stays-separate-from-practice", {
         body: JSON.stringify(afterProof),
         contentType: "application/json",

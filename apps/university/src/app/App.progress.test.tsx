@@ -155,7 +155,10 @@ describe("the four screens that read the progress document", () => {
     expect(text).toContain("这里记录你自己的积累");
     expect(container.querySelector("[data-growth-details]")?.hasAttribute("open")).toBe(false);
     expect(text).not.toContain("排行榜还没开");
-  });
+    // Same full-app integration boundary as the profile checks below: 1.9s
+    // alone, 6.7s beside the app suite. This is not a render-speed assertion;
+    // real browser timing budgets are unchanged.
+  }, 15_000);
 
   // These mount the complete UIKit profile, rather than a small isolated
   // widget: measured at 3.4s alone and 10.2s alongside the whole app suite.

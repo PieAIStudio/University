@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { challengeBoards, challengeDeck, isChallengePair } from "./challenge.js";
+import { challengeBoards, challengeDeck, isChallengePair, isChallengeWon } from "./challenge.js";
 const cards = Array.from({ length: 7 }, (_, i) => ({
   id: String(i),
   front: `q${i}`,
@@ -33,5 +33,15 @@ describe("challenge board projection", () => {
     expect(isChallengePair(cards, "0", "0")).toBe(true);
     expect(isChallengePair(cards, "0", "1")).toBe(false);
     expect(isChallengePair(cards, "unknown", "unknown")).toBe(false);
+  });
+  it("awards a win only for the complete actual deck, never early exit or duplicate matches", () => {
+    const all = cards.map((card) => card.id);
+    expect(isChallengeWon(cards, all)).toBe(true);
+    expect(isChallengeWon(cards, [...all].reverse())).toBe(true);
+    expect(isChallengeWon(cards, all.slice(0, -1))).toBe(false);
+    expect(isChallengeWon(cards, [...all, all[0]!])).toBe(false);
+    expect(isChallengeWon([], [])).toBe(false);
+    expect(isChallengeWon(cards.slice(0, 1), [cards[0]!.id])).toBe(false);
+    expect(isChallengeWon(cards, [...all.slice(0, -1), "unrelated"])).toBe(false);
   });
 });

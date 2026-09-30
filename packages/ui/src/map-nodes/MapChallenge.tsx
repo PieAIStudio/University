@@ -5,6 +5,7 @@ import {
   challengeDeck,
   fingerprint,
   isChallengePair,
+  isChallengeWon,
   type ChallengeCard,
   type LessonRef,
 } from "@pieai/university-core";
@@ -29,12 +30,14 @@ export function MapChallenge({
   accountScope,
   onClose,
   onPlayed,
+  onWon,
 }: {
   cards: readonly ChallengeCard[];
   locator: LessonRef;
   accountScope: string;
   onClose: () => void;
   onPlayed?: (cardIds: readonly string[]) => void;
+  onWon?: () => void;
 }) {
   const { t } = useI18n();
   // Content identity does not depend on the order the loader resolves cards.
@@ -149,6 +152,7 @@ export function MapChallenge({
   function finish() {
     if (ref.current.stage === "finished") return;
     onPlayed?.(ref.current.matched);
+    if (isChallengeWon(cards, ref.current.matched)) onWon?.();
     update((current) => ({ ...current, stage: "finished" }));
   }
   function match(from: string, to: string) {
@@ -312,6 +316,7 @@ export function MapChallenge({
               ) : null}
               {done ? (
                 <GameButton
+                  data-match-next={state.board + 1 === boards.length ? "finish" : "next"}
                   onClick={() => {
                     if (state.board + 1 === boards.length) finish();
                     else {

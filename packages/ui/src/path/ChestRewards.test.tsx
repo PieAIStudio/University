@@ -3,6 +3,7 @@ import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 import type { ChestReward } from "@pieai/university-core";
 import { act, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { ChestRewards } from "./ChestRewards.js";
@@ -91,6 +92,45 @@ it("puts every reward up at once under reduced motion", () => {
   show({ reducedMotion: true });
   expect(lines()).toHaveLength(5);
 });
+
+it.each(["rewards", "throwing", "done"] as const)(
+  "renders the complete reduced-motion reward list in the first %s commit, without an effect",
+  (stage) => {
+    // Static rendering runs no effects. The full browser gate caught a commit
+    // labelled 'rewards' whose list was still empty until the passive effect.
+    const markup = renderToStaticMarkup(
+      withInterfaceLocale(
+        <ChestRewards
+          {...handlers()}
+          stage={stage}
+          tier="wood"
+          upgraded={false}
+          reward={REWARD}
+          dailyFirst={false}
+          reducedMotion
+        />,
+      ),
+    );
+    const captured = document.createElement("div");
+    captured.innerHTML = markup;
+    expect(captured.querySelectorAll(".chest-rewards__line")).toHaveLength(5);
+    const next = captured.querySelector('[data-chest-action="continue"]');
+    // A throw already in flight still belongs to the scene owner. Only a
+    // rewards/done stage can navigate away, even after changing preferences.
+    if (stage === "throwing") expect(next).toBeNull();
+    else expect(next).not.toBeNull();
+  },
+);
+
+it.each(["closed", "opening"] as const)(
+  "does not expose reduced-motion rewards or completion before the %s chest settles",
+  (stage) => {
+    show({ stage, reducedMotion: true, completion: <span data-course-completion /> });
+    expect(lines()).toHaveLength(0);
+    expect(host.querySelector("[data-course-completion]")).toBeNull();
+    expect(action("continue")).toBeNull();
+  },
+);
 
 it("offers the star throw when a monster stands next, and Continue when none does", () => {
   const guarded = show({ reducedMotion: true, guardName: "怕问错蛙" });

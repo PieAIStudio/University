@@ -5,6 +5,8 @@ import {
   lessonRewardTier,
   type CosmeticRewardCourse,
 } from "./cosmetic-rewards.js";
+import { learningDomainOfStudy } from "../domain/learning-domain.js";
+import { knowledgeSetConceptIds } from "./knowledge-cards.js";
 
 function course(count = 6): CosmeticRewardCourse {
   return {
@@ -105,5 +107,65 @@ describe("the cosmetic metadata comes from the same course producer", () => {
     };
     expect(() => cosmeticRewardRules([incomplete])).toThrow(/complete current lesson shape/);
     expect(() => cosmeticRewardRules([input, input])).toThrow(/duplicate/);
+  });
+
+  it("preserves the approved gold amount, purple avatar, and first-try upgrade on one identity", () => {
+    const rules = cosmeticRewardRules([course()]);
+    expect(rules.find((r) => r.id === "lesson:study/course/l5")).toMatchObject({ packs: 3 });
+    expect(rules.find((r) => r.id === "lesson:study/course/l2")).toMatchObject({
+      packs: 1,
+      perfectItemId: "avatar-beanie",
+    });
+    expect(rules.find((r) => r.id.startsWith("gate:"))).toMatchObject({
+      packs: 1,
+      perfectPacks: 3,
+      itemId: "avatar-beanie",
+    });
+    expect(rules.find((r) => r.kind === "challenge")).toMatchObject({
+      packs: 1,
+      itemId: "avatar-beanie",
+    });
+    expect(new Set(rules.map((r) => r.id)).size).toBe(rules.length);
+  });
+
+  it("registers the exact first AI set, retaining unlinked gifts as unfulfilled memory conditions", () => {
+    const input = { ...course(), studyId: "ai-literacy", isDefault: true };
+    const rules = cosmeticRewardRules([input]);
+    const shining = rules.find((r) => r.kind === "set-shining")!;
+    // The album's first set is ai-basics + prompt + token. ai-basics is a
+    // gifted access card with no authored occurrence in this fixture.
+    expect(shining.itemId).toBe("back-set-crown");
+    expect(shining.requirements).toHaveLength(3);
+    expect(shining.requirements[0]).toEqual([]);
+    expect(shining.requirements[1]).toHaveLength(2);
+    expect(shining.requirements[2]).toHaveLength(2);
+    const normal = rules.find((r) => r.kind === "set")!;
+    expect(normal.requirements).toHaveLength(1);
+    expect(
+      knowledgeSetConceptIds(["prompt", "token"], new Set(["prompt", "token", "ai-basics"]), {
+        domainId: learningDomainOfStudy("ai-literacy"),
+        isDefault: true,
+        ordinal: 1,
+      }),
+    ).toEqual(["ai-basics", "prompt", "token"]);
+    expect(learningDomainOfStudy("not-a-real-study")).toBe("unclassified");
+    expect(learningDomainOfStudy("__proto__")).toBe("unclassified");
+  });
+
+  it("carries independent declared review revisions only as identity metadata", () => {
+    const input = course();
+    const versioned = {
+      ...input,
+      units: input.units.map((unit) => ({
+        ...unit,
+        lessons: unit.lessons.map((lesson) => ({ ...lesson, reviewCardRevisions: { recall: 7 } })),
+      })),
+    };
+    const shining = cosmeticRewardRules([versioned]).find((r) => r.kind === "set-shining")!;
+    expect(shining.requirements[0]?.[0]).toMatchObject({
+      contentRevision: 2,
+      reviewCardRevisions: { recall: 7 },
+    });
+    expect(JSON.stringify(shining)).not.toMatch(/answer|front|back"/);
   });
 });

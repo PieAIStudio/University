@@ -46,6 +46,7 @@ import "./map-guide.css";
 import { useFirstMeeting, useGuideOpening } from "./use-first-meeting.js";
 import { useJourneyOpening, type JourneyOpening } from "./use-journey-opening.js";
 import type { FirstStoneInvitation, WelcomeInvitation } from "./first-meeting.js";
+import { settledComparison } from "./settled-comparison.js";
 
 /**
  * 涟 on the map (ADR-0012, phase one; V5 #map-guide). The droplet sits at the
@@ -220,14 +221,17 @@ export function MapGuide({
   // The islands a comparison can be made of, read once the panel has settled.
   useEffect(() => {
     if (!compare || compare.candidates !== null) return;
-    return afterLayout(() => {
-      const candidates = comparable.flatMap((marker) => {
-        const found = registry.locate(markerTargetId(marker.id));
-        return found ? [{ id: found.id, label: found.label }] : [];
-      });
-      setCompare((current) =>
-        current?.key === compare.key ? { ...current, candidates } : current,
-      );
+    return settledComparison({
+      afterLayout,
+      read: () =>
+        comparable.flatMap((marker) => {
+          const found = registry.locate(markerTargetId(marker.id));
+          return found ? [{ id: found.id, label: found.label }] : [];
+        }),
+      publish: (candidates) =>
+        setCompare((current) =>
+          current?.key === compare.key ? { ...current, candidates } : current,
+        ),
     });
   }, [compare, comparable, registry]);
 

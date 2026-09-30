@@ -18,6 +18,29 @@ export type KnowledgeCardTier = "new" | "known" | "shining";
  */
 export const HEAD_START_CONCEPTS = ["prompt", "ai-basics"] as const;
 
+/** The album and Backend registration must describe the exact same set.
+ * A source with no authored links has no set. Gifts join the first segment
+ * of the default AI course only when it has authored links; access is not memory.
+ */
+export function knowledgeSetConceptIds(
+  named: readonly string[],
+  known: ReadonlySet<string>,
+  location: { readonly domainId: string; readonly isDefault: boolean; readonly ordinal: number },
+): readonly string[] {
+  const concepts = [...new Set(named)].filter((id) => known.has(id));
+  if (
+    concepts.length &&
+    location.domainId === "ai-foundations" &&
+    location.isDefault &&
+    location.ordinal === 1
+  ) {
+    concepts.unshift(
+      ...HEAD_START_CONCEPTS.filter((id) => known.has(id) && !concepts.includes(id)),
+    );
+  }
+  return concepts;
+}
+
 /** FSRS's own state for a card that has graduated from learning into review. */
 const FSRS_REVIEW = 2;
 

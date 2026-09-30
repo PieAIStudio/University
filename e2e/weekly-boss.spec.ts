@@ -147,10 +147,19 @@ test("the weekly boss stands on the island studied this week, and its last heart
   await namedStep(page, "心记进了学习记录，大怪这周不再来", async () => {
     const events = await page.evaluate(() => {
       const document = JSON.parse(localStorage.getItem("university.progress.v2") ?? "{}");
-      return Object.keys(document.xpEvents ?? {}).filter((id) => id.startsWith("weekly-boss:"));
+      return Object.fromEntries(
+        Object.entries(document.xpEvents ?? {}).filter(([id]) => id.startsWith("weekly-boss:")),
+      );
     });
-    expect(events.filter((id) => id.includes(":hit:"))).toHaveLength(5);
-    expect(events.filter((id) => !id.includes(":hit:"))).toHaveLength(1);
+    const ids = Object.keys(events);
+    expect(ids.filter((id) => id.includes(":hit:"))).toHaveLength(5);
+    const wins = ids.filter((id) => /^weekly-boss:\d{4}-\d{2}-\d{2}$/.test(id));
+    expect(wins).toHaveLength(1);
+    expect(events[wins[0]!]).toBe(50);
+    expect(events[`${wins[0]}:flawless`]).toBe(0);
+    expect(Object.values(events).reduce<number>((sum, amount) => sum + Number(amount), 0)).toBe(
+      100,
+    );
     await expect(chip).toHaveCount(0);
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });

@@ -118,11 +118,14 @@ receipts; they prove interaction, not server randomness, RLS, remote migration,
 real learning grants or cross-device acceptance. They never enable the product
 switch, write a real account or consume a paid service.
 
-The current continuation could not discover the owning SwimmerBackend project:
-that plugin call was blocked by the tool safety layer. No alternative access path
-was used to bypass it. A migration's presence or prior verification in that
-repository is therefore **not established here**, and no remote apply occurred.
-Do not count frontend mocks as the required server tests.
+An earlier continuation could not discover the owning SwimmerBackend project:
+that plugin call was blocked by the tool safety layer and no alternate access
+path was used. After the connection recovered, the existing backend candidate
+was inspected and verified through its normal project route. Migration
+`20260929010000_university_cosmetics.sql` and its tests are now committed and
+normally pushed at `5c003fd9b8479a032718947f60d0d18e476b83f1`, with the exact
+remote SHA independently checked. No remote migration or registration occurred.
+Frontend mocks still do not count as server acceptance.
 
 Before release, the Backend owner must verify its actual migration/RPC and run
 server-side odds, 10/50-pack guarantees, duplicate exchange, client-outcome
@@ -131,8 +134,10 @@ review must bind the published course metadata to all approved reward amounts:
 blue/purple one pack, gold three, first-try upgrades, purple avatar awards,
 weekly/streak awards, completed sets and the extra all-shining-set reward.
 `cosmetic-rewards.json` is registration input only, **not proof these grants work**.
-The present metadata projection does not yet represent the extra all-shining
-award; complete its contract with the real Backend implementation before enabling.
+The resumed metadata projection now represents the extra all-shining award,
+using the same authored-set membership as the album and each review card's own
+revision. An unlinked starter gift supplies no evidence of memory. Complete
+this contract with the real Backend implementation before enabling.
 Owner approval is still separately required for remote migration/registration.
 
 The missing explicit concept links in the currently published courses remain
@@ -165,3 +170,85 @@ Local candidate acceptance (2026-09-30, not backend acceptance):
 Ordinary pre-push acceptance is still the boundary for saving this candidate
 remotely. Its terminal receipt is retained beside these logs; a local verify
 alone must not be described as a successful push.
+
+### Reduced-motion integration repair
+
+The inherited `3559448e` push ended with **1 failed / 444 passed (22.5m)**,
+`PUSH_EXIT=1`, before the timing lane. The reduced-motion chest could commit
+`data-chest-stage="rewards"` with an empty list, then fill it from a passive
+effect. A focused unmodified rerun passed (**1 passed (50.2s)**), but three
+effect-free render controls reproduced the missing rewards deterministically.
+The complete list and its available action now derive in the same render;
+the ordinary timed reveal and an already-running throw retain their lifecycle.
+Closed/opening chests still show no premature completion. No browser assertion,
+timeout or count floor was relaxed. The repaired chest/album unit subset passed
+**20 tests**. The original failed push and both controls remain under
+`SCRATCH/v7-execution/cosmetics-*`; final verification and normal push are still
+required for this repair.
+
+The repaired actual-browser chest/wardrobe subset passed **10 tests (2.2m)**,
+`E2E_EXIT=0`; the reduced-motion screenshot was inspected at
+`SCRATCH/e2e/cosmetics/reduced-motion-chest.png`. The first full verify then
+stopped at the existing `/league` full-App jsdom test's 5-second execution
+timeout (**6.7s** under the full app suite). Its unchanged standalone file
+passed **6 tests**, with that case taking **1.9s**. This functional integration
+case now uses the same **15-second** execution allowance as its two neighboring
+full-profile cases. All its DOM assertions remain, and no browser action,
+timing threshold or visual budget was changed. This allowance is recorded
+explicitly rather than presented as a product performance improvement.
+
+### Resumed reward-contract acceptance
+
+The inherited reward-contract changes share learning-domain and set membership
+between the album and registration producer, record real challenge wins, and
+retain a zero-XP witness for a flawless weekly boss before its one win event.
+Late fight and chest-drop callbacks are scoped to their account, island and week.
+These records support later server acceptance; the closed service is unchanged.
+
+The previous contract browser run was **18 passed / 1 failed (3.3m)**: its
+weekly-win counter incorrectly counted the new flawless witness as another win.
+The corrected test requires exactly one date-shaped win worth 50 XP, five hit
+events, a zero-XP flawless witness and exactly 100 XP in total; no reward or
+duplicate-win assertion is relaxed. After connection recovery, that exact
+weekly scenario passed **1 passed (56.9s)**, `E2E_EXIT=0`, in
+`SCRATCH/v7-execution/cosmetics-contract-weekly-final.log`.
+The final University `pnpm verify` returned `VERIFY_EXIT=0` in
+`cosmetics-resumed-verify.log`. Backend's actual local SQL returned **14 passed,
+0 failed**, its six independent-connection PostgreSQL cases passed, and the
+shared native harness retained all six YaZu cases. Backend's full source-only
+verify, static migration and documentation checks each returned
+`COMMAND_EXIT=0`; exact `resumed-*` receipts remain in its
+`.devspace-reports/university-v7-cosmetics/` directory. Hosted target/database
+and environment-file inputs were blank, and no provider, account or production
+data was used. The normal University push remains the next delivery gate.
+
+Task 06's local source implementation is ready for that gate; its remaining
+work is the separately approved remote rollout, real Data API/account checks
+and only then service activation. Keep this task active as the owner of that
+boundary, and proceed to independent 08 after the ordinary push passes.
+
+### Full-gate settling repair
+
+The ordinary push of `bd610a59` returned **2 failed / 443 passed (23.3m)**,
+`PUSH_EXIT=1`, before the timing lane. The failures were an island comparison
+captured during re-projection and the English authoring PRIMM second verdict.
+Both passed in isolation (**2 passed (42.6s)**); that does not replace the gate.
+
+The comparison now re-reads the same visibility-checking target registry for
+at most 1.5 seconds after layout, publishing promptly once two are available.
+It still refuses covered/missing targets and cancels on scope exit. Four
+controlled tests cover delayed projection, immediate admission, an honestly
+insufficient map and cancellation. There is no idle polling loop.
+
+A separate PRIMM negative control reproduced a fresh content-array response
+stealing the evaluation button's focus and scrolling back to the heading.
+Focus now follows the actual step, while progress still follows current
+content. The old behavior failed; all seven step tests passed after the fix.
+The browser's second press additionally waits for native enabled state and
+requires exactly two grading calls, preserving fail, repaired pass and the
+original completion assertions. The original intermittent verdict failure's
+exact scheduling is not claimed reproduced by the focus test.
+
+Before the final focus adjustment, repeated real-browser guide/PRIMM checks
+were **12 passed (1.4m)**, `E2E_EXIT=0`. Final verification and a new ordinary
+push are required for the resulting code; the previous failed log is retained.

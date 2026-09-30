@@ -49,6 +49,8 @@ export const weeklyBossWeek = (now: number) => calendarDay(startOfWeek(now));
 
 /** A beaten boss is written as an XP event under this id, so every device knows. */
 export const weeklyBossWonEventId = (week: string) => `weekly-boss:${week}`;
+/** Zero-XP presentation/award fact; the week's one win identity stays unchanged. */
+export const weeklyBossFlawlessEventId = (week: string) => `${weeklyBossWonEventId(week)}:flawless`;
 
 const hitPrefix = (week: string) => `weekly-boss:${week}:hit:`;
 
