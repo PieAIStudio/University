@@ -19,11 +19,21 @@ export const test = base.extend<{
 }>({
   firstUseGuides: ["skip", { option: true }],
   page: async ({ page, firstUseGuides }, use) => {
-    if (firstUseGuides === "skip")
-      await page.addLocatorHandler(page.getByTestId("first-use"), async () => {
-        await page.getByTestId("first-use-skip").click();
-      });
-    await page.addLocatorHandler(page.locator(".game-ui-splash--opening"), async (splash) => {
+    // One handler, not two: Playwright checks every handler before every
+    // action, and a second check shifted the serial timing lane enough to
+    // turn map-studio-3d's no-remount window red. The locator matches either
+    // blocker; the body tells them apart.
+    const guide = page.getByTestId("first-use");
+    const splash = page.locator(".game-ui-splash--opening");
+    const blocker = firstUseGuides === "skip" ? splash.or(guide) : splash;
+    await page.addLocatorHandler(blocker, async () => {
+      if (firstUseGuides === "skip" && (await guide.isVisible())) {
+        // The skip button rides in 涟's bubble, which only shows once the
+        // droplet has flown to its target; under load that outlasts a click's
+        // wait. Its own click handler is the learner's skip, recorded as usual.
+        await page.getByTestId("first-use-skip").dispatchEvent("click");
+        return;
+      }
       await page.waitForFunction(
         () => {
           const current = document.querySelector(".game-ui-splash--opening");
