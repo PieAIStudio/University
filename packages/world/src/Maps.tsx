@@ -102,6 +102,11 @@ import { useBossStrike, type WeeklyBossScene } from "./course/boss-strike.js";
 import { planWeeklyRoam, weeklyBossAnchor } from "./course/weekly-roam.js";
 import { devWeeklyBoss, devWispLessons, useDevOpening } from "./course/dev-opening.js";
 import { WispField, type WispSpot } from "./course/WispField.js";
+import type { WeeklyBossWin } from "@pieai/university-core";
+import { weeklyCrownPlacements } from "./course/weekly-crowns.js";
+import { WeeklyCrownField } from "./course/WeeklyCrownField.js";
+
+const NO_WEEKLY_WINS: readonly WeeklyBossWin[] = [];
 import { CosmeticOrnament } from "./course/CosmeticOrnament.js";
 import {
   COSMETIC_ORNAMENT_RADIUS,
@@ -318,6 +323,8 @@ const PALETTE = {
 } as const;
 
 export interface Marker {
+  /** A verified available weekly challenge on this course, not course completion. */
+  readonly weeklyBoss?: boolean;
   readonly lessonId?: string;
   readonly learningKind?: "personal" | "challenge" | "checkpoint";
   readonly id: string;
@@ -1461,6 +1468,7 @@ export function CourseScene({
   introductoryLessonId = null,
   onIntroductionReady,
   weeklyBoss = null,
+  weeklyWins = NO_WEEKLY_WINS,
   onPickWeeklyBoss,
   cosmeticOrnamentId = null,
 }: {
@@ -1486,6 +1494,7 @@ export function CourseScene({
   reviewDue?: readonly string[] | null;
   /** This week's boss, when it stands on this island and has not been beaten (V7 mechanic 8). */
   weeklyBoss?: WeeklyBossScene | null;
+  weeklyWins?: readonly WeeklyBossWin[];
   onPickWeeklyBoss?: () => void;
   /** A server-confirmed equipped item, not a local grant or random outcome. */
   cosmeticOrnamentId?: string | null;
@@ -1646,6 +1655,23 @@ export function CourseScene({
     vignettes,
     idlePosition,
   ]);
+  const crownSpots = useMemo(
+    () =>
+      weeklyCrownPlacements(
+        lessons,
+        weeklyWins.filter((win) => win.week !== weekly?.week),
+        [
+          ...vignettes.map((item) => ({ x: item.x, z: item.z, radius: item.radius })),
+          ...(ornament
+            ? [{ x: ornament.position.x, z: ornament.position.z, radius: COSMETIC_ORNAMENT_RADIUS }]
+            : []),
+          ...(idlePosition
+            ? [{ x: idlePosition.x, z: idlePosition.z, radius: AVATAR_CLEARANCE }]
+            : []),
+        ],
+      ),
+    [lessons, weeklyWins, weekly?.week, vignettes, ornament, idlePosition],
+  );
   const avatarPoint = avatarAt?.position ?? idlePosition ?? null;
   const sequence = useChestSequence({ opening: staged, avatarAt: avatarPoint });
   // While a star is still to be thrown, its target keeps standing (chest-sequence.ts).
@@ -1788,6 +1814,7 @@ export function CourseScene({
     const route = blueprint.route.nodeRadius;
     return planWeeklyRoam(blueprint, weeklyMonster, [
       ...standing,
+      ...crownSpots.map((spot) => ({ x: spot.at.x, z: spot.at.z, r: COSMETIC_ORNAMENT_RADIUS })),
       ...markers.map((marker) => ({
         x: marker.lesson.position.x,
         z: marker.lesson.position.z,
@@ -1814,6 +1841,7 @@ export function CourseScene({
     ]);
   }, [
     weeklyMonster,
+    crownSpots,
     blueprint,
     standing,
     markers,
@@ -1968,6 +1996,7 @@ export function CourseScene({
           <WispField spots={wisps} />
         </Suspense>
       ) : null}
+      {crownSpots.length > 0 ? <WeeklyCrownField spots={crownSpots} /> : null}
       {staged?.throwing && openingChest && chased && avatarPoint ? (
         <StarThrow
           key={`${openingChest.id}:${chased.monster.id}`}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import { GameAssetIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { leagueTierName } from "../league-tier-name.js";
+import { WeeklyBossRecords } from "./WeeklyBossRecords.js";
 import {
   LEAGUE_TIERS,
   LONG_TERM_STABILITY_DAYS,
@@ -77,6 +78,8 @@ export function LeagueScreen({
           </p>
         </div>
       </GamePanel>
+
+      <WeeklyBossRecords document={progress} now={now} />
 
       <details className="product-details" data-growth-details>
         <summary>{interfaceTranslator.t("product.growth.details")}</summary>

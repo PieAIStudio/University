@@ -13,6 +13,7 @@ import {
   weeklyBossRoundWon,
   weeklyBossWeek,
   weeklyBossWonEventId,
+  weeklyBossHistory,
   type ProgressPort,
 } from "@pieai/university-core";
 import { InterfaceLanguageProvider } from "@pieai/university-ui/i18n.js";
@@ -44,6 +45,7 @@ const course = {
 const courseOf = () => course;
 const onChest = vi.fn();
 let island: { studyId: string; courseId: string } | null;
+let showWorld = false;
 let host: HTMLDivElement, root: Root, value: ReturnType<typeof useWeeklyBoss>;
 function Probe() {
   const progress = useSyncExternalStore(fixture.port!.subscribe, fixture.port!.snapshot);
@@ -51,6 +53,7 @@ function Probe() {
     progress,
     island,
     lessons: [],
+    showWorld,
     courseOf,
     onChest,
     onOpenLesson: () => {},
@@ -97,6 +100,7 @@ beforeEach(() => {
   for (const id of ["a", "b", "c", "d", "e"])
     fixture.port.advanceLesson(lessonKey("s", "c", id), 1);
   fixture.reduced = true;
+  showWorld = false;
   island = { studyId: "s", courseId: "c" };
   onChest.mockReset();
   host = document.createElement("div");
@@ -120,6 +124,10 @@ it("persists a flawless witness before the one win, without inventing extra XP o
   const props = await win();
   expect(fixture.port!.snapshot().xpEvents[weeklyBossFlawlessEventId(week)]).toBe(0);
   expect(fixture.port!.snapshot().xpEvents[weeklyBossWonEventId(week)]).toBe(50);
+  expect(weeklyBossHistory(fixture.port!.snapshot(), Date.now()).weeks[0]!.location).toMatchObject({
+    studyId: "s",
+    courseId: "c",
+  });
   expect(seen.length).toBeGreaterThan(0);
   expect(seen.every(Boolean)).toBe(true);
   expect(onChest).toHaveBeenCalledOnce();
@@ -159,4 +167,47 @@ it("cancels a delayed scene/drop callback when leaving its island", async () => 
     await vi.advanceTimersByTimeAsync(7000);
   });
   expect(onChest).not.toHaveBeenCalled();
+});
+
+it("announces an available boss on the overview without mounting its scene or fight", async () => {
+  island = null;
+  showWorld = true;
+  await render();
+  expect(value.availableIsland).toEqual({ studyId: "s", courseId: "c" });
+  expect(value.scene).toBeNull();
+  expect(value.overlay).toBeNull();
+  await act(async () => value.open());
+  expect(value.overlay).toBeNull();
+});
+
+it("rolls Sunday into Monday without remounting, awarding XP or accepting the old fight", async () => {
+  vi.setSystemTime(new Date(2026, 9, 4, 23, 59, 59, 700));
+  const old = await open();
+  expect(old.boss.week).toBe("2026-09-28");
+  const before = JSON.stringify(fixture.port!.snapshot());
+  await act(async () => vi.advanceTimersByTimeAsync(500));
+  expect(value.scene?.week).toBe("2026-10-05");
+  expect(value.overlay).toBeNull();
+  await act(async () =>
+    old.onStrike({
+      verdict: "correct",
+      hitEventId: "weekly-boss:2026-09-28:hit:s/c/a#e",
+      won: true,
+      flawless: true,
+    }),
+  );
+  expect(JSON.stringify(fixture.port!.snapshot())).toBe(before);
+  expect(onChest).not.toHaveBeenCalled();
+});
+
+it("sees a lesson completed after mounting on the same day", async () => {
+  fixture.port = createProgressPort({ persistence: { read: () => null, write: () => {} } });
+  for (const id of ["a", "b", "c", "d"]) fixture.port.advanceLesson(lessonKey("s", "c", id), 1);
+  await render();
+  expect(value.scene).toBeNull();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000);
+    fixture.port!.advanceLesson(lessonKey("s", "c", "e"), 1);
+  });
+  expect(value.scene?.week).toBe("2026-09-28");
 });

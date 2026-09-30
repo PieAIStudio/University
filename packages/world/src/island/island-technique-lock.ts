@@ -61,6 +61,10 @@ export const COURSE_CHEST_TRIANGLE_CEILING = 280;
  */
 export const COURSE_MONSTER_TRIANGLE_CEILING = 7200;
 
+/** A bounded trophy field, independent of the learner's complete DOM history. */
+export const COURSE_WEEKLY_CROWN_COUNT_CEILING = 8;
+export const COURSE_WEEKLY_CROWN_TRIANGLE_CEILING = 1920;
+
 /** The explicit tree ceiling written into the tree lock below. */
 export const ISLAND_TREE_TRIANGLE_CEILING = 900;
 
@@ -113,6 +117,15 @@ export {
 };
 
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
+  "weekly-crowns": {
+    technique:
+      "One course-only instanced crown-and-plinth field, projected from witnessed weekly wins onto qualified existing ground. Old wins without locations stay in the DOM history, never guessed into the scene.",
+    source:
+      "course/WeeklyCrownField.tsx and weekly-crowns.ts, reusing cosmetic-ornament.ts geometry and the existing island sampler.",
+    budget:
+      "At most eight crowns, one draw, no textures, <= 1920 triangles (currently 8 x 156 = 1248). One cached projection per live blueprint; owned instance, geometry and material released on departure.",
+    rejected: [],
+  },
   "cosmetic-ornament": {
     technique:
       "One merged vertex-coloured mesh on qualified existing course ground, selected by the account's server receipt. No new field, animation loop or canvas.",

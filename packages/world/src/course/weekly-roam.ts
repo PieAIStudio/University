@@ -2,7 +2,8 @@ import * as THREE from "three";
 
 import { sampleIslandSurface, type IslandBlueprint } from "../island/island-blueprint.js";
 import { createIslandHeightSampler } from "../island/island-geometry.js";
-import { BOSS_FOOTPRINT_RADIUS, BOSS_HEIGHT, type CourseMonster } from "./chests-and-monsters.js";
+import { BOSS_FOOTPRINT_RADIUS, type CourseMonster } from "./chests-and-monsters.js";
+import { monsterWorldHeight } from "./monster-size.js";
 
 /**
  * The weekly boss roams (Owner, 2026-09-28): 「平时游荡……在这个林里面漫步来回走，
@@ -81,10 +82,12 @@ export interface WeeklyAnchor {
   readonly at: THREE.Vector3;
   /** Over its head, where the DOM chip hangs. */
   readonly chip: THREE.Vector3;
+  /** Updated by the actual drawn model; stars and the label share its height. */
+  bodyHeight: number;
 }
 
 const anchors = new Map<string, { readonly home: string; readonly anchor: WeeklyAnchor }>();
-const chipLift = (boss: CourseMonster) => BOSS_HEIGHT * (boss.size ?? 1) + 0.35;
+const chipLift = (height: number) => height + 0.35;
 
 export function weeklyBossAnchor(boss: CourseMonster): WeeklyAnchor {
   const week = boss.stop.kind === "weekly" ? boss.stop.week : boss.id;
@@ -92,12 +95,13 @@ export function weeklyBossAnchor(boss: CourseMonster): WeeklyAnchor {
   const known = anchors.get(week);
   if (known && known.home === home) return known.anchor;
   const at = boss.position.clone();
-  const anchor = { at, chip: at.clone().setY(at.y + chipLift(boss)) };
+  const bodyHeight = monsterWorldHeight(boss);
+  const anchor = { at, chip: at.clone().setY(at.y + chipLift(bodyHeight)), bodyHeight };
   anchors.set(week, { home, anchor });
   return anchor;
 }
 
-export function moveWeeklyAnchor(anchor: WeeklyAnchor, to: THREE.Vector3, boss: CourseMonster) {
+export function moveWeeklyAnchor(anchor: WeeklyAnchor, to: THREE.Vector3, _boss: CourseMonster) {
   anchor.at.copy(to);
-  anchor.chip.copy(to).setY(to.y + chipLift(boss));
+  anchor.chip.copy(to).setY(to.y + chipLift(anchor.bodyHeight));
 }

@@ -9,12 +9,14 @@ import { watchConsole } from "./harness/console.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
+import { waitForCourseFraming } from "./harness/course-overview.js";
 import { FIRST_COURSE_ROUTE } from "./harness/online-learner.js";
 import {
   enterSelectedMapObject,
   enterableLessonMarker,
   mapEntryButton,
   openMapQuickActions,
+  runMapCommand,
 } from "./harness/map-actions.js";
 
 const DEFAULT_CAPTURE_DIR = fileURLToPath(
@@ -200,6 +202,15 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   let frameIntervals: unknown = null;
   await namedStep(page, `[${vp.name}] 2秒真实指针拖拽测量帧间隔`, async () => {
     frameIntervals = await measurePointerRaf(page);
+  });
+
+  // The timed drag deliberately moves the camera; its final position depends
+  // on how many pointer moves fit into two seconds. A narrow window can end
+  // with every lesson off-screen. Return through the learner's real command,
+  // not a camera override, before asking to click a visible lesson marker.
+  await namedStep(page, `[${vp.name}] 拖拽后用真实入口回到学习视角`, async () => {
+    await runMapCommand(page, "learning-view");
+    await waitForCourseFraming(page);
   });
 
   await namedStep(page, `[${vp.name}] 验证学习路线抽屉展开与查看单元内容`, async () => {

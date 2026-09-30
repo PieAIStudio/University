@@ -385,18 +385,25 @@ export function WorldMapCanvas({
                 {marker.text}
               </span>
             ) : (
-              <SceneLabelText
-                title={marker.text}
-                status={
-                  courseState ? (
-                    <span aria-hidden="true">
-                      {marker.courseState === "done" ? "✓ " : ""}
-                      {courseState}
-                    </span>
-                  ) : undefined
-                }
-                note={marker.sub}
-              />
+              <>
+                {marker.weeklyBoss ? (
+                  <span aria-hidden="true" data-weekly-course-crown>
+                    ♛
+                  </span>
+                ) : null}
+                <SceneLabelText
+                  title={marker.text}
+                  status={
+                    courseState ? (
+                      <span aria-hidden="true">
+                        {marker.courseState === "done" ? "✓ " : ""}
+                        {courseState}
+                      </span>
+                    ) : undefined
+                  }
+                  note={marker.sub}
+                />
+              </>
             );
           const attach = (element: HTMLElement | null) => {
             if (element) labelNodes.current.set(marker.id, element);
@@ -462,6 +469,7 @@ export function WorldMapCanvas({
               data-proved={marker.proved ? "true" : undefined}
               data-lesson-state={marker.lessonState}
               data-course-state={marker.courseState}
+              data-weekly-boss={marker.weeklyBoss ? "true" : undefined}
               aria-description={marker.label ?? courseState}
               aria-pressed={followId === marker.id}
               style={{ "--placed": 0 } as CSSProperties}

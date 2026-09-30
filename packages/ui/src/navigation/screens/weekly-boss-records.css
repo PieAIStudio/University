@@ -1,0 +1,27 @@
+.weekly-boss-records {
+  margin-block: 1rem;
+}
+.weekly-boss-records h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+}
+.weekly-boss-records__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+.weekly-boss-records__counts p {
+  margin-block: 0.25rem;
+}
+.weekly-boss-records__weeks {
+  padding-inline-start: 1.5rem;
+}
+.weekly-boss-records__weeks li {
+  margin-block: 0.6rem;
+  overflow-wrap: anywhere;
+}
+.weekly-boss-records__weeks small {
+  display: block;
+}

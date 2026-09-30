@@ -4393,6 +4393,16 @@ export interface MessageContracts {
   readonly "weeklyBoss.fight": {  };
   readonly "weeklyBoss.flawlessHint": {  };
   readonly "weeklyBoss.hearts": { readonly "hearts": number; };
+  readonly "weeklyBoss.history.details": {  };
+  readonly "weeklyBoss.history.empty": {  };
+  readonly "weeklyBoss.history.flawless": {  };
+  readonly "weeklyBoss.history.legacy": {  };
+  readonly "weeklyBoss.history.longest": { readonly "count": number; };
+  readonly "weeklyBoss.history.sceneLimit": {  };
+  readonly "weeklyBoss.history.streak": { readonly "count": number; };
+  readonly "weeklyBoss.history.title": {  };
+  readonly "weeklyBoss.history.total": { readonly "count": number; };
+  readonly "weeklyBoss.history.won": {  };
   readonly "weeklyBoss.hit": { readonly "xp": string | number | bigint | boolean | null | undefined | Date; };
   readonly "weeklyBoss.keepHint": {  };
   readonly "weeklyBoss.leave": {  };

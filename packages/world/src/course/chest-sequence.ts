@@ -6,6 +6,7 @@ import type { LessonPlacement } from "../Maps.js";
 import type { CourseOpening } from "./ChestOpening.js";
 import type { MonsterPlacement, MonsterReaction, MonsterReactionPhase } from "./MonsterField.js";
 import { BOSS_HEIGHT, MONSTER_HEIGHT } from "./chests-and-monsters.js";
+import { weeklyBossAnchor } from "./weekly-roam.js";
 import type { ThrowEvent } from "./StarThrow.js";
 
 /**
@@ -127,6 +128,11 @@ export function useChestSequence({
 
 /** The point a star aims at: the middle of the monster. */
 export function starTarget(entry: MonsterPlacement): THREE.Vector3 {
-  const height = entry.monster.boss ? BOSS_HEIGHT : MONSTER_HEIGHT;
+  const height =
+    entry.monster.stop.kind === "weekly"
+      ? weeklyBossAnchor(entry.monster).bodyHeight
+      : entry.monster.boss
+        ? BOSS_HEIGHT
+        : MONSTER_HEIGHT;
   return entry.at.clone().setY(entry.at.y + height * 0.55);
 }
