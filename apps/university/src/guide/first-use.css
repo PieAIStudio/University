@@ -31,9 +31,10 @@
   bottom: 0;
   padding: 12px 14px;
   border-radius: 18px;
-  background: var(--game-ui-liquid-reveal-solid, #101718);
-  color: var(--game-ui-liquid-reveal-text, #f2f7f4);
-  box-shadow: 0 12px 30px rgb(0 0 0 / 20%);
+  /* The kit's own presence label, so the fallback reads as 涟 speaking. */
+  background: var(--game-ui-panel-strong);
+  color: var(--game-ui-text);
+  box-shadow: var(--game-ui-shadow-button);
 }
 
 .first-use__bubble {
