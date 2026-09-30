@@ -56,11 +56,13 @@ function heightOf(mole: MolesState["moles"][number]): number {
   return Math.min(1, mole.age / RISE_SECONDS);
 }
 
+/** A soil ring with a dark hole in the middle: the hole must read from the camera. */
 function Molehill() {
   return (
     <group>
-      <Ball position={[0, 0.02, 0]} size={[0.78, 0.2, 0.7]} color={TOY.soil} />
-      <Disc position={[0, 0.13, 0]} radius={0.42} height={0.04} color={TOY.ink} />
+      <Disc position={[0, 0.06, 0]} radius={0.62} height={0.14} color={TOY.soil} />
+      <Ball position={[0, 0.12, 0]} size={[0.66, 0.12, 0.6]} color={TOY.soil} />
+      <Disc position={[0, 0.2, 0]} radius={0.38} height={0.03} color={TOY.ink} />
     </group>
   );
 }
@@ -90,6 +92,7 @@ function MoleView({
     <group
       ref={body}
       name={`mole-${id}`}
+      scale={1.45}
       onClick={(event) => {
         event.stopPropagation();
         onWhack(id);
@@ -215,7 +218,7 @@ export function MolesScene(props: MolesSceneProps) {
     const mole = session.getState().moles.find((candidate) => candidate.id === id);
     const spot = mole ? spots[mole.hole] : null;
     if (!mole || !spot || mole.state !== "up" || heightOf(mole) < 0.6) return false;
-    out.set(spot.x, GROUND + 0.85, spot.z);
+    out.set(spot.x, GROUND + 1.2, spot.z);
     return true;
   };
   const hits = snapshot.moles.filter((mole) => mole.state === "hit");

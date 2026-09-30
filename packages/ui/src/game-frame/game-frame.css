@@ -489,11 +489,21 @@
   font-size: 12px;
 }
 
-/* An arch's sign on the runner's path: the lane number, then the option. */
-.game-label--arch kbd {
-  font: inherit;
-  font-size: 12px;
-  opacity: 0.7;
+/* An arch's sign on the runner's path: the lane's number in the lane's colour. */
+.game-label--arch {
+  padding: 3px;
+  border-radius: 999px;
+}
+
+.game-label--arch > span {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 50%;
+  color: #1d3336;
+  font-size: 16px;
+  font-weight: 800;
 }
 
 /* The one that comes next, shown after a mistake. */

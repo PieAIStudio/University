@@ -39,7 +39,7 @@ export interface RunnerSceneProps {
   readonly onFailure: () => void;
 }
 
-export const LANE_WIDTH = 1.7;
+export const LANE_WIDTH = 2.2;
 /** Where a fork appears, down the path; the avatar runs at z = 0. */
 const FAR_Z = -24;
 const TILE = 1.2;
@@ -128,16 +128,22 @@ function Arches({ session, lanes }: { session: RunnerSession; lanes: number }) {
             {[-1, 1].map((side) => (
               <Disc
                 key={side}
-                position={[side * (LANE_WIDTH / 2 - 0.12), 0.9, 0]}
-                radius={0.09}
-                height={1.8}
+                position={[side * (LANE_WIDTH / 2 - 0.14), 1.2, 0]}
+                radius={0.13}
+                height={2.4}
                 color={colour(lane)}
               />
             ))}
             <Block
-              position={[0, 1.86, 0]}
-              size={[LANE_WIDTH - 0.05, 0.16, 0.22]}
+              position={[0, 2.45, 0]}
+              size={[LANE_WIDTH + 0.05, 0.26, 0.3]}
               color={colour(lane)}
+            />
+            {/* A cream board under the lintel, where the option's sign hangs. */}
+            <Block
+              position={[0, 2.05, 0.05]}
+              size={[LANE_WIDTH - 0.5, 0.5, 0.08]}
+              color={TOY.cream}
             />
           </group>
         );
@@ -254,8 +260,10 @@ export function RunnerScene(props: RunnerSceneProps) {
   const lanes = fork?.lanes.length ?? 3;
   const { effects, addEffect, dropEffect } = useEffects();
 
+  // The number signs appear once the arches are close enough to tell apart.
+  const near = Boolean(fork && fork.progress >= 0.3);
   const labels: AnchoredLabel[] =
-    fork && item && fork.taken === null
+    fork && item && fork.taken === null && near
       ? fork.lanes.map((optionId, lane) => {
           const label = item.options.find((option) => option.id === optionId)?.label ?? "";
           const current = snapshot.lane === lane;
@@ -266,10 +274,13 @@ export function RunnerScene(props: RunnerSceneProps) {
             className: "game-label--arch",
             ariaLabel: props.describeArch(label, lane, current),
             onPick: () => props.onLane(lane),
+            // Only the lane's number: two signs of words never fit side by
+            // side at a distance, and the button of the same number and
+            // colour below carries the option's words.
             content: (
-              <>
-                <kbd aria-hidden="true">{lane + 1}</kbd> {label}
-              </>
+              <span aria-hidden="true" style={{ background: binColour(lane) }}>
+                {lane + 1}
+              </span>
             ),
           } satisfies AnchoredLabel;
         })
@@ -277,7 +288,7 @@ export function RunnerScene(props: RunnerSceneProps) {
   const anchor = (id: number, out: THREE.Vector3) => {
     const s = session.getState();
     if (!s.fork || s.fork.taken !== null) return false;
-    out.set(laneX(id - 1, s.fork.lanes.length), 2.3, forkZ(s));
+    out.set(laneX(id - 1, s.fork.lanes.length), 2.05, forkZ(s));
     return true;
   };
 
