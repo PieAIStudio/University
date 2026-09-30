@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>界面风格对比</title>
+<link rel="stylesheet" href="lab/uikit.css">
 <style>
 :root{
   --bg:#f5f1e8;--paper:#fffdf8;--ink:#1f2b2a;--ink2:#46524f;--ink3:#5f6967;--line:#e2dbcd;--soft:#f0ebe1;
@@ -166,6 +167,56 @@ details.src{font-size:13.5px;color:var(--ink3)}
 details.src summary{cursor:pointer}
 details.src p{margin-top:4px}
 footer{font-size:13px;color:var(--ink3)}
+
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:14px;align-items:start}
+.duo .col{align-content:start}
+@media (max-width:760px){.duo{grid-template-columns:minmax(0,1fr)}}
+.tag.liquid{background:#efe6ff;color:#5b3fa8}
+details.old{margin:28px 0;border:1px dashed var(--line);border-radius:14px;padding:10px 14px;background:var(--paper)}
+details.old>summary{cursor:pointer;font-weight:700;color:var(--ink2)}
+figure.lian{margin:0 0 12px}figure.lian img{display:block;max-width:100%;border-radius:16px}figure.lian figcaption{font-size:13px;color:var(--ink3);margin-top:6px}
+.ctab{border-collapse:collapse;margin:12px 0;font-size:14px}
+.ctab th,.ctab td{border-bottom:1px solid var(--line);padding:6px 12px;text-align:left}
+/* the live liquid column */
+.lq-phone{background:#fbf4e6;padding:0;overflow:hidden}
+.lq-phone[data-dark]{background:#1d1a22}
+.lq-screen{font-family:var(--font);color:#2a2320;padding:0 0 14px}
+.lq-phone[data-dark] .lq-screen{color:#f3ece2}
+.lq-top{display:flex;justify-content:space-between;align-items:center;padding:16px 22px 4px}
+.lq-phases{display:flex;gap:6px;align-items:center}
+.lq-phases i{font-style:normal;font-size:13px;display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:999px;opacity:.55}
+.lq-phases i.on{opacity:1;font-weight:800;color:#2a2320}
+.lq-count{font-size:12px;opacity:.7}
+.lq-body{padding:8px 28px 0;display:grid;gap:12px}
+.lq-body h4{margin:0;font-size:21px;line-height:1.45}
+.lq-eb{font-size:12px;font-weight:700;opacity:.7}
+.lq-sub,.lq-ctx{margin:0;font-size:14px;opacity:.75}
+.lq-photo{width:132px;height:88px;object-fit:cover;border-radius:14px}
+.lq-opts{display:grid;gap:10px}
+.lq-bead{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:52px;padding:12px 18px;font:600 17px/1.4 var(--font);cursor:pointer;width:100%}
+.lq-bead--big{justify-content:center;font-size:18px;font-weight:800;min-height:56px}
+.lq-bead:focus-visible{outline:3px solid #2a2320;outline-offset:3px;border-radius:14px}
+.lq-tick{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.7);font-size:12px}
+.lq-fb{margin:0;font-size:14px;padding:8px 12px;border-radius:12px;background:rgba(114,197,143,.18)}
+.lq-fb.no{background:rgba(244,135,107,.2)}
+.lq-card-row{display:flex;justify-content:center;padding:8px 0}
+.lq-bins{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lq-bin-group{position:relative;width:100%}
+.lq-bin-group>*{width:100%}
+.lq-bin{all:unset;box-sizing:border-box;display:grid;place-items:center;width:100%;min-width:120px;min-height:78px;font:800 17px var(--font);cursor:pointer}
+.lq-drop{width:120px;height:44px}
+.lq-sentence{display:flex;flex-wrap:wrap;gap:6px;min-height:52px;padding:6px;align-items:center}
+.lq-word{display:inline-block;padding:9px 12px;font:700 15px var(--font)}
+.lq-slot{display:inline-block;padding:10px 14px;font:13px var(--font);opacity:.7}
+.lq-tray{display:flex;flex-wrap:wrap;gap:8px}
+.lq-tray-piece{width:auto}
+.lq-tray-piece .lq-bead{width:auto;min-height:40px;padding:8px 12px;font-size:14px}
+.lq-row{display:flex;gap:10px;align-items:center}
+.lq-row>:first-child{flex:1}
+.lq-reset{all:unset;cursor:pointer;font-size:13px;padding:8px 10px;opacity:.75;text-decoration:underline}
+.lq-palette{display:flex;flex-wrap:wrap;gap:14px}
+.lq-swatch{display:grid;gap:6px;justify-items:center;width:120px}
+.lq-swatch code{font-size:12px;color:var(--ink3)}
 </style>
 </head>
 <body>
@@ -175,21 +226,130 @@ footer{font-size:13px;color:var(--ink3)}
 </svg>
 <div class="page">
 <header>
-  <div class="kicker">University · 界面风格 · 对比页 · 2026 年 9 月 30 日 · 讨论稿，不改产品</div>
-  <h1>扁平马卡龙，还是现在的黏土风？同一屏并排看</h1>
-  <p class="lead">你喜欢样机里那种扁平、多彩的样子，想把它放进品牌 UI。这一页把「现在产品里的样子」「样机原样」「我提议的修正版」放在一起，同一屏、同样的字，浅色深色都能切。中间专门回答你问的「对比度是什么、好看是不是第一」。</p>
+  <div class="kicker">University · 界面风格 · 对比页 · 2026 年 9 月 30 日（下午改版） · 讨论稿，不改产品</div>
+  <h1>彩色液体：从「涟」长出来的新主题，和现在的黏土并排看</h1>
+  <p class="lead">你下午改了主意：不要扁平了，要把全局 AI「涟」那种液体的样子扩成一套彩色主题，像彩色橡皮泥，从品牌 UI 包里出来。下面右边那一列不是图片，是品牌 UI 包里真的液体组件拼出来的，点一下、按住都有反应。</p>
   <nav class="nav" aria-label="同一套文档"><a href="index.html">← 总览</a><a href="album.html">旧组件相册</a><a href="first-level.html">新第一关样机</a><a href="pro-lesson.html">专业课样机</a><a href="spec.html">执行规格</a></nav>
 </header>
 
 <div class="minute">
   <h2>如果你只有一分钟</h2>
   <ol>
-    <li><b>你的眼光没错。</b>3D 舞台是立体的，操作用平的，两层一眼分得开；按钮颜色和 3D 里是同一套，所以看着像一家人。</li>
-    <li><b>样机原样有一个真问题：</b>白字配彩色底的按钮太浅，对比度 2.9 到 3.2。有两个连视力正常的人读字的最低线 3 都不到。</li>
-    <li><b>好看和看得清不冲突。</b>修正版颜色还是那几种，只是把字改成深色、按钮下面加一道稍深的边。你看下面三列，差别很小；可到了阳光下，差别很大。</li>
-    <li><b>怎么进品牌 UI：</b>不改它现在的样子（别的产品也在用），给它加一套可选的新主题，University 选用。先在课文页试，再往别的页面铺。</li>
+    <li><b>你的直觉能做出来。</b>「涟」的液体本来就是品牌 UI 包里的一套组件，颜色是可以换的。换成六种橡皮泥色，就是一套彩色液体主题，不是另起一套画法。</li>
+    <li><b>比黏土多了什么：</b>黏土只有米色和一两种强调色；液体这套每种题型可以有自己的颜色，按下去会被压扁、向两边摊开，卡片放对了会「流」进篮子里融成一团，词块拼对了会连成一整句。</li>
+    <li><b>有一条要守的规矩：</b>品牌 UI 包自己记着一条实测过的教训：<b>静止的色块一直晃，看起来像坏了。</b>所以我建议：平时是饱满、有光泽的彩色软块，一动不动；只有你点它、放卡片、拼句子的那一下，它才像液体。两种你都能在下面切换着看。</li>
+    <li><b>字一律用深色。</b>六种颜色配深色字，对比度都在 6.3 以上，阳光下也看得清。深色模式也用同样亮的颜色，彩块在暗底上更跳。</li>
   </ol>
 </div>
+
+<!-- ───────── liquid ───────── -->
+<section id="liquid">
+  <h2>一、同一屏「猜」：现在的黏土 和 彩色液体</h2>
+  <p class="lead">左边是正式版现在的真实截图；右边是真组件。点右边的三个选项，看被选中那块怎么鼓起来；按住「发出去试试」，看它怎么被压扁。</p>
+  <div class="toolbar" role="group" aria-label="切换">
+    <div class="seg"><span>颜色</span><button type="button" data-lmode="light" aria-pressed="true">浅色</button><button type="button" data-lmode="dark" aria-pressed="false">深色</button></div>
+    <div class="seg"><span>液体什么时候动</span><button type="button" data-lmotion="act" aria-pressed="true">只在你操作时（推荐）</button><button type="button" data-lmotion="always" aria-pressed="false">一直微微流动</button></div>
+  </div>
+  <div class="duo">
+    <div class="col">
+      <h3>① 现在的产品 <span class="tag now">真实截图 · 黏土</span></h3>
+      <div class="phone"><img class="shot" data-lnow src="assets/views/now-guess-light.jpg" alt="正式版现在的猜一屏"></div>
+      <ul class="notes"><li>米色底，按钮下面有厚边、渐变和阴影。颜色只有米色、薄荷、橙三种。</li></ul>
+    </div>
+    <div class="col">
+      <h3>② 彩色液体 <span class="tag liquid">新主题 · 真组件</span></h3>
+      <div class="phone lq-phone"><div data-liquid="guess"></div></div>
+      <ul class="notes">
+        <li>没选的选项是奶油色软块；选中的那块<b>鼓起来、变成嫩叶绿</b>，前面有个对勾（颜色不是唯一的提示）。</li>
+        <li>主按钮是珊瑚色，按住会被压扁、向两边摊开，松手弹回来。</li>
+        <li>现在进行到哪一步（猜）是一颗黄色小水珠。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="liquid2">
+  <h2>二、「分一分」和「排一排」：液体最有用的地方</h2>
+  <p class="lead">这两屏里，液体不是装饰，是在说事：卡片放对了，它流进那一边；词块拼对了，它们融成一句话。</p>
+  <div class="duo">
+    <div class="col">
+      <h3>① 现在的产品 <span class="tag now">真实截图 · 深色</span></h3>
+      <div class="phone"><img class="shot" src="assets/views/l1-5-can-photo-answer.jpg" alt="正式版的分一分"></div>
+    </div>
+    <div class="col">
+      <h3>② 彩色液体 <span class="tag liquid">点下面的颜色试试</span></h3>
+      <div class="phone lq-phone"><div data-liquid="round"></div></div>
+      <ul class="notes"><li>放对：卡片化成一滴，顺着伸出去的「脖子」流进那一池，池子晃一下。放错：卡片不动，下面说为什么。</li></ul>
+    </div>
+  </div>
+  <div class="duo">
+    <div class="col">
+      <div class="phone"><img class="shot" src="assets/views/now-build-dark.jpg" alt="正式版的排一排"></div>
+    </div>
+    <div class="col">
+      <div class="phone lq-phone"><div data-liquid="build"></div></div>
+      <ul class="notes"><li>点词块，它从下面飞上去，和前面的词<b>连成一整条紫色的句子</b>，词和词之间的缝会被液体填上。拼错的也能放进去——对不对，要你自己判断。</li></ul>
+    </div>
+  </div>
+</section>
+
+<section id="palette">
+  <h2>三、橡皮泥色板：六种颜色，字一律深色</h2>
+  <div class="card">
+    <div data-liquid="palette"></div>
+    <table class="ctab">
+      <thead><tr><th>颜色</th><th>深色字的对比度</th><th>够不够</th></tr></thead>
+      <tbody>
+        <tr><td>珊瑚 #f4876b</td><td>6.27</td><td><span class="pill pass">过</span></td></tr>
+        <tr><td>向日葵 #f7c948</td><td>9.86</td><td><span class="pill pass">过</span></td></tr>
+        <tr><td>嫩叶 #72c58f</td><td>7.43</td><td><span class="pill pass">过</span></td></tr>
+        <tr><td>晴空 #6bb3ea</td><td>6.81</td><td><span class="pill pass">过</span></td></tr>
+        <tr><td>葡萄 #b39bf0</td><td>6.52</td><td><span class="pill pass">过</span></td></tr>
+        <tr><td>泡泡糖 #f59ac2</td><td>7.56</td><td><span class="pill pass">过</span></td></tr>
+      </tbody>
+    </table>
+    <p class="fine">深色字是 #2a2320。标准线是 4.5（正文）和 3（大字）。我试过深色模式换成压深一档的颜色：配深字只有 3.3 到 4.2，配浅字也只有 2.3 到 4.1，都不够，所以深色模式也用这六种亮色。</p>
+  </div>
+</section>
+
+<section id="origin">
+  <h2>四、它从哪来，怎么进品牌 UI</h2>
+  <div class="card">
+    <figure class="lian"><img src="assets/views/lian-now.jpg" alt="正式版地图上的涟：青色的水滴和它展开的液体面板"><figcaption>正式版地图上现在的「涟」：下面那颗青色水滴是它的身体，上面是它展开的液体面板。9 月 30 日在本机截的。</figcaption></figure>
+    <p><b>来源就是「涟」。</b>涟的身体、它展开的那块面板，用的是品牌 UI 包里的液体组件：一块软体，上面打一层高光，受力时按弹簧的规律变形，两块靠近会长出一根「脖子」连起来。这些是包里现成的，右边那列就是直接用它们拼的。</p>
+    <p><b>缺的只是「一套颜色」和「一个开关」。</b>现在包里的液体默认只有一种颜色；要加的是：六种橡皮泥色、深色字、以及一个可选的新主题名（比如「彩色液体」），University 打开它，别的产品不受影响。这要给品牌 UI 包发一个新版本，发之前我会先问你。</p>
+    <p><b>一条要守的规矩</b>（包里原话的意思）：一屏只让一个东西在流动；只在用户做了什么的时候流动；静止的色块一直晃会像坏了。上面「一直微微流动」那个开关就是让你亲眼看这条：切过去，盯着不动的按钮看几秒。</p>
+    <p class="fine">手机上跑得动吗：液体用的是网页自带的滤镜，包里有「同时最多几个在动」的上限，超了就不画流动效果、只留颜色。老手机和「减少动态」的设置下，直接不动，颜色和字照旧。</p>
+  </div>
+</section>
+
+<section id="decideL">
+  <h2>五、要你定的三件事</h2>
+  <div class="card">
+    <p><b>L1 要不要做这套彩色液体主题？</b></p>
+    <ul class="notes">
+      <li><b>做，先只在课文页和岛上游戏用（推荐）</b>：课文页本来就要重做，一起换；看着好再铺到别的页面。</li>
+      <li>做，整个 App 一起换：统一最快，但第 7 版刚用黏土做完的一批页面要重看。</li>
+      <li>先不做，保留黏土。</li>
+    </ul>
+    <p><b>L2 液体什么时候动？</b></p>
+    <ul class="notes">
+      <li><b>只在你操作时（推荐）</b>：平时是静止的彩色软块，点、放、拼的那一下才流动。</li>
+      <li>一直微微流动：更「活」，但包里记着这样容易像坏了，也更费电。</li>
+    </ul>
+    <p><b>L3 光泽要多亮？</b></p>
+    <ul class="notes">
+      <li><b>像橡皮泥：柔和的高光（推荐）</b>，就是上面看到的。</li>
+      <li>像果冻：更亮、更透。</li>
+      <li>像陶泥：几乎不反光，最安静。</li>
+    </ul>
+    <p class="fine">回我的时候写「L1 选几、L2 选几、L3 选几」就行。</p>
+  </div>
+</section>
+
+<details class="old">
+  <summary>上午那版：扁平马卡龙对比（9 月 30 日下午已否，留作记录；对比度的解释仍然有效）</summary>
+
 
 <!-- ───────── side by side ───────── -->
 <section id="side">
@@ -388,6 +548,8 @@ footer{font-size:13px;color:var(--ink3)}
   </div>
 </section>
 
+</details>
+
 <section>
   <details class="src"><summary>出处和做法（点开）</summary>
     <p>对比度标准：W3C《Understanding SC 1.4.3 Contrast (Minimum)》，页面 2026-06-01 更新，2026-09-30 查阅，<a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">原文</a>。其中：正文 4.5:1、大字 3:1；大字是 14pt 粗体（约 18.5px）或 18pt（约 24px）；3:1 是 ISO 9241-3 和 ANSI/HFES 100-1988 给正常视力定的最低线；4.5:1 对应约 20/40 视力，「常被报告为八十岁左右老人的典型视力」；色觉异常的人读字几乎不受颜色影响；不能点的控件不要求对比度。</p>
@@ -399,7 +561,18 @@ footer{font-size:13px;color:var(--ink3)}
 <footer>University · 界面风格对比（讨论稿）。这一页只在设计文件夹里，不改产品，也不改品牌 UI 包。</footer>
 </div>
 
+<script src="lab/liquid-theme.js"></script>
 <script>
+(function(){
+  var lstate={mode:'light',motion:'act'};
+  function lapply(){
+    if(window.LiquidTheme) window.LiquidTheme.set(lstate);
+    document.querySelectorAll('.lq-phone').forEach(function(el){ if(lstate.mode==='dark') el.setAttribute('data-dark',''); else el.removeAttribute('data-dark'); });
+    var now=document.querySelector('[data-lnow]'); if(now) now.src='assets/views/now-guess-'+lstate.mode+'.jpg';
+  }
+  document.querySelectorAll('[data-lmode]').forEach(function(b){ b.addEventListener('click',function(){ lstate.mode=b.getAttribute('data-lmode'); document.querySelectorAll('[data-lmode]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));}); lapply(); }); });
+  document.querySelectorAll('[data-lmotion]').forEach(function(b){ b.addEventListener('click',function(){ lstate.motion=b.getAttribute('data-lmotion'); document.querySelectorAll('[data-lmotion]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));}); lapply(); }); });
+})();
 (function(){
 "use strict";
 var PHOTO='<img src="assets/coffee.jpg" alt="" style="width:92px;height:62px;object-fit:cover;border-radius:10px">';
