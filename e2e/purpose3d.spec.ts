@@ -218,14 +218,14 @@ for (const width of [1440, 390])
     });
   }
 for (const origin of [ONLINE_ORIGIN, LOCAL_ORIGIN]) {
-  test(`game-first ${origin}: all ten selectable, original three still garden editions`, async ({
+  test(`game-first ${origin}: all fifteen selectable, original three still garden editions`, async ({
     page,
   }) => {
     await page.goto(`${origin}/play-lab/catalog?group=three&entry=three:sky-invaders&lang=zh-CN`);
-    // Nine scenes plus 庭院拦截, the first game assembled from the kit (ADR-0011).
-    await expect(page.getByRole("tab", { name: "3D组件 10", exact: true })).toBeVisible();
-    await expect(page.locator("[data-entry-id^='three:']")).toHaveCount(10);
-    await expect(page.getByRole("tab", { name: "全部 60", exact: true })).toBeVisible();
+    // Nine scenes plus the six island games assembled from the kit (ADR-0011).
+    await expect(page.getByRole("tab", { name: "3D组件 15", exact: true })).toBeVisible();
+    await expect(page.locator("[data-entry-id^='three:']")).toHaveCount(15);
+    await expect(page.getByRole("tab", { name: "全部 65", exact: true })).toBeVisible();
     for (const mode of ["invaders", "stack", "cloze-tetris"]) {
       await page.goto(`${origin}/play-lab/toy-3d?game=${mode}&lang=zh-CN`);
       await expect(page.getByTestId("arcade3d")).toHaveAttribute("data-edition", "garden");
