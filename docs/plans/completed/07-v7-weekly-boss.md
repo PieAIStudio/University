@@ -215,3 +215,26 @@ The final native `pnpm verify` execution `wc_job_J02tQwYClRxbuXKc` completed wit
 exit code 0, including all source, content, style, build and documentation gates.
 The native job owns this receipt; it did not write a shell `VERIFY_EXIT` marker.
 The normal pre-push browser gate remains the final remote-delivery boundary.
+
+### Push transport and drag-fixture continuation
+
+The first push of `8066ac9a` passed **465 tests (23.6m)** and **39 timing tests
+(5.4m)**, then Git's HTTPS upload failed with `SSL_ERROR_SYSCALL`; the independent
+remote read still returned `eaf24edc`. The next full browser run recorded
+**464 expected / 1 unexpected / 0 skipped** in its retained HTML report.
+Its narrow continuous-course walk could no longer see a lesson after its own
+two-second camera drag. The failure screenshot shows the learning stones outside
+the viewport, not a missing island or broken marker. That unmodified case passed
+alone (**1 passed (52.6s)**, `E2E_EXIT=0`), confirming that a timed pointer loop does
+not have one fixed final camera position.
+
+The walk now uses the existing learning-view command and waits for its actual
+framing after the drag, before the unchanged marker hit test and lesson round
+trip. It neither changes camera limits nor removes visibility, input, render,
+frame-sampling or viewport assertions. The failure report and screenshot remain
+in `SCRATCH/v7-execution/weekly-8066-retry-failure/` and `SCRATCH/e2e/`.
+Both actual viewport walks passed twice (**4 passed (1.4m)**, `E2E_EXIT=0`)
+in `SCRATCH/v7-execution/weekly-continuous-fixed.log`. The final full
+`pnpm verify` completed with native exit **0** (`wc_job_vU8Pc-rGkVMjoYiB`).
+No implementation or test source was edited after that verification; a normal
+push remains the remote-delivery boundary.
