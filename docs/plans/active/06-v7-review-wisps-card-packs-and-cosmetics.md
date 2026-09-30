@@ -226,3 +226,29 @@ Task 06's local source implementation is ready for that gate; its remaining
 work is the separately approved remote rollout, real Data API/account checks
 and only then service activation. Keep this task active as the owner of that
 boundary, and proceed to independent 08 after the ordinary push passes.
+
+### Full-gate settling repair
+
+The ordinary push of `bd610a59` returned **2 failed / 443 passed (23.3m)**,
+`PUSH_EXIT=1`, before the timing lane. The failures were an island comparison
+captured during re-projection and the English authoring PRIMM second verdict.
+Both passed in isolation (**2 passed (42.6s)**); that does not replace the gate.
+
+The comparison now re-reads the same visibility-checking target registry for
+at most 1.5 seconds after layout, publishing promptly once two are available.
+It still refuses covered/missing targets and cancels on scope exit. Four
+controlled tests cover delayed projection, immediate admission, an honestly
+insufficient map and cancellation. There is no idle polling loop.
+
+A separate PRIMM negative control reproduced a fresh content-array response
+stealing the evaluation button's focus and scrolling back to the heading.
+Focus now follows the actual step, while progress still follows current
+content. The old behavior failed; all seven step tests passed after the fix.
+The browser's second press additionally waits for native enabled state and
+requires exactly two grading calls, preserving fail, repaired pass and the
+original completion assertions. The original intermittent verdict failure's
+exact scheduling is not claimed reproduced by the focus test.
+
+Before the final focus adjustment, repeated real-browser guide/PRIMM checks
+were **12 passed (1.4m)**, `E2E_EXIT=0`. Final verification and a new ordinary
+push are required for the resulting code; the previous failed log is retained.

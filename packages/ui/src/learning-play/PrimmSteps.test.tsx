@@ -128,6 +128,30 @@ describe("a choice with a right answer", () => {
 });
 
 describe("a step lesson: one action per screen, the teacher after it", () => {
+  it("a grading refresh retains the current control and focus instead of jumping to the heading", async () => {
+    const activity = { ...lesson, steps: lesson.steps.filter((item) => item.kind === "make") };
+    await render({ activity });
+    await press("开始");
+    await type("猫的眼睛是什么颜色？");
+    await press("发送");
+    const field = container.querySelector<HTMLTextAreaElement>("[data-final-work]")!;
+    const evaluate = buttons().find((button) => button.textContent === "看看这次做得怎样")!;
+    evaluate.focus();
+    const scroll = vi.fn();
+    container.querySelector("h2")!.scrollIntoView = scroll;
+    // The local content adapter returns fresh arrays after recording a grade.
+    // Identity/revision/step did not change; this is not navigation.
+    await render({ activity: structuredClone(activity) });
+    expect(container.querySelector("[data-final-work]")).toBe(field);
+    expect(document.activeElement).toBe(evaluate);
+    expect(scroll).not.toHaveBeenCalled();
+    await press("看看这次做得怎样");
+    expect(container.querySelector(".primm-steps__bottom")?.textContent).toContain("只问了一处");
+    expect(
+      container.querySelector<HTMLButtonElement>(".primm-steps__bottom button")?.disabled,
+    ).toBe(false);
+  });
+
   it("walks all five phases with real runs of the learner's own choices", async () => {
     const { run, grade, complete, progress } = await render();
     expect(

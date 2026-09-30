@@ -103,6 +103,10 @@ export function PrimmSteps({
     heading.current?.focus({ preventScroll: true });
     // The opening keeps its photo in view; each step brings its question to the top.
     if (screen > 0) heading.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
+    // Refreshing the same authored step after grading is not navigation.
+    // Fresh content arrays must not steal focus or scroll under a held press.
+  }, [screen]);
+  useLayoutEffect(() => {
     const phasesDone = PRIMM_PHASES.filter((phase) =>
       steps.every((item) => item.phase !== phase || state.current.done.includes(item.id)),
     ).length;

@@ -746,11 +746,19 @@ for (const [mode, origin] of [
               await humanClick(page, button(dict["primm.evaluate"]), "ask for a verdict");
               await expect(area).toContainText(dict["primm.fail"]);
               await area.locator("[data-final-work]").fill("Revised independent work");
+              // A visible verdict is not the same as the evaluator being
+              // ready again. The real pointer helper does not wait for native
+              // disabled state; never dispatch this press while it is inert.
+              await expect(button(dict["primm.evaluate"])).toBeEnabled();
+              await expect(area.locator("[data-final-work]")).toHaveValue(
+                "Revised independent work",
+              );
               await humanClick(
                 page,
                 button(dict["primm.evaluate"]),
                 "ask again after repairing it",
               );
+              await expect.poll(() => grades).toBe(2);
               await expect(bar).toContainText(dict["primm.pass"]);
               break;
             }
