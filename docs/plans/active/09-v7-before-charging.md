@@ -404,6 +404,15 @@ normal push's terminal receipt in `SCRATCH/v7-execution/final-v7-source-push.log
 and an independent remote SHA read own remote delivery; source verification
 alone never establishes that the push succeeded.
 
+The last upstream merge incorporated `f44c710d`, the Owner's newer house and
+keepsake decision, without source conflicts. Its only changes were the two
+HTML design documents. `pnpm content` was run again afterward:
+`CONTENT_EXIT=0`, `GENERATED_CONTENT_UNCHANGED=true`, in
+`final-house-merge-content.log`. Runtime/test source and dependencies remain
+identical to the final complete verification above; documentation checks were
+rerun. Task 06 now explicitly retains the newly unimplemented house scope,
+so a successful source push must not be reported as completion of that design.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |

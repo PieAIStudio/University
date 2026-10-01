@@ -270,7 +270,28 @@ verification and static/document checks passed. The original migration was not
 rewritten. Backend's existing `docs/reference/university-cosmetics.md` owns the
 exact source/rollout evidence; unrelated in-flight Backend changes were not touched.
 
-`COSMETICS_SERVICE_RELEASED` remains false. The only remaining task-06 work is
-separately authorized remote migration/manifest registration, real own-account
-Data API checks and reviewed activation. Do not rerun local random draws as a
-substitute or mark this active record completed because source was pushed.
+`COSMETICS_SERVICE_RELEASED` remains false. The earlier source candidate still
+requires separately authorized remote migration/manifest registration, real
+own-account Data API checks and reviewed activation. Do not rerun local random
+draws as a substitute or mark this active record completed because source was
+pushed. The later design amendment below adds unfinished implementation work;
+remote activation alone no longer completes the latest approved outcome.
+
+### Owner's 2026-10-01 house/keepsake amendment
+
+Upstream `f44c710d` changes the reward destination in the
+[V7 lesson-step amendment](../../reference/player-journey/v7/lesson-steps-amendment.html#keepsake).
+Only checkpoint, challenge and course-final chests give an authored keepsake;
+ordinary lesson chests, including a first-try blue upgrade, do not. Keepsakes
+belong in the learner's University house. OwnMySpace, not University, owns the
+personal floating island and any later placement of that house there. This is
+a new approved design, **not an implemented house or integration**.
+
+The closed legacy cosmetic candidate and its SQL tests are retained as evidence,
+not silently activated under this newer contract. The house presentation,
+authored keepsake identities, reward/ownership mapping and cross-product house
+contract remain to be implemented and checked in their owning lanes. The existing
+request for authored concept/card metadata remains separate. Two choices are
+still explicitly open in the amendment: whether clothing is also managed in the
+house, and what an unverified 'I used it' response should award. Do not turn that
+self-report into assessed learning or invent those two decisions.
