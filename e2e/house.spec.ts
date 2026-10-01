@@ -63,10 +63,12 @@ test("the wall marks only the days answered 用了, in the chosen style", async 
   await humanClick(page, page.locator("[data-house-calendar]"), "open the wall calendar");
   await expect(page.locator("[data-used]")).toHaveCount(2);
   await expect(page.locator('[data-day="2026-10-09"]')).not.toHaveAttribute("data-used", /.*/);
+  await page.mouse.move(0, 0); // a resting pointer, not a hover, in the picture
   await capture(page, "calendar-tick");
   await humanClick(page, page.getByRole("radio", { name: "画正字" }), "choose tally strokes");
   await expect(page.locator(".house-calendar__tally")).toHaveAttribute("data-used-count", "2");
   await expect(page.locator(".house-calendar__tally")).toContainText("丅");
+  await page.mouse.move(0, 0); // a resting pointer, not a hover, in the picture
   await capture(page, "calendar-tally");
 });
 

@@ -245,6 +245,12 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+/* The chosen mark reads as chosen, not only to a screen reader. */
+.house-calendar__styles [role="radio"][aria-checked="true"] {
+  color: var(--game-ui-text);
+  background: var(--game-ui-secondary-pale);
+  box-shadow: inset 0 0 0 2px var(--game-ui-secondary);
+}
 .house-calendar__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
