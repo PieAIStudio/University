@@ -22,7 +22,8 @@ related: []
 > Owner 已确认的后续方向由 [write-lesson V2](../../apps/local/.agents/skills/write-lesson/SKILL.md)
 > 唯一维护，体验约定见 [V5](player-journey/v5/index.html)。下文固定拍数、字数目标、
 > “拼句一律退役”等阶段性结论，以及旧用量统计，不得直接用作 V2 闸门。
-> 原型统一入口是 `/play-lab/catalog`；保留旧实验不等于已认证为通用课件。
+> 2026-10-01 起，下文提到的 `docs/reference/interaction-prototype/` 各原型页、研究小样和旧 3D
+> 版本已按 Owner 的 G3 删除；截图留在[旧组件相册](interaction-components/album.html)，原文件可从删除前的 git 历史取回。
 
 这是一份研究与评估，不是裁决。裁决要 Owner 下，下完之后应该落成 ADR。
 本文只做三件事：把现状量出来、把「多邻国那套」拆开看清、给出一个我认为对的方向和它的代价。

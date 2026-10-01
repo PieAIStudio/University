@@ -114,7 +114,7 @@ for (const [mode, origin] of [
         await expect(page).toHaveURL(new RegExp(`/library/${tab}(?:\\?|$)`));
         await expect(page.locator(ready)).toBeVisible();
       }
-      await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(62);
+      await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(25);
       await expect(
         page.locator('.play-catalog a[href^="/play-lab"], .play-catalog__rationale'),
       ).toHaveCount(0);
@@ -174,10 +174,7 @@ for (const [mode, origin] of [
             await expect(page.locator(ready)).toBeVisible();
             if (path === "/play-lab") {
               await page.locator('a[href="/play-lab/catalog"]').click();
-              await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(65);
-              await expect(page.locator('.play-catalog [data-entry-id^="history:"]')).toHaveCount(
-                3,
-              );
+              await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(25);
               await page.goBack();
             }
             await page.goBack();
