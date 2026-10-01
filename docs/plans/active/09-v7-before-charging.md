@@ -261,6 +261,18 @@ That is narrower evidence, not proof of the former failures' exact cause and
 not a substitute for the final normal pre-push. No timeout, comparator,
 test count or product readiness condition was weakened.
 
+Before pushing, the other lane advanced remote main to `99142f6d` with UIKit
+2.14.0, the folded-breadcrumb repair and a same-frame comparison probe.
+The local source and evidence were retained, then merged normally as
+`5a0f1f65`. The exact installed UI dependency is 2.14.0. Another `pnpm content`
+returned `CONTENT_EXIT=0` in `v7-integrated-content.log`; the complete
+`pnpm verify` returned `VERIFY_EXIT=0` in `v7-integrated-verify.log`, including
+all source suites, both builds, both current-source recovery exports, all 93
+lesson revisions and documentation checks. The earlier waiting verifier was
+interrupted before accepting an obsolete dependency snapshot, not passed.
+This is the integrated source baseline for the next normal pre-push, whose
+separate receipt is `SCRATCH/v7-execution/v7-resumed-push.log`.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |
