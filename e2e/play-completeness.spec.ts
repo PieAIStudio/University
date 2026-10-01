@@ -105,9 +105,12 @@ test.describe("对照台：两栏都要在，而且要并排", () => {
         row at every width — asserted on real geometry rather than on the CSS
         that is supposed to produce it.
       */
-      const boxes = await activity(page).locator(".play-contrast__outcome").all();
-      const [left, right] = await Promise.all(boxes.map((box) => box.boundingBox()));
-      expect(left!.y, "两栏结果被折成上下排了").toBeCloseTo(right!.y, 0);
+      // Both columns in one frame: the row seats with a 240 ms transform, and two
+      // separate reads under load landed on different frames of it.
+      const [left, right] = await activity(page)
+        .locator(".play-contrast__outcome")
+        .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().y));
+      expect(left!, "两栏结果被折成上下排了").toBeCloseTo(right!, 0);
     });
   }
 

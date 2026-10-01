@@ -74,7 +74,7 @@ export function LocationBreadcrumbs({
                 title={compactTitle ?? items[0]?.title}
                 aria-label={`${compactTitle ?? items[0]?.title ?? ""} · ${interfaceTranslator.t("map.fullPath")}`}
               >
-                {compactTitle ?? items[0]?.title}
+                <span>{compactTitle ?? items[0]?.title}</span>
                 <span aria-hidden="true"> ▾</span>
               </summary>
               <ul>
