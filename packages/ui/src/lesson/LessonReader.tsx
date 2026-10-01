@@ -12,7 +12,7 @@ import {
 } from "@pieai/university-core";
 
 import { PrimmLessonReader } from "./PrimmLessonReader.js";
-import type { RunPrimm } from "../learning-play/PrimmLesson.js";
+import type { PrimmLessonProps, RunPrimm } from "../learning-play/PrimmLesson.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
@@ -111,6 +111,8 @@ export type LessonReaderProps = {
   readonly breadcrumb?: Omit<LessonBreadcrumbsProps, "lessonTitle">;
   /** Identity boundary for browser-only, unsubmitted exercise recovery. */
   readonly answerDraftScope?: string;
+  /** A step lesson's 3D stage, drawn by the shell (V7 amendment one). */
+  readonly lessonStage?: PrimmLessonProps["renderStage"];
 };
 
 export function LessonReader(props: LessonReaderProps) {

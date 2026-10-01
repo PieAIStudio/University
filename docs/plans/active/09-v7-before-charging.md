@@ -273,6 +273,22 @@ interrupted before accepting an obsolete dependency snapshot, not passed.
 This is the integrated source baseline for the next normal pre-push, whose
 separate receipt is `SCRATCH/v7-execution/v7-resumed-push.log`.
 
+### Latest upstream reconciliation (2026-10-01)
+
+The Owner's course/source warning was checked again against the actual remote.
+The new upstream tip `b46789f6` adds V7 amendment one and the first lesson-stage
+implementation. It has been merged without rewriting either line of history.
+The only conflict was in `current-work`: the amendment link from upstream and
+the already-delivered weekly-crown / current task-09 entries are both retained.
+`pnpm content` then returned `CONTENT_EXIT=0` in
+`SCRATCH/v7-execution/v7-oct01-resumed-content.log`, baking all **131/131**
+repository snippets. Both recovery exports match the current authoring sources;
+all **93 lessons / six courses** pass the revision check. No lesson was edited,
+published, rolled back or silently replaced by an old recovery package.
+This is content-alignment evidence only. The merged stage changes still require
+fresh full local and pre-push browser acceptance; previous green receipts do
+not prove this new candidate.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |

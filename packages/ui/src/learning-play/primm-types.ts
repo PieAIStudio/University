@@ -1,4 +1,10 @@
-import type { GradingPort, LearningActivitySpec, LessonRef } from "@pieai/university-core";
+import type {
+  GradingPort,
+  LearningActivitySpec,
+  LessonRef,
+  LessonStageCue,
+} from "@pieai/university-core";
+import type { ReactNode } from "react";
 import type { LessonAssetView } from "../view/lesson-view.js";
 
 export type PrimmActivity = Extract<LearningActivitySpec, { kind: "primm" }>;
@@ -35,4 +41,9 @@ export interface PrimmLessonProps {
   readonly copyPrimmEvaluation?: () => Promise<void>;
   readonly onPrimmComplete?: (signal: AbortSignal) => Promise<void>;
   readonly onPathProgress?: (completed: number) => void;
+  /**
+   * The lesson's 3D stage (V7 amendment one), drawn by the host above the
+   * step. This package never draws it: it only says where the lesson is.
+   */
+  readonly renderStage?: (cue: LessonStageCue) => ReactNode;
 }

@@ -1154,3 +1154,19 @@ details.primm-steps__material {
 .primm-lab__status[data-complete="true"] {
   background: color-mix(in srgb, var(--game-ui-success) 18%, transparent);
 }
+/* The lesson's 3D stage (V7 amendment one). The host draws it; the box is
+   reserved here so a stage that arrives late never moves the step below. */
+.primm-steps__stage {
+  aspect-ratio: 2 / 1;
+  max-block-size: 260px;
+  inline-size: 100%;
+  border-radius: var(--game-ui-radius-panel);
+  overflow: hidden;
+  background: var(--game-ui-secondary-pale);
+}
+@media (max-width: 560px) {
+  /* A phone's card is narrow; a taller band keeps the avatar readable. */
+  .primm-steps__stage {
+    aspect-ratio: 16 / 10;
+  }
+}

@@ -14,6 +14,7 @@ import {
   primmRequestPrompt,
   primmSentences,
   primmSentencesMentioning,
+  type LessonStageCue,
   type PrimmStep,
   type PrimmStepOf,
 } from "@pieai/university-core";
@@ -56,6 +57,7 @@ export function PrimmSteps({
   copyPrimmEvaluation,
   onPrimmComplete,
   onPathProgress,
+  renderStage,
 }: Props) {
   const { t, locale } = useI18n();
   const draft = useAnswerDraft({
@@ -83,8 +85,11 @@ export function PrimmSteps({
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  // Each settled action, with its verdict, for the stage to answer.
+  const [beat, setBeat] = useState<{ n: number; verdict?: "ok" | "no" }>({ n: 0 });
   const pending = useRef<AbortController | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const stageBox = useRef<HTMLDivElement>(null);
   const headingId = useId();
   const steps = activity.steps;
   const screen = session.index; // 0 intro, 1..n steps, n+1 finish
@@ -101,8 +106,13 @@ export function PrimmSteps({
   );
   useLayoutEffect(() => {
     heading.current?.focus({ preventScroll: true });
-    // The opening keeps its photo in view; each step brings its question to the top.
-    if (screen > 0) heading.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
+    // The opening keeps its photo in view; each step brings its question to the
+    // top, under the lesson's stage when there is one, so the two stay together.
+    if (screen > 0)
+      (stageBox.current ?? heading.current)?.scrollIntoView?.({
+        block: "start",
+        behavior: "instant",
+      });
     // Refreshing the same authored step after grading is not navigation.
     // Fresh content arrays must not steal focus or scroll under a held press.
   }, [screen]);
@@ -137,10 +147,12 @@ export function PrimmSteps({
     setToast("");
     playSound(result.tone === "bad" ? "answer.wrong" : "answer.correct");
     setFeedback(result);
+    setBeat((last) => ({ n: last.n + 1, verdict: result.tone === "bad" ? "no" : "ok" }));
   }
   function miss(message: string) {
     playSound("answer.wrong");
     setToast(message);
+    setBeat((last) => ({ n: last.n + 1, verdict: "no" }));
   }
 
   /** Really run prepared or learner text; results are kept per request key. */
@@ -1010,6 +1022,12 @@ export function PrimmSteps({
   }, [step?.id]);
 
   const phaseIndex = step ? PRIMM_PHASES.indexOf(step.phase) : screen === 0 ? -1 : 5;
+  const stageCue: LessonStageCue = {
+    scene: step?.phase ?? (screen === 0 ? "intro" : "finish"),
+    ...(step ? { action: step.kind } : {}),
+    beat: beat.n,
+    ...(beat.verdict ? { verdict: beat.verdict } : {}),
+  };
   // A wrong attempt that has not finished the step: the bar offers another try.
   const retrying = feedback?.tone === "bad" && !stepDone;
   return (
@@ -1037,6 +1055,11 @@ export function PrimmSteps({
           );
         })}
       </ol>
+      {renderStage ? (
+        <div className="primm-steps__stage" data-stage-scene={stageCue.scene} ref={stageBox}>
+          {renderStage(stageCue)}
+        </div>
+      ) : null}
       {body}
       {toast ? (
         <p className="primm-steps__toast" role="status">

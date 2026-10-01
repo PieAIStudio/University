@@ -8,6 +8,7 @@ import { InterfaceLanguageProvider } from "../i18n/index.js";
 import { PrimmLesson } from "./PrimmLesson.js";
 import { initialStepsSession, restoreStepsSession } from "./primm-steps-session.js";
 import type { PrimmLessonProps, RunPrimm } from "./primm-types.js";
+import type { LessonStageCue } from "@pieai/university-core";
 
 let root: Root, container: HTMLDivElement;
 beforeEach(() => {
@@ -220,6 +221,31 @@ describe("a text-only request and a lesson's real-world lines", () => {
     expect(
       container.querySelector(".primm-steps__bubble.is-me .primm-steps__file")?.textContent,
     ).toBe("团建通知");
+  });
+
+  it("tells the stage where the lesson is and answers each settled action", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    const choose = activity.steps.find((item) => item.kind === "choose")!;
+    if (choose.kind !== "choose") throw Error();
+    activity.steps = [{ ...choose, answerId: choose.options[1]!.id }];
+    const cues: LessonStageCue[] = [];
+    await render({
+      activity,
+      renderStage: (cue) => {
+        cues.push(cue);
+        return <span data-testid="stage">{cue.scene}</span>;
+      },
+    });
+    expect(container.querySelector(".primm-steps__stage")?.textContent).toBe("intro");
+    await press("开始");
+    expect(cues.at(-1)).toMatchObject({ scene: "predict", action: "choose", beat: 0 });
+    // A wrong pick is a settled action the stage answers, without moving on.
+    await press(choose.options[0]!.label);
+    await press("就选这个");
+    expect(cues.at(-1)).toMatchObject({ scene: "predict", beat: 1, verdict: "no" });
+    await press(choose.options[1]!.label);
+    await press("就选这个");
+    expect(cues.at(-1)).toMatchObject({ scene: "predict", beat: 2, verdict: "ok" });
   });
 
   it("ends with 你知道吗 and one thing to try today", async () => {

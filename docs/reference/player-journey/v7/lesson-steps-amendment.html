@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>V7 修订一：一关里面</title>
+<style>
+:root{
+  --bg:#F4F4F1; --paper:#FFFFFF; --ink:#1C1D21; --ink2:#4E525B; --ink3:#80858F;
+  --line:#DCDDD8; --soft:#F7F7F4;
+  --green:#12835A; --green-bg:#E0F3EA; --orange:#D9621E; --orange-bg:#FCEBDD;
+  --blue:#2B63C8; --blue-bg:#E6EEFB;
+  --shadow:0 1px 2px rgba(25,25,20,.05),0 8px 28px rgba(25,25,20,.06);
+  --sans:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --green:#3DC48D; --green-bg:#16332A; --orange:#F0894B; --orange-bg:#3A2519;
+  --blue:#76A2F2; --blue-bg:#1C2843;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121315; --paper:#1B1D20; --ink:#ECEDEF; --ink2:#B0B4BC; --ink3:#868B94;
+  --line:#30333A; --soft:#202226;
+  --green:#3DC48D; --green-bg:#16332A; --orange:#F0894B; --orange-bg:#3A2519;
+  --blue:#76A2F2; --blue-bg:#1C2843;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.85;padding-inline:16px;padding-block:0 80px}
+.col{max-width:760px;margin-inline:auto;display:grid;gap:30px}
+h1,h2,h3{text-wrap:balance;line-height:1.3;margin:0}
+p{margin:0}
+a{color:var(--blue)}
+.cover{padding-block:48px 0;display:grid;gap:14px}
+.kicker{font-size:13px;letter-spacing:.1em;color:var(--ink3)}
+.cover h1{font-size:clamp(30px,6vw,44px);font-weight:900}
+.cover .sub{font-size:18px;color:var(--ink2)}
+section{display:grid;gap:14px}
+h2{font-size:24px}
+.card{background:var(--paper);border-radius:16px;box-shadow:var(--shadow);padding:18px 20px;display:grid;gap:10px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.65}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--ink2);font-weight:700;white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:999px;white-space:nowrap}
+.done{background:var(--green-bg);color:var(--green)}
+.todo{background:var(--orange-bg);color:var(--orange)}
+ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.small{font-size:14px;color:var(--ink3);line-height:1.7}
+code{font-size:.88em}
+</style>
+</head>
+<body>
+<main class="col">
+  <header class="cover">
+    <div class="kicker">University · 学习者旅程 V7 · 修订一 · 2026 年 10 月 1 日</div>
+    <h1>V7 修订一：进了一关以后，学习者看到什么</h1>
+    <p class="sub">V7 讲了岛、宝箱和回来的理由，没细讲「进了一关以后」。9 月 28–30 日 Owner 在互动组件设计稿里拍了板。这一页把其中学习者看得到、摸得着的部分记进旅程，往后的产品按这一页做。V7 说过、这一页没提的，仍按 V7。</p>
+  </header>
+
+  <section aria-labelledby="shape">
+    <h2 id="shape">一关的样子</h2>
+    <p>一关 8–12 屏，8–12 分钟。每屏只有一个标题和一个动作，老师的话在学习者做完之后才说。上方是这一关的 3D 小庭院，下方是能读能点的字。</p>
+    <div class="card scroll">
+      <table>
+        <thead><tr><th>段</th><th>学习者做什么</th><th>上方的庭院</th><th>真实世界</th><th>现在</th></tr></thead>
+        <tbody>
+          <tr><td>开场</td><td>读一件真事、今天的情境，和要用的练习材料</td><td>整座庭院第一次出现，这时加载</td><td>第一处：开门，一件真事加出处</td><td><span class="pill done">字已上线</span> <span class="pill done">庭院第一批</span></td></tr>
+          <tr><td>猜</td><td>选一种问法。猜的是怎么用 AI，不猜 AI 会说什么，没有对错</td><td>小兔子在桌边想</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
+          <tr><td>跑</td><td>把选的那句真的发给 AI，恰好一次</td><td>纸飞机飞向灯塔</td><td>第二处：等回答的时候，一条小知识</td><td><span class="pill done">已上线</span></td></tr>
+          <tr><td>看</td><td>对照结果：连一连、点一句、分一分</td><td>小回合：几张卡一张张来，扔进篮子</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
+          <tr><td>改</td><td>拼一句更好的请求，再发一次，恰好一次</td><td>积木挂成小火车，发车</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
+          <tr><td>做</td><td>换一件事，自己写请求，改到满意再交；可再跟一个自查</td><td>工作台，作品上架</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
+          <tr><td>学完</td><td>一句带走的话、一条「你知道吗」、一件今天就能做的事、开宝箱拿复习卡</td><td>彩纸，岛上多一样东西</td><td>第三处：你知道吗，加出处</td><td><span class="pill done">字已上线</span> <span class="pill todo">带回岛上待做</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">「已上线」只指下方的字和动作。上方庭院现在有第一批：庭院、你的小兔子、写着「AI」的灯塔；猜的时候小兔子头上冒「？」，发出去时纸飞机飞向灯塔，答对欢呼、答错缩一下，学完撒星星。篮子、小火车、工作台和带回岛上的东西还没做。</p>
+  </section>
+
+  <section aria-labelledby="actions">
+    <h2 id="actions">课里只有八种动作</h2>
+    <div class="card">
+      <ul>
+        <li>选一个、发出去、点一句、点一处（照片上点）、连一连、分一分、排一排、自己做。</li>
+        <li>分一分放错了，那张卡留着，说一句为什么，改到对才过；最后报「几张第一次就放对」（H1）。</li>
+        <li>每种动作第一次出现时，「涟」的水滴一步步指给你看该看哪里、该用什么，不给一屏规则，也不指答案。</li>
+        <li>退役的老动作不出现在任何一关里。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="stage">
+    <h2 id="stage">上方的 3D 小庭院</h2>
+    <div class="card">
+      <ul>
+        <li>一关一个庭院，开场时加载，之后每屏只是转镜头、换道具，不重新加载。</li>
+        <li>庭院跟着学习者的动作走：你一点就生效，动画在后面跟上，课从不等动画。</li>
+        <li>庭院里只有一到六个字的小标签（比如「AI」「像你会发的」），而且是能读能选的字。题目、回答都在庭院下面。</li>
+        <li>画不出 3D 时（没有显卡支持、手机太慢、用户关了 3D、系统设了「减少动态」），换成这一屏的静态图或一块彩色底，课照常上。</li>
+        <li>用岛上庭院拦截那一套积木、颜色和小兔子，不另起画风。加载快不快看帧时间，不看截图。</li>
+      </ul>
+      <p class="small">待测、待定的数：中端手机首次加载几秒、稳定帧率多少、额外下载多少，做出第一版后实测再填。</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="material">
+    <h2 id="material">练习材料怎么摆</h2>
+    <div class="card">
+      <ul>
+        <li>文字材料（一条通知、一封邮件）在开场展开给你读；猜的时候折成一行，想看再点开；自己做的那一屏展开。</li>
+        <li>发出去的时候，对话框里写着附件的名字（比如「李经理的邮件」）。照片材料照旧，要先拖进对话框。</li>
+        <li>练习材料都标「练习」，不冒充真事。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="after">
+    <h2 id="after">学完以后</h2>
+    <div class="card">
+      <ul>
+        <li>学完页有四样：一句带走的话、一条「你知道吗」、一件今天就能做的小事、开宝箱拿这一关的复习卡（接 V7 的宝箱，不另起一套）。</li>
+        <li>每关带一样东西回岛上（第一关是一张明信片摆上小屋的架子，庭院多一把椅子）。</li>
+        <li>「今天就能做的小事」下次打开会问一句「用了吗？」，用了给岛上贴一张贴纸。只算贴纸，不算成绩，因为没法验证。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="source">
+    <h2 id="source">出处</h2>
+    <p class="small">拍板记录：Owner 2026-09-28 与 2026-09-30，A1 B1 C1 D2 E3 F1 G3 H1 I1 J2。设计稿：<a href="../../interaction-components/index.html">互动组件总览</a>、<a href="../../interaction-components/spec.html">执行规格</a>（§4 一关的结构、§5 互动组件契约、§8 3D 舞台契约、§9 带回岛上）、<a href="../../interaction-components/lesson-1.html">第 1 关</a>、<a href="../../interaction-components/lesson-2.html">第 2 关</a>、<a href="../../interaction-components/lesson-3.html">第 3 关</a>。已上线的部分：主线提交 <code>1f3e7a1f</code>（新第 1–3 关、文字材料的摆法）、<code>c9f665b9</code>（等待时的小知识、学完四样里的文字、分一分改到对）。</p>
+  </section>
+</main>
+</body>
+</html>

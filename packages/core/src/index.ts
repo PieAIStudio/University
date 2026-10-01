@@ -426,6 +426,7 @@ export * from "./learning-play/connect.js";
 export * from "./learning-play/interaction-path.js";
 export * from "./learning-play/primm.js";
 export * from "./learning-play/primm-lesson.js";
+export * from "./learning-play/lesson-stage.js";
 export { primmFixture, primmLessonFixture } from "./learning-play/fixtures/primm.js";
 export { primmStepsFixture } from "./learning-play/fixtures/primm-steps.js";
 export * from "./learning-play/sort.js";

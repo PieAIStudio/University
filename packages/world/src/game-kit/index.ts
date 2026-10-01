@@ -35,6 +35,7 @@ export {
   type InterceptState,
 } from "./rules/intercept.js";
 export { InterceptScene, type InterceptSceneProps } from "./InterceptScene.js";
+export { LessonStage, type LessonStageProps } from "./LessonStage.js";
 export {
   LinksSession,
   SETTLE_SECONDS,
