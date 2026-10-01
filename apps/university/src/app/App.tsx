@@ -837,8 +837,26 @@ export function App() {
     framedFirstStone.current = key;
     mapCommands.current.focus(stone.position.toArray());
   }, [firstMeetingHere, guideUser, sceneAttempt, splashReady, lessons]);
+  /*
+    The campus record is still opening.
+
+    Until the shelf has been named there is no series for the capsule to show,
+    so the picker beside 「University」 is missing and the two builds genuinely
+    do not look alike. The delivery build ships its catalogue and never shows
+    this; the authoring build has to ask a loopback server, and saying so is
+    what makes 「the chrome is the same」 a claim about the settled screen
+    instead of a race against a fetch.
+
+    It is said in the slot the picker will fill, not above the page. As a line
+    at the top of the content it pushed every screen down until the shelf
+    arrived and then let it jump back up — 54 px on 「关于」 at 320 px, under a
+    finger already on its way to a link (2026-10-01).
+  */
+  const campusOpening = studyNames.length === 0 && !shelf;
   const counters = universityCounters({
-    projectName,
+    projectName: campusOpening
+      ? interfaceTranslator.t("app.app.mainRouter.copy.正在打开校园档案")
+      : projectName,
     streakDays: progress.streak.days,
     // A picker with nothing to pick is not a control. Null here means the
     // catalogue is empty, which is the only case where no series can be named.
@@ -1670,7 +1688,6 @@ export function App() {
         world={world}
         courseProgress={courseProgress}
         stage={stage}
-        studyNames={studyNames}
         todayNode={todayNode}
         todaySection={todaySection}
         uncorrectedMistakeCount={uncorrectedMistakeCount}

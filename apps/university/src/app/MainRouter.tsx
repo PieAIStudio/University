@@ -48,7 +48,7 @@ import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import { UnitSkipTest } from "@pieai/university-ui/path/UnitSkipTest.js";
 import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
 import { pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
-import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
+import type { ContentPort, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 import {
   PlanetStage,
@@ -158,7 +158,6 @@ interface MainRouterProps {
   readonly world: WorldMap | null;
   readonly courseProgress: (node: CourseNode) => number;
   readonly stage: ReactNode;
-  readonly studyNames: readonly ContentStudy[];
   readonly todayNode: CourseNode | null;
   readonly todaySection: ReactNode;
   readonly uncorrectedMistakeCount: number;
@@ -213,7 +212,6 @@ export function MainRouter({
   world,
   courseProgress,
   stage,
-  studyNames,
   todayNode,
   todaySection,
   uncorrectedMistakeCount,
@@ -247,22 +245,6 @@ export function MainRouter({
   };
   return (
     <>
-      {/*
-        The campus record is still opening.
-
-        Not decoration and not only for the learner: until the shelf has been
-        named there is no series for the capsule to show, so the picker beside
-        「University」 is missing and the two builds genuinely do not look alike.
-        The delivery build ships its catalogue and never renders this line; the
-        authoring build has to ask a loopback server, and saying so is what
-        makes 「the chrome is the same」 a claim about the settled screen instead
-        of a race against a fetch.
-      */}
-      {studyNames.length === 0 && !shelf ? (
-        <p className="loading-copy">
-          {interfaceTranslator.t("app.app.mainRouter.copy.正在打开校园档案")}
-        </p>
-      ) : null}
       {view.kind === "planet" || view.kind === "world" || view.kind === "course" ? (
         <MapBreadcrumbs
           layer={view.kind}
