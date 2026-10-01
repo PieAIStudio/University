@@ -84,19 +84,30 @@ test.describe("L actual 3D asset inspector", () => {
     });
     await expect(course).toBeEnabled();
     await course.selectOption(PREVIEW_COURSE.id);
-    await page.waitForFunction(() => {
+    // The former course can still report ready while the selection commits.
+    // Admit this exact fixture's dressing, not whichever old island happened
+    // to be present; otherwise the no-remount baseline can be undefined.
+    await page.waitForFunction((expectedSeed) => {
       const bag = globalThis as unknown as {
         three?: {
           scene: {
-            getObjectByName(name: string): { userData: Record<string, unknown> } | undefined;
+            getObjectByName(name: string):
+              | {
+                  userData: {
+                    islandDressingReady?: boolean;
+                    islandDressingPlan?: { seed?: string };
+                  };
+                }
+              | undefined;
           };
         };
       };
+      const dressing = bag.three?.scene.getObjectByName("island-dressing-course");
       return (
-        bag.three?.scene.getObjectByName("island-dressing-course")?.userData.islandDressingReady ===
-        true
+        dressing?.userData.islandDressingReady === true &&
+        dressing.userData.islandDressingPlan?.seed === expectedSeed
       );
-    });
+    }, `${PREVIEW_STUDY.id}/${PREVIEW_COURSE.id}`);
     await expect
       .poll(
         async () =>
@@ -146,6 +157,9 @@ test.describe("L actual 3D asset inspector", () => {
       };
       return bag.three?.scene.getObjectByName("island-dressing-course")?.uuid;
     });
+    expect(before, "the selected dressing must exist before observing statistics").toEqual(
+      expect.any(String),
+    );
     await page.waitForTimeout(800);
     const after = await page.evaluate(() => {
       const bag = globalThis as unknown as {

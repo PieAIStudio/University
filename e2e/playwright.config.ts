@@ -104,6 +104,13 @@ export default defineConfig({
       // a machine that is also running three other browsers.
       name: "timing",
       testMatch: TIMING_SPECS,
+      // Measure the visible browser, not a headless host's frame pacing. On
+      // this Mac, Chrome 154's empty headless page itself measured 66–84ms
+      // p95, even with no app/WebGL and without CPU throttling. The unchanged
+      // slowed-phone stage measured 19.9ms in a foreground window. Keep all
+      // budgets, CPU slowdown and real pointer checks; functional tests below
+      // remain headless. Exact controls live in the V7-09 delivery receipt.
+      use: { headless: false },
     },
     {
       name: "island-look",

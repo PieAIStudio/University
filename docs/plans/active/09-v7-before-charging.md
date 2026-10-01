@@ -356,6 +356,54 @@ upstream interaction-components album preserves their screenshots.
 snippets. This new combined candidate needs its own complete source and normal
 pre-push acceptance; no earlier pass is substituted for it.
 
+### Visible-browser timing admission, not a scene downgrade
+
+The normal push of `4dfed0b8` completed **425 default tests** but failed two
+of 40 timing cases: avatar landing was **541.6 ms** against **540 ms**, and
+the slowed-phone lesson stage was **84.8 ms p95** against **34 ms**. The
+unchanged narrow rerun passed the avatar but retained the stage failure at
+**77.5 ms**. Original failures and source-stability receipts are retained in
+`final-retirement-push.log`, `final-timing-narrow.log` and `final-timing-failures/`.
+
+Controlled measurement then separated the scene from the host: pausing the
+actual renderer still gave **63.3 ms**; an entirely empty Chrome 154 page,
+without University or WebGL, gave **66.7 ms** even without CPU throttling and
+**77.3–84.4 ms** with it. The page reported visible and used the actual M1 Max
+Metal renderer. This does not establish an upstream Chrome defect, nor does it
+prove a scene performance regression. The profile and empty/foreground controls
+are retained in `SCRATCH/v7-execution/stage-profile/`.
+
+Both original timing cases passed unchanged in a foreground Chrome window:
+**2 passed (50.9s)**, `E2E_EXIT=0`; stage ready **4688 ms**, frame **19.9 ms p95**
+over **121 frames**. The timing project therefore uses visible windows while
+ordinary functional tests remain headless. No time budget, viewport, CPU-slowdown
+rate, comparator, pointer sequence or scene feature is removed. The two temporary
+diagnostic specs were moved to ignored evidence storage, not counted as product
+acceptance. A fresh full source verification and normal push are still required.
+This is an explicit measurement-environment correction, not a rendering speedup
+or physical-phone acceptance.
+
+The complete source check then passed `VERIFY_EXIT=0`, `SOURCE_UNCHANGED=true`
+(`final-visible-source-verify.log`). The first entire visible timing run was
+**39 passed / 1 failed (6.3m)**. Its remaining inspector case sampled an
+undefined **before** UUID and an existing after UUID; the old readiness check
+could admit the prior course while the requested fixture was still loading.
+The unchanged narrow run reproduced it (**1 passed / 1 failed (1.6m)**), with
+its original trace retained under `map-studio-visible-repro-failure/`.
+
+The inspector now waits for the selected fixture's exact dressing seed and
+requires a real string UUID before starting the unchanged 800ms observation.
+The exact before/after equality, geometry dimensions, grounding, assembly,
+replacement/restore and console checks remain. This is not a claim that a
+product remount bug was fixed. The same full inspector passed three consecutive
+runs (**3 passed (1.8m)**, `E2E_EXIT=0`, `map-studio-visible-fixed.log`). The
+resulting final source then passed complete `pnpm verify`, `VERIFY_EXIT=0`,
+`SOURCE_UNCHANGED=true`, in `SCRATCH/v7-execution/final-source-ready-verify.log`
+(`wc_job_RB0YFA0WVc31uKQ2`). Only this receipt was updated afterward. The
+normal push's terminal receipt in `SCRATCH/v7-execution/final-v7-source-push.log`
+and an independent remote SHA read own remote delivery; source verification
+alone never establishes that the push succeeded.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |
