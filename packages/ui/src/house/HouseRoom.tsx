@@ -134,7 +134,7 @@ function Placed({
       data-dragging={drag ? true : undefined}
       aria-label={t.t("house.keepsake.label", { name: text.name })}
       aria-describedby="house-drag-hint"
-      style={{ left: `${shown.x * 100}%`, top: `${shown.y * 100}%` }}
+      style={{ insetInlineStart: `${shown.x * 100}%`, top: `${shown.y * 100}%` }}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         event.currentTarget.setPointerCapture?.(event.pointerId);

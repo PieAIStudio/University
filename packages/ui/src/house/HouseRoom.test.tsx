@@ -94,12 +94,12 @@ describe("the house", () => {
     const id = held[0]!.keepsake.id;
     await render({ house: placeItem(undefined, id, 0.6, 0.9, "2026-10-01T00:00:00.000Z") });
     const first = container.querySelector<HTMLElement>(`[data-keepsake="${id}"]`)!;
-    expect(first.style.left).toBe("60%");
+    expect(first.style.insetInlineStart).toBe("60%");
     expect(first.style.top).toBe("90%");
     const second = container.querySelector<HTMLElement>(
       `[data-keepsake="${held[1]!.keepsake.id}"]`,
     )!;
-    expect(second.style.left).toBe(`${defaultPlacement(1).x * 100}%`);
+    expect(second.style.insetInlineStart).toBe(`${defaultPlacement(1).x * 100}%`);
   });
 
   it("moves with the arrow keys as well as by dragging", async () => {
