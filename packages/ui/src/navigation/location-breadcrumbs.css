@@ -63,6 +63,23 @@
   flex: 0 1 auto;
   max-width: 28ch;
 }
+/* The fold shrinks with its slot; at its content width its title spilled over
+   the next crumb. Only the title ellipsizes, so ▾ still says it opens. */
+.location-breadcrumb__overflow > details {
+  min-width: 0;
+  max-width: 100%;
+}
+.location-breadcrumb .location-breadcrumb__overflow summary {
+  display: flex;
+}
+.location-breadcrumb__overflow summary > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.location-breadcrumb__overflow summary > span:last-child {
+  flex: none;
+}
 .location-breadcrumb__list > .location-breadcrumb__overflow + li::before {
   content: none;
 }
