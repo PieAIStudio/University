@@ -248,6 +248,33 @@ describe("a text-only request and a lesson's real-world lines", () => {
     expect(cues.at(-1)).toMatchObject({ scene: "predict", beat: 2, verdict: "ok" });
   });
 
+  it("tells the stage which basket a sorted card went to, and clears the verdict on the next screen", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    const sort = activity.steps.find((item) => item.kind === "sort")!;
+    if (sort.kind !== "sort") throw Error();
+    activity.steps = [sort, ...activity.steps.filter((item) => item.kind === "build")];
+    const cues: LessonStageCue[] = [];
+    await render({ activity, renderStage: (cue) => (cues.push(cue), null) });
+    await press("开始");
+    expect(cues.at(-1)).toMatchObject({ action: "sort", bins: sort.buckets.length });
+    const card = sort.cards[0]!;
+    const bin = sort.buckets.findIndex((bucket) => bucket.id === card.bucketId);
+    const place = async (bucketId: string) =>
+      act(async () =>
+        container
+          .querySelector<HTMLButtonElement>(`.primm-steps__buckets [data-bucket="${bucketId}"]`)!
+          .click(),
+      );
+    await place(card.bucketId);
+    expect(cues.at(-1)).toMatchObject({ verdict: "ok", bin });
+    for (const next of sort.cards.slice(1)) await place(next.bucketId);
+    await press("继续");
+    // The build screen starts clean: no verdict, no basket, a train with no wagons.
+    expect(cues.at(-1)).toMatchObject({ action: "build", wagons: 0 });
+    expect(cues.at(-1)?.verdict).toBeUndefined();
+    expect(cues.at(-1)?.bin).toBeUndefined();
+  });
+
   it("ends with 你知道吗 and one thing to try today", async () => {
     const activity = structuredClone(primmStepsFixture);
     const choose = activity.steps.find((item) => item.kind === "choose")!;
