@@ -22,6 +22,14 @@
       "port": 9999
     },
     {
+      "name": "university-primm-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "primm:preview"
+      ],
+      "port": 23150
+    },
+    {
       "name": "university-local-server",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
