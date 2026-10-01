@@ -24,6 +24,7 @@ import {
   type ReviewEmailIntent,
 } from "../progress/journey.js";
 import { mergeGuidedHistory, parseGuidedHistory, type GuidedHistory } from "../progress/guided.js";
+import { mergeHouseState, parseHouseState, type HouseState } from "../progress/house.js";
 
 /** The settings that follow the learner between browser profiles. */
 export interface AccountForeignSettings {
@@ -57,6 +58,7 @@ export type AccountPreferenceKey =
   | "locale"
   | "journey"
   | "guided"
+  | "house"
   | "reviewEmail"
   | "dailyLessonGoal"
   | "domainInterests";
@@ -78,6 +80,8 @@ export interface AccountPreferences {
   readonly journey?: JourneyHistory;
   /** First-use guides already walked through; presentation history, merged by union. */
   readonly guided?: GuidedHistory;
+  /** The learner's house: where things stand, the wall's mark style, 「用了吗」 answers. Merged per item. */
+  readonly house?: HouseState;
   readonly reviewEmail?: ReviewEmailIntent;
   readonly dailyLessonGoal?: DailyLessonGoal;
   /** Contact intent only; real announcement delivery is separately released. */
@@ -176,6 +180,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "locale",
       "journey",
       "guided",
+      "house",
       "reviewEmail",
       "dailyLessonGoal",
       "domainInterests",
@@ -208,6 +213,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     journey: parseJourneyHistory(value.journey),
     guided: parseGuidedHistory(value.guided),
+    house: parseHouseState(value.house),
     reviewEmail: updatedAt.reviewEmail ? parseReviewEmailIntent(value.reviewEmail) : undefined,
     dailyLessonGoal:
       value.dailyLessonGoal === undefined ? undefined : dailyLessonGoal(value.dailyLessonGoal),
@@ -224,6 +230,7 @@ function cloneAccountPreferences(value: AccountPreferences): AccountPreferences 
     foreignSettings: { ...value.foreignSettings },
     ...(value.journey ? { journey: parseJourneyHistory(value.journey) } : {}),
     ...(value.guided ? { guided: [...value.guided] } : {}),
+    ...(value.house ? { house: parseHouseState(value.house) } : {}),
     ...(value.reviewEmail ? { reviewEmail: { ...value.reviewEmail } } : {}),
     ...(value.domainInterests
       ? { domainInterests: parseDomainInterests(value.domainInterests) }
@@ -297,6 +304,7 @@ export function mergeAccountPreferences(
         : mergeDomainInterests(left.domainInterests, right.domainInterests),
     journey: mergeJourneyHistory(left.journey, right.journey),
     guided: mergeGuidedHistory(left.guided, right.guided),
+    house: mergeHouseState(left.house, right.house),
     // A concurrent opt-out wins. Passive prompt history has its own field and
     // cannot turn an older email consent back on.
     reviewEmail:
@@ -322,6 +330,7 @@ export function mergeAccountPreferences(
     "locale",
     "journey",
     "guided",
+    "house",
     "reviewEmail",
     "dailyLessonGoal",
     "domainInterests",
