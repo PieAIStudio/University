@@ -51,6 +51,23 @@ the new first three lessons preserve their original identities, but still add
 no explicit concept links. The table remains 0 linked lessons out of 93.
 Completing that course revision is not evidence that this separate request is done.
 
+The same 2026-10-01 source check also found a distinct version handoff gap:
+all **213 review cards** in the six generated delivery packages lack an explicit
+card `contentRevision`. The recovery package's card shape already omits it,
+and the public-card allowlist does not carry it. Consequently the shelf's
+`reviewCardRevisions` maps are empty. This must not be repaired by substituting
+the lesson version or inferring mastery from an unversioned review record.
+The exact per-course count is retained in
+`SCRATCH/v7-execution/v7-content-card-audit.json`.
+
+Before accepting earned album frames from revised course content, the owning
+export/recovery and public projection contracts must carry each card's actual
+declared revision, and the reader/scheduler must consume that same identity.
+Adding concept links alone does not complete this boundary. Existing scheduler
+cards remain usable; an empty version map deliberately supplies no album-memory
+proof. This is a remaining contract/authoring dependency, not a claim that the
+new first three lessons already satisfy task 05's earned-card acceptance.
+
 The existing gift ids are `prompt` and `ai-basics`. The latter's current
 catalogue title is **AI 应用基础**, and its description is about putting an AI
 into a site/tool, rather than V7's introductory **AI 是什么**. Resolve that

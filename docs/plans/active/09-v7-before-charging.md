@@ -242,6 +242,25 @@ all source/style/content/documentation checks. The final ordinary push receipt
 is `SCRATCH/v7-execution/final-course-sync-push.log`; source verification alone
 does not establish its result.
 
+### Resumed source and browser check (2026-10-01)
+
+The remote was fetched again at `1f3e7a1f`; the local merge `f3193486`
+already contains it, so the requested merge was a verified no-op, not skipped.
+The subsequent `pnpm content` completed with `CONTENT_EXIT=0` in
+`SCRATCH/v7-execution/v7-resumed-content.log`. Both published recovery exports
+match their current authoring sources; all 93 lesson revisions and six courses
+pass the content checks. No course was authored, republished or reverted here.
+
+The previous full push ended with **6 failed, 4 interrupted, 353 did not run,
+111 passed (15.5m)** and `PUSH_EXIT=1`. Its later narrow run was also red;
+neither is replaced or represented as a successful gate. After the already
+running lesson-format full suite ended, the unchanged accessibility, desktop
+completion and authoring album subset returned **8 passed (3.4m)**,
+`E2E_EXIT=0`, in `SCRATCH/v7-execution/v7-resumed-focused.log`.
+That is narrower evidence, not proof of the former failures' exact cause and
+not a substitute for the final normal pre-push. No timeout, comparator,
+test count or product readiness condition was weakened.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |
