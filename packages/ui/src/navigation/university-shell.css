@@ -1313,6 +1313,6 @@ a.linkish {
   font-weight: 800;
 }
 .profile-house:focus-visible {
-  outline: 3px solid var(--game-ui-focus, #3d82c8);
+  outline: 3px solid var(--game-ui-focus-ring);
   outline-offset: 3px;
 }

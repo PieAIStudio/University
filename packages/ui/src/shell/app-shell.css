@@ -1043,3 +1043,19 @@
 .nav-rail::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/*
+  A reading page's last control must clear the phone's bar, not sit under it.
+  The shell is one screen tall and a page longer than that overflows it, so the
+  shell's own padding never reaches the end of the document: the page's own
+  bottom space is what the bar has to clear. Exactly the page's 48px left the
+  「我」 page's feedback button under the bar's top edge once it scrolled to the
+  end (2026-10-01). Map views keep their full-bleed stage. Last in the file on
+  purpose: a media query adds no specificity, so it must follow every rule it
+  overrides.
+*/
+@media (max-width: 767px) {
+  .app-shell__content:not(:has(.stagewrap:not([hidden]))) {
+    padding-bottom: calc(var(--tab-bar-height) + 1rem);
+  }
+}

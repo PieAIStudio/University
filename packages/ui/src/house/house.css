@@ -134,7 +134,7 @@
 .house-room__rack:focus-visible,
 .house-room__packs:focus-visible,
 .house-keepsake:focus-visible {
-  outline: 3px solid var(--game-ui-focus, #3d82c8);
+  outline: 3px solid var(--game-ui-focus-ring);
   outline-offset: 3px;
 }
 .house-room__avatar {
