@@ -771,10 +771,13 @@
 .primm-steps__answer {
   padding: 10px 12px;
   font-size: 15px;
-  touch-action: none;
+  /* Whole answers are long: a finger on one must still scroll the page. Tap the
+   * answer, then its question; a mouse can still drag it. */
+  touch-action: pan-y;
   cursor: grab;
 }
-.primm-steps__answer .primm__formatted > * {
+.primm-steps__answer .primm__formatted > *,
+.primm-steps__zone .primm__formatted > * {
   margin: 0;
 }
 .primm-steps__question {

@@ -243,7 +243,6 @@ export const messages = {
   "primm.steps.mentionedToast": "It did mention it. Look again.",
   "primm.steps.drop": "Put the answer here",
   "primm.steps.youAsked": "You asked: {text}",
-  "primm.steps.moreSentences": "… {count} sentences in all",
   "primm.steps.composerTarget": "Put the photo here",
   "primm.steps.attachHint": "Drag it over, or tap it",
   "primm.steps.send": "Send",
@@ -252,11 +251,12 @@ export const messages = {
   "primm.steps.retry": "Try again",
   "primm.steps.cancel": "Cancel",
   "primm.steps.liveNote": "This is what the AI really just answered",
-  "primm.steps.liveAll": "Each of these is the AI''s real answer about the same photo",
+  "primm.steps.liveAll": "Each of these is what the AI really just answered",
   "primm.steps.lineLabel": "Your request",
   "primm.steps.lineHint": "Tap the pieces below to build it here",
   "primm.steps.coach.attach": "Hold the photo and drag it into the chat",
-  "primm.steps.coach.match": "Drag each answer under its question",
+  "primm.steps.coach.match":
+    "Drag each answer under its question, or tap the answer, then the question",
   "primm.steps.coach.swipe": "Swipe right: {right} · left: {left}",
   "primm.steps.coach.build": "Tap pieces to build the request",
 } satisfies Record<keyof typeof source, string>;
