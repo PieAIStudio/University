@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-01T02:54:50.595Z
+generated_at: 2026-10-01T12:40:49.645Z
 generator_version: doc-gov@0.14.2
-docs_count: 165
+docs_count: 166
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -213,6 +213,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-30
+    pinned: false
+  - id: PLAN-V7-10-LEARNER-HOUSE
+    path: docs/plans/active/10-learner-house.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-01
     pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/active/ai-foundations-revival.md
