@@ -1791,6 +1791,7 @@ export function App() {
               }}
               onWorthwhileProgress={onWorthwhileProgress}
               readEntitlements={readEntitlements}
+              avatarRecipe={avatarRecipe}
               onSettled={(doneBefore) => {
                 const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
                 setGrewFrom({ key, doneBefore });

@@ -39,6 +39,8 @@ import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports
 import { progressPort } from "../progress/store.js";
 import { identityPort } from "../account/identity.js";
 import { LessonFirstUse } from "../guide/LessonFirstUse.js";
+import { LessonStageHost } from "../lesson/LessonStageHost.js";
+import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
 
 function exerciseAnalyticsKey(locator: LessonRef, exerciseId: string): string {
   return `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exerciseId}`;
@@ -69,6 +71,7 @@ export function LessonScreen({
   onSettled,
   onWorthwhileProgress,
   readEntitlements,
+  avatarRecipe,
 }: {
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
@@ -85,6 +88,8 @@ export function LessonScreen({
   readonly onWorthwhileProgress?: () => void;
   /** Reads the server-selected AI plan for open tutoring controls. */
   readonly readEntitlements?: EntitlementReader;
+  /** The learner's avatar, who stands in a step lesson's stage. */
+  readonly avatarRecipe?: AvatarRecipe | null;
 }) {
   const interfaceTranslator = useI18n();
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
@@ -380,6 +385,7 @@ export function LessonScreen({
         {...(returnDepth > 0 ? { onReturn } : {})}
         toolbarExtras={<SoundToggle progress={progressPort} />}
         answerDraftScope={answerDraftScope}
+        lessonStage={(cue) => <LessonStageHost cue={cue} recipe={avatarRecipe ?? null} />}
       />
       <LearningSaveStatus
         progress={progressPort}
