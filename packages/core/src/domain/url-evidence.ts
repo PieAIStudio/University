@@ -8,41 +8,31 @@
  * callers guessing which one is the pin. A union of two strict objects makes
  * the pin kind a type, not a convention.
  *
- * The host lists live in `url-evidence-hosts.json` so the adoption skill's
- * gate and this persist-time schema cannot drift: one file, added-to rather
- * than forked.
+ * `url-evidence-hosts.json` holds the one host list this type keeps, so the
+ * adoption skill's gate and this persist-time schema cannot drift.
  *
- * ## What may join `authorityHosts`, and why it is a list rather than a filter
+ * ## Why there is no list of admitted hosts
  *
- * A host qualifies when an inspected source can support the specific claim:
- * first-party documentation, research, public records/data, rights-holder
- * material, or original reporting about a real event. Admission is not an
- * endorsement of every page on the host. New authority categories require
- * claim-specific provenance in the schema: publisher, inspection date,
- * supported claim and limits. A news report is not a technical specification,
- * and a vendor's case study is not an independent outcome measurement.
+ * There was one. It was meant to stop a model inventing a source, and it could
+ * not: a fabricated page on a real host passed it, and a real page on a host
+ * nobody had admitted yet failed it. Every new site became a person's approval,
+ * and in September 2026 a correct NIST citation took the authoring server's
+ * `/api/studies/general` down with a 400.
  *
- * The list grows. It was originally sized for teaching the web platform, and
- * when the curriculum moved to AI tooling nothing on it could be cited — which
- * is a reason to add hosts, not a reason to stop checking. Add the host, keep
- * the gate.
+ * Fabrication is caught by opening the page, not by knowing the host:
+ * `research` keeps a candidate only when its quote is really on the fetched
+ * page, and `check-proposal-evidence` / `check-adoption --verify-urls` request
+ * every cited URL. Whether a page supports the claim is the claim-specific
+ * provenance below, reviewed with the lesson. This schema checks only what a
+ * string can show: an https page a reader can open, no credentials, no odd
+ * port, and a GitHub file pinned to a commit.
  *
- * ## Why not a deny-list instead
- *
- * Because the lessons are written by models. The failure this catches is not a
- * low-quality site slipping in; it is a **fabricated URL** — a plausible-looking
- * page on a real-sounding host that does not exist, or does exist and never
- * said the thing cited. A deny-list cannot catch that by construction: an
- * invented host is, definitionally, not on any list of known-bad ones. An
- * allow-list rejects it on the first try.
- *
- * `forbiddenHosts` is a different instrument and is not a quality filter. It
- * names the specific course sites this project adopts material *from*, so that
- * citing them back would be laundering rather than sourcing.
+ * `forbiddenHosts` is not a quality filter. It names the course sites this
+ * project adopts material *from*, so that citing them back would be laundering
+ * rather than sourcing.
  */
 import hosts from "./url-evidence-hosts.json" with { type: "json" };
 
-const AUTHORITY_HOSTS: readonly string[] = hosts.authorityHosts;
 const FORBIDDEN_EVIDENCE_HOSTS: readonly string[] = hosts.forbiddenHosts;
 /**
  * Tags are a TypeScript tuple so `z.enum` can use them. The JSON file is the
@@ -133,9 +123,6 @@ export function urlEvidenceIssue(raw: string): string | null {
   }
   if (FORBIDDEN_EVIDENCE_HOSTS.some((entry) => hostMatches(host, entry))) {
     return `URL evidence must not cite the adopted source site (${host})`;
-  }
-  if (!AUTHORITY_HOSTS.some((entry) => hostMatches(host, entry))) {
-    return `${host} is not on the authority-host list`;
   }
   return null;
 }

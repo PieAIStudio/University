@@ -207,6 +207,41 @@ acceptance follow this exact test and documentation candidate.
 `VERIFY_EXIT=0` (`wc_job_iiReB81yPi3ibiyq`). No product behavior, published lesson,
 entitlement or legal-publication state changed during this test-only repair.
 
+### Final integration with the new first three lessons
+
+The Owner relayed the other lane's shared-course warning. Before another push,
+`origin/main` was fetched and merged at `1f3e7a1fcb67a10845872091de1f305693fa5257`,
+preserving the three local V7 commits. `pnpm content` then returned
+`CONTENT_EXIT=0` in `SCRATCH/v7-execution/final-course-sync-content.log`.
+The rebuilt shelf still contains 93 lessons in six courses, with all 131/131
+repository snippets baked. Source/export freshness and revision checks pass.
+The first three stable lesson ids now carry the message, emoji and long-email
+lessons at revisions 15, 9 and 9 respectively; old photo prose was not restored.
+
+The incoming photo-layout regression had become conditional on a currently
+shipped photo lesson. Since the new step lessons are text-only, that would skip
+the old guard. It now falls back to the existing shared PRIMM fixture and the
+actual product renderer on an explicitly isolated page, not to a second lesson
+producer. The original one-pixel viewport limit and real pointer check remain;
+a step-relative comparison additionally prevents scroll anchoring from hiding
+a layout shift. A negative control removes image-space reservation and detects
+the movement. There are no skipped photo checks or paid model calls.
+
+All three new lessons completed through their actual step engine in both modes
+and languages, together with first-use guidance, policy/management navigation
+and both image-layout controls: **22 passed (5.8m)**, `E2E_EXIT=0`, retained in
+`SCRATCH/v7-execution/final-course-sync-focused.log`. The answers/portal are
+explicit test transports, not live provider or cancellation acceptance. This
+integrated source still requires its own complete verify and normal push;
+pre-course-update receipts are not reused as the final gate.
+
+That combined source then passed the complete `pnpm verify` with
+`VERIFY_EXIT=0` in `SCRATCH/v7-execution/final-course-sync-verify.log`, including
+both builds, current-source freshness, 42 registered component identities and
+all source/style/content/documentation checks. The final ordinary push receipt
+is `SCRATCH/v7-execution/final-course-sync-push.log`; source verification alone
+does not establish its result.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |

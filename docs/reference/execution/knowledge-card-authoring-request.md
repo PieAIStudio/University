@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-29
-last_reviewed: 2026-09-29
+last_reviewed: 2026-10-01
 domain: course-authoring
 tags:
   - v7
@@ -45,6 +45,11 @@ not every local draft. The normal lesson still earns its real XP, review cards
 and badges. The album starts with its two existing head-start gifts, but finishing these
 published lessons cannot truthfully announce a newly collected concept yet.
 An unmarked road segment has no invented six-card set or fake complete 2/2 set.
+
+Rechecked after integrating `1f3e7a1f` and rebuilding content on 2026-10-01:
+the new first three lessons preserve their original identities, but still add
+no explicit concept links. The table remains 0 linked lessons out of 93.
+Completing that course revision is not evidence that this separate request is done.
 
 The existing gift ids are `prompt` and `ai-basics`. The latter's current
 catalogue title is **AI 应用基础**, and its description is about putting an AI

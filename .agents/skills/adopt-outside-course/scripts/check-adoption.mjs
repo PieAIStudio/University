@@ -13,6 +13,8 @@
  * `--verify-urls` 会真的去请求每一条出处。这一条值得单独说：
  * 一个看起来完全合理、实际不存在的 MDN 链接，是 AI 写课最典型的错误，
  * 而它在人工评审里几乎发现不了 —— 因为链接看起来就该是那样。
+ * 这里曾经还有一份「允许的站点」清单，它拦不住真站点上编出来的页面，
+ * 却拦住了每一个还没人批准过的真站点，所以删了：打开网页才是真检查。
  *
  * 用法：
  *   node check-adoption.mjs <proposal.json> [...]
@@ -24,9 +26,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * One list, shared with the persist-time schema. Duplicating it here used to
- * mean a host could pass adoption and then fail `course create`, or the other
- * way around — both are the same rule, so they read the same file.
+ * One file, shared with the persist-time schema. Duplicating it here used to
+ * mean a citation could pass adoption and then fail `course create`, or the
+ * other way around — both are the same rule, so they read the same file.
  */
 const hosts = JSON.parse(
   readFileSync(
@@ -37,7 +39,6 @@ const hosts = JSON.parse(
     "utf8",
   ),
 );
-const AUTHORITY_HOSTS = hosts.authorityHosts;
 const FORBIDDEN_HOSTS = hosts.forbiddenHosts;
 const AUTHORITY_TAGS = hosts.authorityTags;
 
@@ -163,12 +164,6 @@ function checkEvidence(evidence, where, problems) {
       continue;
     }
 
-    if (!AUTHORITY_HOSTS.some((entry) => hostMatches(host, entry))) {
-      problems.push(
-        `${at}: ${host} 不在权威出处清单里。` +
-          `确认它是官方文档 / 规范之后，把它加进 AUTHORITY_HOSTS，不要就地放行`,
-      );
-    }
     if (reference.sourceAuthority && !AUTHORITY_TAGS.includes(reference.sourceAuthority)) {
       problems.push(
         `${at}: sourceAuthority "${reference.sourceAuthority}" 不在 ${AUTHORITY_TAGS.join(" / ")} 里`,

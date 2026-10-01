@@ -143,11 +143,11 @@ if (repositoryReferences.length > 0) {
 }
 
 /*
-  Why the network check exists at all: the persist-time schema only checks the
-  citation's *host* against the authority list. That catches an invented host
-  and nothing else — a model that fabricates a claim will happily hang it on a
-  real host and a page that was never written. Both defects look identical on
-  disk, and the reader is the one who finds out.
+  Why the network check exists at all: the persist-time schema can only read
+  the URL string — https, no credentials, not an adopted-course site. A model
+  that fabricates a claim will happily hang it on a real host and a page that
+  was never written, and that looks identical on disk to a real citation. This
+  request is where the invented page is caught; the reader must not be.
 
   It fails closed. An unreachable host is reported rather than skipped, because
   a checker that quietly passes when it cannot look is a green gate that is not

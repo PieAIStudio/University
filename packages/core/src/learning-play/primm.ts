@@ -157,6 +157,9 @@ function primmStepIssues(payload: PrimmStepsPayload): string[] {
   if (repeated(requests.map((request) => request.prompt.trim())))
     issues.push("Duplicate PRIMM request prompt");
   const known = new Set(["starter", ...requests.map((request) => request.id)]);
+  const sources = new Set(payload.sources.map((source) => source.id));
+  if (payload.finish.didYouKnow && !sources.has(payload.finish.didYouKnow.sourceId))
+    issues.push("Unknown PRIMM finish source");
   const assets = new Set([...payload.starter.assetIds, ...payload.make.assetIds]);
   const counts = PRIMM_PHASES.map(() => 0);
   let phaseIndex = 0;
@@ -190,6 +193,8 @@ function primmStepIssues(payload: PrimmStepsPayload): string[] {
           if (!before.some((earlier) => earlier.kind === "build" && earlier.phase === step.phase))
             issues.push(`PRIMM built request needs an earlier build: ${step.id}`);
         } else if (!known.has(step.request)) issues.push(`Unknown PRIMM request: ${step.request}`);
+        if (step.wait && !sources.has(step.wait.sourceId))
+          issues.push(`Unknown PRIMM wait source: ${step.id}`);
         for (const debrief of step.debriefs ?? [])
           if (!known.has(debrief.requestId))
             issues.push(`Unknown PRIMM debrief request: ${debrief.requestId}`);

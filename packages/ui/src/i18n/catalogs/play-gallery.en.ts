@@ -217,11 +217,11 @@ export const messages = {
     "Keep material present across predictions, actions and self-checks",
   "gallery.history.compare.name": "Original and remade comparison",
   "gallery.history.compare.action": "Compare reading the source lesson with continuous interaction",
-  "gallery.lesson.ask-about-a-picture": "When you see a photo, how do you ask AI about it?",
+  "gallery.lesson.ask-about-a-picture":
+    "When AI helps you write a message, how do you make it sound like you?",
   "gallery.lesson.sound-words-and-meaning":
-    "Can''t hear an English voicemail clearly? How AI can help",
-  "gallery.lesson.name-the-result":
-    "To make AI write something useful, how do you state your requirements clearly?",
+    "Want emoji in a message? How do you get AI to help you pick?",
+  "gallery.lesson.name-the-result": "A long email to answer: how do you get AI to help?",
   "gallery.lesson.edit-one-part":
     "Just want to change one sentence? How to keep AI from rewriting the whole thing?",
   "gallery.lesson.answer-or-search":

@@ -85,10 +85,10 @@ for (const [mode, origin] of [
             }
 
             const images = reader.locator("figure img");
-            // Not every asset is a picture: `sound-words-and-meaning` ships two
-            // audio recordings, and demanding an <img> for those made an audio
-            // lesson look like a missing image. Require a rendered image only
-            // when the lesson actually carries one.
+            // Not every asset is a picture: an audio lesson ships recordings,
+            // and demanding an <img> for those made it look like a missing
+            // image. Require a rendered image only when the lesson actually
+            // carries one.
             const pictures = (
               lesson.assets as ReadonlyArray<{ metadata?: { mime?: string }; mime?: string }>
             ).filter((asset) => (asset.metadata?.mime ?? asset.mime ?? "").startsWith("image/"));

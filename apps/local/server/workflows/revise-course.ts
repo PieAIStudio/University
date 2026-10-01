@@ -127,6 +127,13 @@ export const CourseRevisionProposalSchema = z
         evidence: z.array(EvidenceReferenceSchema).min(1),
         assets: z.array(LessonAssetSchema).max(100).optional(),
         /*
+          Existing assets this revision deliberately stops carrying. A lesson
+          replaced by new content (Owner, 2026-09-28: old lessons go in batches
+          with their replacements) must not ship the old one's media, and an
+          omission must still never drop one: retiring is said by name.
+        */
+        retireAssetIds: z.array(StableId).max(100).optional(),
+        /*
           Omitted means unchanged, the way assets are: a revision that only
           rewords prose must not silently drop the activity the lesson
           embeds, and an author who did not mention activities did not ask
@@ -338,21 +345,32 @@ function assertCoversExisting(
 function resolveLessonAssets(
   currentLesson: LessonManifest,
   proposedAssets: readonly LessonAsset[] | undefined,
+  retiredIds: readonly string[] = [],
 ): readonly LessonAsset[] {
-  const assets = proposedAssets ?? currentLesson.assets;
+  const retired = new Set(retiredIds);
+  for (const id of retired) {
+    if (!currentLesson.assets.some((asset) => asset.id === id))
+      throw new Error(`Retired asset is not an asset of lesson ${currentLesson.id}: ${id}`);
+  }
+  const assets = proposedAssets ?? currentLesson.assets.filter((asset) => !retired.has(asset.id));
   assertUniqueIds(assets, "Proposed lesson assets");
   assertUniqueIds(
     assets.map((asset) => ({ id: asset.path })),
     "Proposed lesson asset paths",
   );
+  for (const asset of assets) {
+    if (retired.has(asset.id))
+      throw new Error(`Lesson ${currentLesson.id} asset is both kept and retired: ${asset.id}`);
+  }
+  const kept = currentLesson.assets.filter((asset) => !retired.has(asset.id));
   assertCoversExisting(
     assets.map((asset) => asset.id),
-    currentLesson.assets.map((asset) => asset.id),
+    kept.map((asset) => asset.id),
     `Lesson ${currentLesson.id} assets`,
   );
 
   const proposedById = new Map(assets.map((asset) => [asset.id, asset]));
-  for (const current of currentLesson.assets) {
+  for (const current of kept) {
     const replacement = proposedById.get(current.id);
     if (replacement?.path !== current.path) {
       throw new Error(`Existing lesson asset paths cannot change in a revision: ${current.id}`);
@@ -634,7 +652,11 @@ function buildBundle(
     unit.id,
     proposal.lesson.id,
   ).manifest;
-  const assets = resolveLessonAssets(currentLesson, proposal.lesson.assets);
+  const assets = resolveLessonAssets(
+    currentLesson,
+    proposal.lesson.assets,
+    proposal.lesson.retireAssetIds,
+  );
   if (proposal.lesson.sections) {
     assertUniqueIds(proposal.lesson.sections, `Proposed lesson ${currentLesson.id} sections`);
     assertCoversExisting(

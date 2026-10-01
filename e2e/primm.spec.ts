@@ -1,4 +1,4 @@
-import { expect, test } from "./harness/learner-test.js";
+import { expect, test, type Page } from "./harness/learner-test.js";
 import AxeBuilder from "@axe-core/playwright";
 import {
   joinPrimmPieces,
@@ -94,25 +94,42 @@ test("PRIMM investigations are not all one or two operations", () => {
   expect(kinds.size).toBeGreaterThanOrEqual(3);
 });
 
-test("a late photo never pushes a beginner's prediction away from the pointer", async ({
-  page,
-}) => {
-  const sample = stepLessons.find(({ activity }) => activity.starter.operation === "vision")!;
-  const assets = sample.lesson.packageLesson.assets as { id: string; url: string }[];
-  const asset = assets.find((item) => item.id === sample.activity.starter.assetIds[0])!;
+async function latePhotoShift(page: Page, removeReservation = false) {
+  // Prefer a real shipped photo lesson. Its absence is not permission to skip
+  // an existing renderer guard: retain the shared fixture in an isolated page.
+  const sample = removeReservation
+    ? undefined
+    : stepLessons.find(({ activity }) => activity.starter.operation === "vision");
+  const assetUrl = sample
+    ? (sample.lesson.packageLesson.assets as { id: string; url: string }[]).find(
+        (item) => item.id === sample.activity.starter.assetIds[0],
+      )!.url
+    : "/e2e-fixtures/primm-layout-image.svg";
   let release!: () => void;
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route(`**${asset.url}`, async (route) => {
+  await page.route(`**${assetUrl}`, async (route) => {
     await held;
-    await route.continue();
+    if (sample) await route.continue();
+    else
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="600"><rect width="240" height="600" fill="gray"/></svg>',
+      });
   });
   try {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${ONLINE_ORIGIN}${lessonPathOf(sample.course, sample.lesson)}?lang=en`, {
-      waitUntil: "domcontentloaded",
-    });
+    await page.goto(
+      `${ONLINE_ORIGIN}${sample ? lessonPathOf(sample.course, sample.lesson) : "/e2e-fixtures/primm-photo-layout.html"}?lang=en`,
+      { waitUntil: "domcontentloaded" },
+    );
+    if (!sample) await expect(page.locator("[data-synthetic-photo-layout]")).toBeVisible();
+    if (removeReservation)
+      await page.addStyleTag({
+        content:
+          ".primm-steps__thumb { aspect-ratio: auto !important; } .primm-steps__thumb img { block-size: auto !important; }",
+      });
     await humanClick(
       page,
       page.getByRole("button", { name: en["primm.steps.start"], exact: true }),
@@ -123,6 +140,8 @@ test("a late photo never pushes a beginner's prediction away from the pointer", 
     await page.evaluate(() => document.fonts.ready);
     await scrollIntoView(target);
     const before = (await target.boundingBox())!;
+    const step = page.locator(".primm-steps__step");
+    const stepBefore = (await step.boundingBox())!;
     release();
     await expect
       .poll(() =>
@@ -135,12 +154,30 @@ test("a late photo never pushes a beginner's prediction away from the pointer", 
       )
       .toBe(true);
     const after = (await target.boundingBox())!;
-    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+    const stepAfter = (await step.boundingBox())!;
     await humanClick(page, target, "choose without a late photo moving the question");
     await expect(target).toHaveAttribute("aria-checked", "true");
+    return {
+      viewport: Math.abs(after.y - before.y),
+      // Browser scroll anchoring cannot disguise a real layout shift.
+      withinStep: Math.abs(after.y - stepAfter.y - (before.y - stepBefore.y)),
+    };
   } finally {
     release();
   }
+}
+
+test("a late photo never pushes a beginner's prediction away from the pointer", async ({
+  page,
+}) => {
+  const shift = await latePhotoShift(page);
+  expect(shift.viewport).toBeLessThanOrEqual(1);
+  expect(shift.withinStep).toBeLessThanOrEqual(1);
+});
+
+test("the late-photo guard detects removal of the reserved image frame", async ({ page }) => {
+  const shift = await latePhotoShift(page, true);
+  expect(shift.withinStep).toBeGreaterThan(1);
 });
 
 for (const [mode, origin] of [
@@ -517,7 +554,9 @@ for (const [mode, origin] of [
         const runs: { phase: string; prompt: string }[] = [];
         let grades = 0;
         // Explicit contract-test responses, not evidence of live AI use. Each
-        // answer repeats its request, so the terms a find step looks for are there.
+        // answer repeats its request and names what the lesson's find steps look
+        // for, so a find step has a sentence to tap.
+        const sought = a.steps.flatMap((step) => (step.kind === "find" ? step.terms : []));
         await page.route("http://127.0.0.1:23151/**", async (route) => {
           const request = route.request(),
             headers = {
@@ -534,7 +573,13 @@ for (const [mode, origin] of [
               headers,
               json: {
                 kind: "live",
-                text: `${locale === "en" ? "Contract answer." : "契约测试回答。"}\n${body.prompt}`,
+                text: [
+                  locale === "en" ? "Contract answer." : "契约测试回答。",
+                  body.prompt,
+                  ...sought,
+                ]
+                  .filter(Boolean)
+                  .join("\n"),
                 prompt: body.prompt,
                 requestId: crypto.randomUUID(),
                 model: "explicit-browser-test-fixture",
@@ -626,7 +671,12 @@ for (const [mode, origin] of [
               const prompt = requestText(step.request);
               const attach = area.locator(".primm-steps__attach");
               const composer = area.locator(".primm-steps__composer");
-              if (step.phase === "run") {
+              if (!a.starter.assetIds.length) {
+                // A text material is already in the chat, named in the photo's place.
+                await expect(composer.locator(".primm-steps__file")).toHaveText(
+                  step.attachmentLabel!,
+                );
+              } else if (step.phase === "run") {
                 // A real pointer drag into the chat.
                 const from = (await attach.boundingBox())!;
                 const to = (await composer.boundingBox())!;
@@ -683,9 +733,10 @@ for (const [mode, origin] of [
                     bucket.id === step.buckets[0]!.id ? "ArrowRight" : "ArrowLeft",
                   );
                 } else
+                  // By the bucket, not its label: one label can contain another.
                   await humanClick(
                     page,
-                    area.locator(".primm-steps__buckets button", { hasText: bucket.label }),
+                    area.locator(`.primm-steps__buckets button[data-bucket="${bucket.id}"]`),
                     "sort the card",
                   );
               }

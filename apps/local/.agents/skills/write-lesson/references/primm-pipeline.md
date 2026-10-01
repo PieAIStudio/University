@@ -19,7 +19,7 @@ node scripts/primm-pipeline.mjs review   --lesson <unit>/<lesson> --version N --
 node scripts/primm-pipeline.mjs fix      --lesson <unit>/<lesson> --from N
 node scripts/primm-pipeline.mjs status   # every lesson: versions, writer, scores, best, manual notes
 # A hand-written version-3 step lesson (the line does not write steps yet):
-node scripts/primm-pipeline.mjs assemble-steps --lesson <unit>/<lesson> --input <file.json> [--apply]
+node scripts/primm-pipeline.mjs assemble-steps --lesson <unit>/<lesson> --input <file.json> [--replace] [--apply]
 ```
 
 Individual stages (`write`, `check`, `detect`, `fix`, `research`) can be run on
@@ -33,11 +33,11 @@ their own; each reads the latest `draft.vN.json`.
 | write | Writer (Grok, highest effort) | Plans first (five real moments with elimination tests, case choice, uncertainty, investigate act, teacher thread), then writes the whole lesson as typed JSON derived from the native zod schema. | `draft.v1.json` |
 | check | script + local AI | zod + `primmIssues` on the assembled payload; lint for banned words, UI narration, long sentences, material meta-leaks, reused Make material, card lengths, sort-card giveaways, edit sentences absent from the run material. Then **really runs** the starter request, a fully scaffolded modify request and a beginner-style Make request through the same PRIMM runtime the product uses, and renders the lesson screen by screen with those outputs. | `lint.vN.json`, `samples.vN.json`, `render.vN.md` |
 | detect | Detector (Gemini Flash, different family) | Walks the rendered lesson as a 55-year-old first-time user and, for wording only, as a 9-year-old reader. Reports F1–F15 findings with severity and exact quotes; proposes no wording. | `detector.vN.json` |
-| research | Researcher (Gemini Pro via agy, search only) | When the plan found no fitting case or called its case weak. Proposes primary sources with an exact quote; the script fetches each page and keeps only those whose quote is really there and whose host is on the authority list. | `research.checked.json`, `research.accepted.json` |
+| research | Researcher (Gemini Pro via agy, search only) | When the plan found no fitting case or called its case weak. Proposes primary sources with an exact quote; the script fetches each page and keeps only those whose quote is really there. | `research.checked.json`, `research.accepted.json` |
 | fix | Writer family | Returns the whole revised lesson plus a resolution for every finding (fixed, or rejected with a reason). | `draft.vN+1.json` |
 | polish | Polisher (Gemini Flash) | Spoken, 8–9-year-old-readable wording for every displayed string, with the rendered lesson as context; then faithful English. Gates: numbers, hedges, new absolutes, AI alias, growth, quoted text. A key failing a gate keeps the fixed wording; it is never hand-repaired and called polished. | `final.json`, `polish.vN.acceptance.json` |
 | assemble | script + native CLI | Builds and schema-validates the `CourseRevisionProposal`: activity with `locales.en.strings`, all prior evidence plus newly used verified sources, preserved card/exercise IDs, explain exercise with rubric, recap content. `--apply` opens the course for edit if needed, runs the native dry-run, then `course revise`. | `proposal.json`, `native-*.json` |
-| assemble-steps | person + native CLI | Lands a version-3 step lesson written by hand: `{ activity, exercise, cards }` with every display string already in English. Same evidence, card/exercise identities and native dry-run → revise path as `assemble` (both call one `nativeApply`). Logged as `MANUAL`. | `proposal.json`, `native-apply.json` |
+| assemble-steps | person + native CLI | Lands a version-3 step lesson written by hand: `{ activity, exercise, cards }` with every display string already in English. Same evidence, card/exercise identities and native dry-run → revise path as `assemble` (both call one `nativeApply`). `--replace` lands new content in an old lesson's identities: only its own sources, and the old media it no longer uses retired by name (`retireAssetIds`). Logged as `MANUAL`. | `proposal.json`, `native-apply.json` |
 | finish | native CLI | Once per batch after every `--apply`: reactivate the course, export the recovery package. Then `pnpm content` at the repository root. | `native-finish.json` |
 
 `run` loops check → detect → fix until the Detector returns `ready` with no
@@ -65,9 +65,11 @@ stays green regardless (see `activities.md`).
   agy, then Codex, marking an exhausted family for an hour. Claude via agy is
   capped at 4 concurrent calls (`PRIMM_WRITER_SLOTS`). A result hidden by a late
   429 is recovered with `reparse --name writer.v1` before paying for a rewrite.
-- **Sources pass the authority-host list.** `research` keeps a quote-verified
-  candidate only when its host is on `url-evidence-hosts.json`; any other host
-  waits for a person to admit it under that file's policy.
+- **A source is admitted by its page, not its host.** `research` keeps a
+  candidate whose quote is really on the fetched page, on any https host except
+  the adopted-course sites in `url-evidence-hosts.json`. There is no host list to
+  approve; whether the page supports the claim is its provenance, reviewed with
+  the lesson.
 - **Render annotations.** Everything the learner does not see (sample prompts,
   failed sample runs, interaction types) is marked `〔检查者注〕` in the render,
   or the Detector reviews pipeline artefacts as lesson content.

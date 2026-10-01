@@ -86,6 +86,8 @@ const PRIMM_DISPLAY_PATHS = new Set([
   "make.artifactLabel",
   "finish.title",
   "finish.note",
+  "finish.didYouKnow.text",
+  "finish.today",
   // Version 3 steps. Terms are matched against a live result in the learner's
   // language, so they translate with the lesson; request prompts run as written.
   "requests.prompt",
@@ -96,6 +98,8 @@ const PRIMM_DISPLAY_PATHS = new Set([
   "steps.options.after",
   "steps.attachmentLabel",
   "steps.debriefs.text",
+  "steps.wait.text",
+  "steps.hint",
   "steps.terms",
   "steps.found",
   "steps.absent",
@@ -104,6 +108,7 @@ const PRIMM_DISPLAY_PATHS = new Set([
   "steps.buckets.label",
   "steps.cards.text",
   "steps.cards.why",
+  "steps.cards.miss",
   "steps.pieces.text",
   "steps.pieces.why",
 ]);

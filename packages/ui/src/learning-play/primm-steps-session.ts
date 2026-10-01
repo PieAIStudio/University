@@ -13,6 +13,8 @@ export interface StepsSession {
   readonly found: Readonly<Record<string, number>>;
   readonly matched: Readonly<Record<string, Readonly<Record<string, string>>>>;
   readonly sorted: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** Sort cards a learner first put on the wrong side, by step: the score counts first tries. */
+  readonly missed: Readonly<Record<string, readonly string[]>>;
   readonly pointed: Readonly<Record<string, string>>;
   readonly built: Readonly<Record<string, readonly string[]>>;
   readonly makePrompt: string;
@@ -30,6 +32,7 @@ export function initialStepsSession(): StepsSession {
     found: {},
     matched: {},
     sorted: {},
+    missed: {},
     pointed: {},
     built: {},
     makePrompt: "",
@@ -88,6 +91,15 @@ export function restoreStepsSession(activity: PrimmStepsActivity, answer: string
           Object.entries(value).filter(([key, item]) => ids.has(key) && strings(item)),
         )
       : {};
+  const lists = (value: unknown) =>
+    record(value)
+      ? (Object.fromEntries(
+          Object.entries(value).filter(
+            ([key, item]) =>
+              ids.has(key) && Array.isArray(item) && item.every((id) => typeof id === "string"),
+          ),
+        ) as Record<string, string[]>)
+      : {};
   const evaluation =
     record(saved.evaluation) &&
     ["pass", "fail", "undecided"].includes(saved.evaluation.outcome as string) &&
@@ -112,15 +124,9 @@ export function restoreStepsSession(activity: PrimmStepsActivity, answer: string
       : {},
     matched: nested(saved.matched) as StepsSession["matched"],
     sorted: nested(saved.sorted) as StepsSession["sorted"],
+    missed: lists(saved.missed),
     pointed: strings(saved.pointed) ? saved.pointed : {},
-    built: record(saved.built)
-      ? (Object.fromEntries(
-          Object.entries(saved.built).filter(
-            ([key, value]) =>
-              ids.has(key) && Array.isArray(value) && value.every((id) => typeof id === "string"),
-          ),
-        ) as Record<string, string[]>)
-      : {},
+    built: lists(saved.built),
     makePrompt: typeof saved.makePrompt === "string" ? saved.makePrompt : "",
     evaluation: runs.make ? evaluation : null,
   };

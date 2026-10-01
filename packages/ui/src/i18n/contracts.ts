@@ -3125,7 +3125,6 @@ export interface MessageContracts {
   readonly "primm.sortRight": { readonly "why": string | number | bigint | boolean | null | undefined | Date; };
   readonly "primm.sortWrong": { readonly "why": string | number | bigint | boolean | null | undefined | Date; };
   readonly "primm.sourceSummary": {  };
-  readonly "primm.steps.actually": { readonly "bucket": string | number | bigint | boolean | null | undefined | Date; readonly "why": string | number | bigint | boolean | null | undefined | Date; };
   readonly "primm.steps.answered": {  };
   readonly "primm.steps.attachHint": {  };
   readonly "primm.steps.built": {  };
@@ -3145,6 +3144,7 @@ export interface MessageContracts {
   readonly "primm.steps.composerTarget": {  };
   readonly "primm.steps.continue": {  };
   readonly "primm.steps.demo": {  };
+  readonly "primm.steps.didYouKnow": {  };
   readonly "primm.steps.drop": {  };
   readonly "primm.steps.extra": {  };
   readonly "primm.steps.failed": {  };
@@ -3175,8 +3175,10 @@ export interface MessageContracts {
   readonly "primm.steps.running": {  };
   readonly "primm.steps.seen": {  };
   readonly "primm.steps.send": {  };
+  readonly "primm.steps.sortAgain": {  };
   readonly "primm.steps.sorted": { readonly "right": string | number | bigint | boolean | null | undefined | Date; readonly "total": string | number | bigint | boolean | null | undefined | Date; };
   readonly "primm.steps.start": {  };
+  readonly "primm.steps.today": {  };
   readonly "primm.steps.tryAgain": {  };
   readonly "primm.steps.tryAgainToast": {  };
   readonly "primm.steps.wrong": {  };

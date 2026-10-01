@@ -38,6 +38,45 @@ describe("PRIMM steps: the fixed frame", () => {
       expect(lesson.locales?.en?.strings?.[text], text).toBeTruthy();
   });
 
+  it("carries a lesson's reasons, hints and real-world lines, each tied to its own source", () => {
+    const source = lesson.sources[0]!.id;
+    const next = withSteps((steps) =>
+      steps.map((step) => {
+        if (step.kind === "send")
+          return { ...step, wait: { text: "等的时候读一句。", sourceId: source } };
+        if (step.kind === "match") return { ...step, miss: "对照一下请求。" };
+        if (step.kind === "build") return { ...step, hint: "先说要问哪一处。" };
+        if (step.kind === "sort")
+          return { ...step, cards: step.cards.map((card) => ({ ...card, miss: "再想想。" })) };
+        return step;
+      }),
+    );
+    next.finish = {
+      ...next.finish,
+      didYouKnow: { text: "一句真事。", sourceId: source },
+      today: "今天试一次。",
+    };
+    expect(issuesOf(next)).toEqual([]);
+    // Every new line is display text: it translates with the lesson.
+    const strings = activityDisplayStrings(next);
+    for (const line of [
+      "等的时候读一句。",
+      "对照一下请求。",
+      "先说要问哪一处。",
+      "再想想。",
+      "一句真事。",
+      "今天试一次。",
+    ])
+      expect(strings, line).toContain(line);
+
+    const stranger = structuredClone(next);
+    stranger.finish = {
+      ...stranger.finish,
+      didYouKnow: { text: "一句真事。", sourceId: "nowhere" },
+    };
+    expect(issuesOf(stranger)).toContain("Unknown PRIMM finish source");
+  });
+
   it("lets a phase hold one or several steps of any allowed kind", () => {
     // Predict with two steps, Investigate with one: still the same frame.
     const varied = withSteps((steps) => [

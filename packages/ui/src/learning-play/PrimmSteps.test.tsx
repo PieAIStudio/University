@@ -127,6 +127,126 @@ describe("a choice with a right answer", () => {
   });
 });
 
+describe("a sort step: a wrong side says why and the card stays (Owner H1)", () => {
+  it("keeps the card until it goes right, and scores first tries", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    const sort = activity.steps.find((item) => item.kind === "sort")!;
+    if (sort.kind !== "sort") throw Error();
+    (sort.cards[0] as { miss?: string }).miss = "颜色一眼就看得到。";
+    activity.steps = [sort];
+    await render({ activity });
+    await press("开始");
+    const first = sort.cards[0]!;
+    await press(first.bucketId === "yes" ? "← 答不出" : "答得出 →");
+    expect(text()).toContain("颜色一眼就看得到。");
+    // Not revealed, and not moved on: the same card is still the one to place.
+    expect(container.querySelector(".primm-steps__card.is-top")?.textContent).toContain(first.text);
+    for (const card of sort.cards) await press(card.bucketId === "yes" ? "答得出 →" : "← 答不出");
+    const total = sort.cards.length;
+    expect(text()).toContain(`${total} 张里对了 ${total - 1} 张`);
+  });
+});
+
+describe("a text-only request and a lesson's real-world lines", () => {
+  it("sends at once when there is nothing to attach, with 你知道吗 while it runs", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    activity.starter = { ...activity.starter, assetIds: [], materialIds: [], operation: "text" };
+    const send = activity.steps.find((item) => item.kind === "send")!;
+    if (send.kind !== "send") throw Error();
+    activity.steps = [
+      {
+        ...send,
+        request: "starter",
+        attachmentLabel: undefined,
+        wait: { text: "研究者数过一千五百多万篇摘要。", sourceId: activity.sources[0]!.id },
+      },
+    ];
+    let release: () => void = () => {};
+    const runPrimm = vi.fn<RunPrimm>(
+      (request) =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve({
+              kind: "live",
+              prompt: request.prompt,
+              text: "测试输出",
+              requestId: "r",
+              model: "test",
+              createdAt: new Date().toISOString(),
+              sourceIds: [],
+            });
+        }),
+    );
+    await render({ activity, runPrimm });
+    await press("开始");
+    await press("发送");
+    expect(runPrimm).toHaveBeenCalledTimes(1);
+    expect(container.querySelector(".primm-steps__aside")?.textContent).toContain(
+      "研究者数过一千五百多万篇摘要。",
+    );
+    await act(async () => release());
+    expect(container.querySelector(".primm-steps__aside")).toBeNull();
+  });
+
+  it("shows a text material where a photo would be, and names it in the chat", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    activity.materials = [
+      ...activity.materials,
+      { id: "notice", label: "团建通知（练习）", kind: "practice", text: "下周六公司团建！" },
+    ];
+    activity.starter = {
+      ...activity.starter,
+      assetIds: [],
+      materialIds: ["notice"],
+      operation: "text",
+    };
+    const choose = activity.steps.find((item) => item.kind === "choose")!;
+    const send = activity.steps.find((item) => item.kind === "send")!;
+    if (choose.kind !== "choose" || send.kind !== "send") throw Error();
+    activity.steps = [choose, { ...send, attachmentLabel: "团建通知" }];
+    await render({ activity });
+    expect(container.querySelector(".primm-steps__material")?.hasAttribute("open")).toBe(true);
+    expect(text()).toContain("下周六公司团建！");
+    await press("开始");
+    // Folded on the choice: a reminder, not a wall of text above the options.
+    expect(container.querySelector(".primm-steps__material")?.hasAttribute("open")).toBe(false);
+    await press(choose.options[0]!.label);
+    await press("就选这个");
+    await press("继续");
+    expect(container.querySelector(".primm-steps__composer .primm-steps__file")?.textContent).toBe(
+      "团建通知",
+    );
+    await press("发送");
+    expect(
+      container.querySelector(".primm-steps__bubble.is-me .primm-steps__file")?.textContent,
+    ).toBe("团建通知");
+  });
+
+  it("ends with 你知道吗 and one thing to try today", async () => {
+    const activity = structuredClone(primmStepsFixture);
+    const choose = activity.steps.find((item) => item.kind === "choose")!;
+    activity.steps = [choose];
+    activity.finish = {
+      ...activity.finish,
+      didYouKnow: { text: "看过 AI 点子的故事彼此更像。", sourceId: activity.sources[0]!.id },
+      today: "下次先把你以前写的两句话贴给它。",
+    };
+    await render({ activity });
+    await press("开始");
+    if (choose.kind !== "choose") throw Error();
+    await press(choose.options[0]!.label);
+    await press("就选这个");
+    await press("继续");
+    expect(title()).toBe(activity.finish.title);
+    expect(container.querySelector(".primm-steps__aside")?.textContent).toContain(
+      "看过 AI 点子的故事彼此更像。",
+    );
+    expect(container.querySelector(".primm-steps__today")?.textContent).toContain(
+      "下次先把你以前写的两句话贴给它。",
+    );
+  });
+});
+
 describe("a step lesson: one action per screen, the teacher after it", () => {
   it("a grading refresh retains the current control and focus instead of jumping to the heading", async () => {
     const activity = { ...lesson, steps: lesson.steps.filter((item) => item.kind === "make") };
