@@ -75,11 +75,11 @@ code{font-size:.88em}
           <tr><td>看</td><td>对照结果：连一连、点一句、分一分</td><td>小回合：几张卡一张张来，扔进篮子</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
           <tr><td>改</td><td>拼一句更好的请求，再发一次，恰好一次</td><td>积木挂成小火车，发车</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
           <tr><td>做</td><td>换一件事，自己写请求，改到满意再交；可再跟一个自查</td><td>工作台，作品上架</td><td>—</td><td><span class="pill done">已上线</span></td></tr>
-          <tr><td>学完</td><td>一句带走的话、一条「你知道吗」、一件今天就能做的事、开宝箱拿复习卡</td><td>彩纸，岛上多一样东西</td><td>第三处：你知道吗，加出处</td><td><span class="pill done">字已上线</span> <span class="pill todo">带回岛上待做</span></td></tr>
+          <tr><td>学完</td><td>一句带走的话、一条「你知道吗」、一件今天就能做的事、开宝箱拿复习卡</td><td>彩纸和星星</td><td>第三处：你知道吗，加出处</td><td><span class="pill done">字已上线</span> <span class="pill todo">小屋陈列待做</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="small">「已上线」只指下方的字和动作。上方庭院现在有第一批：庭院、你的小兔子、写着「AI」的灯塔；猜的时候小兔子头上冒「？」，发出去时纸飞机飞向灯塔，答对欢呼、答错缩一下，学完撒星星；分一分时台阶上立着篮子，放对一张，小兔子就把纸条扔进去；排一排时每拼一块多一节小火车车厢，拼对了火车开走；自己做时小兔子转向工作台，过关后作品立起来。带回岛上的东西还没做。</p>
+    <p class="small">「已上线」只指下方的字和动作。上方庭院现在有第一批：庭院、你的小兔子、写着「AI」的灯塔；猜的时候小兔子头上冒「？」，发出去时纸飞机飞向灯塔，答对欢呼、答错缩一下，学完撒星星；分一分时台阶上立着篮子，放对一张，小兔子就把纸条扔进去；排一排时每拼一块多一节小火车车厢，拼对了火车开走；自己做时小兔子转向工作台，过关后作品立起来。高级宝箱弹出的摆设和小屋陈列还没做。</p>
   </section>
 
   <section aria-labelledby="actions">
@@ -124,15 +124,35 @@ code{font-size:.88em}
     <div class="card">
       <ul>
         <li>学完页有四样：一句带走的话、一条「你知道吗」、一件今天就能做的小事、开宝箱拿这一关的复习卡（接 V7 的宝箱，不另起一套）。</li>
-        <li>每关带一样东西回岛上（第一关是一张明信片摆上小屋的架子，庭院多一把椅子）。</li>
-        <li>「今天就能做的小事」下次打开会问一句「用了吗？」，用了给岛上贴一张贴纸。只算贴纸，不算成绩，因为没法验证。</li>
+        <li>「今天就能做的小事」下次打开会问一句「用了吗？」。只是问一句，不算成绩，因为没法验证。用了以后给什么，见下面「待定」。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="keepsake">
+    <h2 id="keepsake">高级宝箱弹出一件东西，放进你的小屋</h2>
+    <p>Owner 2026 年 10 月 1 日改定：<b>不是每学完一关就多一样东西，也不放到岛上。</b>东西给得太勤就不值钱，得是难拿的宝箱弹出来才有分量。</p>
+    <div class="card">
+      <ul>
+        <li><b>普通宝箱不给东西。</b>每关的木箱、一次全对升级的蓝箱，照 V7 给复习卡和经验。</li>
+        <li><b>高一级的宝箱才弹出一件摆设</b>：一段学完时的检查站宝箱、挑战赢了的宝箱、一门课最后那个大宝箱。弹出的东西和这一段学的事有关，比如「看图提问」那一段弹出一台小相机。</li>
+        <li><b>东西放进你的小屋。</b>小屋在 University 里就有，打开能看到屋里陈列的每一件东西，摆在架子上、墙上。University 只给小屋，不给岛。</li>
+        <li><b>岛由 OwnMySpace 给。</b>你在 OwnMySpace 有自己的浮空岛（会员），可以把这间小屋当一栋房子装到岛上，屋里的陈列跟着过去。一个账号一座岛，这是 2026 年 9 月 30 日定的「University 给小屋，OwnMySpace 给地」。</li>
+      </ul>
+      <p class="small">现有代码：宝箱的等级（木箱、稀有、传说、检查站、挑战）已经在 <code>packages/core/src/progress/cosmetic-rewards.ts</code> 里，高级宝箱现在掉的是小兔子的衣帽。摆设和小屋接在这套上做，不另起一套宝箱。</p>
+    </div>
+    <div class="card">
+      <h3>待定，等 Owner 定</h3>
+      <ul>
+        <li><b>衣帽和摆设的关系。</b>建议衣帽也住进小屋：挂在屋里的衣架上，小兔子穿哪件从衣架上拿。这样你拿到的所有东西都在一个地方。</li>
+        <li><b>「用了吗？」答「用了」给什么。</b>原来写的是给岛上贴一张贴纸；岛不归 University，建议改成贴在小屋墙上。</li>
       </ul>
     </div>
   </section>
 
   <section aria-labelledby="source">
     <h2 id="source">出处</h2>
-    <p class="small">拍板记录：Owner 2026-09-28 与 2026-09-30，A1 B1 C1 D2 E3 F1 G3 H1 I1 J2。设计稿：<a href="../../interaction-components/index.html">互动组件总览</a>、<a href="../../interaction-components/spec.html">执行规格</a>（§4 一关的结构、§5 互动组件契约、§8 3D 舞台契约、§9 带回岛上）、<a href="../../interaction-components/lesson-1.html">第 1 关</a>、<a href="../../interaction-components/lesson-2.html">第 2 关</a>、<a href="../../interaction-components/lesson-3.html">第 3 关</a>。已上线的部分：主线提交 <code>1f3e7a1f</code>（新第 1–3 关、文字材料的摆法）、<code>c9f665b9</code>（等待时的小知识、学完四样里的文字、分一分改到对）。</p>
+    <p class="small">拍板记录：Owner 2026-09-28 与 2026-09-30，A1 B1 C1 D2 E3 F1 G3 H1 I1 J2；2026-10-01 改定「带回岛上」为「高级宝箱弹出一件东西，放进小屋」。设计稿：<a href="../../interaction-components/index.html">互动组件总览</a>、<a href="../../interaction-components/spec.html">执行规格</a>（§4 一关的结构、§5 互动组件契约、§8 3D 舞台契约；§9「带回岛上」已被本页「高级宝箱弹出一件东西」取代）、<a href="../../interaction-components/lesson-1.html">第 1 关</a>、<a href="../../interaction-components/lesson-2.html">第 2 关</a>、<a href="../../interaction-components/lesson-3.html">第 3 关</a>。已上线的部分：主线提交 <code>1f3e7a1f</code>（新第 1–3 关、文字材料的摆法）、<code>c9f665b9</code>（等待时的小知识、学完四样里的文字、分一分改到对）。</p>
   </section>
 </main>
 </body>
