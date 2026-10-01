@@ -49,6 +49,7 @@ export function ChestRewards({
   knowledgeCards = [],
   badgeEmblem,
   completion,
+  keepsake,
   sound = false,
 }: {
   readonly stage: ChestRewardStage;
@@ -70,6 +71,8 @@ export function ChestRewards({
   readonly knowledgeCards?: readonly KnowledgeAlbumCard[];
   readonly badgeEmblem?: (badge: Badge, arriving: boolean) => ReactNode;
   readonly completion?: ReactNode;
+  /** A blue or gold chest's keepsake and its one action (V7 amendment one). */
+  readonly keepsake?: ReactNode;
   readonly sound?: boolean;
 }): ReactNode {
   const interfaceTranslator = useI18n();
@@ -200,6 +203,7 @@ export function ChestRewards({
         </ul>
       ) : null}
       {allShown ? completion : null}
+      {allShown ? keepsake : null}
 
       {stage === "rewards" && allShown && guardName ? (
         <>

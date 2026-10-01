@@ -74,12 +74,14 @@ const COPY = {
   "keepsake.lighthouse": ["keepsake.lighthouse.name", "keepsake.lighthouse.meaning"],
 } as const;
 type CopyStem = keyof typeof COPY;
-const copyOf = (k: Keepsake) => COPY[(k.copy in COPY ? k.copy : "keepsake.signpost") as CopyStem];
+/** The catalogue keys for a keepsake's name and meaning. */
+export const keepsakeCopy = (k: Keepsake) =>
+  COPY[(k.copy in COPY ? k.copy : "keepsake.signpost") as CopyStem];
 
 function useKeepsakeText() {
   const t = useI18n();
   return (item: HouseKeepsake) => {
-    const [name, meaning] = copyOf(item.keepsake);
+    const [name, meaning] = keepsakeCopy(item.keepsake);
     return {
       name: t.t(name),
       meaning: t.t(meaning),

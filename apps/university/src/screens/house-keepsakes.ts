@@ -41,3 +41,16 @@ export function keepsakesOf(shelf: Shelf | null, progress: ProgressDocument): Ho
     ),
   );
 }
+
+let arrival: string | null = null;
+
+/** A chest's keepsake is on its way in: the house lights it once. */
+export function arriveAt(id: string): void {
+  arrival = id;
+}
+
+export function takeArrival(): string | null {
+  const id = arrival;
+  arrival = null;
+  return id;
+}

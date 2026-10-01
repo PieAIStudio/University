@@ -13,7 +13,7 @@ import type { Shelf } from "@pieai/university-ui/content/port.js";
 import { AvatarChip, type AvatarRecipe } from "@pieai/university-world/avatar.js";
 import { cosmeticOwner, cosmeticsStore } from "../cosmetics/store.js";
 import { progressPort } from "../progress/store.js";
-import { keepsakesOf } from "./house-keepsakes.js";
+import { keepsakesOf, takeArrival } from "./house-keepsakes.js";
 
 // A string, not the object: accountData() returns a fresh copy on every call,
 // and a snapshot that is never equal to itself re-renders forever.
@@ -53,6 +53,7 @@ export default function HouseScreen({
   const house = useMemo(() => parseHouseState(JSON.parse(raw)), [raw]);
   const keepsakes = useMemo(() => keepsakesOf(shelf, progress), [shelf, progress]);
   const t = useI18n();
+  const [arrived] = useState(takeArrival);
   const [wardrobe, setWardrobe] = useState<"rack" | "packs" | null>(null);
   const now = () => new Date().toISOString();
   return (
@@ -61,7 +62,7 @@ export default function HouseScreen({
         keepsakes={keepsakes}
         house={house}
         today={localDay()}
-        highlight={highlight ?? null}
+        highlight={highlight ?? arrived}
         avatar={<AvatarChip recipe={avatarRecipe ?? undefined} signedIn={signedIn} size={120} />}
         onPlace={(id, x, y) => saveHouse(placeItem(house, id, x, y, now()))}
         onMarkStyle={(style) => saveHouse(chooseMarkStyle(house, style, now()))}

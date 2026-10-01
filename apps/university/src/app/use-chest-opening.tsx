@@ -8,7 +8,11 @@ import {
   type ProgressDocument,
   type KnowledgeAlbum,
   type KnowledgeAlbumCard,
+  type Keepsake,
+  lessonKey as lessonDocumentKey,
 } from "@pieai/university-core";
+import { GameButton } from "@pieai/swimmer-ui-kit";
+import { KeepsakeArt, keepsakeCopy } from "@pieai/university-ui";
 import { ChestRewards, type ChestRewardStage } from "@pieai/university-ui/path/ChestRewards.js";
 import { EmblemImage, usePrefersReducedMotion } from "@pieai/university-world";
 import { useI18n } from "@pieai/university-ui/i18n.js";
@@ -64,6 +68,7 @@ interface Flow {
   readonly stage: ChestRewardStage | "leaving";
   readonly skipped: boolean;
   readonly onLeave?: () => void;
+  readonly keepsake?: { readonly item: Keepsake; readonly isNew: boolean };
 }
 
 /**
@@ -82,6 +87,8 @@ export function useChestOpening({
   courseTitle,
   guestAdoption,
   completionAvatar,
+  keepsakeOf,
+  onKeepsake,
 }: {
   /** The lesson being read now, or null. The baseline is taken when it changes. */
   readonly lessonOpen: LessonRef | null;
@@ -92,6 +99,10 @@ export function useChestOpening({
   readonly courseTitle?: string;
   readonly completionAvatar?: ReactNode;
   readonly guestAdoption?: GuestAdoption;
+  /** The keepsake this lesson's chest leaves, if it is a blue or gold one. */
+  readonly keepsakeOf?: (locator: LessonRef) => Keepsake | undefined;
+  /** 放进小屋: leave the chest for the house. */
+  readonly onKeepsake?: (keepsake: Keepsake) => void;
 }): {
   readonly active: boolean;
   /** The chest open now is the weekly boss's, on the course island rather than after a lesson. */
@@ -118,6 +129,8 @@ export function useChestOpening({
     owner: object | string | null;
     value: ChestBaseline;
     knowledge: KnowledgeAlbum | null;
+    /** The lesson was already finished when it opened: its keepsake is not new. */
+    doneBefore: boolean;
   } | null>(null);
   const lessonKey = lessonOpen
     ? `${lessonOpen.studyId}/${lessonOpen.courseId}/${lessonOpen.unitId}/${lessonOpen.lessonId}`
@@ -131,6 +144,10 @@ export function useChestOpening({
       owner,
       knowledge,
       value: chestBaseline(snapshot(), knowledge?.coursesFinished, knowledge?.pathsFinished),
+      doneBefore:
+        snapshot().lessons[
+          lessonDocumentKey(lessonOpen!.studyId, lessonOpen!.courseId, lessonOpen!.lessonId)
+        ]?.completedAt != null,
     };
   }, [lessonKey, owner, readAlbum]);
 
@@ -188,6 +205,7 @@ export function useChestOpening({
       reward = { ...reward, xp: reward.xp + bonus.amount };
     }
     const tier = lessonChestTier(lessons, index);
+    const keepsake = tier === "wood" ? undefined : keepsakeOf?.(locator);
     setFlow({
       key: ++sequence.current,
       owner,
@@ -199,6 +217,7 @@ export function useChestOpening({
         ? { completedCourse: courseTitle, completionAvatar }
         : {}),
       source: { kind: "lesson", locator, lessonNumber: index + 1 },
+      ...(keepsake ? { keepsake: { item: keepsake, isNew: !before.doneBefore } } : {}),
       from: tier,
       tier: openedTier(tier, reward.allFirstTry),
       reward,
@@ -346,6 +365,29 @@ export function useChestOpening({
               {flow.completionAvatar}
               <EmblemImage kind="badge" id="first-course" size={112} />
               <p>{t.t("album.courseComplete", { title: flow.completedCourse })}</p>
+            </div>
+          ) : null
+        }
+        keepsake={
+          flow.keepsake ? (
+            <div className="chest-keepsake" data-chest-keepsake={flow.keepsake.item.id}>
+              <KeepsakeArt art={flow.keepsake.item.art} />
+              <p>
+                {t.t(flow.keepsake.isNew ? "chest.keepsake.new" : "chest.keepsake.again", {
+                  name: t.t(keepsakeCopy(flow.keepsake.item)[0]),
+                })}
+              </p>
+              <GameButton
+                variant="secondary"
+                static
+                data-chest-action="keepsake"
+                onClick={() => {
+                  const item = flow.keepsake!.item;
+                  update({ stage: "leaving", onLeave: () => onKeepsake?.(item) });
+                }}
+              >
+                {t.t("chest.keepsake.put")}
+              </GameButton>
             </div>
           ) : null
         }

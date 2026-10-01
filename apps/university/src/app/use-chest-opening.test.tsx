@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, useSyncExternalStore, type ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createProgressPort,
@@ -9,6 +10,7 @@ import {
   progressSourceOf,
   type AlbumCourse,
   type ConceptHead,
+  type Keepsake,
   type ProgressPort,
 } from "@pieai/university-core";
 import type { LessonPlacement } from "@pieai/university-world/Maps.js";
@@ -56,6 +58,7 @@ let result: ReturnType<typeof useChestOpening>;
 let sourceReady = true;
 let adoption: GuestAdoption | undefined;
 let paint = false;
+let keepsakeFor: Keepsake | undefined;
 function controlledAdoption() {
   let snapshot: GuestAdoptionSnapshot = { scope: {}, ready: true };
   const observers = new Set<() => void>();
@@ -91,6 +94,7 @@ function Probe() {
     readAlbum,
     courseTitle: course.title,
     guestAdoption: adoption,
+    keepsakeOf: () => keepsakeFor,
   });
   return paint ? result.overlay : null;
 }
@@ -124,6 +128,7 @@ beforeEach(() => {
   done.mockReset();
   adoption = undefined;
   paint = false;
+  keepsakeFor = undefined;
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -250,5 +255,47 @@ describe("chest rewards and callbacks keep their original record and owner", () 
     expect(result.active).toBe(false);
     expect(JSON.stringify(state.port!.snapshot())).toBe(record);
     expect(done).not.toHaveBeenCalled();
+  });
+});
+
+describe("a keepsake chest (V7 amendment one)", () => {
+  const lighthouse: Keepsake = {
+    id: "s/c/course/course",
+    tier: "course",
+    art: "lighthouse",
+    copy: "keepsake.lighthouse",
+    studyId: "s",
+    courseId: "c",
+    unitId: "u",
+    anchorLessonId: "l",
+  };
+  const slot = () =>
+    card().keepsake as ReactElement<{ "data-chest-keepsake": string; children: unknown }> | null;
+  // The slot shows once the chest's rewards are shown; read it directly.
+  const slotText = () =>
+    renderToStaticMarkup(
+      <InterfaceLanguageProvider locale="en">{slot()}</InterfaceLanguageProvider>,
+    );
+  it("shows the keepsake as new the first time the lesson is finished", async () => {
+    keepsakeFor = lighthouse;
+    await render();
+    await finish();
+    await act(async () => result.begin(locator));
+    expect(slot()?.props["data-chest-keepsake"]).toBe(lighthouse.id);
+    expect(slotText()).toContain("A keepsake fell out of the chest");
+  });
+  it("says it is already home when the finished lesson is finished again", async () => {
+    keepsakeFor = lighthouse;
+    await finish();
+    await render();
+    await act(async () => result.begin(locator));
+    expect(slotText()).toContain("is already in your house");
+    expect(slotText()).not.toContain("A keepsake fell out of the chest");
+  });
+  it("leaves no keepsake slot when the lesson has none", async () => {
+    await render();
+    await finish();
+    await act(async () => result.begin(locator));
+    expect(card().keepsake).toBeFalsy();
   });
 });

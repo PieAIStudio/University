@@ -438,6 +438,9 @@ export interface MessageContracts {
   readonly "chest.continue": {  };
   readonly "chest.dailyFirst": {  };
   readonly "chest.guard": { readonly "name": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "chest.keepsake.again": { readonly "name": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "chest.keepsake.new": { readonly "name": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "chest.keepsake.put": {  };
   readonly "chest.label": { readonly "number": string | number | bigint | boolean | null | undefined | Date; readonly "tier": string | number | bigint | boolean | null | undefined | Date; };
   readonly "chest.open": {  };
   readonly "chest.reward.badge": { readonly "name": string | number | bigint | boolean | null | undefined | Date; };

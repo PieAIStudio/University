@@ -295,3 +295,15 @@
   color: var(--game-ui-text-muted);
   font-size: 14px;
 }
+
+/* The keepsake on a blue or gold chest's reward card. */
+.chest-keepsake {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.chest-keepsake .keepsake-art {
+  width: 72px;
+  height: 72px;
+}

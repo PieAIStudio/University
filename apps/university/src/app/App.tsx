@@ -26,6 +26,7 @@
  * that is not in it. A rule that is counted survives a refactor; this comment
  * claimed there was exactly one until somebody counted.
  */
+import { arriveAt } from "../screens/house-keepsakes.js";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import {
@@ -54,6 +55,7 @@ import {
   type FeedbackContext,
   type LessonRef,
   type View,
+  keepsakeForLesson,
 } from "@pieai/university-core";
 import { useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
@@ -494,6 +496,19 @@ export function App() {
       ) : null,
     readAlbum: knowledge.read,
     courseTitle: course?.title,
+    keepsakeOf: (locator) => {
+      const owning = courseOf(locator.studyId, locator.courseId);
+      return owning
+        ? keepsakeForLesson(
+            { studyId: locator.studyId, id: owning.id, units: owning.units },
+            locator.lessonId,
+          )
+        : undefined;
+    },
+    onKeepsake: (keepsake) => {
+      arriveAt(keepsake.id);
+      setView({ kind: "house" });
+    },
   });
   const openingOnMap = chest.active && view.kind === "settled";
   // The island the chest opens on is the lesson's own course map: while it

@@ -1,6 +1,7 @@
 export { LessonPracticeSurface } from "./practice/LessonPracticeSurface.js";
 export { CosmeticsPanel } from "./cosmetics/CosmeticsPanel.js";
-export { HouseRoom, type HouseKeepsake } from "./house/HouseRoom.js";
+export { HouseRoom, keepsakeCopy, type HouseKeepsake } from "./house/HouseRoom.js";
+export { KeepsakeArt } from "./house/keepsake-art.js";
 export { CosmeticAppearanceProvider } from "./cosmetics/appearance.js";
 
 /**
