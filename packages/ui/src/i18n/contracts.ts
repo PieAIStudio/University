@@ -2981,7 +2981,6 @@ export interface MessageContracts {
   readonly "primm.steps.mentionedToast": {  };
   readonly "primm.steps.missing": {  };
   readonly "primm.steps.missingText": {  };
-  readonly "primm.steps.moreSentences": { readonly "count": string | number | bigint | boolean | null | undefined | Date; };
   readonly "primm.steps.notMentioned": {  };
   readonly "primm.steps.notThis": {  };
   readonly "primm.steps.noted": {  };

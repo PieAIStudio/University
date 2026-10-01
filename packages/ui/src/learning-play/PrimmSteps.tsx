@@ -1259,12 +1259,8 @@ function MatchStep({
     return (
       <RunStatus busy={busy} error={error} onCancel={onCancel} onRetry={() => void runNext()} />
     );
-  const excerpt = (text: string) => {
-    const sentences = primmSentences(text);
-    return sentences.length > 2
-      ? `${sentences.slice(0, 1).join("")}${t("primm.steps.moreSentences", { count: sentences.length })}`
-      : text;
-  };
+  // Matching an answer to its request means reading the whole answer: a first
+  // sentence and a count hid exactly what the learner had to judge.
   return (
     <>
       <div className="primm-steps__answers" data-guide="step-match">
@@ -1273,7 +1269,7 @@ function MatchStep({
             <AnswerCard
               key={id}
               id={id}
-              text={excerpt(runs[id]!.result.text)}
+              text={runs[id]!.result.text}
               selected={selected === id}
               disabled={done}
               onSelect={() => setSelected(selected === id ? null : id)}
@@ -1296,7 +1292,11 @@ function MatchStep({
                 disabled={!!answered || done}
                 onClick={() => selected && place(selected, id)}
               >
-                {answered ? excerpt(runs[answered]!.result.text) : t("primm.steps.drop")}
+                {answered ? (
+                  <PrimmResultText text={runs[answered]!.result.text} />
+                ) : (
+                  t("primm.steps.drop")
+                )}
               </button>
             </div>
           );

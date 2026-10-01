@@ -366,6 +366,11 @@ describe("a step lesson: one action per screen, the teacher after it", () => {
       "帮我看看这张照片。",
     ]);
     expect(text()).not.toContain("问整张图，它就说整张图");
+    // The learner judges whole answers: the last sentence of a long one is on
+    // the card, not a first sentence and a count (Owner 2026-10-01).
+    const cards = [...container.querySelectorAll(".primm-steps__answer")].map((c) => c.textContent);
+    expect(cards.some((c) => c?.includes("整体画面温暖。"))).toBe(true);
+    expect(cards.join("")).not.toContain("一共");
     const zone = (prompt: string) =>
       [...container.querySelectorAll<HTMLElement>(".primm-steps__question")]
         .find((item) => item.textContent?.includes(prompt))!
