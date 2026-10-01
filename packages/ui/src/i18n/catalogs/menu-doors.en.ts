@@ -5,14 +5,9 @@ export const messages = {
   "doors.courseware.all": "All",
   "doors.courseware.native": "Hands-on practice",
   "doors.courseware.paths": "Practise in a level",
-  "doors.courseware.blocks": "Quick activities",
-  "doors.courseware.arcade": "Mini-games",
   "doors.courseware.three": "3D mini-games",
-  "doors.courseware.history": "More activities",
   "doors.courseware.session": "Several rounds",
   "doors.courseware.short": "A short round",
-  "doors.courseware.localDemo":
-    "This activity currently has Chinese content only. Replies use fixed rules, not a live AI service. See the controls above for keyboard support.",
   "doors.courseware.courseProgress":
     "Once you open the level, progress follows the reading and exercises you actually complete.",
   "doors.courseware.noProgress":

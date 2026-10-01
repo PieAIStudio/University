@@ -326,6 +326,36 @@ included. The final content rebuild is `v7-oct01-stage3-content.log`,
 timing acceptance; source acceptance alone does not close this task's legal,
 payment, reminder or deployment boundaries.
 
+### Reproduced gate scope and the approved prototype retirement
+
+The inherited `14922cb7` push was stopped after four observed failures, not
+accepted: two authoring step journeys, a delivery map-node round trip and the
+light-theme settlement walk. No aggregate pass count was retained. The raw
+error-context directory was no longer present after cancellation; the saved
+`final-14922-interrupted-failures/interruption.json` explicitly distinguishes
+tool-readback summaries from the retained original course-entry screenshot.
+After the other heavy check leaders ended, the exact four unchanged cases
+passed **4 passed (1.7m)**, `E2E_EXIT=0`, `SOURCE_UNCHANGED=true`, in
+`final-14922-four-repro.log`. This does not claim the earlier scheduling cause
+was reproduced or that a four-case subset replaces the complete gate.
+
+Before the next push, upstream advanced to `e66b2410`, the Owner-G3 removal of
+superseded research prototypes and earlier 3D editions. It is incorporated by
+an ordinary merge, not rewritten or silently restored. This deliberately
+changes the browser inventory from **474 to 425** default cases: 21
+`arcade3d.spec.ts`, 24 `purpose3d.spec.ts`, three `harness/prototype-click.spec.ts`
+and four former `play-catalog.spec.ts` cases leave with their retired surfaces;
+three current catalogue cases replace the latter four. All four failed/retested
+V7 cases remain. The exact before/after identities are in
+`final-retirement-test-inventory.json`; this count change is not described as
+fixing red tests. The retired implementations remain in Git history and the
+upstream interaction-components album preserves their screenshots.
+
+`pnpm content` was run again after this merge (`final-retirement-content.log`,
+`CONTENT_EXIT=0`), preserving 93 lessons, six courses and 131/131 repository
+snippets. This new combined candidate needs its own complete source and normal
+pre-push acceptance; no earlier pass is substituted for it.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |

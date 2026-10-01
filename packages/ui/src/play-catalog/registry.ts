@@ -2,13 +2,11 @@ import { toPath, type ActivityKind } from "@pieai/university-core";
 import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
 import type { PlainMessageKey } from "../i18n/types.js";
 import { SAMPLE_PATHS } from "./sample-paths.js";
-import { KIT_THREE_GAMES, THREE_GAMES, type ThreeGame } from "./three-games.js";
+import { THREE_GAMES, type ThreeGame } from "./three-games.js";
 export { THREE_GAMES, type ThreeGame } from "./three-games.js";
 
-export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "three", "history"] as const;
+export const CATALOG_GROUPS = ["native", "paths", "three"] as const;
 export type CatalogGroup = (typeof CATALOG_GROUPS)[number];
-export type PrototypeSource = "blocks" | "arcade" | "index" | "remade" | "compare";
-export type PrototypeSources = Readonly<Record<PrototypeSource, string>>;
 export type NativeKind = Exclude<ActivityKind, "interaction-path" | "primm">;
 export interface CatalogEntry {
   readonly id: string;
@@ -19,35 +17,20 @@ export interface CatalogEntry {
   readonly scope: PlainMessageKey;
   readonly nativeKind?: NativeKind;
   readonly href?: string;
-  readonly source?: PrototypeSource;
-  readonly prototypeId?: string;
   readonly rhythm?: "session" | "short";
   readonly threeMode?: ThreeGame;
-  readonly retained?: boolean;
-  readonly inspiredBy?: string;
 }
 
-/** Read the committed build registrations, not a copied total or a second game list. */
-export function prototypeRegistrations(source: string): readonly { id: string; title: string }[] {
-  const registrations = [
-    ...source.matchAll(
-      /\{\s*id:\s*"([\w-]+)",\s*title:\s*"([^"]+)",\s*from:\s*"[^"]*",\s*build:\s*\w+/g,
-    ),
-  ].map((match) => ({ id: match[1]!, title: match[2]! }));
-  if (
-    !registrations.length ||
-    new Set(registrations.map((entry) => entry.id)).size !== registrations.length
-  )
-    throw new Error("Prototype build registrations are missing or duplicated");
-  return registrations;
-}
-
-// A session is a structural distinction, never a measured duration claim.
-const SESSION_IDS = new Set(["forge", "shift", "defenseline", "invaders", "cloze-tetris"]);
 const itemKey = (id: string, field: "name" | "action" | "controls") =>
   `gallery.item.${id}.${field}` as PlainMessageKey;
 
-export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[] {
+/**
+ * What the play lab offers: the lesson actions, the sample lessons and the
+ * island games. The research prototypes, history pages and earlier 3D editions
+ * were deleted on 2026-10-01 (Owner G3); their screenshots stay in
+ * docs/reference/interaction-components/album.html.
+ */
+export function createCatalog(): readonly CatalogEntry[] {
   const native: CatalogEntry[] = [...FOUNDATION_MODES, ...AI_MODES].map((kind) => ({
     id: `native:${kind}`,
     group: "native",
@@ -72,90 +55,27 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
       lessonId: id,
     }),
   }));
-  const research: CatalogEntry[] = (["blocks", "arcade"] as const).flatMap((source) =>
-    prototypeRegistrations(sources[source]).map(({ id }) => ({
-      id: `${source}:${id}`,
-      group: source,
-      source,
-      prototypeId: id,
-      name: itemKey(id, "name"),
-      action: itemKey(id, "action"),
-      controls: itemKey(id, "controls"),
-      scope: "gallery.researchScope",
-      rhythm: source === "arcade" && SESSION_IDS.has(id) ? "session" : "short",
-    })),
-  );
-  const history: CatalogEntry[] = (["index", "remade", "compare"] as const).map((source) => ({
-    id: `history:${source}`,
-    group: "history",
-    source,
-    name: `gallery.history.${source}.name`,
-    action: `gallery.history.${source}.action`,
-    controls: "gallery.archiveControls",
-    scope: "gallery.archiveScope",
-  }));
-  const three: CatalogEntry[] = (["invaders", "stack", "cloze-tetris"] as const).map((mode) => ({
-    id: `three:${mode}`,
-    group: "three",
-    threeMode: mode,
-    inspiredBy: `arcade:${mode}`,
-    name: `arcade3d.${mode}`,
-    action: `gallery.three.${mode}`,
-    controls: `arcade3d.how.${mode}`,
-    scope: "arcade3d.boundary",
-    rhythm: "session",
-    retained: true,
-  }));
   // Assembled from the game kit (ADR-0011): content from the lessons, the
   // learner's avatar as the hero.
-  const kit: CatalogEntry[] = (
-    [
-      ["courtyard", "arcade:invaders", "intercept.controls"],
-      ["links", "blocks:wire", "links.controls"],
-      ["snake", "blocks:rank", "snake.controls"],
-      ["moles", "arcade:slice", "moles.controls"],
-      ["runner", "arcade:chase", "runner.controls"],
-      ["blocks", "arcade:stack", "blocks.controls"],
-    ] as const
-  ).map(([mode, inspiredBy, controls]) => ({
+  const controls: Readonly<Record<ThreeGame, PlainMessageKey>> = {
+    courtyard: "intercept.controls",
+    links: "links.controls",
+    snake: "snake.controls",
+    moles: "moles.controls",
+    runner: "runner.controls",
+    blocks: "blocks.controls",
+  };
+  const three: CatalogEntry[] = THREE_GAMES.map((mode) => ({
     id: `three:${mode}`,
     group: "three",
     threeMode: mode,
-    inspiredBy,
     name: `arcade3d.${mode}`,
     action: `gallery.three.${mode}`,
-    controls,
+    controls: controls[mode],
     scope: "gameKit.result.boundary",
     rhythm: "session",
-    retained: false,
   }));
-  const upgraded: CatalogEntry[] = THREE_GAMES.filter(
-    (mode) => !(KIT_THREE_GAMES as readonly string[]).includes(mode),
-  )
-    .slice(0, 6)
-    .map((mode) => ({
-      id: `three:${mode}`,
-      group: "three",
-      threeMode: mode,
-      inspiredBy:
-        mode === "sky-invaders"
-          ? "arcade:invaders"
-          : mode === "factory-stack"
-            ? "arcade:stack"
-            : mode === "press-words"
-              ? "arcade:cloze-tetris"
-              : mode === "slice"
-                ? "arcade:slice"
-                : `blocks:${mode}`,
-      name: `arcade3d.${mode}`,
-      action: `gallery.three.${mode}` as PlainMessageKey,
-      controls:
-        `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as PlainMessageKey,
-      scope: "arcade3d.boundary",
-      rhythm: "session",
-      retained: false,
-    }));
-  return [...native, ...paths, ...research, ...kit, ...upgraded, ...three, ...history];
+  return [...native, ...paths, ...three];
 }
 
 export function filterCatalog(
@@ -169,7 +89,7 @@ export function filterCatalog(
     (entry) =>
       (group === "all" || entry.group === group) &&
       terms.every((term) =>
-        `${entry.id} ${label(entry.name)} ${label(entry.action)} ${label(entry.controls)} ${entry.threeMode ? label(entry.retained ? "gallery.three.retained" : "gallery.three.new") : ""}`
+        `${entry.id} ${label(entry.name)} ${label(entry.action)} ${label(entry.controls)} ${entry.threeMode ? label("gallery.three.kit") : ""}`
           .toLocaleLowerCase()
           .includes(term),
       ),

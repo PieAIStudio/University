@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "@pieai/university-ui/i18n.js";
-import {
-  KIT_THREE_GAMES,
-  THREE_GAMES,
-  type ThreeGame,
-} from "@pieai/university-ui/play-catalog/three-games.js";
+import { THREE_GAMES, type ThreeGame } from "@pieai/university-ui/play-catalog/three-games.js";
 import { ThreePlayer } from "./ThreePlayer.js";
 import "./arcade3d.css";
 
@@ -13,7 +9,7 @@ export default function ArcadeRoute() {
   const { t, locale } = useI18n();
   const [mode, setMode] = useState<ThreeGame>(() => {
     const requested = new URLSearchParams(location.search).get("game");
-    return THREE_GAMES.find((m) => m === requested) ?? "sky-invaders";
+    return THREE_GAMES.find((m) => m === requested) ?? "courtyard";
   });
   return (
     <section className="arcade3d__standalone">
@@ -39,15 +35,7 @@ export default function ArcadeRoute() {
           </GameButton>
         ))}
       </nav>
-      <p>
-        {t(
-          (KIT_THREE_GAMES as readonly string[]).includes(mode)
-            ? "gallery.three.kit"
-            : ["invaders", "stack", "cloze-tetris"].includes(mode)
-              ? "gallery.three.retained"
-              : "gallery.three.new",
-        )}
-      </p>
+      <p>{t("gallery.three.kit")}</p>
       <ThreePlayer key={mode} mode={mode} />
     </section>
   );

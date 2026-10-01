@@ -5,7 +5,6 @@ import { useI18n } from "../i18n/index.js";
 import { AI_MODES, getLabExamples } from "../learning-play/LearningPlayLab.js";
 import { getExampleFamily } from "../learning-play/difficulty-examples.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
-import { PrototypeFrame } from "./PrototypeFrame.js";
 import {
   CATALOG_GROUPS,
   createCatalog,
@@ -13,7 +12,6 @@ import {
   type CatalogEntry,
   type CatalogGroup,
   type NativeKind,
-  type PrototypeSources,
 } from "./registry.js";
 
 function NativePlay({ kind }: { readonly kind: NativeKind }) {
@@ -52,25 +50,18 @@ function NativePlay({ kind }: { readonly kind: NativeKind }) {
 }
 
 export function PlayCatalog({
-  sources,
-  presentation,
   renderThree,
   learner = false,
 }: {
-  readonly sources: PrototypeSources;
-  readonly presentation: string;
   /** Library presentation reuses every playable activity; author diagnostics
-   * and historic layout comparisons remain in the retained laboratory. */
+   * stay out of it. */
   readonly learner?: boolean;
   readonly renderThree?: (mode: NonNullable<CatalogEntry["threeMode"]>) => ReactNode;
 }) {
   const interfaceTranslator = useI18n();
   const { locale } = useI18n();
-  const entries = useMemo(
-    () => createCatalog(sources).filter((entry) => !learner || entry.group !== "history"),
-    [sources, learner],
-  );
-  const groups = CATALOG_GROUPS.filter((id) => !learner || id !== "history");
+  const entries = useMemo(() => createCatalog(), []);
+  const groups = CATALOG_GROUPS;
   const title = interfaceTranslator.t(learner ? "album.courseware" : "gallery.title");
   const groupLabel = (id: CatalogGroup | "all") =>
     interfaceTranslator.t(learner ? `doors.courseware.${id}` : `gallery.${id}`);
@@ -180,11 +171,7 @@ export function PlayCatalog({
                       <span>{interfaceTranslator.t(entry.action)}</span>
                       {!learner ? <small>{entry.id}</small> : null}
                       {!learner && entry.threeMode ? (
-                        <small>
-                          {interfaceTranslator.t(
-                            entry.retained ? "gallery.three.retained" : "gallery.three.new",
-                          )}
-                        </small>
+                        <small>{interfaceTranslator.t("gallery.three.kit")}</small>
                       ) : null}
                     </button>
                   </li>
@@ -220,11 +207,7 @@ export function PlayCatalog({
                   </p>
                   <h2>{interfaceTranslator.t(selected.name)}</h2>
                   {!learner && selected.threeMode ? (
-                    <small>
-                      {interfaceTranslator.t(
-                        selected.retained ? "gallery.three.retained" : "gallery.three.new",
-                      )}
-                    </small>
+                    <small>{interfaceTranslator.t("gallery.three.kit")}</small>
                   ) : null}
                 </div>
                 <GameHudActions label={interfaceTranslator.t("gallery.controls")}>
@@ -266,24 +249,9 @@ export function PlayCatalog({
                   )}
                 </p>
               ) : null}
-              {selected.source ? (
-                <p className="play-catalog__limit">
-                  {interfaceTranslator.t(
-                    learner ? "doors.courseware.localDemo" : "gallery.researchLimit",
-                  )}
-                </p>
-              ) : null}
               <div key={`${selected.id}:${round}`} className="play-catalog__board">
                 {selected.threeMode ? renderThree?.(selected.threeMode) : null}
                 {selected.nativeKind ? <NativePlay kind={selected.nativeKind} /> : null}
-                {selected.source ? (
-                  <PrototypeFrame
-                    source={sources[selected.source]}
-                    presentation={presentation}
-                    entryId={selected.prototypeId}
-                    title={interfaceTranslator.t(selected.name)}
-                  />
-                ) : null}
                 {selected.href ? (
                   <GamePanel title={interfaceTranslator.t("gallery.paths")}>
                     <p>{interfaceTranslator.t("gallery.pathsScope")}</p>
@@ -308,9 +276,6 @@ export function PlayCatalog({
                   </>
                 )}
               </p>
-              {!learner && selected.source ? (
-                <p className="play-catalog__scope">{interfaceTranslator.t("gallery.boundary")}</p>
-              ) : null}
             </>
           ) : (
             <p className="play-catalog__empty">{interfaceTranslator.t("gallery.choose")}</p>
