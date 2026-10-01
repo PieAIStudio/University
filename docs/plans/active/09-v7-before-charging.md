@@ -289,6 +289,43 @@ This is content-alignment evidence only. The merged stage changes still require
 fresh full local and pre-push browser acceptance; previous green receipts do
 not prove this new candidate.
 
+The map-navigation and retained-questionnaire repro subsequently passed all
+**11 tests (4.7m)** with native exit **0** in
+`SCRATCH/v7-execution/v7-oct01-navigation-isolated.log`. It was admitted only
+after competing check leaders had exited; another worktree later started a
+short stage-timing run, so this is not claimed to be a machine-exclusive timing
+measurement. An earlier overlapping attempt was deliberately interrupted and
+is retained in `v7-oct01-navigation.log`, not counted as a passed run. The
+original navigation assertions, timeouts and source were unchanged.
+
+Before final verification, upstream advanced to `41b31eff` (the lesson-stage
+sort/build/Make props). That separate work was also merged normally, then the
+content build was repeated in `v7-oct01-stage-content.log`. These imported
+stage changes are not presented as new work authored by the V7 delivery lane.
+The complete verification and normal push still have to pass for the combined
+candidate; do not reuse the earlier pre-stage full-suite result.
+
+That combined source run completed with `VERIFY_EXIT=0` and
+`SOURCE_UNCHANGED=true` in `v7-oct01-remote-aligned-verify.log`. While it ran,
+the independent lesson lane published `019a4b69`, adding the stage's explicit
+ready/still wrapper and one slowed-browser frame-budget test. This commit was
+reviewed and merged after the running verification ended, rather than changing
+the workspace beneath it. Content is rebuilt again after that merge; the final
+gate must include the new timing test. A simulated slowed browser remains
+distinct from a physical phone. The earlier wait-only logs never ran `verify`
+and must not be counted as successful validation or as product test failures.
+
+Final source acceptance for the resulting merge `ecdcdbce` is retained in
+`SCRATCH/v7-execution/v7-oct01-stage3-verify.log`: `VERIFY_EXIT=0`,
+`COMMAND_EXIT=0`, `SOURCE_UNCHANGED=true`. The admission check independently
+read remote `019a4b69616aa55699f5b1997a0308198536e517` and verified that the
+candidate contained it. All workspace checks, both builds, current content,
+recovery freshness, 165 governed documents and the new stage source were
+included. The final content rebuild is `v7-oct01-stage3-content.log`,
+`CONTENT_EXIT=0`. The following ordinary push still owns full browser and
+timing acceptance; source acceptance alone does not close this task's legal,
+payment, reminder or deployment boundaries.
+
 ### Draft facts for Owner approval — not public policy text
 
 | Document | Facts/questions that must be supplied or approved |
