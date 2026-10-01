@@ -86,7 +86,9 @@ export function PrimmSteps({
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   // Each settled action, with its verdict, for the stage to answer.
-  const [beat, setBeat] = useState<{ n: number; verdict?: "ok" | "no" }>({ n: 0 });
+  const [beat, setBeat] = useState<{ n: number; verdict?: "ok" | "no"; bin?: number }>({
+    n: 0,
+  });
   const pending = useRef<AbortController | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const stageBox = useRef<HTMLDivElement>(null);
@@ -136,6 +138,8 @@ export function PrimmSteps({
   }
   function go(index: number) {
     stopCoach();
+    // A new screen starts without a verdict; the count of actions goes on.
+    setBeat((last) => ({ n: last.n }));
     setFeedback(null);
     setToast("");
     setError("");
@@ -704,12 +708,15 @@ export function PrimmSteps({
         image={starterImage ? photoUrl(starterImage) : undefined}
         onMiss={(cardId) => {
           playSound("answer.wrong");
+          setBeat((last) => ({ n: last.n + 1, verdict: "no" }));
           const missed = session.missed[current.id] ?? [];
           if (!missed.includes(cardId))
             update({ missed: { ...session.missed, [current.id]: [...missed, cardId] } });
         }}
         onDecide={(cardId, bucketId) => {
           const next = { ...decided, [cardId]: bucketId };
+          const bin = current.buckets.findIndex((bucket) => bucket.id === bucketId);
+          setBeat((last) => ({ n: last.n + 1, verdict: "ok", bin }));
           update({ sorted: { ...session.sorted, [current.id]: next } });
           playSound("answer.correct");
           if (current.cards.every((item) => next[item.id])) {
@@ -1027,6 +1034,9 @@ export function PrimmSteps({
     ...(step ? { action: step.kind } : {}),
     beat: beat.n,
     ...(beat.verdict ? { verdict: beat.verdict } : {}),
+    ...(beat.bin !== undefined && beat.bin >= 0 ? { bin: beat.bin } : {}),
+    ...(step?.kind === "sort" ? { bins: step.buckets.length } : {}),
+    ...(step?.kind === "build" ? { wagons: (session.built[step.id] ?? []).length } : {}),
   };
   // A wrong attempt that has not finished the step: the bar offers another try.
   const retrying = feedback?.tone === "bad" && !stepDone;

@@ -13,6 +13,12 @@ export interface LessonStageCue {
   readonly action?: string;
   /** Counts the learner's settled actions; the stage reacts when it changes. */
   readonly beat: number;
-  /** The latest settled action's verdict, when it had one. */
+  /** The latest settled action's verdict on this screen, when it had one. */
   readonly verdict?: "ok" | "no";
+  /** A sort step's bin count; the stage stands a basket for each. */
+  readonly bins?: number;
+  /** The bin the latest settled placement went to. */
+  readonly bin?: number;
+  /** How many pieces the current build holds; the stage's train has as many wagons. */
+  readonly wagons?: number;
 }
