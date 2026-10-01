@@ -30,15 +30,20 @@ export function LessonStageHost({
 }) {
   const [drawable] = useState(() => hasWebGLContext() && !prefersReducedMotion());
   const [failed, setFailed] = useState(false);
-  if (!drawable || failed) return null;
+  const [ready, setReady] = useState(false);
+  // What the stage is doing, for the timing lane: it reads frames, not screenshots.
+  if (!drawable || failed) return <div data-lesson-stage="still" />;
   return (
-    <Suspense fallback={null}>
-      <LessonStage
-        cue={cue}
-        recipe={recipe ?? null}
-        aiLabel="AI"
-        onFailure={() => setFailed(true)}
-      />
-    </Suspense>
+    <div data-lesson-stage={ready ? "ready" : "loading"}>
+      <Suspense fallback={null}>
+        <LessonStage
+          cue={cue}
+          recipe={recipe ?? null}
+          aiLabel="AI"
+          onFailure={() => setFailed(true)}
+          onReady={() => setReady(true)}
+        />
+      </Suspense>
+    </div>
   );
 }

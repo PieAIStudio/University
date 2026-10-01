@@ -1164,6 +1164,10 @@ details.primm-steps__material {
   overflow: hidden;
   background: var(--game-ui-secondary-pale);
 }
+.primm-steps__stage > * {
+  inline-size: 100%;
+  block-size: 100%;
+}
 @media (max-width: 560px) {
   /* A phone's card is narrow; a taller band keeps the avatar readable. */
   .primm-steps__stage {
