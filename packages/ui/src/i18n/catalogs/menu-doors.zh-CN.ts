@@ -38,7 +38,7 @@ export const messages = {
   "doors.settings": "设置",
   "doors.help": "帮助与提意见",
   "doors.about": "关于与使用说明",
-  "doors.wardrobe": "装扮与卡包",
+  "doors.wardrobe": "我的小屋",
   "doors.growth.details": "今天的任务与等级",
   "doors.settings.learning": "学习",
   "doors.settings.appearance": "画面与声音",

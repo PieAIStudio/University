@@ -1,0 +1,297 @@
+/* The learner's house: a flat room, a keepsake list, and three sheets. */
+.house {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.house__hint {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 14px;
+}
+
+/* The room pans sideways on a phone so a keepsake stays finger-sized. */
+.house-room {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border-radius: var(--game-ui-radius-card);
+  border: 1px solid var(--game-ui-border-subtle);
+}
+.house-room__stage {
+  position: relative;
+  width: max(100%, 640px);
+  aspect-ratio: 8 / 5;
+  touch-action: pan-x pan-y;
+}
+.house-room__scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.house-room__wall {
+  fill: color-mix(in srgb, #f4876b 14%, var(--game-ui-surface-raised));
+}
+.house-room__floor {
+  fill: color-mix(in srgb, #c99a6b 34%, var(--game-ui-surface-raised));
+}
+.house-room__shelf,
+.house-room__table {
+  fill: #c99a6b;
+}
+.house-room__wood {
+  fill: none;
+  stroke: #a97b4f;
+}
+
+/* Fixtures are real buttons laid over the drawing; their words are DOM. */
+.house-room__window,
+.house-room__calendar,
+.house-room__rack,
+.house-room__packs {
+  position: absolute;
+  display: grid;
+  place-items: end center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--game-ui-text);
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+.house-room__window {
+  left: 39.6%;
+  top: 8.3%;
+  width: 20.8%;
+  height: 30%;
+  border-radius: 18px;
+  background: color-mix(in srgb, #6bb3ea 38%, var(--game-ui-surface-raised));
+  box-shadow: inset 0 0 0 8px #c99a6b;
+}
+.house-room__calendar {
+  left: 67.7%;
+  top: 10%;
+  width: 24%;
+  height: auto;
+  place-items: stretch;
+  align-content: start;
+  gap: 6px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--game-ui-surface-raised);
+  box-shadow: inset 0 0 0 2px var(--game-ui-text);
+}
+.house-room__calendar-head {
+  padding: 6px;
+  background: color-mix(in srgb, #22bb91 80%, white);
+  color: #2a2320;
+}
+.house-room__calendar-count {
+  padding-inline: 8px;
+  font-size: 13px;
+}
+.house-room__calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 0 8px 8px;
+}
+.house-room__calendar-days i {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--game-ui-border-subtle);
+}
+.house-room__calendar-days i[data-blank] {
+  background: transparent;
+}
+.house-room__calendar-days i[data-marked] {
+  background: #22bb91;
+}
+.house-room__rack {
+  left: 92%;
+  top: 30%;
+  width: 7%;
+  height: 40%;
+}
+.house-room__packs {
+  left: 61%;
+  top: 67%;
+  width: 13%;
+  height: 12%;
+  place-items: center;
+  border-radius: 10px;
+  background: #b39bf0;
+  color: #2a2320;
+  box-shadow: inset 0 0 0 2px #2a2320;
+}
+.house-room__window:focus-visible,
+.house-room__calendar:focus-visible,
+.house-room__rack:focus-visible,
+.house-room__packs:focus-visible,
+.house-keepsake:focus-visible {
+  outline: 3px solid var(--game-ui-focus, #3d82c8);
+  outline-offset: 3px;
+}
+.house-room__avatar {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  translate: -50% 0;
+  width: 15%;
+  pointer-events: none;
+}
+.house-room__postcard {
+  position: absolute;
+  left: 26%;
+  top: 76%;
+  margin: 0;
+  padding: 10px 14px;
+  rotate: -5deg;
+  border-radius: 8px;
+  background: var(--game-ui-surface-raised);
+  box-shadow: inset 0 0 0 2px var(--game-ui-text);
+  font-weight: 800;
+}
+
+/* A keepsake stands on its foot: (x, y) is the bottom-centre. */
+.house-keepsake {
+  position: absolute;
+  translate: -50% -100%;
+  width: 10%;
+  min-width: 44px;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.house-keepsake[data-dragging] {
+  cursor: grabbing;
+  z-index: 2;
+}
+.house-keepsake .keepsake-art {
+  width: 100%;
+  height: 100%;
+}
+.house-keepsake[data-highlight] {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, #22d3ee 35%, transparent) 0 60%,
+    transparent 70%
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .house-keepsake[data-highlight] {
+    animation: house-arrive 1.2s ease-out 2;
+  }
+}
+@keyframes house-arrive {
+  50% {
+    scale: 1.12;
+  }
+}
+
+.house__list ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.house__list li {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.house__list li > div {
+  display: grid;
+  min-width: 0;
+}
+.house__list .keepsake-art {
+  width: 48px;
+  height: 48px;
+}
+.house__list small,
+.house-detail__source {
+  color: var(--game-ui-text-muted);
+}
+.house-detail {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.house-detail .keepsake-art {
+  width: 96px;
+  height: 96px;
+}
+
+.house-calendar {
+  display: grid;
+  gap: 12px;
+}
+.house-calendar__styles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.house-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.house-calendar__grid li {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+  background: var(--game-ui-surface-raised);
+}
+.house-calendar__grid li:empty {
+  background: transparent;
+}
+.house-calendar__grid li[data-today] {
+  box-shadow: inset 0 0 0 2px var(--game-ui-text);
+}
+.house-calendar__grid i {
+  position: absolute;
+  inset: auto 2px 2px auto;
+  font-style: normal;
+  font-weight: 900;
+  color: #1a8f6e;
+}
+.house-calendar[data-mark-style="sticker"] .house-calendar__grid i {
+  inset: 2px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f59ac2;
+  color: #2a2320;
+}
+.house-calendar__tally {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.house-calendar__tally span:first-child {
+  font-size: 32px;
+  letter-spacing: 0.1em;
+}
+.house-calendar__note {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 14px;
+}

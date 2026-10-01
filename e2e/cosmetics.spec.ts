@@ -17,7 +17,7 @@ for (const [mode, origin] of [
   ["authoring", LOCAL_ORIGIN],
 ] as const) {
   for (const width of [1440, 390])
-    test(`${mode} ${width}: wardrobe states the release boundary and odds, never calls an unopened service`, async ({
+    test(`${mode} ${width}: the house pack box states the release boundary and odds, never calls an unopened service`, async ({
       page,
     }) => {
       const errors = watchConsole(page);
@@ -26,14 +26,19 @@ for (const [mode, origin] of [
         if (request.url().includes("/rpc/cosmetics")) requests.push(request.url());
       });
       await page.setViewportSize({ width, height: 900 });
+      // The wardrobe merged into the house (Owner H2): the old address opens the
+      // house, and the pack box holds what the wardrobe page held.
       await page.goto(`${origin}/wardrobe?lang=zh-CN`);
+      await expect(page.locator("[data-house]")).toBeVisible();
+      await page.locator("[data-house-packs]").click();
       await expect(page.locator('[data-cosmetics-phase="closed"]')).toBeVisible();
       await expect(page.locator("[data-cosmetic-open]")).toHaveCount(0);
       await expect(page.locator(".cosmetic-odds dd")).toHaveText(["70%", "22%", "7%", "1%"]);
       await noOverflow(page);
       await capture(page, `${mode}-${width}-closed`);
       await page.locator(".cosmetics-panel > button").click();
-      await expect(page).toHaveURL(/\/me(?:\?|$)/);
+      await expect(page.locator(".cosmetics-panel")).toHaveCount(0);
+      await expect(page.locator("[data-house]")).toBeVisible();
       expect(requests).toEqual([]);
       errors.assertClean();
     });

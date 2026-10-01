@@ -44,7 +44,7 @@ export const messages = {
   "doors.settings": "Settings",
   "doors.help": "Help and feedback",
   "doors.about": "About and usage information",
-  "doors.wardrobe": "Wardrobe and packs",
+  "doors.wardrobe": "My house",
   "doors.growth.details": "Daily goals and level",
   "doors.settings.learning": "Learning",
   "doors.settings.appearance": "Picture and sound",

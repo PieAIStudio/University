@@ -83,8 +83,9 @@ import {
 } from "../screens/lazy";
 import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
+import { keepsakesOf } from "../screens/house-keepsakes.js";
 
-const WardrobeScreen = lazy(() => import("../screens/WardrobeScreen.js"));
+const HouseScreen = lazy(() => import("../screens/HouseScreen.js"));
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
 const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
 const PropFinishRoute = lazy(() => import("../play-catalog/PropFinishRoute.js"));
@@ -274,9 +275,15 @@ export function MainRouter({
           )}
         </Suspense>
       ) : null}
-      {view.kind === "wardrobe" ? (
+      {view.kind === "house" ? (
         <Suspense fallback={<RouteFallback />}>
-          <WardrobeScreen avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} onOpen={setView} />
+          <HouseScreen
+            shelf={shelf}
+            progress={progress}
+            avatarRecipe={avatarRecipe}
+            signedIn={avatarSignedIn}
+            onOpen={setView}
+          />
         </Suspense>
       ) : null}
       {view.kind === "avatar-lab" ? (
@@ -598,7 +605,8 @@ export function MainRouter({
       {view.kind === "me" ? (
         <ProfileScreen
           accountEmail={accountIdentity.kind === "signed_in" ? accountIdentity.user.email : null}
-          onOpenWardrobe={() => setView({ kind: "wardrobe" })}
+          onOpenHouse={() => setView({ kind: "house" })}
+          keepsakeCount={keepsakesOf(shelf, progress).length}
           avatar={
             avatarPanel ?? (
               <Suspense

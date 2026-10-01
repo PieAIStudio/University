@@ -1,6 +1,5 @@
 import { useI18n } from "../../i18n/index.js";
 import type { ReactNode } from "react";
-import { GameButton } from "@pieai/swimmer-ui-kit";
 import { toPath, type View } from "@pieai/university-core";
 
 /** V7's Me door: identity, saving, and the secondary places that used to
@@ -15,7 +14,8 @@ export function ProfileScreen({
   lessonsCompleted,
   nextHref = "/",
   reviewCardCount = 0,
-  onOpenWardrobe,
+  onOpenHouse,
+  keepsakeCount = 0,
 }: {
   readonly avatar?: ReactNode;
   readonly account?: ReactNode;
@@ -25,13 +25,28 @@ export function ProfileScreen({
   readonly lessonsCompleted: number;
   readonly nextHref?: string;
   readonly reviewCardCount?: number;
-  readonly onOpenWardrobe?: () => void;
+  /** The house card at the top of Me (Owner H1, 2026-10-01). */
+  readonly onOpenHouse?: () => void;
+  readonly keepsakeCount?: number;
 }) {
   const t = useI18n();
   const href = (view: View) => `${toPath(view)}?lang=${encodeURIComponent(t.locale)}`;
   return (
     <div className="profile-screen">
       <h1>{t.t("doors.me")}</h1>
+      {onOpenHouse ? (
+        <button type="button" className="profile-house" data-me-house onClick={onOpenHouse}>
+          <strong>{t.t("house.title")}</strong>
+          <span>
+            {keepsakeCount
+              ? t.t("house.card.count", { count: keepsakeCount })
+              : t.t("house.card.empty")}
+          </span>
+          <span className="profile-house__go" aria-hidden="true">
+            →
+          </span>
+        </button>
+      ) : null}
       {accountEmail ? (
         <p className="profile-screen__email" data-profile-email>
           {t.t("support.account.email", { email: accountEmail })}
@@ -58,11 +73,6 @@ export function ProfileScreen({
         <a href={href({ kind: "support", page: "about" })} data-me-door="about">
           {t.t("support.about.title")}
         </a>
-        {onOpenWardrobe ? (
-          <GameButton variant="secondary" static onClick={onOpenWardrobe}>
-            {t.t("doors.wardrobe")}
-          </GameButton>
-        ) : null}
       </nav>
       <dl className="profile-screen__stats">
         <div>

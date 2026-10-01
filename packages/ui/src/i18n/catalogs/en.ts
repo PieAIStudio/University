@@ -15,6 +15,7 @@ import { messages as productWelcome } from "./product-welcome.en.js";
 import { messages as journeyReturn } from "./journey-return.en.js";
 import { messages as knowledgeAlbum } from "./knowledge-album.en.js";
 import { messages as cosmetics } from "./cosmetics.en.js";
+import { messages as house } from "./house.en.js";
 import { messages as coreMessages } from "./en-core.js";
 import { messages as realitySources } from "./reality-sources.en.js";
 import { messages as accountFailures } from "./account-failures.en.js";
@@ -67,6 +68,7 @@ export const messages = {
   ...journeyReturn,
   ...knowledgeAlbum,
   ...cosmetics,
+  ...house,
   ...productNavigation,
   ...productBilling,
   ...productSupport,

@@ -1598,7 +1598,7 @@ export function App() {
     <AvatarPanel
       onOpenWardrobe={() => {
         setAvatarPanelOpen(null);
-        setView({ kind: "wardrobe" });
+        setView({ kind: "house" });
       }}
       avatar={
         <RailIdentity

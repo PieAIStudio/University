@@ -1281,3 +1281,38 @@ a.linkish {
   > :not(.avatar-panel__face) {
   display: none;
 }
+
+/* The house card at the top of Me (Owner H1, 2026-10-01). */
+.profile-house {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  font: inherit;
+  text-align: start;
+  color: var(--game-ui-text);
+  cursor: pointer;
+  border: 2px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  background: color-mix(in srgb, #f4876b 12%, var(--game-ui-surface-raised));
+}
+.profile-house strong {
+  font-size: 18px;
+}
+.profile-house > span:not(.profile-house__go) {
+  grid-column: 1;
+  color: var(--game-ui-text-muted);
+}
+.profile-house__go {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: 22px;
+  font-weight: 800;
+}
+.profile-house:focus-visible {
+  outline: 3px solid var(--game-ui-focus, #3d82c8);
+  outline-offset: 3px;
+}
