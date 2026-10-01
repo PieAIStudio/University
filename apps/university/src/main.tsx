@@ -11,6 +11,7 @@ import "@pieai/swimmer-nerve-kit/interaction.css";
 import "@pieai/swimmer-nerve-kit/details.css";
 import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/cosmetics/cosmetics.css";
+import "@pieai/university-ui/house/house.css";
 import "@pieai/university-ui/capability/capability.css";
 import "@pieai/university-ui/cta/liquid-cta.css";
 import { App } from "./app/App";

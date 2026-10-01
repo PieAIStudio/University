@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./cosmetics/cosmetics.css": "./src/cosmetics/cosmetics.css",
+    "./house/house.css": "./src/house/house.css",
     "./navigation/location-breadcrumbs.css": "./src/navigation/location-breadcrumbs.css",
     "./path/map-entry-action.css": "./src/path/map-entry-action.css",
     "./path/chest-rewards.css": "./src/path/chest-rewards.css",
