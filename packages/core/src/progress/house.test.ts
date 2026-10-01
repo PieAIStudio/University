@@ -9,7 +9,9 @@ import {
   chooseMarkStyle,
   hasAnsweredUsed,
   mergeHouseState,
+  offerToday,
   parseHouseState,
+  pendingUsedQuestion,
   placeItem,
   usedDays,
 } from "./house.js";
@@ -111,5 +113,52 @@ describe("the house travels with the account", () => {
     expect(parseAccountData({ preferences: DEFAULT_ACCOUNT_PREFERENCES }).preferences.house).toBe(
       undefined,
     );
+  });
+});
+
+describe("「用了吗？」 is asked once, on a later day", () => {
+  const task = "给一个朋友发消息前，先把你以前发给他的两条消息附上。";
+  it("never on the day the lesson was finished", () => {
+    const house = offerToday(undefined, "s/c/l1", task, "2026-10-01", t(1));
+    expect(pendingUsedQuestion(house, "2026-10-01")).toBeNull();
+    expect(pendingUsedQuestion(house, "2026-10-02")).toEqual({
+      lessonKey: "s/c/l1",
+      task,
+      day: "2026-10-01",
+    });
+  });
+
+  it("stops asking once answered, whichever answer", () => {
+    let house = offerToday(undefined, "s/c/l1", task, "2026-10-01", t(1));
+    house = answerUsed(house, "s/c/l1", "not-yet", "2026-10-02", t(2));
+    expect(pendingUsedQuestion(house, "2026-10-03")).toBeNull();
+  });
+
+  it("asks about the most recent small thing first, one at a time", () => {
+    let house = offerToday(undefined, "s/c/l1", "old", "2026-09-28", t(1));
+    house = offerToday(house, "s/c/l2", "recent", "2026-09-30", t(2));
+    expect(pendingUsedQuestion(house, "2026-10-01")?.task).toBe("recent");
+  });
+
+  it("keeps offers made on two devices", () => {
+    const phone = offerToday(undefined, "s/c/l1", "a", "2026-09-30", t(1));
+    const laptop = offerToday(undefined, "s/c/l2", "b", "2026-09-30", t(2));
+    expect(Object.keys(mergeHouseState(phone, laptop)!.offered ?? {}).sort()).toEqual([
+      "s/c/l1",
+      "s/c/l2",
+    ]);
+  });
+
+  it("refuses an empty or oversized task when reading the document", () => {
+    const parsed = parseHouseState({
+      placements: {},
+      used: {},
+      offered: {
+        ok: { task: "x", day: "2026-10-01", at: t(1) },
+        empty: { task: "  ", day: "2026-10-01", at: t(1) },
+        long: { task: "x".repeat(401), day: "2026-10-01", at: t(1) },
+      },
+    })!;
+    expect(Object.keys(parsed.offered ?? {})).toEqual(["ok"]);
   });
 });

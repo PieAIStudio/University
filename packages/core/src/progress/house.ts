@@ -36,15 +36,30 @@ export interface UsedRecord {
   readonly at: string;
 }
 
+/** A lesson's 「今天就能做的小事」, kept when it was finished so it can be asked about later. */
+export interface OfferedRecord {
+  readonly task: string;
+  /** The learner's local day the lesson was finished, YYYY-MM-DD. */
+  readonly day: string;
+  readonly at: string;
+}
+
 export interface HouseState {
   readonly placements: Readonly<Record<string, HousePlacement>>;
   readonly markStyle?: { readonly style: WallMarkStyle; readonly at: string };
   /** Keyed by lesson document key. */
   readonly used: Readonly<Record<string, UsedRecord>>;
+  /**
+   * Small things offered at the end of a lesson, keyed by lesson document key.
+   * The question 「用了吗？」 comes on a later day, so the words must outlive the
+   * lesson page that showed them.
+   */
+  readonly offered?: Readonly<Record<string, OfferedRecord>>;
 }
 
 const MAX_PLACEMENTS = 400;
 const MAX_USED = 2000;
+const MAX_TASK = 400;
 const ID = /^[\w./#:-]{1,200}$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -88,6 +103,19 @@ export function parseHouseState(value: unknown): HouseState | undefined {
         : null,
     MAX_USED,
   );
+  const offered = entries(
+    value.offered,
+    (raw): OfferedRecord | null =>
+      typeof raw.task === "string" &&
+      raw.task.trim() &&
+      raw.task.length <= MAX_TASK &&
+      typeof raw.day === "string" &&
+      DAY.test(raw.day) &&
+      validAt(raw.at)
+        ? { task: raw.task, day: raw.day, at: raw.at }
+        : null,
+    MAX_USED,
+  );
   const style = isRecord(value.markStyle) ? value.markStyle : null;
   const markStyle: HouseState["markStyle"] =
     style &&
@@ -95,7 +123,12 @@ export function parseHouseState(value: unknown): HouseState | undefined {
     validAt(style.at)
       ? { style: style.style, at: style.at }
       : undefined;
-  return { placements, used, ...(markStyle ? { markStyle } : {}) };
+  return {
+    placements,
+    used,
+    ...(markStyle ? { markStyle } : {}),
+    ...(Object.keys(offered).length ? { offered } : {}),
+  };
 }
 
 export function mergeHouseState(
@@ -109,8 +142,11 @@ export function mergeHouseState(
     placements[id] = later(placements[id], item)!;
   const used: Record<string, UsedRecord> = { ...left.used };
   for (const [key, item] of Object.entries(right.used)) used[key] = later(used[key], item)!;
+  const offered: Record<string, OfferedRecord> = { ...left.offered };
+  for (const [key, item] of Object.entries(right.offered ?? {}))
+    offered[key] = later(offered[key], item)!;
   const markStyle = later(left.markStyle, right.markStyle);
-  return parseHouseState({ placements, used, ...(markStyle ? { markStyle } : {}) });
+  return parseHouseState({ placements, used, offered, ...(markStyle ? { markStyle } : {}) });
 }
 
 const EMPTY: HouseState = { placements: {}, used: {} };
@@ -164,4 +200,36 @@ export function usedDays(house: HouseState | undefined): readonly string[] {
 /** Whether 「用了吗？」 has already been answered for this lesson. */
 export function hasAnsweredUsed(house: HouseState | undefined, lessonKey: string): boolean {
   return Boolean(house?.used[lessonKey]);
+}
+
+/** Keep a finished lesson's small thing, to ask about it on a later day. */
+export function offerToday(
+  house: HouseState | undefined,
+  lessonKey: string,
+  task: string,
+  day: string,
+  at: string,
+): HouseState {
+  return mergeHouseState(house ?? EMPTY, {
+    placements: {},
+    used: {},
+    offered: { [lessonKey]: { task: task.trim().slice(0, MAX_TASK), day, at } },
+  })!;
+}
+
+/**
+ * The one 「用了吗？」 to ask now, if any: the most recently offered small thing
+ * from an earlier day that has no answer yet. One question at a time, never on
+ * the day the lesson was finished — there has been no chance to use it yet.
+ */
+export function pendingUsedQuestion(
+  house: HouseState | undefined,
+  today: string,
+): { readonly lessonKey: string; readonly task: string; readonly day: string } | null {
+  let best: { lessonKey: string; task: string; day: string } | null = null;
+  for (const [lessonKey, offer] of Object.entries(house?.offered ?? {})) {
+    if (offer.day >= today || house?.used[lessonKey]) continue;
+    if (!best || offer.day > best.day) best = { lessonKey, task: offer.task, day: offer.day };
+  }
+  return best;
 }

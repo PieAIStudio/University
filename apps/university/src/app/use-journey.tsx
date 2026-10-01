@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   isLessonComplete,
@@ -13,11 +13,16 @@ import {
   type ProgressDocument,
   type ProgressPort,
   type View,
+  answerUsed,
+  pendingUsedQuestion,
+  type UsedAnswer,
 } from "@pieai/university-core";
+import { UsedQuestion } from "@pieai/university-ui";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { readingMinutes } from "@pieai/university-ui/path/path-stats.js";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { WrapUpCard } from "../guide/WrapUpCard.js";
+import { localDay } from "../screens/house-keepsakes.js";
 import type { JourneyOpening } from "../guide/use-journey-opening.js";
 
 export function journeyOwner(identity: IdentityStatus): string | null {
@@ -190,6 +195,25 @@ export function useJourney({
   const close = () => {
     if (active && alive(active.key)) setInvitation(null);
   };
+  // 「用了吗？」 rides on the return card (V7 amendment one). Read once per card,
+  // so answering it does not make the question vanish before its confirmation.
+  const usedQuestion = useMemo(
+    () =>
+      active?.kind === "continue"
+        ? pendingUsedQuestion(progress.accountData().preferences.house, localDay())
+        : null,
+    [active?.key],
+  );
+  const answerUsedQuestion = (answer: UsedAnswer) => {
+    if (!usedQuestion) return;
+    const preferences = progress.accountData().preferences;
+    const now = new Date().toISOString();
+    progress.setAccountPreferences({
+      ...preferences,
+      house: answerUsed(preferences.house, usedQuestion.lessonKey, answer, localDay(), now),
+      updatedAt: { ...preferences.updatedAt, house: now },
+    });
+  };
 
   let opening: JourneyOpening | null = null;
   if (active) {
@@ -238,6 +262,9 @@ export function useJourney({
         card:
           active.kind === "continue" ? (
             <div className="journey-card" data-journey-continue>
+              {usedQuestion ? (
+                <UsedQuestion task={usedQuestion.task} onAnswer={answerUsedQuestion} />
+              ) : null}
               <GameButton
                 variant="primary"
                 static

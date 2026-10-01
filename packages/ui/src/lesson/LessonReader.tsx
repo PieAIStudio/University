@@ -113,6 +113,8 @@ export type LessonReaderProps = {
   readonly answerDraftScope?: string;
   /** A step lesson's 3D stage, drawn by the shell (V7 amendment one). */
   readonly lessonStage?: PrimmLessonProps["renderStage"];
+  /** A step lesson finished with a small thing to try today (V7 amendment one). */
+  readonly onTryToday?: PrimmLessonProps["onTryToday"];
 };
 
 export function LessonReader(props: LessonReaderProps) {

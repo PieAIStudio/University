@@ -309,3 +309,22 @@
   width: 72px;
   height: 72px;
 }
+
+/* 「用了吗？」 on the return card: two ordinary answers above the forward action. */
+.used-question {
+  display: grid;
+  gap: 8px;
+  margin-block-end: 10px;
+}
+.used-question p {
+  margin: 0;
+}
+.used-question__answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.used-question--done {
+  margin: 0 0 10px;
+  color: var(--game-ui-text-muted);
+}

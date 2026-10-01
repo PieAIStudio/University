@@ -1,5 +1,6 @@
 import {
   earnedKeepsakes,
+  type HouseState,
   isLessonComplete,
   progressSourceOf,
   type ProgressDocument,
@@ -53,4 +54,22 @@ export function takeArrival(): string | null {
   const id = arrival;
   arrival = null;
   return id;
+}
+
+// A string, not the object: accountData() returns a fresh copy on every call,
+// and a snapshot that is never equal to itself re-renders forever.
+export const readHouse = () => JSON.stringify(progressPort.accountData().preferences.house ?? null);
+
+export function saveHouse(next: HouseState): void {
+  const preferences = progressPort.accountData().preferences;
+  progressPort.setAccountPreferences({
+    ...preferences,
+    house: next,
+    updatedAt: { ...preferences.updatedAt, house: new Date().toISOString() },
+  });
+}
+
+export function localDay(time = Date.now()): string {
+  const day = new Date(time);
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
 }

@@ -48,6 +48,7 @@ function PrimmReaderSession({
   breadcrumb,
   completionDestination,
   lessonStage,
+  onTryToday,
 }: LessonReaderProps & { readonly activity: PrimmActivity }) {
   const { t } = useI18n();
   const [stage, setStage] = useState(0);
@@ -98,6 +99,7 @@ function PrimmReaderSession({
           }
           onPathProgress={setStage}
           {...(lessonStage ? { renderStage: lessonStage } : {})}
+          {...(onTryToday ? { onTryToday } : {})}
           evaluatePrimm={
             exercise
               ? async (work, signal) => {

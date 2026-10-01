@@ -46,4 +46,9 @@ export interface PrimmLessonProps {
    * step. This package never draws it: it only says where the lesson is.
    */
   readonly renderStage?: (cue: LessonStageCue) => ReactNode;
+  /**
+   * The lesson finished with a 「今天就能做的小事」: the host keeps its words so
+   * 「用了吗？」 can be asked on a later day (V7 amendment one).
+   */
+  readonly onTryToday?: (task: string) => void;
 }

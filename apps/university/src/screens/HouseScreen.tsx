@@ -4,7 +4,6 @@ import {
   chooseMarkStyle,
   parseHouseState,
   placeItem,
-  type HouseState,
   type ProgressDocument,
   type View,
 } from "@pieai/university-core";
@@ -13,25 +12,7 @@ import type { Shelf } from "@pieai/university-ui/content/port.js";
 import { AvatarChip, type AvatarRecipe } from "@pieai/university-world/avatar.js";
 import { cosmeticOwner, cosmeticsStore } from "../cosmetics/store.js";
 import { progressPort } from "../progress/store.js";
-import { keepsakesOf, takeArrival } from "./house-keepsakes.js";
-
-// A string, not the object: accountData() returns a fresh copy on every call,
-// and a snapshot that is never equal to itself re-renders forever.
-const readHouse = () => JSON.stringify(progressPort.accountData().preferences.house ?? null);
-
-function saveHouse(next: HouseState): void {
-  const preferences = progressPort.accountData().preferences;
-  progressPort.setAccountPreferences({
-    ...preferences,
-    house: next,
-    updatedAt: { ...preferences.updatedAt, house: new Date().toISOString() },
-  });
-}
-
-function localDay(time = Date.now()): string {
-  const day = new Date(time);
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-}
+import { keepsakesOf, localDay, readHouse, saveHouse, takeArrival } from "./house-keepsakes.js";
 
 export default function HouseScreen({
   shelf,

@@ -159,3 +159,51 @@ for (const state of ["email", "member"] as const) {
     });
   }
 }
+
+test.describe("用了吗 on the return card (V7 amendment one)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  test("a small thing left yesterday is asked about once, and 用了 marks the house wall", async ({
+    page,
+  }) => {
+    mkdirSync(OUTPUT, { recursive: true });
+    await completeFirst(page);
+    await page.locator("[data-journey-later]").click();
+    // Yesterday's lesson left one small thing. The record says so; the
+    // question never comes on the day the lesson was finished.
+    const yesterday = await page.evaluate(() => {
+      const day = new Date(Date.now() - 86_400_000);
+      return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    });
+    await page.evaluate((day) => {
+      const key = "university.progress.v2";
+      const document = JSON.parse(localStorage.getItem(key)!);
+      document.account.preferences.house = {
+        placements: {},
+        used: {},
+        offered: {
+          "e2e/yesterday/lesson": {
+            task: "给朋友发消息前，先附上两条你以前发给他的消息。",
+            day,
+            at: new Date(Date.now() - 86_400_000).toISOString(),
+          },
+        },
+      };
+      localStorage.setItem(key, JSON.stringify(document));
+    }, yesterday);
+    await page.goto(ONLINE_ORIGIN + "/");
+    const question = page.locator("[data-journey-continue] [data-used-question]");
+    await expect(question).toBeVisible({ timeout: 90_000 });
+    await expect(question).toContainText("先附上两条你以前发给他的消息");
+    // The forward action is still the one primary button on the card.
+    await expect(page.locator("[data-journey-start]")).toBeVisible();
+    await waitForGuidePaint(page);
+    await page.screenshot({ path: `${OUTPUT}/used-question-390.png` });
+    await question.locator('[data-used-answer="used"]').click();
+    await expect(page.locator('[data-used-answered="used"]')).toHaveText("在小屋墙上记了一笔。");
+    const used = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("university.progress.v2")!).account.preferences.house.used,
+    );
+    expect(used["e2e/yesterday/lesson"].answer).toBe("used");
+  });
+});

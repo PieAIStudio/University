@@ -58,6 +58,7 @@ export function PrimmSteps({
   onPrimmComplete,
   onPathProgress,
   renderStage,
+  onTryToday,
 }: Props) {
   const { t, locale } = useI18n();
   const draft = useAnswerDraft({
@@ -374,6 +375,8 @@ export function PrimmSteps({
     setBusy("complete");
     try {
       await onPrimmComplete(controller.signal);
+      const today = activity.finish.today?.trim();
+      if (today) onTryToday?.(today);
     } catch {
       if (!controller.signal.aborted) setError(t("primm.completeFailed"));
     } finally {

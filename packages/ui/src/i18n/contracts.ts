@@ -997,6 +997,12 @@ export interface MessageContracts {
   readonly "house.packs": {  };
   readonly "house.rack": {  };
   readonly "house.title": {  };
+  readonly "house.used.ask": { readonly "task": string | number | bigint | boolean | null | undefined | Date; };
+  readonly "house.used.later": {  };
+  readonly "house.used.marked": {  };
+  readonly "house.used.notYet": {  };
+  readonly "house.used.question": {  };
+  readonly "house.used.yes": {  };
   readonly "house.welcome": {  };
   readonly "house.window.body": {  };
   readonly "house.window.label": {  };

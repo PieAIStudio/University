@@ -326,7 +326,11 @@ describe("a step lesson: one action per screen, the teacher after it", () => {
   });
 
   it("walks all five phases with real runs of the learner's own choices", async () => {
-    const { run, grade, complete, progress } = await render();
+    const onTryToday = vi.fn();
+    const { run, grade, complete, progress } = await render({
+      activity: { ...lesson, finish: { ...lesson.finish, today: "先把以前的两句话贴给它。" } },
+      onTryToday,
+    });
     expect(
       container.querySelector("[data-primm-version]")?.getAttribute("data-primm-version"),
     ).toBe("3");
@@ -457,6 +461,8 @@ describe("a step lesson: one action per screen, the teacher after it", () => {
     expect(progress).toHaveBeenLastCalledWith(5);
     await press("完成，回到地图");
     expect(complete).toHaveBeenCalledTimes(1);
+    // The small thing to try today outlives the lesson page (V7 amendment one).
+    expect(onTryToday).toHaveBeenCalledWith("先把以前的两句话贴给它。");
   });
 
   it("says so when the live answer did not mention what was asked", async () => {
