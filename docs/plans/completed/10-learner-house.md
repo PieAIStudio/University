@@ -2,11 +2,11 @@
 id: PLAN-V7-10-LEARNER-HOUSE
 title: "V7 · 10 The learner's house: keepsakes, wear, the wall and dragging"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-10-01
-last_reviewed: 2026-10-01
+last_reviewed: 2026-10-02
 domain: product
 tags:
   - v7
@@ -83,3 +83,22 @@ superseded_by: null
 - A learner who finishes the first checkpoint sees the keepsake in the chest,
   finds it on the shelf, can move it, and finds it in the same place on another
   device after sync.
+
+## Delivered (2026-10-01/02, on `main`)
+
+| Step | Commit | Browser evidence |
+| --- | --- | --- |
+| 1 Keepsakes derived from the record | `0f0c6513` | unit tests mirror `lessonRewardTier` |
+| 2 House state in account data | `3a152bba` | merge and round-trip tests |
+| 3–4 House view, Me card, wardrobe merged, `/wardrobe` → `/house` | `c4970f00`, `f9901448`, `f8435b58`, `67da9984` | `e2e/house.spec.ts` (synthetic `e2e-fixtures/house.html` and the real Me entry), `e2e/cosmetics.spec.ts` |
+| 5 Keepsake on blue and gold chests, 放进小屋 | `b4410472` | `use-chest-opening.test.tsx` |
+| 6 「用了吗？」 on the return card | `b8b77926` | `e2e/v7-journey.spec.ts` (用了吗 case) |
+
+Found on the way and fixed: on a phone a reading page's last control could
+sit under the tab bar (`93c15680`).
+
+Not yet done, and not part of this task: a 3D room reading the same
+placements; keepsakes written for segments beyond the first course's three;
+placing the house on an OwnMySpace island (the window explains it until that
+interface exists); turning the pack service on (separately authorized).
+
