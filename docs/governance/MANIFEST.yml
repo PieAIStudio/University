@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-02T04:13:42.780Z
+generated_at: 2026-10-02T04:52:36.469Z
 generator_version: doc-gov@0.14.2
 docs_count: 168
 docs:
@@ -478,7 +478,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-27
+    last_reviewed: 2026-10-02
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md

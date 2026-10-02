@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-27
+last_reviewed: 2026-10-02
 domain: execution
 tags:
   - current-work
@@ -58,7 +58,7 @@ New mainline work follows the applicable lanes below.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Next mainline work | From 2026-10-01 University has one agent (Claude); Codex works only in SwimmerUIKit. In order: a convergence pass (retire finished plans, align design records with what shipped, split `PrimmSteps.tsx` and `App.tsx` by feature, remove unused exports); the write-lesson rules update from lessons 1–3 (D2); the knowledge-card contract (per-card review revisions through export and delivery, concept links for the new lessons); UIKit 3.0 adoption once Codex hands over the candidate. Waiting on the Owner: the AI-foundations revival decision, legal facts for `09-`, and authorization to open the pack service |
+| Next mainline work | From 2026-10-01 University has one agent (Claude); Codex works only in SwimmerUIKit. The 2026-10-02 convergence pass is done: six finished plans retired, `PrimmSteps.tsx` split by step kind, `App.tsx` split into named feature hooks (see the [app module map](../../../apps/university/src/app/README.md)), the house store moved to `apps/university/src/house/`, 33 unused declarations removed, two stray reports archived. Next, in order: make the browser suite independent of shipped courses (a frozen test catalogue), so old courses can retire and only lessons 1–3 stay; the write-lesson update and the production line writing version-3 steps ([spec §11](../interaction-components/spec.html), Owner D2); then new courses from partner material. Also open: the knowledge-card contract; UIKit 3.0 adoption once Codex hands over the candidate. Waiting on the Owner (asked 2026-10-02): which market sells first (it decides payment, stores, compliance and servers), a small paid beta before 150 lessons, a feature freeze until that beta, moving course content to its own repository, and how old courses retire; still waiting from before: the AI-foundations revival decision, legal facts for `09-`, and authorization to open the pack service |
 | English reading aids missing on PRIMM lessons | [PRIMM reading tools gap](primm-reading-tools-gap.md): the PRIMM reader ships without foreign-language mode or the reading-detail toggle, so an English learner meets five lessons in a row without them. Recorded rather than fixed on 2026-09-21 by Owner ruling, and the browser gate no longer raises it — this document is the only alarm left |
 | Four-course archipelago draws three names | [Archipelago framing gap](archipelago-framing-gap.md): the world camera does not avoid the opaque right rail the way the course overview does, so one of `browser-ai`'s four course names is not drawn and an island dragged to the right edge has no room for its entry button. Recorded rather than fixed on 2026-09-21; the browser gates no longer require the fourth name, so this document is the only alarm left |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
