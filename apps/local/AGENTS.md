@@ -106,7 +106,7 @@ upstream repository first.
 - The AI host performs research and teaching. The authoring mode's AI comes
   from that host/clipboard path; it must not require a product API key. Do not
   add direct model-provider calls merely to imitate the host. Online model calls
-  go through SwimmerAIKit and the shared grading boundary.
+  go through SwimmerAIProviderKit and the shared grading boundary.
 - The authoring mode is not permanently offline. Both modes use the same
   SwimmerBackend account and learner-data sync lane. The root router defines
   the permitted AI-source, content-source and source-access port boundaries;
