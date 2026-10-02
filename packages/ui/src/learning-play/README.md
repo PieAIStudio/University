@@ -1,8 +1,18 @@
 # 互动课件
 
-## 当前试验：完整 PRIMM（`primm`）
+## PRIMM 课（`primm`）
 
-当前日常应用版本声明 `experienceVersion: 2`：真实案例只作开场引子，练习材料可以另选。
+**新课是第 3 版步骤课（`experienceVersion: 3`）。** 五个阶段不变，每个阶段 1–4 步，每一步一屏、
+一个动作，老师的话在动作之后才出现。新第 1–3 关就是这种，Owner 2026-10-01 接受为样板。
+
+代码结构（2026-10-02 拆分）：`PrimmSteps.tsx` 是外壳，管进度、草稿保存、真跑模型、判分、
+学完提交、底部按钮和 3D 舞台插槽；`primm-steps/` 每种动作一个文件（`choose`、`send`、
+`find`、`match`、`sort`、`point`、`build`、`make`），从 `context.ts` 的 `StepContext` 取用
+外壳给的东西，返回 `StepView`（内容、底部按钮、演示）。联网、计时和保存只在外壳里。
+新加一种动作要改三处：core 的 schema 加 kind、这里加一个文件、外壳的 `switch` 加一行；
+漏了任何一处，类型检查都会报错。
+
+下面是第 2 版（`experienceVersion: 2`）的说明，旧课仍按它运行：真实案例只作开场引子，练习材料可以另选。
 五阶段分别使用预想、材料加入与发送、内容操作、可编辑请求拼接、新任务作品制作。
 `PrimmAttachment` 与 `PrimmRequestWorkbench` 是同一宿主中的共享操作，不是另一份课程
 或新的教学方法。请求片段可编辑、排序、删除，显示的组合文本就是实际运行输入。
