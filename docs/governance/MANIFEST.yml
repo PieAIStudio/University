@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-02T03:47:45.640Z
+generated_at: 2026-10-02T04:13:42.780Z
 generator_version: doc-gov@0.14.2
-docs_count: 166
+docs_count: 168
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -137,6 +137,13 @@ docs:
     canonical: false
     last_reviewed: 2026-09-07
     pinned: false
+  - id: REF-GRID-ASSET-LIBRARY-2026-09-03
+    path: docs/archive/execution/grid-asset-library-2026-09-03.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-10-02
+    pinned: false
   - id: REF-LIQUID-DIFFICULTY-HANDOFF
     path: docs/archive/execution/liquid-and-difficulty-handoff-2026-09-11.md
     type: archive
@@ -150,6 +157,13 @@ docs:
     status: archived
     canonical: false
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-REVIEW-INTERVALS-2026-08-29
+    path: docs/archive/execution/review-intervals-2026-08-29.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-10-02
     pinned: false
   - id: REF-ISLAND-ART-V2
     path: docs/archive/island-art-reference-v2.md

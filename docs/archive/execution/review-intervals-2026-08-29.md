@@ -1,4 +1,24 @@
-# Review flow 修复记录
+---
+id: REF-REVIEW-INTERVALS-2026-08-29
+title: Review flow fixes — recap help and rating intervals
+type: archive
+status: archived
+canonical: false
+owner: human
+created: 2026-08-29
+last_reviewed: 2026-10-02
+domain: execution
+tags:
+  - review
+  - fsrs
+  - report
+---
+
+# Review flow 修复记录（2026-08-29）
+
+> 归档说明（2026-10-02）：这份任务报告原来放在仓库根目录 `REVIEW-FIXES.md`，
+> 对应提交 `86f63389`。它记录的是一次修复的取舍，不是现行规则；
+> 复习评分的现行实现以 `ReviewCardPort` 和核心 FSRS 调度器为准。
 
 ## 缺陷 1：recap 卡的评分帮助
 
@@ -21,11 +41,8 @@
 ## 浏览器截图
 
 四张截图均在真实 delivery 浏览器的 `/review` 复习页、答案揭示后截取，并逐张目视检查：
-
-- 普通课程卡，桌面：[`.scratch/review-fixes-qa/ordinary-desktop.png`](.scratch/review-fixes-qa/ordinary-desktop.png)
-- 普通课程卡，390×844：[`.scratch/review-fixes-qa/ordinary-mobile.png`](.scratch/review-fixes-qa/ordinary-mobile.png)
-- 「讲一遍」recap 卡，桌面：[`.scratch/review-fixes-qa/recap-desktop.png`](.scratch/review-fixes-qa/recap-desktop.png)
-- 「讲一遍」recap 卡，390×844：[`.scratch/review-fixes-qa/recap-mobile.png`](.scratch/review-fixes-qa/recap-mobile.png)
+普通课程卡与「讲一遍」recap 卡，各一张桌面、一张 390×844。截图当时存在被 git 忽略的
+`.scratch/review-fixes-qa/` 里，没有进入仓库。
 
 两张手机截图的 `document.documentElement.scrollWidth` 与 `innerWidth` 都是 390，没有横向溢出；recap 截图没有参考答案区域，普通卡截图保留参考答案区域。
 

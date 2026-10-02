@@ -1,4 +1,24 @@
+---
+id: REF-GRID-ASSET-LIBRARY-2026-09-03
+title: Grid asset library expansion report
+type: archive
+status: archived
+canonical: false
+owner: human
+created: 2026-09-03
+last_reviewed: 2026-10-02
+domain: execution
+tags:
+  - world
+  - assets
+  - report
+---
+
 # Grid asset library 扩容报告
+
+> 归档说明（2026-10-02）：这份代理报告原来被强制追踪在被忽略的 `.scratch/library/REPORT.md`，
+> 对应提交 `366a74f7`。资产清单的现行来源是 `packages/world/src/grid/grid-assets.json`，
+> 这里只保留当时的取舍理由。
 
 日期：2026-09-03
 分支：`work/library`
