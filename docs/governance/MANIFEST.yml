@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-02T04:52:36.469Z
+generated_at: 2026-10-02T06:38:11.794Z
 generator_version: doc-gov@0.14.2
-docs_count: 168
+docs_count: 172
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -219,14 +219,35 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-30
+    last_reviewed: 2026-10-02
     pinned: false
-  - id: PLAN-AI-FOUNDATIONS-REVIVAL
-    path: docs/plans/active/ai-foundations-revival.md
+  - id: PLAN-11-TEST-CATALOGUE
+    path: docs/plans/active/11-test-catalogue.md
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-14
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-12-PIPELINE-STEP-LESSONS
+    path: docs/plans/active/12-pipeline-writes-step-lessons.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-13-RETIRE-OLD-COURSES
+    path: docs/plans/active/13-retire-old-courses.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-14-CONTENT-REPOSITORY
+    path: docs/plans/active/14-content-repository.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-02
     pinned: false
   - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
     path: docs/plans/completed/00-ai-literacy-commercial-release.md
@@ -289,6 +310,13 @@ docs:
     type: plan
     status: completed
     canonical: true
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-AI-FOUNDATIONS-REVIVAL
+    path: docs/plans/completed/ai-foundations-revival.md
+    type: plan
+    status: superseded
+    canonical: false
     last_reviewed: 2026-10-02
     pinned: false
   - id: PLAN-AI-PRODUCT-PLAY
@@ -611,7 +639,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-13
+    last_reviewed: 2026-10-02
     pinned: true
   - id: REF-ISLAND-ART-V3
     path: docs/reference/FloatingIsland-Reference-v3/island-art-reference.md

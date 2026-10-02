@@ -2,11 +2,11 @@
 id: PLAN-AI-FOUNDATIONS-REVIVAL
 title: 认识 AI，从这里开始：复活计划与阶段 0 阻塞回执
 type: plan
-status: active
-canonical: true
+status: superseded
+canonical: false
 owner: human
 created: 2026-09-13
-last_reviewed: 2026-09-14
+last_reviewed: 2026-10-02
 domain: course-authoring
 tags:
   - ai-foundations
@@ -16,10 +16,15 @@ pinned: false
 related:
   - REF-CURRENT-WORK
 supersedes: []
-superseded_by: null
+superseded_by: PLAN-13-RETIRE-OLD-COURSES
 ---
 
 # 认识 AI，从这里开始：复活计划
+
+> **收尾（2026-10-02）**：不再复活。Owner 当天决定 T1——旧课全部退役，只留新的
+> 第 1–3 关步骤课；新课从合作方材料经写课流水线产出（任务 12、13）。这门课随其他旧课
+> 进入退役区，见[任务 13](../active/13-retire-old-courses.md)。阶段 0 的 UA 阻塞没有
+> 解决，也不再需要解决；下文是当时的记录。
 
 ## 当前边界
 

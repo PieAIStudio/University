@@ -21,7 +21,7 @@ superseded_by: null
 
 # Task 06 · Review wisps, card packs and cosmetics
 
-> **2026-10-02 对齐**：装扮页已并进学习者的小屋（[任务 10](../completed/10-learner-house.md)，Owner H2）：衣架是头像装扮，桌上的卡包盒就是原来的卡包与收藏，`/wardrobe` 打开小屋。卡包里「岛屿」一类小摆件，按 V7 修订一改为放在小屋里，不放课程岛。本计划仍持有：卡包服务的线上迁移、奖励登记和真账号验收，开放前要 Owner 单独授权。
+> **2026-10-02 对齐**：装扮页已并进学习者的小屋（[任务 10](../completed/10-learner-house.md)，Owner H2）：衣架是头像装扮，桌上的卡包盒就是原来的卡包与收藏，`/wardrobe` 打开小屋。卡包里「岛屿」一类小摆件，按 V7 修订一改为放在小屋里，不放课程岛。本计划仍持有：卡包服务的线上迁移、奖励登记和真账号验收，开放前要 Owner 单独授权。执行队列时跳过本任务，直到 Owner 授权。
 
 ## Context the executor does not have
 
@@ -297,3 +297,19 @@ request for authored concept/card metadata remains separate. Two choices are
 still explicitly open in the amendment: whether clothing is also managed in the
 house, and what an unverified 'I used it' response should award. Do not turn that
 self-report into assessed learning or invent those two decisions.
+
+**Update 2026-10-02.** The house is built and on `main`
+([task 10](../completed/10-learner-house.md)): authored keepsakes from checkpoint,
+challenge and course chests, a draggable room, and the wall that marks
+「用了」. Both open choices were decided by the Owner on 2026-10-01. Clothing
+lives in the house (H2). 「用了」 is one mark on the house wall in the
+learner's chosen style, with no reward and no score.
+
+What this record still holds is only the Owner-authorized remote activation of
+the cosmetics service:
+- the remote migration and manifest registration;
+- real own-account Data API checks;
+- reviewed activation.
+
+That belongs to the release that opens the beta. Until the Owner authorizes it,
+a session running the queue steps over this task.

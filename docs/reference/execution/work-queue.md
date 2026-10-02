@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: "human"
 created: 2026-09-13
-last_reviewed: 2026-09-13
+last_reviewed: 2026-10-02
 domain: "execution"
 tags:
   - work-queue
@@ -49,11 +49,17 @@ the queue is changing the same code.
 
 ### The gates, and which one actually looks
 
-| | Command | What it covers | Baseline 2026-09-13 |
+| | Command | What it covers | Baseline 2026-10-02 (`26a296fe`) |
 | --- | --- | --- | --- |
-| fast | `pnpm verify` | types, lint, format, unit tests, boundaries, build, docs | green at `9f5bc900` |
-| docs | `pnpm doc-gov check` | governed frontmatter and integrity | 137 docs |
-| complete | `pnpm e2e`, also run by `pre-push` | the real browser product | 235 passed / 6 skipped / 0 failed |
+| fast | `pnpm verify` | types, lint, format, unit tests, boundaries, build, docs | green |
+| docs | `pnpm doc-gov check` | governed frontmatter and integrity | 168 docs |
+| complete | `pnpm e2e`, also run by `pre-push` | the real browser product | 430 passed / 0 failed |
+| timing | `pnpm e2e:timing`, also run by `pre-push` | frame-time and loading budgets | 40 passed / 0 failed |
+
+The first baseline, 2026-09-13 at `9f5bc900`, was 137 docs and 235 browser tests.
+When the default ports are busy, run the suites on another block with
+`E2E_ONLINE_PORT`, `E2E_LOCAL_WEB_PORT`, `E2E_LOCAL_API_PORT` and
+`E2E_GRADING_PORT`.
 
 `pnpm verify` does not run the browser suite. "Verify is green" can therefore be
 said perfectly honestly over a product that does not work. The suite cannot run

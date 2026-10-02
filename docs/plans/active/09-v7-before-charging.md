@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-30
+last_reviewed: 2026-10-02
 domain: product
 tags:
   - v7
@@ -36,6 +36,20 @@ superseded_by: null
   governing law and refund terms. Draft with every such fact marked as a
   question for the Owner; do not invent them. This task is independent and may
   be stepped over while those facts are missing.
+- **Who sells, decided 2026-10-02.**
+  - The Owner sells to overseas learners as an individual. Paddle (Individual) is
+    the merchant of record, which handles checkout, consumer tax, refunds and
+    chargebacks; payouts go to Payoneer (Individual). The route and its reasoning
+    are in HQ's `docs/reference/indie_ai_app_global_payment_route.md`.
+  - The "legal entity" fact is therefore the Owner as an individual seller, with
+    Paddle named as the reseller in the terms. Still missing: the seller name and
+    contact email to publish, governing law, and refund terms. The refund terms
+    must be consistent with Paddle's buyer terms.
+  - Paddle's acceptable-use policy (version of 2026-04-13) forbids selling
+    "certifications or courses for which the business is not the owner or creator
+    of the underlying product". The pages must therefore describe University as
+    interactive AI learning software whose lessons are its own, never as resold
+    courses.
 - Account, wallet and payment UI come from SwimmerUIKit and SwimmerBackend.
 
 ## 1 Outcome
