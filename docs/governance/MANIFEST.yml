@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-02T03:46:59.223Z
+generated_at: 2026-10-02T03:47:45.640Z
 generator_version: doc-gov@0.14.2
 docs_count: 166
 docs:
@@ -436,7 +436,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-10-02
     pinned: false
   - id: REF-ADDRESSABLE-LESSONS-PRERENDER
     path: docs/reference/execution/addressable-lessons-prerender-evaluation.md

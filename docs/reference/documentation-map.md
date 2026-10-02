@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-08
+last_reviewed: 2026-10-02
 domain: meta
 tags:
   - navigation
@@ -26,19 +26,19 @@ documentation work, not for every renderer edit.
 
 | Question | Read |
 | --- | --- |
-| What is active? | [Current work](execution/current-work.md), a short navigation index |
-| Which 3D tasks remain? | [Delivery plan](../plans/completed/continuous-world-delivery.md), the sole task-state list |
-| Why these techniques? | [ADR-0008](../adr/ADR-0008-one-locked-technique-per-island-element.md), concise choices/rejections with historical evidence links |
-| Where does scene data come from? | [ADR-0009](../adr/ADR-0009-the-procedural-map-is-one-pipeline.md), shared pipeline and source map |
+| What is active, and what comes next? | [Current work](execution/current-work.md): a short navigation index; its "Next mainline work" row is the order of work |
+| How is work run on the mainline? | [Work queue](execution/work-queue.md): one task, one commit, one push |
+| What does the learner see? | [Player journey V7](player-journey/v7/index.html) and its [amendment one](player-journey/v7/lesson-steps-amendment.html); earlier versions only where V7 is silent |
+| How is a lesson written? | [SPEC-0001](../specs/active/SPEC-0001-universitylocal-parity-contract.md), then the write-lesson skill in `apps/local/.agents/skills/write-lesson/` |
+| Why these 3D techniques, and where does scene data come from? | [ADR-0008](../adr/ADR-0008-one-locked-technique-per-island-element.md), [ADR-0009](../adr/ADR-0009-the-procedural-map-is-one-pipeline.md), [ADR-0011](../adr/ADR-0011-3d-learning-games-are-assembled-from-one-kit.md) |
 | How does this Mac/phone preview restart? | [Local device testing](execution/local-device-testing.md), dated machine facts and recovery |
-| What happened in older trials? | Follow the particular archive link from the decision or R receipt; do not load all of `docs/archive/` |
+| What happened in older rounds? | The completed plan or archive link named by the decision or row you are reading; do not load all of `docs/plans/completed/` or `docs/archive/` |
 
-The 2026-09-08 cleanup keeps all 128 task entries and their states. One local
-`SCRATCH/HANDOFF.md` points to the current plan; it is not another task list.
-Current decisions stay in the ADRs, device recovery in the device reference,
-and dated outcomes in the plan-linked archive. Old agent prose is not a new
-worker assignment or product acceptance. Raw failure/measurement evidence is
-retained separately and read only for the result being investigated.
+Finished plans keep their reasons and evidence in `docs/plans/completed/`; each
+opens with a note on what finished and where any remaining item went. They are
+history, not assignments. Current decisions stay in the ADRs and the journey;
+raw failure and measurement evidence is read only for the result being
+investigated.
 
 ## Areas
 
