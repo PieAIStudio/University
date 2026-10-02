@@ -1944,7 +1944,7 @@ pre b{color:var(--go);font-weight:600}
 <h3>验收与依据</h3>
 <p>新增测试先见红再见绿；检查新访客/回访/直达、320 宽、键盘、减少动效、输入恢复/身份切换/版本隔离、三态判题、月年订单与不开售边界。沿用全仓 verify 和默认浏览器回归，真实画面与同条件旧截图对照。统计只收阶段和匿名枚举/稳定 ID，不收答案；没有真实用户数据不宣称提高了转化率。</p>
 <p>设计依据：<a href="https://www.nngroup.com/articles/onboarding-tutorials/">NN/g：引导与情境帮助</a>、<a href="https://www.nngroup.com/articles/mobile-app-onboarding/">NN/g：简短的实际操作</a>、<a href="https://selfdeterminationtheory.org/theory/">自我决定理论：自主与胜任支持</a>、<a href="https://www.w3.org/WAI/WCAG22/Techniques/css/C39">W3C：尊重减少动态效果</a>。这些是设计依据，不是本产品已经有效的证明。</p>
-<p>实施状态与跨工作树依赖只在 <a href="../../../plans/active/product-completeness.md">产品完整性计划</a> 维护。</p>
+<p>实施状态与跨工作树依赖只在 <a href="../../../plans/completed/product-completeness.md">产品完整性计划</a> 维护。</p>
 
 <h3 id="product-lightness">轻量化：一眼知道下一步</h3>
 <p>2026-09-15 登录链接与统计边界：旧书签迁移只处理以 <code>#/</code> 开头的产品地址。邮件登录或找回密码返回的片段属于共享认证SDK，学习路由不得抢先删除，也不把它当作课程地址。普通页面内锚点同样不被误迁移。产品统计只发送已声明的学习事件、账号标识和有限设备元数据；关闭自动页面、错误、交互与回放采集，并在SDK发送前再次过滤自动附加字段，不发送完整网址、查询参数、片段、来源网址、邮箱或表单正文。这项保护不等于已经完成密码恢复界面或邮件送达验收。</p>

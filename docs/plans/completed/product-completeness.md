@@ -2,11 +2,11 @@
 id: PLAN-PRODUCT-COMPLETENESS
 title: University 产品完整性实施
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-09
-last_reviewed: 2026-09-13
+last_reviewed: 2026-10-02
 domain: product
 tags:
   - onboarding
@@ -17,6 +17,9 @@ related:
 ---
 
 # 产品完整性：让开始、学习、保存和收费说同一种话
+
+> **收尾（2026-10-02）**：产品侧的改动早已进主线。原来留在这里的真实环境验收（真实账号跨设备与 RLS、实际支付/取消/退款与经营信息、实体设备、提醒送达），各有现行文档：current-work 的「Designed but unfinished」一栏和[后端迁移 runbook](../../reference/execution/swimmer-backend-migration.md)，不再由本计划持有。下文是当时的记录。
+
 
 ## 当前接续：已整合主线（2026-09-13）
 

@@ -28,7 +28,7 @@ related:
 
 > **本计划已被 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)、
 > [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) 和
-> [当前3D交付计划](../active/continuous-world-delivery.md) 取代。**
+> [当前3D交付计划](./continuous-world-delivery.md) 取代。**
 >
 > 它写于岛屿第一版切片阶段，下面这几处**现在是错的**，读的时候直接跳过：
 >

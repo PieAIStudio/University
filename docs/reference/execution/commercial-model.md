@@ -36,7 +36,7 @@ related:
 | 课程是否已经进入交付目录 | [published-catalog.json](../../../apps/university/published-catalog.json) 与正式构建生成的 content/manifest.json | 本地存在课程不证明官网已更新；以实际官网 release.json 及内容校验为准 |
 | 浏览器能否真正下单 | [后端支付适配器](../../../packages/backend/src/payment.ts) 与 [支付缺口](payment-backend-gap.md) | 当前适配器只有余额、权益读取；没有下单、订单查询和订阅管理接线 |
 | 购买过程中如何处理账号、报价和恢复 | [PaymentPort](../../../packages/core/src/ports/payment.ts) 与 [会员页](../../../packages/ui/src/navigation/screens/PlansScreen.tsx) | 前端保护与测试通过不等于真实结算、取消和退款通过 |
-| 这次内容与产品发布做到哪一步 | [双系列交付计划](../../plans/active/00-ai-literacy-commercial-release.md) | 只在该计划维护任务状态，不在这里再造一份完成清单 |
+| 这次内容与产品发布做到哪一步 | [双系列交付计划](../../plans/completed/00-ai-literacy-commercial-release.md) | 只在该计划维护任务状态，不在这里再造一份完成清单 |
 
 当前配置仍允许阅读全部已发布课程，收费方案授予 AI 与同步相关权益，不是给
 两套新课单独设付费墙。免费方案的同步配置为不包含，会员配置包含同步；实际

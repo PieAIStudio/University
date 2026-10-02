@@ -27,7 +27,7 @@ documentation work, not for every renderer edit.
 | Question | Read |
 | --- | --- |
 | What is active? | [Current work](execution/current-work.md), a short navigation index |
-| Which 3D tasks remain? | [Delivery plan](../plans/active/continuous-world-delivery.md), the sole task-state list |
+| Which 3D tasks remain? | [Delivery plan](../plans/completed/continuous-world-delivery.md), the sole task-state list |
 | Why these techniques? | [ADR-0008](../adr/ADR-0008-one-locked-technique-per-island-element.md), concise choices/rejections with historical evidence links |
 | Where does scene data come from? | [ADR-0009](../adr/ADR-0009-the-procedural-map-is-one-pipeline.md), shared pipeline and source map |
 | How does this Mac/phone preview restart? | [Local device testing](execution/local-device-testing.md), dated machine facts and recovery |

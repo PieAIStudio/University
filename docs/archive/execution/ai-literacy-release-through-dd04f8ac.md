@@ -18,7 +18,7 @@ related:
 
 > Historical execution record, not current task state or permission to replay
 > commands. The authoritative remaining work and confirmed publication are in
-> [the active plan](../../plans/active/00-ai-literacy-commercial-release.md).
+> [the active plan](../../plans/completed/00-ai-literacy-commercial-release.md).
 > The original plan at `dd04f8ac` is preserved below without changing its body.
 > Its statements that deployment or the final browser gate are still pending
 > have since been resolved; authentication/service prerequisites remain separate.

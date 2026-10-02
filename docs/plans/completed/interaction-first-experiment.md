@@ -2,11 +2,11 @@
 id: PLAN-INTERACTION-FIRST-EXPERIMENT
 title: Interaction-first lesson experiment
 type: plan
-status: active
+status: completed
 canonical: false
 owner: ai-assisted
 created: 2026-09-16
-last_reviewed: 2026-09-20
+last_reviewed: 2026-10-02
 domain: learning
 tags:
   - lesson-reader
@@ -17,6 +17,9 @@ related:
 ---
 
 # Interaction-first lesson experiment
+
+> **收尾（2026-10-02）**：步骤课（第 3 版）早已是主线现实，新第 1–3 关就是按它写的，Owner 在 2026-10-01 接受为样板。剩下的「教会写课流程写步骤课、重写其余课」转入写课规则更新（D2，见 current-work）；「真实学习者」属于上线前的真实环境验收。下文是实验当时的记录。
+
 
 ## Read before merging to main: this branch was pushed with a red e2e suite
 

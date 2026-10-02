@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-01T16:53:04.150Z
+generated_at: 2026-10-02T03:46:59.223Z
 generator_version: doc-gov@0.14.2
 docs_count: 166
 docs:
@@ -193,19 +193,12 @@ docs:
     canonical: true
     last_reviewed: 2026-09-10
     pinned: true
-  - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
-    path: docs/plans/active/00-ai-literacy-commercial-release.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-16
-    pinned: false
   - id: PLAN-V7-06-WISPS-AND-PACKS
     path: docs/plans/active/06-v7-review-wisps-card-packs-and-cosmetics.md
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-27
+    last_reviewed: 2026-10-02
     pinned: false
   - id: PLAN-V7-09-BEFORE-CHARGING
     path: docs/plans/active/09-v7-before-charging.md
@@ -221,40 +214,12 @@ docs:
     canonical: true
     last_reviewed: 2026-09-14
     pinned: false
-  - id: PLAN-CONTINUOUS-WORLD-DELIVERY
-    path: docs/plans/active/continuous-world-delivery.md
+  - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
+    path: docs/plans/completed/00-ai-literacy-commercial-release.md
     type: plan
-    status: active
+    status: completed
     canonical: true
-    last_reviewed: 2026-09-18
-    pinned: false
-  - id: PLAN-INTERACTION-3D-PLAYLAB
-    path: docs/plans/active/interaction-3d-playlab.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-19
-    pinned: false
-  - id: PLAN-INTERACTION-FIRST-EXPERIMENT
-    path: docs/plans/active/interaction-first-experiment.md
-    type: plan
-    status: active
-    canonical: false
-    last_reviewed: 2026-09-20
-    pinned: false
-  - id: PLAN-MAP-LEARNING-NODES
-    path: docs/plans/active/map-learning-nodes.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-19
-    pinned: false
-  - id: PLAN-PRODUCT-COMPLETENESS
-    path: docs/plans/active/product-completeness.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-13
+    last_reviewed: 2026-10-02
     pinned: false
   - id: PLAN-V7-01-CHESTS-AND-MONSTERS
     path: docs/plans/completed/01-v7-chests-and-monsters-on-the-island.md
@@ -326,6 +291,27 @@ docs:
     canonical: true
     last_reviewed: 2026-09-13
     pinned: false
+  - id: PLAN-CONTINUOUS-WORLD-DELIVERY
+    path: docs/plans/completed/continuous-world-delivery.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-INTERACTION-3D-PLAYLAB
+    path: docs/plans/completed/interaction-3d-playlab.md
+    type: plan
+    status: superseded
+    canonical: false
+    last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-INTERACTION-FIRST-EXPERIMENT
+    path: docs/plans/completed/interaction-first-experiment.md
+    type: plan
+    status: completed
+    canonical: false
+    last_reviewed: 2026-10-02
+    pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
     type: plan
@@ -347,6 +333,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-13
     pinned: false
+  - id: PLAN-MAP-LEARNING-NODES
+    path: docs/plans/completed/map-learning-nodes.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-02
+    pinned: false
   - id: PLAN-MAP-NAVIGATION-EVOLUTION
     path: docs/plans/completed/map-navigation-evolution.md
     type: plan
@@ -360,6 +353,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: PLAN-PRODUCT-COMPLETENESS
+    path: docs/plans/completed/product-completeness.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-02
     pinned: false
   - id: PLAN-UIKIT-LIQUID-CTA-MIGRATION
     path: docs/plans/completed/uikit-liquid-cta-migration.md

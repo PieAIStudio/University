@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-27
-last_reviewed: 2026-09-27
+last_reviewed: 2026-10-02
 domain: learning-experience
 tags:
   - v7
@@ -20,6 +20,8 @@ superseded_by: null
 ---
 
 # Task 06 · Review wisps, card packs and cosmetics
+
+> **2026-10-02 对齐**：装扮页已并进学习者的小屋（[任务 10](../completed/10-learner-house.md)，Owner H2）：衣架是头像装扮，桌上的卡包盒就是原来的卡包与收藏，`/wardrobe` 打开小屋。卡包里「岛屿」一类小摆件，按 V7 修订一改为放在小屋里，不放课程岛。本计划仍持有：卡包服务的线上迁移、奖励登记和真账号验收，开放前要 Owner 单独授权。
 
 ## Context the executor does not have
 

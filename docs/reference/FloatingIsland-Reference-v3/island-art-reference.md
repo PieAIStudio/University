@@ -25,7 +25,7 @@ superseded_by: null
 用户在2026-09-08指定的新参考，替代六边形外观参考；产品决定仍以
 [V5 M](../player-journey/v5/index.html)、[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)
 和[ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)为准。
-任务状态只在[原交付计划](../../plans/active/continuous-world-delivery.md)。
+任务状态只在[原交付计划](../../plans/completed/continuous-world-delivery.md)。
 
 ## 借鉴什么，不照搬什么
 

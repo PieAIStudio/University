@@ -2,11 +2,11 @@
 id: PLAN-INTERACTION-3D-PLAYLAB
 title: Nine Learning Games and Selective Map Object Refinement
 type: plan
-status: active
-canonical: true
+status: superseded
+canonical: false
 owner: ai-assisted
 created: 2026-09-17
-last_reviewed: 2026-09-19
+last_reviewed: 2026-10-02
 domain: learning-experience
 tags:
   - interaction
@@ -14,9 +14,14 @@ tags:
 related:
   - ADR-0009
   - REF-CURRENT-WORK
+supersedes: []
+superseded_by: ADR-0011
 ---
 
 # Nine learning games and selective map-object refinement
+
+> **已被取代（2026-10-01）**：实验室里的花园、工厂、工坊、飞行各版和平面街机，已按 Owner 的 G3 决定删除；保留的六个岛上游戏由 [ADR-0011](../../adr/ADR-0011-3d-learning-games-are-assembled-from-one-kit.md) 管理，截图留在[互动组件相册](../../reference/interaction-components/album.html)。下文是当时的实验记录。
+
 
 Owner authorized a separate experiment based on the committed interaction-first
 lane. The course lane and its PRIMM work remain untouched; course content follows

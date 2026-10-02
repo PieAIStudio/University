@@ -2,11 +2,11 @@
 id: PLAN-MAP-LEARNING-NODES
 title: Personal lessons, practice games and checkpoints on the course map
 type: plan
-status: active
+status: completed
 canonical: true
 owner: project
 created: 2026-09-18
-last_reviewed: 2026-09-19
+last_reviewed: 2026-10-02
 domain: learning-experience
 tags:
   - learning
@@ -20,6 +20,9 @@ superseded_by: null
 ---
 
 # Map learning nodes
+
+> **收尾（2026-10-02）**：已整体合进主线，上面的事项全部完成。地图上学习节点的行为以 [V5 旅程的 map-learning-nodes 一节](../../reference/player-journey/v5/index.html#map-learning-nodes) 为准；下文是当时的实验记录。
+
 
 ## Scope and baseline
 

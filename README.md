@@ -44,7 +44,7 @@ Kit translator，Node 调用使用独立 core 入口，AI 服务用请求作用�
 - `docs/reference/player-journey/v5/` — 用户旅程 V5，当前有效的一版（承接并取代 V1–V4）
 - `docs/specs/active/SPEC-0001-universitylocal-parity-contract.md` — 内容与功能的
   一致性契约
-- `docs/plans/active/00-ai-literacy-commercial-release.md` — 双系列交付、验证和外部缺口
+- `docs/plans/completed/00-ai-literacy-commercial-release.md` — 双系列交付、验证和外部缺口
 
 先设计再开发。用户能看见的行为，先在用户旅程里定稿，再落地。
 

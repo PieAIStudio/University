@@ -18,7 +18,7 @@ pinned: false
 
 > 已退役的 2026-08-29 现场记录，不是当前派工或安全策略。
 > 下文“子代理正在跑”、固定模型名、无限制执行示例、旧树冠与机位指令均不得照做。
-> 当前任务读[活动计划](../../plans/active/continuous-world-delivery.md)，
+> 当前任务读[活动计划](../../plans/completed/continuous-world-delivery.md)，
 > 技术取舍读[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)。
 
 给接手这条主线的 session 读。**先读完这一页再动任何代码。**

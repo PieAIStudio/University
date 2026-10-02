@@ -2,11 +2,11 @@
 id: PLAN-CONTINUOUS-WORLD-DELIVERY
 title: Continuous 3D World Delivery
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-06
-last_reviewed: 2026-09-18
+last_reviewed: 2026-10-02
 domain: web3d
 tags:
   - procedural-map
@@ -26,6 +26,9 @@ superseded_by: null
 ---
 
 # 3D 世界交付清单
+
+> **收尾（2026-10-02）**：R59 及以前各轮已交付。没打勾的格子大多是被后续轮次取代的收尾证据，不再是待办。仍开着的只有两件：R58-04 景观密度（向参考图的密度靠，见 current-work 的 3D 一栏）和实体手机验收（属于上线前的真实环境验收）。3D 规则以 ADR-0008、ADR-0009、ADR-0011 和 island-look-review 技能为准。下文是各轮的记录。
+
 
 ## R59 当前：落脚点统一、Kenney 石头、真水与更丰富的景观（2026-09-23 起）
 

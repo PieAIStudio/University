@@ -116,7 +116,7 @@ V2 在判断、依据定位、片段修改之外增加 `experiment`：一至四�
 
 载荷和纯规则：`packages/core/src/learning-play/interaction-path.ts`；通用可运行
 示例：`packages/core/fixtures/interaction-path.json`；实验状态与样课验收见
-[互动主线实验](../../../../docs/plans/active/interaction-first-experiment.md)。
+[互动主线实验](../../../../docs/plans/completed/interaction-first-experiment.md)。
 
 ### 一处查看所有玩法
 

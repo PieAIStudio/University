@@ -561,7 +561,7 @@ Change a technique only with a measurement, an amendment here and corresponding
 lock/tests. A discrepancy is something to investigate, not permission to silently
 prefer a stale number. [ADR-0009](ADR-0009-the-procedural-map-is-one-pipeline.md)
 owns data flow; [V5 I–M](../reference/player-journey/v5/index.html) owns appearance
-and interaction. The [delivery plan](../plans/active/continuous-world-delivery.md)
+and interaction. The [delivery plan](../plans/completed/continuous-world-delivery.md)
 owns completion status. This condensation changes none of those contracts.
 
 ## R44 candidate: reference-led miniature archipelagos

@@ -28,7 +28,7 @@ related:
 
 **历史证据提示：**以下内容和截图保留原始审查时点。之后用户已授权实施，
 最新行为以 [V5 产品决定](../player-journey/v5/index.html#product-completeness) 为准，
-代码与验收进展只在 [产品完整性计划](../../plans/active/product-completeness.md) 更新。
+代码与验收进展只在 [产品完整性计划](../../plans/completed/product-completeness.md) 更新。
 原四步开场提案已收窄为可跳过的单页邀请，不应继续当作待实施的四道必经手续。
 
 ## 想看后来实际改了什么

@@ -112,5 +112,5 @@ University 复制”的理由仍保留。既然公共内核已经存在，旧文
 代码回归入口为 `packages/core/src/ports/payment.test.ts`、
 `packages/backend/src/payment.test.ts` 和会员页相邻测试。它们只证明对应
 本地契约，不替代以上外部验收。原始旧文与未提交版本已在R39来源保全中保留；
-本次产品工作树的验收状态见[产品完整性计划](../../plans/active/product-completeness.md)；
-主线整合状态仍见[交付面板](../../plans/active/continuous-world-delivery.md)。
+本次产品工作树的验收状态见[产品完整性计划](../../plans/completed/product-completeness.md)；
+主线整合状态仍见[交付面板](../../plans/completed/continuous-world-delivery.md)。

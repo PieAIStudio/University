@@ -2,11 +2,11 @@
 id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
 title: "AI 基础星球：真实来源双系列与商业体验交付"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-14
-last_reviewed: 2026-09-16
+last_reviewed: 2026-10-02
 domain: product
 tags:
   - ai-literacy
@@ -22,6 +22,9 @@ related:
 ---
 
 # 真实来源双系列与商业体验交付
+
+> **收尾（2026-10-02）**：两条课程和共享账号早已上线。真实邮箱收件、真实跨设备账号、账号删除的人工核查与经营验收，转由 current-work 的「Designed but unfinished」一栏和[后端迁移 runbook](../../reference/execution/swimmer-backend-migration.md) 持有；真实收费仍关闭。下文是当时的记录。
+
 
 ## 最新结论：课程与共享账号已上线，主线已准备好供 Owner 走查
 

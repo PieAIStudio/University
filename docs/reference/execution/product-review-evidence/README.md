@@ -42,7 +42,7 @@ related:
 ## 谁在引用
 
 - `docs/reference/execution/product-completeness-review.md` —— 评审结论本身
-- `docs/plans/active/product-completeness.md` —— 仍在进行的产品完整性计划
+- `docs/plans/completed/product-completeness.md` —— 仍在进行的产品完整性计划
 - `docs/reference/execution/product-before-after/{before-after,first-pass-comparison}.md`
 
 四份文档合计点名 **14 条具体路径**（截图、`receipt.json`、`motion.json`、三份

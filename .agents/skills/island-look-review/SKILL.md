@@ -11,7 +11,7 @@ metadata:
 
 ## 先确认当前验收入口
 
-当前任务和验收边界以 `docs/plans/active/continuous-world-delivery.md` 为准，
+当前任务和验收边界以 `docs/plans/completed/continuous-world-delivery.md` 为准，
 产品行为以 V5 最新决定为准，技术与预算以 ADR-0008/0009 为准。
 本技能规定看图和改规则的方法，不另立任务清单，也不以旧诊断入口覆盖当前计划。
 
@@ -166,7 +166,7 @@ metadata:
 
 - `docs/reference/execution/island-look-contract.md` — 门槛、基线、以及历次推翻记录
 - `docs/policy/shared-rules/donors.md` — donor 各自能拿什么、不能拿什么
-- `docs/plans/active/continuous-world-delivery.md` — 当前验收入口、状态和回执
+- `docs/plans/completed/continuous-world-delivery.md` — 当前验收入口、状态和回执
 - `e2e/continuous-course.spec.ts`、`e2e/world-delivery.spec.ts` — 普通页面与场景身份证据
 - `e2e/playwright.webkit.config.ts` — 可选 WebKit 课程冒烟，复用 K，不改变默认闸门
 - `e2e/island-look.spec.ts` — 旧判官实现；当前计划未授权运行或修改

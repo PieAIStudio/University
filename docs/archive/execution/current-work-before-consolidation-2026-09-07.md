@@ -52,7 +52,7 @@ The short, current handoff. **What is true now, never how it got that way.**
 > 本轮不处理 `island-look` 浏览器门禁。在 `ART_READY` 之前，不以当前机位、草或
 > 灯光数字宣称观感或性能已通过。已有实验和截图保留在原工作区及本机证据目录。
 
-**3D 的可接续任务清单：**[连续 3D 世界交付](../../plans/active/continuous-world-delivery.md)。
+**3D 的可接续任务清单：**[连续 3D 世界交付](../../plans/completed/continuous-world-delivery.md)。
 这里保留当前工作入口；细项状态、执行器分工、验收回执和中断后的下一步只在该计划维护。
 这里不再复制检查数字或阶段完成状态；共享头像正式版本、工具就绪状态与未完成视觉项
 均查该计划最新回执。本机 19998 为交付预览，19999 为同一源码的作者模式检查器；

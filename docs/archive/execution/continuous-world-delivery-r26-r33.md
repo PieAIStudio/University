@@ -23,7 +23,7 @@ pinned: false
 # R26–R33：历史证据，不是接手指令
 
 2026-09-08 从活动面板、三版交接及重复专项报告提炼。这里只保留追溯所需的
-变化、反例和证据入口；当前状态只看[唯一面板](../../plans/active/continuous-world-delivery.md)。
+变化、反例和证据入口；当前状态只看[唯一面板](../../plans/completed/continuous-world-delivery.md)。
 原始测试日志、失败截图、trace、CPU profile 和设备收据留在原路径，没有因文档整理删除。
 以下结果均属于当时源码快照，不是最后版本的通行证；路径相对项目根目录。
 

@@ -139,7 +139,7 @@ existing server/browser boundaries remain governed by `pnpm boundaries`.
 The ordinary mode switches cover ports, studio access and analytics metadata.
 One source-access-oriented world annotation bypasses ports outside studio;
 its source fact and unverified runtime condition are recorded in the active
-[product plan](../active/product-completeness.md),
+[product plan](./product-completeness.md),
 not silently fixed or certified by this behavior-preserving change. No physical
 device, real multi-account backend, paid grading or airlock-enabled parity
 acceptance was performed. The reader and grading wire contracts remain intact.

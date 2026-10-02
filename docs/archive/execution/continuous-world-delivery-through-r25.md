@@ -25,7 +25,7 @@ superseded_by: null
 # 3D 世界交付清单
 
 > 2026-09-07 文档整理前快照，仅保存 R01–R25 的依据与当时状态，不再追加任务。
-> 唯一活动清单仍是[连续 3D 世界交付](../../plans/active/continuous-world-delivery.md)。
+> 唯一活动清单仍是[连续 3D 世界交付](../../plans/completed/continuous-world-delivery.md)。
 > 本页旧授权、模型状态、进程和待发布信息不是现在的执行指令；历史勾选也不是新代码的验收。
 
 本文件是当前 3D 工作的唯一任务清单。用户要求在额度中断后能直接接续，
