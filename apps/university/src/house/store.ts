@@ -9,6 +9,13 @@ import type { HouseKeepsake } from "@pieai/university-ui";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
 import { progressPort } from "../progress/store.js";
 
+/*
+ * The learner's house, as the app holds it: what the record says they have
+ * earned, the keepsake a chest just sent in, and the account preference the
+ * room's layout and wall marks are saved to. The rules live in core
+ * (`progress/house.ts`, `progress/keepsakes.ts`); the room is `@pieai/university-ui`.
+ */
+
 /** What the record says this learner holds, across every course on the shelf. */
 export function keepsakesOf(shelf: Shelf | null, progress: ProgressDocument): HouseKeepsake[] {
   if (!shelf) return [];
@@ -67,9 +74,4 @@ export function saveHouse(next: HouseState): void {
     house: next,
     updatedAt: { ...preferences.updatedAt, house: new Date().toISOString() },
   });
-}
-
-export function localDay(time = Date.now()): string {
-  const day = new Date(time);
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
 }

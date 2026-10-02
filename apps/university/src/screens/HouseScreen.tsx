@@ -6,13 +6,14 @@ import {
   placeItem,
   type ProgressDocument,
   type View,
+  calendarDay,
 } from "@pieai/university-core";
 import { CosmeticsPanel, HouseRoom, useI18n } from "@pieai/university-ui";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
 import { AvatarChip, type AvatarRecipe } from "@pieai/university-world/avatar.js";
 import { cosmeticOwner, cosmeticsStore } from "../cosmetics/store.js";
 import { progressPort } from "../progress/store.js";
-import { keepsakesOf, localDay, readHouse, saveHouse, takeArrival } from "./house-keepsakes.js";
+import { keepsakesOf, readHouse, saveHouse, takeArrival } from "../house/store.js";
 
 export default function HouseScreen({
   shelf,
@@ -42,7 +43,7 @@ export default function HouseScreen({
       <HouseRoom
         keepsakes={keepsakes}
         house={house}
-        today={localDay()}
+        today={calendarDay(Date.now())}
         highlight={highlight ?? arrived}
         avatar={<AvatarChip recipe={avatarRecipe ?? undefined} signedIn={signedIn} size={120} />}
         onPlace={(id, x, y) => saveHouse(placeItem(house, id, x, y, now()))}

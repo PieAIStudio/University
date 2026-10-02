@@ -83,7 +83,7 @@ import {
 } from "../screens/lazy";
 import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
-import { keepsakesOf } from "../screens/house-keepsakes.js";
+import { keepsakesOf } from "../house/store.js";
 
 const HouseScreen = lazy(() => import("../screens/HouseScreen.js"));
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));

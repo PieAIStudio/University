@@ -9,7 +9,7 @@
  * fetched a view over HTTP and one that folded a package, which is how the two
  * campuses came to disagree about what happens when a lesson is finished.
  */
-import { localDay, readHouse, saveHouse } from "./house-keepsakes.js";
+import { readHouse, saveHouse } from "../house/store.js";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -26,6 +26,7 @@ import {
   type LessonRef,
   offerToday,
   parseHouseState,
+  calendarDay,
 } from "@pieai/university-core";
 import { LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonProgressDestinationId } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
@@ -392,7 +393,13 @@ export function LessonScreen({
         onTryToday={(task) => {
           const house = parseHouseState(JSON.parse(readHouse()));
           saveHouse(
-            offerToday(house, lessonKeyOf(locator), task, localDay(), new Date().toISOString()),
+            offerToday(
+              house,
+              lessonKeyOf(locator),
+              task,
+              calendarDay(Date.now()),
+              new Date().toISOString(),
+            ),
           );
         }}
       />

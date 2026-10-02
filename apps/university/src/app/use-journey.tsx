@@ -16,13 +16,13 @@ import {
   answerUsed,
   pendingUsedQuestion,
   type UsedAnswer,
+  calendarDay,
 } from "@pieai/university-core";
 import { UsedQuestion } from "@pieai/university-ui";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 import { readingMinutes } from "@pieai/university-ui/path/path-stats.js";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { WrapUpCard } from "../guide/WrapUpCard.js";
-import { localDay } from "../screens/house-keepsakes.js";
 import type { JourneyOpening } from "../guide/use-journey-opening.js";
 
 export function journeyOwner(identity: IdentityStatus): string | null {
@@ -200,7 +200,7 @@ export function useJourney({
   const usedQuestion = useMemo(
     () =>
       active?.kind === "continue"
-        ? pendingUsedQuestion(progress.accountData().preferences.house, localDay())
+        ? pendingUsedQuestion(progress.accountData().preferences.house, calendarDay(Date.now()))
         : null,
     [active?.key],
   );
@@ -210,7 +210,13 @@ export function useJourney({
     const now = new Date().toISOString();
     progress.setAccountPreferences({
       ...preferences,
-      house: answerUsed(preferences.house, usedQuestion.lessonKey, answer, localDay(), now),
+      house: answerUsed(
+        preferences.house,
+        usedQuestion.lessonKey,
+        answer,
+        calendarDay(Date.now()),
+        now,
+      ),
       updatedAt: { ...preferences.updatedAt, house: now },
     });
   };
