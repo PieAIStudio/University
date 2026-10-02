@@ -4,6 +4,7 @@ import type { View } from "@pieai/university-core";
 import { buildCourseGrid, hexToWorld } from "@pieai/university-world";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import {
+  islandLookCameraForShot,
   islandLookSceneSource,
   type IslandLookDebugOptions,
   type IslandLookSceneSource,
@@ -55,8 +56,51 @@ interface IslandLookSourceOptions {
   readonly world: WorldMap | null;
 }
 
+interface IslandLookStageOptions extends Omit<IslandLookSourceOptions, "lookShotIsCourse"> {
+  readonly wide: boolean;
+}
+
+/**
+ * The DEV look judge's stage: the measured scene source and, for a named shot,
+ * the fixed camera that frames it. Outside DEV, or without a shot, both are null
+ * and the learner's own camera runs.
+ */
+export function useIslandLookStage({ wide, ...options }: IslandLookStageOptions) {
+  const { inCourse, lessons, lookDebug, viewKind, world } = options;
+  const lookShotIsCourse = import.meta.env.DEV && (lookDebug?.shot?.startsWith("course-") ?? false);
+  const lookSource = useIslandLookSource({ ...options, lookShotIsCourse });
+  const viewport = {
+    width: typeof window === "undefined" ? (wide ? 1440 : 390) : window.innerWidth,
+    // The phone shell gives the stage `min(70dvh, 720px)`, so the browser
+    // viewport is taller than the WebGL drawing surface used by the camera.
+    // Fit the debug shot to the actual stage envelope, not to the DOM below it.
+    height:
+      typeof window === "undefined"
+        ? wide
+          ? 900
+          : Math.min(844 * 0.7, 720)
+        : wide
+          ? window.innerHeight
+          : Math.min(window.innerHeight * 0.7, 720),
+  };
+  const bounds = lookShotIsCourse
+    ? (lookSource?.detailBounds ?? {
+        halfX: lessons[0]?.blueprint.bounds.halfX ?? 1,
+        halfZ: lessons[0]?.blueprint.bounds.halfZ ?? 1,
+        outline: lessons[0]?.blueprint.outline,
+      })
+    : { halfX: world?.extent ?? 1, halfZ: world?.extent ?? 1 };
+  const fixedCamera =
+    import.meta.env.DEV &&
+    lookDebug?.shot &&
+    ((lookShotIsCourse && inCourse) || (lookDebug.shot === "world-design" && viewKind === "world"))
+      ? islandLookCameraForShot(lookDebug.shot, bounds, viewport)
+      : null;
+  return { lookSource, fixedCamera };
+}
+
 /** Build the measured DEV scene from the same world/course data as the learner view. */
-export function useIslandLookSource({
+function useIslandLookSource({
   inCourse,
   lessons,
   lookDebug,

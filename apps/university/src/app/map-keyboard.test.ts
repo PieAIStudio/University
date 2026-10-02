@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { isMapSpace } from "./map-keyboard.js";
+import { isMapEscape, isMapSpace } from "./map-keyboard.js";
 
 afterEach(() => document.body.replaceChildren());
-function decision(element: HTMLElement, init: KeyboardEventInit = {}) {
+function decision(element: HTMLElement, init: KeyboardEventInit = {}, judge = isMapSpace) {
   let accepted = false;
   element.addEventListener(
     "keydown",
     (e) => {
-      accepted = isMapSpace(e);
+      accepted = judge(e);
     },
     { once: true },
   );
@@ -65,5 +65,19 @@ describe("map shortcut ownership", () => {
     panel.dataset.mobilePanel = "aside";
     document.body.append(panel);
     expect(decision(document.body)).toBe(false);
+  });
+});
+describe("map escape ownership", () => {
+  const escape = { code: "Escape", key: "Escape" };
+  it("clears the map's pick from the page, not from a field or an open drawer", () => {
+    expect(decision(document.body, escape, isMapEscape)).toBe(true);
+    const input = document.createElement("input");
+    document.body.append(input);
+    expect(decision(input, escape, isMapEscape)).toBe(false);
+    expect(decision(document.body, { ...escape, isComposing: true }, isMapEscape)).toBe(false);
+    const panel = document.createElement("div");
+    panel.dataset.mobilePanel = "rail";
+    document.body.append(panel);
+    expect(decision(document.body, escape, isMapEscape)).toBe(false);
   });
 });

@@ -28,7 +28,6 @@
  */
 import { arriveAt } from "../screens/house-keepsakes.js";
 import { useI18n } from "@pieai/university-ui/i18n.js";
-import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import {
   Suspense,
   useCallback,
@@ -42,17 +41,9 @@ import {
   activeIdForView,
   isBareView,
   learningNodeId,
-  leagueStanding,
   learningSegments,
-  lessonRefKey,
   lessonsWithDueCards,
-  questsForToday,
-  studyWeek,
-  todayGoalProgress,
-  toPath,
   progressSourceOf,
-  restTicketBalance,
-  type FeedbackContext,
   type LessonRef,
   type View,
   keepsakeForLesson,
@@ -66,19 +57,20 @@ import {
   type LearnerNavigationFocus,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
-import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { MapEntryAction, type MapEntryLock } from "@pieai/university-ui/path/MapEntryAction.js";
 import {
   MapInformation,
   courseInformation,
   lessonInformation,
+  planetInformation,
+  studyInformation,
   type MapInformationData,
 } from "./MapInformation.js";
 import {
   MapQuickActions,
+  mapDestinations,
+  mapQuickCommands,
   useMapShortcuts,
-  type MapDestination,
-  type MapQuickCommand,
 } from "./MapQuickActions.js";
 import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
 import {
@@ -87,7 +79,6 @@ import {
   type MonsterRole,
 } from "@pieai/university-world/learning-nodes.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
-import { RailIdentity } from "@pieai/university-world/avatar.js";
 
 import { CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
 import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
@@ -114,9 +105,6 @@ import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { useChestOpening } from "./use-chest-opening.js";
 import { useJourney } from "./use-journey.js";
 import { useWeeklyBoss } from "./use-weekly-boss.js";
-import { AvatarPanel } from "@pieai/university-ui/navigation/AvatarPanel.js";
-import { leagueTierName } from "@pieai/university-ui/navigation/league-tier-name.js";
-import { EmblemImage } from "@pieai/university-world";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
@@ -127,18 +115,12 @@ import { rankPromotions } from "../progress/store.js";
 import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
 import { useWorldMarkers, useWorldModel, type PathOverlay } from "./world-model";
-
-/** No labels: the chest's close-up keeps the island to itself. */
-const NO_MARKERS: readonly never[] = [];
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
-import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
+import { PresenceLayer, PresenceSession } from "@pieai/university-ui/presence.js";
 import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { bindWorldStylePreference, WorldStyleControl } from "@pieai/university-ui/world-style.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
-import {
-  islandLookCameraForShot,
-  resolveIslandLookDebug,
-} from "@pieai/university-world/island-look.js";
+import { resolveIslandLookDebug } from "@pieai/university-world/island-look.js";
 import {
   WorldMapCanvas,
   type MapViewportCommands,
@@ -154,26 +136,29 @@ import { CosmeticAppearanceProvider } from "@pieai/university-ui";
 import { AvatarChip, cosmeticAvatarRecipe } from "@pieai/university-world/avatar.js";
 import { useSkipTest } from "./skip-test.js";
 import { useCoursePathActions } from "./course-path-actions";
-import { useIslandLookSource, useIslandLookView } from "./island-look-view";
+import { useIslandLookStage, useIslandLookView } from "./island-look-view";
 import { useMistakeSummary } from "./mistake-summary";
 import { useSceneCamera } from "./scene-camera";
 import { useSceneInteraction } from "./scene-interaction";
 import { useStudyContext } from "./study-context";
 import { readNavigationFocus } from "./navigation-focus.js";
-import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
 import { DomainInterest } from "./DomainInterest.js";
 import { useTodaySectionData } from "./today-section-data";
-import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
 import { OpeningSplash, useOpeningAdmission } from "./OpeningSplash.js";
 import { splashProgress } from "./splash-policy.js";
-import { welcomeDestinations, type WelcomeDestination } from "../guide/first-meeting.js";
 import { useWelcome } from "./use-welcome.js";
-import { isWelcomeEntry } from "./welcome-policy.js";
+import { useFeedbackContext } from "./feedback-context.js";
+import { useFirstMeeting } from "./use-first-meeting.js";
+import { useCourseAvatarTarget } from "./use-course-avatar-target.js";
+import { usePlanetChoice } from "./use-planet-choice.js";
+import { useContinueOnReturn, useFrameLessonOnce } from "./map-arrival.js";
+import { usePresenceAnchors } from "./presence-anchors.js";
+import { useReviewDueAnalytics, useRouteAnalytics } from "./route-analytics.js";
+import { isMapEscape } from "./map-keyboard.js";
+import { LearnerAvatarDialog, LearnerAvatarPanel } from "./LearnerAvatarPanel.js";
 
-type FeedbackContextSeed = Pick<
-  FeedbackContext,
-  "locator" | "contentRevision" | "exerciseAttemptCount" | "signedIn"
->;
+/** No labels: the chest's close-up keeps the island to itself. */
+const NO_MARKERS: readonly never[] = [];
 
 export function App() {
   const interfaceTranslator = useI18n();
@@ -204,17 +189,7 @@ export function App() {
   const { view: routeView, setView } = useRoute();
   const welcome = useWelcome(routeView, progress, identityStatus.kind);
   const admission = useOpeningAdmission(routeView);
-  const [firstMeeting, setFirstMeeting] = useState<{
-    owner: string;
-    destination: WelcomeDestination;
-    /** A restored canvas must frame the pair again before the guide points. */
-    framedAttempt: number | null;
-  } | null>(null);
-  const welcomePaths = useMemo(() => welcomeDestinations(studies), [studies]);
   const [avatarPanelOpen, setAvatarPanelOpen] = useState<string | null>(null);
-  const returnEntry = useRef(
-    typeof location !== "undefined" && isWelcomeEntry(new URL(location.href)),
-  );
   const wide = useMinWidth(768);
   // The look judge is a DEV-only URL input. A seed identifies the course whose
   // existing blueprint should be measured; it never creates a second course or
@@ -257,22 +232,7 @@ export function App() {
   }, [retrySceneState]);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
-  /** The course cell the learner last chose, retained through its settlement. */
-  const [courseAvatarTarget, setCourseAvatarTarget] = useState<{
-    readonly studyId: string;
-    readonly courseId: string;
-    readonly lessonId: string | null;
-    /** A learning node (gate, pennant or board) the avatar stands at instead of a lesson. */
-    readonly nodeId: string | null;
-  } | null>(null);
-  const rememberCourseAvatarTarget = useCallback((lesson: LessonPlacement) => {
-    setCourseAvatarTarget({
-      studyId: lesson.studyId,
-      courseId: lesson.courseId,
-      lessonId: lesson.lessonId,
-      nodeId: null,
-    });
-  }, []);
+  const avatarTarget = useCourseAvatarTarget(view);
   /*
     V5 §12 decision C′: a locked stop's card — lesson, gate, pennant or board —
     says why and offers the current lesson or the current stretch's checkpoint
@@ -295,19 +255,10 @@ export function App() {
     );
     return {
       current: live.lessonTitle,
-      onGoToCurrent: () => {
-        rememberCourseAvatarTarget(live);
-        mapCommands.current?.focus(live.position.toArray());
-        setPathOverlay({
-          kind: "node",
-          unitId: live.unitId,
-          lessonId: live.lessonId,
-          returnFocusTo: null,
-        });
-      },
+      onGoToCurrent: () => goToLesson(live),
       onTest: segment
         ? () => {
-            rememberCourseAvatarNode(learningNodeId(segment, "checkpoint"));
+            avatarTarget.rememberNode(learningNodeId(segment, "checkpoint"));
             setPathOverlay({
               kind: "learning-node",
               segment,
@@ -319,18 +270,6 @@ export function App() {
         : undefined,
     };
   };
-  const rememberCourseAvatarNode = useCallback(
-    (nodeId: string) => {
-      if (view.kind !== "course") return;
-      setCourseAvatarTarget({
-        studyId: view.studyId,
-        courseId: view.courseId,
-        lessonId: null,
-        nodeId,
-      });
-    },
-    [view],
-  );
   // Screen 02/03: a path card sits on the course map. It is not a route —
   // confirming is what changes the URL, not pointing at a stone.
   const [pathOverlay, setPathOverlay] = useState<PathOverlay | null>(null);
@@ -353,8 +292,6 @@ export function App() {
     setView({ kind: "me" });
   }, [routeView, setView]);
   const readEntitlements = useCallback(() => paymentPort.readEntitlements(), []);
-  const lastRouteAnalyticsKey = useRef<string | null>(null);
-  const reviewDueAnalyticsReported = useRef(false);
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const knowledge = useKnowledgeAlbum(shelf, progressPort, source, progress);
   const {
@@ -411,38 +348,7 @@ export function App() {
       ? courseOf(view.studyId, view.courseId)
       : null;
   usePageMetadata(view, course);
-
-  const feedbackLocator: LessonRef | null =
-    view.kind === "lesson" || view.kind === "settled"
-      ? {
-          studyId: view.studyId,
-          courseId: view.courseId,
-          unitId: view.unitId,
-          lessonId: view.lessonId,
-        }
-      : null;
-  const feedbackLesson = feedbackLocator
-    ? (course?.units
-        .find((unit) => unit.id === feedbackLocator.unitId)
-        ?.lessons.find((lesson) => lesson.id === feedbackLocator.lessonId) ?? null)
-    : null;
-  const feedbackContext = useMemo<FeedbackContextSeed>(() => {
-    const contentRevision = feedbackLesson?.contentRevision ?? null;
-    const exerciseAttemptCount =
-      feedbackLocator && contentRevision !== null
-        ? Object.values(progress.exerciseAttempts).filter(
-            (attempt) =>
-              lessonRefKey(attempt.locator) === lessonRefKey(feedbackLocator) &&
-              attempt.contentRevision === contentRevision,
-          ).length
-        : 0;
-    return {
-      locator: feedbackLocator,
-      contentRevision,
-      exerciseAttemptCount,
-      signedIn: avatarSignedIn,
-    };
-  }, [avatarSignedIn, feedbackLesson, feedbackLocator, progress.exerciseAttempts]);
+  const feedback = useFeedbackContext(view, course, progress, avatarSignedIn);
 
   const {
     lessonsDone,
@@ -524,8 +430,19 @@ export function App() {
   const dismissPick = useCallback(() => {
     setPicked(null);
     setPathOverlay(null);
-    setCourseAvatarTarget(null);
-  }, []);
+    avatarTarget.forget();
+  }, [avatarTarget.forget]);
+  /** Move the camera to a lesson stone and open its card; a locked stone explains, the avatar stays put. */
+  const goToLesson = (placement: LessonPlacement) => {
+    if (placement.state !== "locked") avatarTarget.rememberLesson(placement);
+    mapCommands.current?.focus(placement.position.toArray());
+    setPathOverlay({
+      kind: "node",
+      unitId: placement.unitId,
+      lessonId: placement.lessonId,
+      returnFocusTo: null,
+    });
+  };
   const companionNodes = useRef(new Map<string, HTMLElement>());
 
   const { focusedStudyId, world, learnerAt, studyItems, planetStudies, backToMapLabel } =
@@ -542,53 +459,13 @@ export function App() {
       view,
     });
 
-  // Browsing an empty domain changes the planet focus, never the study/account
-  // selection. Both DOM and globe consume this one transient selection owner.
-  const planetDomainCatalog = useMemo(() => mapDomainCatalog(), []);
-  const [planetDomainChoice, setPlanetDomainChoice] = useState<string | null>(null);
-  const [planetStudyChoice, setPlanetStudyChoice] = useState<string | null>(null);
-  const lastStudyByDomain = useRef(new Map<string, string>());
-  const focusedPlanetDomainId =
-    planetStudies.find((study) => study.id === focusedStudyId)?.domain?.id ??
-    (focusedStudyId ? "unclassified" : "programming");
-  const selectedPlanetDomainId = planetDomainChoice;
-  useEffect(() => {
-    if (focusedStudyId) lastStudyByDomain.current.set(focusedPlanetDomainId, focusedStudyId);
-    if (view.kind !== "planet") {
-      setPlanetDomainChoice(null);
-      setPlanetStudyChoice(null);
-    }
-  }, [focusedPlanetDomainId, focusedStudyId, view.kind]);
-  const selectPlanetDomain = useCallback(
-    (domainId: string) => {
-      if (
-        !planetDomainCatalog.some((domain) => domain.id === domainId) &&
-        !planetStudies.some((study) => (study.domain?.id ?? "unclassified") === domainId)
-      )
-        return;
-      const restored = studyForMapDomain(
-        domainId,
-        planetStudies,
-        focusedStudyId,
-        lastStudyByDomain.current.get(domainId),
-      );
-      setPlanetDomainChoice(domainId);
-      setPlanetStudyChoice(null);
-      if (restored) setNavigationFocus(restored);
-    },
-    [focusedStudyId, planetDomainCatalog, planetStudies],
-  );
-  const selectPlanetStudy = useCallback(
-    (studyId: string) => {
-      const study = planetStudies.find((entry) => entry.id === studyId);
-      if (!study) return;
-      lastStudyByDomain.current.set(study.domain?.id ?? "unclassified", studyId);
-      setPlanetDomainChoice(study.domain?.id ?? "unclassified");
-      setPlanetStudyChoice(studyId);
-      setNavigationFocus(studyId);
-    },
-    [planetStudies],
-  );
+  const planet = usePlanetChoice({
+    planetStudies,
+    focusedStudyId,
+    viewKind: view.kind,
+    setNavigationFocus,
+    setView,
+  });
 
   const { projectName, focusedTodayNode, focusedNextUpProgress, focusStudy } = useStudyContext({
     courseProgress,
@@ -609,8 +486,8 @@ export function App() {
     proofs: progress.provenLessons,
     labelNodes,
     lessons,
-    setCourseAvatarTarget: rememberCourseAvatarTarget,
-    setCourseAvatarNode: rememberCourseAvatarNode,
+    setCourseAvatarTarget: avatarTarget.rememberLesson,
+    setCourseAvatarNode: avatarTarget.rememberNode,
     setPathOverlay,
     setPicked,
     view: sceneView,
@@ -622,30 +499,17 @@ export function App() {
       ? identityStatus.user.id
       : "guest";
   useEffect(() => setAvatarPanelOpen(null), [guideUser, view.kind]);
-  const firstMeetingHere =
-    firstMeeting?.owner === guideUser &&
-    view.kind === "course" &&
-    view.studyId === firstMeeting.destination.lesson.studyId &&
-    view.courseId === firstMeeting.destination.lesson.courseId
-      ? firstMeeting.destination
-      : null;
-  useEffect(() => {
-    if (firstMeeting && !firstMeetingHere) setFirstMeeting(null);
-  }, [firstMeeting, firstMeetingHere]);
-  const chooseWelcomePath = (destination: WelcomeDestination, assessment: boolean) => {
-    // Re-resolve the real shelf identity, not an object retained from an older opening.
-    const current = welcomePaths.find((path) => path.id === destination.id);
-    if (!current || !welcome.visible) return;
-    welcome.dismiss("lesson");
-    setNavigationFocus(current.lesson.studyId);
-    setFirstMeeting(
-      assessment ? null : { owner: guideUser, destination: current, framedAttempt: null },
-    );
-    setView({ kind: "course", studyId: current.lesson.studyId, courseId: current.lesson.courseId });
-    setPathOverlay(
-      assessment ? { kind: "unit", unitId: current.lesson.unitId, returnFocusTo: null } : null,
-    );
-  };
+  const firstMeeting = useFirstMeeting({
+    guideUser,
+    view,
+    studies,
+    welcome,
+    sceneAttempt,
+    setNavigationFocus,
+    setView,
+    setPathOverlay,
+    openAccount,
+  });
   const guideMap = useMemo<MapGuideMap | null>(
     () =>
       view.kind === "world" || view.kind === "course"
@@ -690,92 +554,20 @@ export function App() {
     });
   }, [setView, todayLesson]);
   const showMap = SHOWS_THE_MAP.has(view.kind) || openingOnMap;
-  const clearPlanetPick = useCallback(() => {
-    setPlanetDomainChoice(null);
-    setPlanetStudyChoice(null);
-  }, []);
-  const enterPlanetStudy = (studyId: string) => {
-    if (!planetStudies.some((study) => study.id === studyId && study.lessonCount > 0)) return;
-    setNavigationFocus(studyId);
-    setView({ kind: "world" });
-  };
-  useEffect(() => {
-    if (view.kind === "world" || view.kind === "planet") setCourseAvatarTarget(null);
-  }, [view.kind]);
   useEffect(() => {
     if (!mapMode) return;
     const cancel = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return;
-      if (
-        event.target instanceof Element &&
-        event.target.closest(
-          'input,textarea,select,[contenteditable="true"],[role="dialog"],[role="menu"]',
-        )
-      )
-        return;
-      if (
-        document.querySelector(
-          'dialog[open],[aria-modal="true"],.nav-rail__flyout,[data-mobile-panel="rail"],[data-mobile-panel="aside"]',
-        )
-      )
-        return;
-      if (view.kind === "planet") clearPlanetPick();
+      if (!isMapEscape(event)) return;
+      if (view.kind === "planet") planet.clear();
       else dismissPick();
     };
     window.addEventListener("keydown", cancel);
     return () => window.removeEventListener("keydown", cancel);
-  }, [mapMode, view.kind, clearPlanetPick, dismissPick]);
+  }, [mapMode, view.kind, planet.clear, dismissPick]);
   const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
-
-  useEffect(() => {
-    let event: AnalyticsEvent | null = null;
-    let key: string | null = null;
-    if (view.kind === "course") {
-      key = `course:${view.studyId}/${view.courseId}`;
-      event = {
-        name: "course_opened",
-        studyId: view.studyId,
-        courseId: view.courseId,
-      };
-    } else if (view.kind === "lesson") {
-      key = `lesson:${view.studyId}/${view.courseId}/${view.lessonId}`;
-      event = {
-        name: "lesson_opened",
-        studyId: view.studyId,
-        courseId: view.courseId,
-        lessonId: view.lessonId,
-      };
-    } else if (view.kind === "settled") {
-      key = `settled:${view.studyId}/${view.courseId}/${view.lessonId}`;
-      event = {
-        name: "settlement_shown",
-        studyId: view.studyId,
-        courseId: view.courseId,
-        lessonId: view.lessonId,
-      };
-    } else if (view.kind === "plans") {
-      key = "plans";
-      event = { name: "plans_opened" };
-    }
-    if (!event) {
-      lastRouteAnalyticsKey.current = null;
-      return;
-    }
-    if (key === lastRouteAnalyticsKey.current) return;
-    lastRouteAnalyticsKey.current = key;
-    trackEvent(event);
-  }, [view]);
-
-  useEffect(() => {
-    if (due.length === 0) {
-      reviewDueAnalyticsReported.current = false;
-      return;
-    }
-    if (!reviewVisible || !todayCard || reviewDueAnalyticsReported.current) return;
-    reviewDueAnalyticsReported.current = true;
-    trackEvent({ name: "review_due_opened", cardCount: due.length });
-  }, [due.length, reviewVisible, todayCard]);
+  useRouteAnalytics(view);
+  useReviewDueAnalytics(due.length, reviewVisible && Boolean(todayCard));
 
   // Suspense reports the models; this reports the JSON they stand on. Either
   // one alone still paints an empty sea, which is the same broken-page read.
@@ -790,45 +582,20 @@ export function App() {
   const mapRecoveryReason: RecoveryReason | null =
     mapMode || openingOnMap ? (sceneFailure ?? (mapTimedOut ? "scene-timeout" : null)) : null;
   const splashReady = sceneReady && !waitingForData;
-  useEffect(() => {
-    if (!returnEntry.current) return;
-    if (view.kind !== "world") {
-      returnEntry.current = false;
-      return;
-    }
-    if (admission.pending || !splashReady || identityStatus.kind === "pending") return;
-    const owner =
-      identityStatus.kind === "signed_in" || identityStatus.kind === "anonymous"
-        ? identityStatus.user.id
-        : null;
-    if (progressPort.syncState().userId !== owner) return;
-    if (progressPort.syncState().status === "syncing") return;
-    returnEntry.current = false;
-    if (welcome.visible || !todayLesson || Object.keys(progress.lessons).length === 0) return;
-    journey.continueAt(todayLesson);
-  }, [
-    view.kind,
-    admission.pending,
+  useContinueOnReturn({
+    viewKind: view.kind,
+    admissionPending: admission.pending,
     splashReady,
     identityStatus,
-    welcome.visible,
+    welcomeVisible: welcome.visible,
     todayLesson,
     progress,
-    journey.continueAt,
-  ]);
-  const framedJourney = useRef<string | null>(null);
-  useEffect(() => {
-    if (!journey.target) {
-      framedJourney.current = null;
-      return;
-    }
-    const key = `${guideUser}:${sceneAttempt}:${lessonRefKey(journey.target)}`;
-    if (!splashReady || framedJourney.current === key) return;
-    const target = lessons.find((lesson) => lesson.lessonId === journey.target?.lessonId);
-    if (!target || !mapCommands.current) return;
-    framedJourney.current = key;
-    mapCommands.current.focus(target.position.toArray());
-  }, [journey.target, guideUser, sceneAttempt, splashReady, lessons]);
+    continueAt: journey.continueAt,
+  });
+  const arrival = { guideUser, sceneAttempt, splashReady, lessons, mapCommands };
+  useFrameLessonOnce(journey.target, arrival);
+  // The learner explicitly chose this route: frame that real stone once.
+  useFrameLessonOnce(firstMeeting.here?.lesson ?? null, arrival);
   const loadProgress = splashProgress(
     !waitingForData,
     sceneProgress.loaded,
@@ -836,22 +603,6 @@ export function App() {
     sceneReady,
   );
   const showOpeningSplash = admission.pending && mapMode && !mapRecoveryReason;
-  const framedFirstStone = useRef<string | null>(null);
-  useEffect(() => {
-    if (!firstMeetingHere) {
-      framedFirstStone.current = null;
-      return;
-    }
-    const key = `${guideUser}:${sceneAttempt}:${lessonRefKey(firstMeetingHere.lesson)}`;
-    if (!splashReady || framedFirstStone.current === key) return;
-    const stone = lessons.find((lesson) => lesson.lessonId === firstMeetingHere.lesson.lessonId);
-    if (!stone || !mapCommands.current) return;
-    // The learner explicitly chose this route. Frame that real stone once,
-    // rather than the ordinary road's look-ahead point: its chest then stays
-    // above the guide's bottom card even on a narrow phone. No scenery moves.
-    framedFirstStone.current = key;
-    mapCommands.current.focus(stone.position.toArray());
-  }, [firstMeetingHere, guideUser, sceneAttempt, splashReady, lessons]);
   /*
     The campus record is still opening.
 
@@ -919,11 +670,11 @@ export function App() {
     onChest: chest.beginWeekly,
   });
   const labelMarkers = useMemo(() => {
-    if (firstMeetingHere) {
+    if (firstMeeting.here) {
       // One named place in this one-step tour. Other normal map labels return
       // on dismissal; their competing kind icons do not cover this close-up.
       return markers
-        .filter((marker) => marker.id === firstMeetingHere.lesson.lessonId)
+        .filter((marker) => marker.id === firstMeeting.here?.lesson.lessonId)
         .map((marker) => ({
           ...marker,
           text: interfaceTranslator.t("map.stop.lesson", { number: 1 }),
@@ -949,7 +700,7 @@ export function App() {
     markers,
     weekly.marker,
     weekly.availableIsland,
-    firstMeetingHere,
+    firstMeeting.here,
     interfaceTranslator,
     view.kind,
     focusedStudyId,
@@ -980,7 +731,7 @@ export function App() {
           },
           onOpenLearningNode: (segment, nodeKind, returnFocusTo) => {
             shortcuts.close();
-            rememberCourseAvatarNode(learningNodeId(segment, nodeKind));
+            avatarTarget.rememberNode(learningNodeId(segment, nodeKind));
             setPathOverlay({
               kind: "learning-node",
               segment,
@@ -994,43 +745,7 @@ export function App() {
         }
       : null;
 
-  const presenceView = presenceViewKey(view);
-  const presenceLocation = useMemo(() => {
-    if (view.kind === "lesson" || view.kind === "settled") {
-      return { studyId: view.studyId, courseId: view.courseId, lessonId: view.lessonId };
-    }
-    if (view.kind === "course") {
-      const live = lessons.find((lesson) => lesson.state === "live");
-      return {
-        studyId: view.studyId,
-        courseId: view.courseId,
-        lessonId: live?.lessonId ?? null,
-      };
-    }
-    if (focusedTodayNode) {
-      return {
-        studyId: focusedTodayNode.studyId,
-        courseId: focusedTodayNode.courseId,
-        lessonId: null,
-      };
-    }
-    return null;
-  }, [view, lessons, focusedTodayNode]);
-  const companionAnchors = useMemo(() => {
-    if (sceneView.kind === "course" || sceneView.kind === "lesson") {
-      return lessons.map((lesson) => ({
-        id: `lesson:${lesson.lessonId}`,
-        position: lesson.position,
-      }));
-    }
-    if (!world) return [];
-    return world.placements.map((entry) => ({
-      id: `course:${entry.node.studyId}/${entry.node.courseId}`,
-      position: entry.position,
-    }));
-  }, [sceneView.kind, lessons, world]);
-  const companionSurface =
-    sceneView.kind === "course" || sceneView.kind === "lesson" ? "course" : "world";
+  const presence = usePresenceAnchors({ view, sceneView, lessons, focusedTodayNode, world });
 
   /*
     One stage for every scene, mounted once.
@@ -1056,42 +771,14 @@ export function App() {
       .filter((lesson) => lesson.state === "done" && due.has(lesson.lessonId))
       .map((lesson) => lesson.lessonId);
   }, [inCourse, course, view, progress, lessons]);
-  const lookShotIsCourse = import.meta.env.DEV && (lookDebug?.shot?.startsWith("course-") ?? false);
-  const lookViewport = {
-    width: typeof window === "undefined" ? (wide ? 1440 : 390) : window.innerWidth,
-    // The phone shell gives the stage `min(70dvh, 720px)`, so the browser
-    // viewport is taller than the WebGL drawing surface used by the camera.
-    // Fit the debug shot to the actual stage envelope, not to the DOM below it.
-    height:
-      typeof window === "undefined"
-        ? wide
-          ? 900
-          : Math.min(844 * 0.7, 720)
-        : wide
-          ? window.innerHeight
-          : Math.min(window.innerHeight * 0.7, 720),
-  };
-  const lookSource = useIslandLookSource({
+  const { lookSource, fixedCamera } = useIslandLookStage({
     inCourse,
     lessons,
     lookDebug,
-    lookShotIsCourse,
     viewKind: view.kind,
     world,
+    wide,
   });
-  const lookBounds = lookShotIsCourse
-    ? (lookSource?.detailBounds ?? {
-        halfX: lessons[0]?.blueprint.bounds.halfX ?? 1,
-        halfZ: lessons[0]?.blueprint.bounds.halfZ ?? 1,
-        outline: lessons[0]?.blueprint.outline,
-      })
-    : { halfX: world?.extent ?? 1, halfZ: world?.extent ?? 1 };
-  const fixedCamera =
-    import.meta.env.DEV &&
-    lookDebug?.shot &&
-    ((lookShotIsCourse && inCourse) || (lookDebug.shot === "world-design" && view.kind === "world"))
-      ? islandLookCameraForShot(lookDebug.shot, lookBounds, lookViewport)
-      : null;
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
   const stage =
@@ -1158,27 +845,14 @@ export function App() {
               compete with course names for the label budget, and a companion
               that lost that competition would silently stop existing.
             */}
-            <CompanionProbe anchors={companionAnchors} nodes={companionNodes.current} />
+            <CompanionProbe anchors={presence.anchors} nodes={companionNodes.current} />
             {inCourse && lessons.length > 0 ? (
               <CourseScene
                 lessons={lessons}
                 avatarRecipe={avatarRecipe}
                 avatarSignedIn={avatarSignedIn}
-                avatarLessonId={
-                  firstMeetingHere?.lesson.lessonId ??
-                  ((view.kind === "course" || view.kind === "lesson" || view.kind === "settled") &&
-                  courseAvatarTarget?.studyId === view.studyId &&
-                  courseAvatarTarget.courseId === view.courseId
-                    ? courseAvatarTarget.lessonId
-                    : null)
-                }
-                avatarNodeId={
-                  view.kind === "course" &&
-                  courseAvatarTarget?.studyId === view.studyId &&
-                  courseAvatarTarget.courseId === view.courseId
-                    ? courseAvatarTarget.nodeId
-                    : null
-                }
+                avatarLessonId={firstMeeting.here?.lesson.lessonId ?? avatarTarget.lessonId}
+                avatarNodeId={avatarTarget.nodeId}
                 onPickNode={(site) => {
                   if (view.kind !== "course" || !course) return;
                   const segment = learningSegments(course).find(
@@ -1187,7 +861,7 @@ export function App() {
                   if (!segment) return;
                   // The same as a lesson stone: a locked stop explains, an open one is hopped to.
                   const locked = learningSiteLocked(site, lessons);
-                  if (!locked) rememberCourseAvatarNode(site.id);
+                  if (!locked) avatarTarget.rememberNode(site.id);
                   setPathOverlay({
                     kind: "stop",
                     segment,
@@ -1201,7 +875,7 @@ export function App() {
                 onPick={(lesson) => {
                   if (view.kind !== "course") return;
                   // A locked stone opens its explanation; the avatar stays put.
-                  if (lesson.state !== "locked") rememberCourseAvatarTarget(lesson);
+                  if (lesson.state !== "locked") avatarTarget.rememberLesson(lesson);
                   setPathOverlay({
                     kind: "node",
                     unitId: lesson.unitId,
@@ -1211,18 +885,8 @@ export function App() {
                 }}
                 onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
                 opening={openingOnMap || chest.weekly ? chest.opening : null}
-                introductoryLessonId={firstMeetingHere?.lesson.lessonId ?? null}
-                onIntroductionReady={(lessonId) => {
-                  setFirstMeeting((current) =>
-                    current &&
-                    current.framedAttempt !== sceneAttempt &&
-                    current.owner === guideUser &&
-                    current.destination === firstMeetingHere &&
-                    current.destination.lesson.lessonId === lessonId
-                      ? { ...current, framedAttempt: sceneAttempt }
-                      : current,
-                  );
-                }}
+                introductoryLessonId={firstMeeting.here?.lesson.lessonId ?? null}
+                onIntroductionReady={firstMeeting.introductionReady}
                 reviewDue={reviewDue}
                 cosmeticOrnamentId={cosmeticData?.equipped.island}
                 weeklyBoss={weekly.scene}
@@ -1238,8 +902,8 @@ export function App() {
             {chest.weekly ? chest.overlay : null}
             <PresenceLayer
               port={presencePort}
-              surface={companionSurface}
-              viewKey={presenceView}
+              surface={presence.surface}
+              viewKey={presence.viewKey}
               attach={(userId, element) => {
                 if (element) companionNodes.current.set(userId, element);
                 else companionNodes.current.delete(userId);
@@ -1317,37 +981,8 @@ export function App() {
             <MapGuide
               map={guideMap}
               ready={splashReady && !admission.pending && !mapCover}
-              invitation={
-                welcome.visible && welcomePaths.length > 0
-                  ? {
-                      choices: welcomePaths,
-                      onChoose: chooseWelcomePath,
-                      onBrowse: () => {
-                        welcome.dismiss("map");
-                        setView({ kind: "planet" });
-                      },
-                      onSignIn: () => {
-                        welcome.dismiss("account");
-                        openAccount();
-                      },
-                      onDismiss: () => welcome.dismiss("map"),
-                    }
-                  : null
-              }
-              firstStone={
-                firstMeetingHere
-                  ? {
-                      id: `${guideUser}:${firstMeetingHere.lesson.studyId}:${firstMeetingHere.lesson.courseId}:${firstMeetingHere.lesson.lessonId}`,
-                      lessonId: firstMeetingHere.lesson.lessonId,
-                      ready: firstMeeting?.framedAttempt === sceneAttempt,
-                      onDismiss: () => setFirstMeeting(null),
-                      onEnter: () => {
-                        setFirstMeeting(null);
-                        setView({ kind: "lesson", ...firstMeetingHere.lesson });
-                      },
-                    }
-                  : null
-              }
+              invitation={firstMeeting.invitation}
+              firstStone={firstMeeting.firstStone}
               journey={journey.opening}
               onShortcuts={shortcuts.show}
               onOpenDetails={() => setView({ kind: "settings" })}
@@ -1413,57 +1048,9 @@ export function App() {
     />
   );
 
-  const selectedDomain = planetDomainCatalog.find((domain) => domain.id === planetDomainChoice);
-  const selectedStudy = planetStudies.find((study) => study.id === planetStudyChoice);
-  const currentStudy = studies.find((study) => study.id === focusedStudyId);
   const mapInfo: MapInformationData =
     view.kind === "planet"
-      ? selectedStudy
-        ? {
-            id: `study:${selectedStudy.id}`,
-            title: selectedStudy.title,
-            kind: "study",
-            description: selectedStudy.description,
-            facts: [
-              interfaceTranslator.t("map.counts", {
-                courses: selectedStudy.courseCount,
-                lessons: selectedStudy.lessonCount,
-              }),
-            ],
-          }
-        : selectedDomain
-          ? {
-              id: `domain:${selectedDomain.id}`,
-              title: selectedDomain.title,
-              kind: "domain",
-              description: selectedDomain.description,
-              sections: [
-                {
-                  title: interfaceTranslator.t("map.study"),
-                  lines: planetStudies
-                    .filter((study) => (study.domain?.id ?? "unclassified") === selectedDomain.id)
-                    .map((study) => study.title),
-                },
-              ],
-              facts: planetStudies.some((study) => study.domain?.id === selectedDomain.id)
-                ? [
-                    interfaceTranslator.t("map.counts", {
-                      courses: planetStudies
-                        .filter((study) => study.domain?.id === selectedDomain.id)
-                        .reduce((sum, study) => sum + study.courseCount, 0),
-                      lessons: planetStudies
-                        .filter((study) => study.domain?.id === selectedDomain.id)
-                        .reduce((sum, study) => sum + study.lessonCount, 0),
-                    }),
-                  ]
-                : [interfaceTranslator.t("ui.world.domain.unpublished")],
-            }
-          : {
-              id: "planet:none",
-              title: interfaceTranslator.t("ui.world.navigation.planets"),
-              kind: "none",
-              description: interfaceTranslator.t("map.chooseHint"),
-            }
+      ? planetInformation(planet.selectedStudy, planet.selectedDomain, planetStudies)
       : (view.kind === "course" || openingOnMap) && course
         ? view.kind === "course" && pathOverlay?.kind === "node" && pathLesson && pathUnit
           ? lessonInformation(pathUnit, pathLesson)
@@ -1477,115 +1064,66 @@ export function App() {
               courseProgressForNode(picked)?.done ?? 0,
               unmetFor(picked, picked.studyId),
             )
-          : {
-              id: `study:${focusedStudyId ?? "none"}`,
-              title:
-                currentStudy?.title ?? interfaceTranslator.t("ui.world.navigation.archipelago"),
-              kind: "study",
-              description:
-                (currentStudy && "description" in currentStudy ? currentStudy.description : null) ||
-                interfaceTranslator.t("map.chooseHint"),
-            };
+          : studyInformation(
+              focusedStudyId,
+              studies.find((study) => study.id === focusedStudyId),
+            );
 
-  const destinations: MapDestination[] =
+  const destinations = mapDestinations(
     view.kind === "planet"
-      ? planetDomainCatalog.map((domain) => ({
-          id: domain.id,
-          title: domain.title,
-          detail: domain.description,
-          select: () => selectPlanetDomain(domain.id),
-        }))
+      ? { level: "planet", domains: planet.catalog }
       : view.kind === "course" && course
-        ? course.units.flatMap((unit) =>
-            unit.lessons.map((lesson) => ({
-              id: lesson.id,
-              title: lesson.title,
-              detail: unit.title,
-              select: () => {
-                const placement = lessons.find((item) => item.lessonId === lesson.id);
-                if (!placement) return;
-                if (placement.state !== "locked") rememberCourseAvatarTarget(placement);
-                mapCommands.current?.focus(placement.position.toArray());
-                setPathOverlay({
-                  kind: "node",
-                  unitId: unit.id,
-                  lessonId: lesson.id,
-                  returnFocusTo: null,
-                });
-              },
-            })),
-          )
-        : (nodes ?? [])
-            .filter((node) => node.studyId === focusedStudyId)
-            .map((node) => ({
-              id: node.courseId,
-              title: node.title,
-              select: () => {
-                const placement = world?.placements.find(
-                  (entry) =>
-                    entry.node.courseId === node.courseId && entry.node.studyId === node.studyId,
-                );
-                if (placement) mapCommands.current?.focus(placement.position.toArray());
-                setPicked(node);
-              },
-            }));
-  const quickCommands: MapQuickCommand[] = [
-    ...(weekly.marker
-      ? [
-          {
-            id: "weekly-boss",
-            title: interfaceTranslator.t("weeklyBoss.name"),
-            run: weekly.open,
+        ? { level: "course", course }
+        : {
+            level: "world",
+            courses: (nodes ?? []).filter((node) => node.studyId === focusedStudyId),
           },
-        ]
-      : []),
-    ...(showMap
-      ? [
-          {
-            id: "overview",
-            title: interfaceTranslator.t("map.overview"),
-            run: () => mapCommands.current?.overview(),
-          },
-          {
-            id: "learning-view",
-            title: interfaceTranslator.t("map.resetView"),
-            run: () => mapCommands.current?.learningView(),
-          },
-        ]
-      : []),
-    ...(view.kind !== "planet"
-      ? [
-          {
-            id: "back",
-            title: interfaceTranslator.t("map.back"),
-            run: () => setView({ kind: view.kind === "course" ? "world" : "planet" }),
-          },
-        ]
-      : []),
-    ...(picked || pathOverlay?.kind === "node" || pathOverlay?.kind === "stop" || planetDomainChoice
-      ? [
-          {
-            id: "clear",
-            title: interfaceTranslator.t("map.clear"),
-            run: () => {
-              dismissPick();
-              clearPlanetPick();
-            },
-          },
-        ]
-      : []),
-  ];
+    {
+      domain: planet.selectDomain,
+      lesson: (lessonId) => {
+        const placement = lessons.find((item) => item.lessonId === lessonId);
+        if (placement) goToLesson(placement);
+      },
+      course: (node) => {
+        const placement = world?.placements.find(
+          (entry) => entry.node.courseId === node.courseId && entry.node.studyId === node.studyId,
+        );
+        if (placement) mapCommands.current?.focus(placement.position.toArray());
+        setPicked(node);
+      },
+    },
+  );
+  const quickCommands = mapQuickCommands({
+    weeklyBoss: weekly.marker ? weekly.open : null,
+    camera: showMap
+      ? {
+          overview: () => mapCommands.current?.overview(),
+          learningView: () => mapCommands.current?.learningView(),
+        }
+      : null,
+    back:
+      view.kind !== "planet"
+        ? () => setView({ kind: view.kind === "course" ? "world" : "planet" })
+        : null,
+    clear:
+      picked || pathOverlay?.kind === "node" || pathOverlay?.kind === "stop" || planet.domainId
+        ? () => {
+            dismissPick();
+            planet.clear();
+          }
+        : null,
+  });
   const aside = (
     <>
       {mapShell ? (
         <>
           <MapInformation data={mapInfo} />
           {view.kind === "planet" &&
-          selectedDomain &&
-          !planetStudies.some((study) => study.domain?.id === selectedDomain.id) ? (
+          planet.selectedDomain &&
+          !planetStudies.some((study) => study.domain?.id === planet.selectedDomain?.id) ? (
             <DomainInterest
-              key={`${guideUser}:${selectedDomain.id}`}
-              domainId={selectedDomain.id}
+              key={`${guideUser}:${planet.selectedDomain.id}`}
+              domainId={planet.selectedDomain.id}
               progress={progressPort}
             />
           ) : null}
@@ -1605,51 +1143,29 @@ export function App() {
     </>
   );
 
-  // One projection feeds the rail, phone drawer and Me: no competing daily counter.
-  const panelNow = Date.now();
-  const standing = leagueStanding(progress, panelNow);
-  const lessonQuest = questsForToday(progress, panelNow).find((quest) => quest.id === "lesson");
-  const renderAvatarPanel = (inDialog = false) => (
-    <AvatarPanel
-      onOpenWardrobe={() => {
+  const openAccountFromPanel = () => {
+    setAvatarPanelOpen(null);
+    openAccount();
+  };
+  const avatarPanel = (inDialog: boolean) => (
+    <LearnerAvatarPanel
+      progress={progress}
+      avatarRecipe={avatarRecipe}
+      signedIn={avatarSignedIn}
+      opensDialog={!wide && !inDialog}
+      onOpenDialog={() => setAvatarPanelOpen(guideUser)}
+      onOpenAccount={openAccountFromPanel}
+      onOpenHouse={() => {
         setAvatarPanelOpen(null);
         setView({ kind: "house" });
       }}
-      avatar={
-        <RailIdentity
-          recipe={avatarRecipe}
-          signedIn={avatarSignedIn}
-          label={!wide && !inDialog ? interfaceTranslator.t("journey.avatar.open") : undefined}
-          onOpen={() => {
-            if (!wide && !inDialog) setAvatarPanelOpen(guideUser);
-            else {
-              setAvatarPanelOpen(null);
-              openAccount();
-            }
-          }}
-        />
-      }
-      todayProgress={todayGoalProgress(progress, panelNow)}
-      streakDays={progress.streak.days}
-      rank={{
-        name: leagueTierName(standing.tier),
-        emblem: <EmblemImage kind="rank" id={standing.tier.id} size={56} />,
-      }}
-      level={<LevelProgress totalXp={progress.totalXp} rail />}
-      week={studyWeek(progress, panelNow)}
-      today={{ done: lessonQuest?.done ?? 0, goal: lessonQuest?.goal ?? 1 }}
-      rest={{
-        balance: restTicketBalance(progress.streak),
-        covered: progress.streak.rest?.covered.length ?? 0,
-      }}
-      membership={{ href: toPath({ kind: "plans" }) }}
     />
   );
   const main = (
     <CosmeticAppearanceProvider equipped={cosmeticData?.equipped}>
       <MainRouter
         album={knowledge.album}
-        avatarPanel={view.kind === "me" ? renderAvatarPanel(true) : undefined}
+        avatarPanel={view.kind === "me" ? avatarPanel(true) : undefined}
         contentPort={contentPort}
         sceneAttempt={sceneAttempt}
         planetReadiness={{
@@ -1682,13 +1198,13 @@ export function App() {
         pathOverlay={pathOverlay}
         pathUnit={pathUnit}
         planetStudies={planetStudies}
-        planetDomainCatalog={planetDomainCatalog}
-        selectedPlanetDomainId={selectedPlanetDomainId}
-        selectedPlanetStudyId={planetStudyChoice}
-        onEnterPlanetStudy={enterPlanetStudy}
-        onClearPlanetPick={clearPlanetPick}
-        onSelectPlanetDomain={selectPlanetDomain}
-        onSelectPlanetStudy={selectPlanetStudy}
+        planetDomainCatalog={planet.catalog}
+        selectedPlanetDomainId={planet.domainId}
+        selectedPlanetStudyId={planet.studyId}
+        onEnterPlanetStudy={planet.enterStudy}
+        onClearPlanetPick={planet.clear}
+        onSelectPlanetDomain={planet.selectDomain}
+        onSelectPlanetStudy={planet.selectStudy}
         presencePort={presencePort}
         reviewReminderPort={reviewReminderPort}
         profileStats={profileStats}
@@ -1715,15 +1231,9 @@ export function App() {
       key={guideUser}
       shell={CAMPUS_NAME}
       port={feedbackPort}
-      context={feedbackContext}
-      lessonTitle={feedbackLesson?.title ?? null}
-      surface={
-        view.kind === "me" || view.kind === "auth-callback" || view.kind === "auth-reset"
-          ? "account"
-          : feedbackLocator
-            ? "lesson"
-            : "default"
-      }
+      context={feedback.context}
+      lessonTitle={feedback.lessonTitle}
+      surface={feedback.surface}
     />
   );
   /*
@@ -1771,7 +1281,11 @@ export function App() {
     return (
       <>
         <div className="app app--lesson">
-          <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
+          <PresenceSession
+            port={presencePort}
+            location={presence.location}
+            viewKey={presence.viewKey}
+          />
           <Suspense fallback={<RouteFallback />}>
             <LessonScreen
               locator={reading}
@@ -1807,11 +1321,7 @@ export function App() {
               }}
               onBack={() => {
                 setReturnStack([]);
-                if (
-                  courseAvatarTarget?.studyId === view.studyId &&
-                  courseAvatarTarget.courseId === view.courseId &&
-                  courseAvatarTarget.lessonId === view.lessonId
-                ) {
+                if (avatarTarget.lessonId === view.lessonId) {
                   setPathOverlay({
                     kind: "node",
                     unitId: view.unitId,
@@ -1887,7 +1397,7 @@ export function App() {
                 : counters
               : undefined
           }
-          identity={shellConfig.showLearnerChrome ? renderAvatarPanel() : null}
+          identity={shellConfig.showLearnerChrome ? avatarPanel(false) : null}
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={
             mapMode
@@ -1898,7 +1408,11 @@ export function App() {
           }
           showAsideOnPhone={view.kind === "planet"}
         >
-          <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
+          <PresenceSession
+            port={presencePort}
+            location={presence.location}
+            viewKey={presence.viewKey}
+          />
           {view.kind === "world" ? (
             <h1 className="app__screen-title">
               {interfaceTranslator.t("product.navigation.mapHeading")}
@@ -1934,28 +1448,12 @@ export function App() {
         />
       ) : null}
       {avatarPanelOpen === guideUser && shellConfig.showLearnerChrome ? (
-        <GameModal
-          open
-          className="journey-avatar-modal"
-          size="sm"
-          title={interfaceTranslator.t("journey.avatar.title")}
-          closeLabel={interfaceTranslator.t("journey.avatar.close")}
+        <LearnerAvatarDialog
           onClose={() => setAvatarPanelOpen(null)}
-          footer={
-            <GameButton
-              variant="secondary"
-              static
-              onClick={() => {
-                setAvatarPanelOpen(null);
-                openAccount();
-              }}
-            >
-              {interfaceTranslator.t("product.account.open")}
-            </GameButton>
-          }
+          onOpenAccount={openAccountFromPanel}
         >
-          {renderAvatarPanel(true)}
-        </GameModal>
+          {avatarPanel(true)}
+        </LearnerAvatarDialog>
       ) : null}
       <RankPromotion promotions={rankPromotions} owner={progressPort.syncState().userId} />
       {showOpeningSplash ? null : feedbackSurface}

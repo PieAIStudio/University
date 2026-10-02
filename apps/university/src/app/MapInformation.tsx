@@ -1,6 +1,8 @@
 import { GameBadge } from "@pieai/swimmer-ui-kit";
 import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
+import type { PlanetStudy } from "@pieai/university-world/planet.js";
+import type { MapDomain } from "./map-domain-catalog.js";
 import "./map-navigation.css";
 
 export interface MapInformationData {
@@ -101,5 +103,69 @@ export function lessonInformation(
         lines: [interfaceTranslator.t("map.sources")],
       },
     ],
+  };
+}
+
+/** The planet's panel: the study or domain being browsed, or a hint to choose one. */
+export function planetInformation(
+  study: PlanetStudy | undefined,
+  domain: MapDomain | undefined,
+  planetStudies: readonly PlanetStudy[],
+): MapInformationData {
+  if (study)
+    return {
+      id: `study:${study.id}`,
+      title: study.title,
+      kind: "study",
+      description: study.description,
+      facts: [
+        interfaceTranslator.t("map.counts", {
+          courses: study.courseCount,
+          lessons: study.lessonCount,
+        }),
+      ],
+    };
+  if (!domain)
+    return {
+      id: "planet:none",
+      title: interfaceTranslator.t("ui.world.navigation.planets"),
+      kind: "none",
+      description: interfaceTranslator.t("map.chooseHint"),
+    };
+  const published = planetStudies.filter((entry) => entry.domain?.id === domain.id);
+  return {
+    id: `domain:${domain.id}`,
+    title: domain.title,
+    kind: "domain",
+    description: domain.description,
+    sections: [
+      {
+        title: interfaceTranslator.t("map.study"),
+        lines: planetStudies
+          .filter((entry) => (entry.domain?.id ?? "unclassified") === domain.id)
+          .map((entry) => entry.title),
+      },
+    ],
+    facts: published.length
+      ? [
+          interfaceTranslator.t("map.counts", {
+            courses: published.reduce((sum, entry) => sum + entry.courseCount, 0),
+            lessons: published.reduce((sum, entry) => sum + entry.lessonCount, 0),
+          }),
+        ]
+      : [interfaceTranslator.t("ui.world.domain.unpublished")],
+  };
+}
+
+/** The focused study, when nothing on the archipelago is picked. */
+export function studyInformation(
+  studyId: string | null,
+  study: { readonly title: string; readonly description?: string } | undefined,
+): MapInformationData {
+  return {
+    id: `study:${studyId ?? "none"}`,
+    title: study?.title ?? interfaceTranslator.t("ui.world.navigation.archipelago"),
+    kind: "study",
+    description: study?.description || interfaceTranslator.t("map.chooseHint"),
   };
 }

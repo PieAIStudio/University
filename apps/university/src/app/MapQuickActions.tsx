@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameInput, GameModal } from "@pieai/swimmer-ui-kit";
-import { useI18n } from "@pieai/university-ui/i18n.js";
+import { interfaceTranslator, useI18n } from "@pieai/university-ui/i18n.js";
+import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
+import type { CourseNode } from "@pieai/university-world/course.js";
+import type { MapDomain } from "./map-domain-catalog.js";
 import { isMapSpace } from "./map-keyboard.js";
 import "./map-navigation.css";
 
@@ -14,6 +17,84 @@ export interface MapQuickCommand {
   readonly id: string;
   readonly title: string;
   readonly run: () => void;
+}
+
+/**
+ * The directory: every place on this level, by name. The planet lists its
+ * domains, a course its lessons, and the archipelago the focused study's courses.
+ */
+export function mapDestinations(
+  places:
+    | { readonly level: "planet"; readonly domains: readonly MapDomain[] }
+    | { readonly level: "course"; readonly course: CourseView }
+    | { readonly level: "world"; readonly courses: readonly CourseNode[] },
+  go: {
+    readonly domain: (domainId: string) => void;
+    readonly lesson: (lessonId: string) => void;
+    readonly course: (node: CourseNode) => void;
+  },
+): MapDestination[] {
+  if (places.level === "planet")
+    return places.domains.map((domain) => ({
+      id: domain.id,
+      title: domain.title,
+      detail: domain.description,
+      select: () => go.domain(domain.id),
+    }));
+  if (places.level === "course")
+    return places.course.units.flatMap((unit) =>
+      unit.lessons.map((lesson) => ({
+        id: lesson.id,
+        title: lesson.title,
+        detail: unit.title,
+        select: () => go.lesson(lesson.id),
+      })),
+    );
+  return places.courses.map((node) => ({
+    id: node.courseId,
+    title: node.title,
+    select: () => go.course(node),
+  }));
+}
+
+/** The palette's commands, in a fixed order; a missing action is simply not offered. */
+export function mapQuickCommands(actions: {
+  readonly weeklyBoss: (() => void) | null;
+  readonly camera: { readonly overview: () => void; readonly learningView: () => void } | null;
+  readonly back: (() => void) | null;
+  readonly clear: (() => void) | null;
+}): MapQuickCommand[] {
+  return [
+    ...(actions.weeklyBoss
+      ? [
+          {
+            id: "weekly-boss",
+            title: interfaceTranslator.t("weeklyBoss.name"),
+            run: actions.weeklyBoss,
+          },
+        ]
+      : []),
+    ...(actions.camera
+      ? [
+          {
+            id: "overview",
+            title: interfaceTranslator.t("map.overview"),
+            run: actions.camera.overview,
+          },
+          {
+            id: "learning-view",
+            title: interfaceTranslator.t("map.resetView"),
+            run: actions.camera.learningView,
+          },
+        ]
+      : []),
+    ...(actions.back
+      ? [{ id: "back", title: interfaceTranslator.t("map.back"), run: actions.back }]
+      : []),
+    ...(actions.clear
+      ? [{ id: "clear", title: interfaceTranslator.t("map.clear"), run: actions.clear }]
+      : []),
+  ];
 }
 
 /** Scoped keyboard access is an alternative, never a second permanent map HUD. */
