@@ -14,8 +14,10 @@ product". Agents must not write a second CDP screenshot script.
 Specs use descriptive `<feature>.spec.ts` names, not ordering letters. Playwright
 discovers them by glob; files must not depend on execution order. Historical
 case IDs inside titles stay unchanged so old receipts remain searchable.
-`harness/catalogue.ts` is the only E2E published-catalogue reader; select roles
-there rather than pinning a course identity in a spec. Root `pnpm lint` and
+`harness/catalogue.ts` selects roles from the test-owned frozen catalogue;
+select roles there rather than adding course identities to specs. The deliberate
+release-inventory exception is `published-catalogue.spec.ts`, through
+`harness/published-catalogue.mjs`: it checks real release files, not test inputs. Root `pnpm lint` and
 `pnpm format:check` cover this directory with oxlint and oxfmt.
 
 ```bash
@@ -30,8 +32,8 @@ uses the system Chrome (`channel: "chrome"`), and is **not** part of
 For a fresh worktree, run `pnpm worktree:prepare .` first. This installs and
 prepares the actual inputs, including public account configuration. Its ignored
 `.scratch/worktree.json` records all four E2E ports. The ordinary author's existing
-`apps/local/university-local.config.local.json` owns the source root for dev,
-freshness and E2E alike. Explicit
+`apps/local/university-local.config.local.json` still owns dev/freshness inputs,
+but is never read by the isolated E2E API. Explicit
 `E2E_ONLINE_PORT`, `E2E_LOCAL_WEB_PORT`, `E2E_LOCAL_API_PORT` and
 `E2E_GRADING_PORT` override those defaults. The pre-push gate sets all four.
 Startup refuses busy ports; it never connects silently to another run.
@@ -41,10 +43,18 @@ Do not derive another origin from environment variables in a spec: that bypasses
 saved worktree settings. The preparation regression suite guards this boundary;
 the non-default-port worktree run caught eleven planet cases that once bypassed it.
 
-Before baking, the disposable E2E manifest is rebased on this checkout's tracked
-manifest. The importer still checks shrinkage against that current baseline;
-old evidence receipts beside the cache are not removed. `harness/catalogue.ts`
-remains the only E2E role selector for published courses.
+Before each default or timing run, `prepare-catalogue.mjs` verifies the frozen
+fixture digests, restores fresh authoring storage through the production recovery
+importer, then bakes the same inputs through the production delivery importer.
+Both modes, their embedded manifests and all disk-based answer/activity readers
+share `.scratch/e2e-catalogue/<online-port>/`. No private studies, old production
+packages, learner databases or authoring focus are borrowed. `E2E_STUDIES_ROOT`
+and personal source-root settings do not override these owned fixtures.
+
+`pnpm e2e:prepare` prepares the same inputs without opening browsers; use it
+before `pnpm e2e --list` in a fresh checkout. It refuses occupied test ports.
+See [the fixture contract](fixtures/catalogue/README.md) for provenance, sizes,
+roles and the explicit (never automatic) snapshot-refresh command.
 
 ## Opening and returning learners
 

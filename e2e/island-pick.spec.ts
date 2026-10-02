@@ -190,36 +190,61 @@ async function pickLeftishIsland(page: Page): Promise<Box> {
 
 async function pickRightEdgeIsland(page: Page): Promise<Box> {
   await waitForCourseLabelLayout(page);
-  const rightmost = (await visibleCourseSnapshot(page)).sort(
-    (a, b) => center(b.box).x - center(a.box).x,
-  )[0];
+  let snapshot = await visibleCourseSnapshot(page);
+  const rightmost = snapshot.sort((a, b) => center(b.box).x - center(a.box).x)[0];
   if (!rightmost) throw new Error("地图上没有可见的课名");
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
-  const now = rightmost.box.x + rightmost.box.width / 2;
   // The entry is now a compact button, not a 260px card. Put the target
   // genuinely against the right edge to exercise flipping, not at 78% where
   // the new control correctly still fits to its right.
   const wantX = viewport.width - 85;
-  const dx = Math.min(Math.max(wantX - now, 0), 440);
-  if (dx > 40) {
-    const canvas = page.locator(".stagewrap canvas").first();
-    const canvasBox = await canvas.boundingBox();
-    if (!canvasBox) throw new Error("画布没有屏幕矩形");
-    const fromX = canvasBox.x + canvasBox.width * 0.4;
-    const fromY = canvasBox.y + 56;
+  const canvasBox = await page.locator(".stagewrap canvas").first().boundingBox();
+  if (!canvasBox) throw new Error("画布没有屏幕矩形");
+  const fromX = canvasBox.x + canvasBox.width * 0.4;
+  const fromY = canvasBox.y + 56;
+  // A pointer pixel is not a projected-label pixel: camera fit changes with
+  // the number/extent of islands. One 440px swipe sent the smaller frozen
+  // catalogue off screen. Measure short real drags against common marker IDs.
+  // Labels may legitimately hide behind the context rail during a pan; like
+  // the original walk, choose the rightmost VISIBLE island after panning, then
+  // keep its identity fixed for the actual click and all placement assertions.
+  let current = rightmost;
+  let gain = 1;
+  const moves: { pointerDx: number; marker: string; x: number; gain: number }[] = [];
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const beforeX = center(current.box).x;
+    const remaining = wantX - beforeX;
+    if (Math.abs(remaining) <= 12) break;
+    const dx = Math.sign(remaining) * Math.min(Math.abs(remaining / gain) * 0.75, 50);
     await page.mouse.move(fromX, fromY);
     await page.mouse.down();
     await page.mouse.move(fromX + dx, fromY, { steps: 12 });
     await page.mouse.up();
-    await page.waitForTimeout(500);
+    await waitForCourseLabelLayout(page);
+    const after = await visibleCourseSnapshot(page);
+    const commonBefore = snapshot.find(({ id }) => after.some((entry) => entry.id === id));
+    const commonAfter = after.find(({ id }) => id === commonBefore?.id);
+    if (commonBefore && commonAfter) {
+      const measuredGain = (center(commonAfter.box).x - center(commonBefore.box).x) / dx;
+      if (measuredGain <= 0) throw new Error("真实拖动没有把课程岛向预期方向平移");
+      gain = measuredGain;
+    }
+    const next = after.sort((a, b) => center(b.box).x - center(a.box).x)[0];
+    if (!next) throw new Error("短距离平移后没有真实可见的课程岛");
+    moves.push({ pointerDx: dx, marker: next.id, x: center(next.box).x, gain });
+    snapshot = after;
+    current = next;
   }
-  await waitForCourseLabelLayout(page);
-  const next = (await visibleCourseSnapshot(page)).sort(
-    (a, b) => center(b.box).x - center(a.box).x,
-  )[0];
-  if (!next) throw new Error("平移后没有真实可见的课程岛");
-  const clicked = await clickCourseLabel(page, courseLabel(page, next.id));
+  await test.info().attach("right-edge-pointer-approach", {
+    body: JSON.stringify({ marker: current.id, wantX, moves }, null, 2),
+    contentType: "application/json",
+  });
+  expect(
+    Math.abs(center(current.box).x - wantX),
+    "实际选中的课程岛须真正到达右边缘",
+  ).toBeLessThanOrEqual(12);
+  const clicked = await clickCourseLabel(page, courseLabel(page, current.id));
   expect(center(clicked).x, "翻边验收必须实际点到右侧岛").toBeGreaterThan(viewport.width * 0.62);
   return clicked;
 }

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./harness/learner-test.js";
 import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { E2E_STUDIES_ROOT } from "./catalogue-paths.mjs";
 import {
   learningSegments,
   judgeCheckpointAnswer,
@@ -75,7 +76,7 @@ function references(locale: "zh-CN" | "en") {
   const result = new Map<string, string>();
   for (const lessonId of segment.lessonIds) {
     const dir = join(
-      "apps/local/studies",
+      E2E_STUDIES_ROOT,
       course.studyId,
       "courses",
       course.id,

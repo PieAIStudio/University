@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { E2E_STUDIES_ROOT } from "./catalogue-paths.mjs";
 import { expect, test } from "./harness/learner-test.js";
 
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
@@ -38,7 +39,7 @@ interface Target {
   answer 「nothing」 and turn this file green.
 */
 function lessonsWithActivities(): readonly Target[] {
-  const root = resolve("apps/local/studies");
+  const root = E2E_STUDIES_ROOT;
   const out: Target[] = [];
   const dirs = (at: string) => {
     if (!existsSync(at)) return [];

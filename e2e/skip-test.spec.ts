@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./harness/learner-test.js";
 import { mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { E2E_STUDIES_ROOT } from "./catalogue-paths.mjs";
 import { fileURLToPath } from "node:url";
 
 import { humanClick } from "./harness/click.js";
@@ -28,7 +29,6 @@ import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
  * verdict, and the sentence that says a skipped unit is not a learned one.
  */
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SHOTS = fileURLToPath(new URL("../SHOTS", import.meta.url));
 const SKIP_TEST = CATALOGUE_ROLES.skipTest;
 const STUDY = SKIP_TEST.study.id;
@@ -44,7 +44,7 @@ const UNIT = SKIP_TEST.unit.id;
  * list here would be exactly the parallel question bank 决定 B refuses.
  */
 function authoredAnswers(): ReadonlyMap<string, string> {
-  const unitRoot = join(ROOT, "apps/local/studies", STUDY, "courses", COURSE, "units", UNIT);
+  const unitRoot = join(E2E_STUDIES_ROOT, STUDY, "courses", COURSE, "units", UNIT);
   const answers = new Map<string, string>();
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir)) {

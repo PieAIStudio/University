@@ -2,6 +2,7 @@ import { expect, test } from "./harness/learner-test.js";
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { E2E_RECOVERY_ROOT } from "./catalogue-paths.mjs";
 // start-servers builds core before Playwright collects this root-level suite.
 // The workspace root does not have the app's @pieai dependencies installed.
 import { gradeDeterministically, type AnswerKey } from "../packages/core/dist/index.js";
@@ -35,7 +36,7 @@ interface Course {
   units: Array<{ id: string; lessons: Lesson[] }>;
 }
 const literacy = catalogueStudyOf("ai-literacy");
-const RECOVERY = `apps/local/course-proposals/recovery/${literacy.id}`;
+const RECOVERY = join(E2E_RECOVERY_ROOT, literacy.id);
 const index = JSON.parse(readFileSync(join(RECOVERY, "index.json"), "utf8")) as {
   courses: Array<{ courseId: string; file: string }>;
 };

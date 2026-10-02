@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { islandThemeSelectionForCourse } from "../../packages/world/src/island/kenney-recipes.js";
 import { terrainCraftCoverage } from "./terrain-craft.js";
+import { E2E_IMPORTED_MANIFEST, E2E_CONTENT_ROOT, E2E_RECOVERY_ROOT } from "../catalogue-paths.mjs";
 
 type JsonObject = { [key: string]: unknown };
 
@@ -82,16 +83,18 @@ export interface CourseLessonRole {
   readonly lesson: ShippedLesson;
 }
 
-const IMPORTED_PATH = "apps/university/src/content/imported.json";
-const SHELF_PATH = "apps/university/content/shelf.json";
-const CONTENT_ROOT = "apps/university/content";
+// Historical export names identify test specimens served through real product
+// boundaries. These inputs are frozen independently of the release shelf.
+const IMPORTED_PATH = E2E_IMPORTED_MANIFEST;
+const SHELF_PATH = `${E2E_CONTENT_ROOT}/shelf.json`;
+const CONTENT_ROOT = E2E_CONTENT_ROOT;
 
 function readJson(path: string): JsonObject {
   try {
     return JSON.parse(readFileSync(path, "utf8")) as JsonObject;
   } catch (reason) {
     const message = reason instanceof Error ? reason.message : String(reason);
-    throw new Error(`e2e catalogue: cannot read ${path}; run pnpm content first (${message})`);
+    throw new Error(`e2e catalogue: cannot read ${path}; run pnpm e2e:prepare first (${message})`);
   }
 }
 
@@ -334,7 +337,7 @@ if (!settlementLesson) throw new Error("e2e catalogue: settlement course has no 
  * data or a mocked grading response. Changing the first published course must
  * change its answer too. The browser still submits through the real grader. */
 export function shippedDeterministicAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
-  const root = `apps/local/course-proposals/recovery/${course.studyId}`;
+  const root = `${E2E_RECOVERY_ROOT}/${course.studyId}`;
   const index = readJson(`${root}/index.json`);
   const entry = arrayOf(index.courses, "recovery courses")
     .map((item) => objectOf(item, "recovery entry"))

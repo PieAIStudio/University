@@ -14,24 +14,21 @@
  * ago answers 504 Outdated Optimize Dep with a white page.
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, readdirSync, realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { testProcessEnvironment } from "./process-environment.mjs";
+import { ONLINE_PORT, LOCAL_WEB_PORT, LOCAL_API_PORT, GRADING_PORT } from "./ports.ts";
 import {
-  ONLINE_PORT,
-  LOCAL_WEB_PORT,
-  LOCAL_API_PORT,
-  GRADING_PORT,
+  E2E_PROJECT_ROOT,
   E2E_STUDIES_ROOT,
-} from "./ports.ts";
-import { refreshE2EManifest, reservePorts } from "../scripts/link-studies-into-worktree.mjs";
+  E2E_CONTENT_ROOT,
+  E2E_IMPORTED_MANIFEST,
+} from "./catalogue-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
 const APP = join(ROOT, "apps/university");
 const GRADING = join(ROOT, "apps/university-ai");
-const E2E_CONTENT_ROOT = join(ROOT, ".scratch/evidence2/e2e-content");
-const E2E_IMPORTED_MANIFEST = join(ROOT, ".scratch/evidence2/e2e-imported.json");
 
 const LOCAL_API_ORIGIN = `http://127.0.0.1:${LOCAL_API_PORT}`;
 const GRADING_ORIGIN = `http://127.0.0.1:${GRADING_PORT}`;
@@ -50,7 +47,7 @@ const SERVER_ONLY_ENV = [
 const children = [];
 
 function run(command, args, cwd, extraEnv = {}) {
-  const childEnv = { ...process.env, ...extraEnv };
+  const childEnv = testProcessEnvironment(extraEnv);
   // Vite only embeds VITE_* values, but do not hand the browser-mode process
   // server credentials at all. The grading child keeps them in its own
   // process, where the Vercel function is the only consumer.
@@ -92,7 +89,7 @@ function must(command, args, cwd, extraEnv = {}) {
   const result = spawnSync(command, args, {
     cwd,
     stdio: "inherit",
-    env: { ...process.env, ...extraEnv },
+    env: testProcessEnvironment(extraEnv),
   });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
@@ -132,75 +129,12 @@ process.on("SIGINT", () => stop("SIGINT"));
 process.on("SIGTERM", () => stop("SIGTERM"));
 process.on("exit", () => stop("SIGTERM"));
 
-const localStudiesRoot = join(LOCAL, "studies");
-const nestedStudies = join(localStudiesRoot, "studies");
 const localApiEnv = {
   UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
-  UNIVERSITY_LOCAL_PROJECT_ROOT: LOCAL,
+  UNIVERSITY_LOCAL_PROJECT_ROOT: E2E_PROJECT_ROOT,
+  UNIVERSITY_LOCAL_STUDIES_ROOT: E2E_STUDIES_ROOT,
 };
-// This worktree keeps personal studies behind a nested symlink so the
-// checkout does not own learner data. Point the API at the containers
-// themselves, otherwise bootstrap is an empty shelf and the authoring
-// walk never finds 「开始学习」.
-if (existsSync(nestedStudies)) {
-  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = nestedStudies;
-} else if (existsSync(localStudiesRoot)) {
-  /*
-   * A worktree may link each study directory directly into studies/ instead
-   * of linking one nested root. Node's Dirent reports those entries as
-   * symlinks, so UniversityLocal quite correctly skips them as directories.
-   * Resolve one linked study back to its real shared root for this disposable
-   * E2E server; the test never writes through that path.
-   */
-  const linkedStudy = readdirSync(localStudiesRoot, { withFileTypes: true })
-    .filter((entry) => entry.isSymbolicLink())
-    .map((entry) => join(localStudiesRoot, entry.name))
-    .find((candidate) => {
-      try {
-        return existsSync(join(candidate, "study.json"));
-      } catch {
-        return false;
-      }
-    });
-  if (linkedStudy) {
-    const resolvedRoot = dirname(realpathSync(linkedStudy));
-    if (
-      resolvedRoot !== localStudiesRoot &&
-      existsSync(join(resolvedRoot, ".university-local-root"))
-    ) {
-      localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = resolvedRoot;
-    }
-  }
-}
-
-// An isolated copy may live outside apps/local. The authoring server still
-// validates its marker/location; this changes the input, never that protection.
-if (E2E_STUDIES_ROOT) {
-  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = realpathSync(E2E_STUDIES_ROOT);
-}
-
-// Resolve the worktree source once, before either consumer starts. The baked
-// importer previously ran before this discovery and rejected the outer
-// studies skeleton even though the API knew about its nested source link.
-// An explicitly configured importer root still wins; its safety checks stay on.
-console.log("e2e: importing baked course content for the delivery mode");
-const reservation = await reservePorts([ONLINE_PORT, LOCAL_WEB_PORT, LOCAL_API_PORT, GRADING_PORT]);
-await reservation.release();
-refreshE2EManifest(ROOT);
-must("pnpm", ["content"], ROOT, {
-  UNIVERSITY_STUDIES_ROOT:
-    process.env.UNIVERSITY_STUDIES_ROOT ??
-    localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT ??
-    localStudiesRoot,
-  UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
-  UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
-  UNIVERSITY_EVIDENCE_MODE: "auto",
-  UNIVERSITY_REQUIRE_BAKED_EVIDENCE: "1",
-});
-
-console.log("e2e: building @pieai/university-core (the local API cannot import .ts)");
-must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
-must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], LOCAL);
+must("node", ["e2e/prepare-catalogue.mjs"], ROOT);
 
 run("node", [join(LOCAL, ".university-local-build/server/http-server.js")], LOCAL, localApiEnv);
 
@@ -231,6 +165,8 @@ run(
   {
     E2E_TAG: "local",
     UNIVERSITY_E2E: "1",
+    UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
+    UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
     // The config builds the `/api` proxy target from this, so the suite's Vite
     // talks to the suite's API rather than to a campus somebody left running.
     UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
@@ -267,6 +203,7 @@ run(
     E2E_TAG: "online",
     UNIVERSITY_E2E: "1",
     UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
+    UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
     VITE_UNIVERSITY_GRADING_URL: `${GRADING_ORIGIN}/api/grade`,
   },
 );

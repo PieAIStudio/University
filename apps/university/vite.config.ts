@@ -228,6 +228,25 @@ function emitSiteIndex(mode: string): Plugin {
   };
 }
 
+/** Pair an explicitly selected content root with its structural manifest.
+ * With no override, dev/build still use the tracked production import. */
+function selectedContentManifest(): Plugin {
+  const selected = process.env["UNIVERSITY_IMPORTED_MANIFEST_PATH"];
+  return {
+    name: "university-selected-content-manifest",
+    enforce: "pre",
+    resolveId(id, importer) {
+      if (
+        selected &&
+        id === "./imported.json" &&
+        importer?.split("?")[0] === resolve(import.meta.dirname, "src/content/library.ts")
+      ) {
+        return resolve(import.meta.dirname, selected);
+      }
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   /*
     A separate optimizer cache per mode, and another one for the test run.
@@ -263,7 +282,13 @@ export default defineConfig(({ mode }) => ({
           ]
         : {},
   },
-  plugins: [react(), serveImportedContent(mode), emitSiteIndex(mode), analyzeChunks()],
+  plugins: [
+    react(),
+    selectedContentManifest(),
+    serveImportedContent(mode),
+    emitSiteIndex(mode),
+    analyzeChunks(),
+  ],
   build: {
     outDir: `dist/${mode}`,
     emptyOutDir: true,

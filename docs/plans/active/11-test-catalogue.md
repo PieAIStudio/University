@@ -116,3 +116,129 @@ passes only because specs were skipped.
 - Which courses the test catalogue holds, and which role each one serves.
 - One sentence on what changed and why.
 - Anything noticed but not done, as candidates for later tasks.
+
+## 7 Execution checkpoint · 2026-10-02 · blocked
+
+**Not accepted; task 11 remains active.** The isolation implementation exists,
+but the complete browser gate is red. No push or task 12 work has been performed.
+Save this checkpoint locally under section 5; do not treat the new fixtures or
+fast-gate success as permission to advance the queue.
+
+### Implemented boundary
+
+`e2e/prepare-catalogue.mjs` restores test-owned authoring storage through the real
+recovery importer and bakes it through the real delivery importer. Both browser
+modes, the role selector, native answer readers and the timing launcher use
+`.scratch/e2e-catalogue/<online-port>/`. The API has its own project root rather
+than reading the author's personal source-root preference. Vite's explicit
+embedded-manifest override is the only product-code seam changed.
+
+The [frozen-input contract](../../../e2e/fixtures/catalogue/README.md) owns the
+course-by-course roles, provenance and refresh procedure: five courses, 89
+lessons, two exercised source images, and six cited source files plus LICENSE.
+The fixture directory adds **2,895,733 bytes**, of which the three gzip inputs
+are **2,881,582 bytes**. It contains no screenshots, learner database, accumulated
+recovery history or full source-project checkout. Its tiny source Git fixture is
+independent of University's mainline Git database; three node regressions cover
+reproducibility, inherited hook Git paths, and source-path ownership.
+
+The deliberate real-release exception is `e2e/published-catalogue.spec.ts`, test
+`published catalogue preserves every current lesson and excludes test-only inputs`.
+It reads the real release files inside the test, retains lesson/revision/package
+parity and rejects test-only hashes/markers without requiring old course counts.
+It passed during the three-lesson rehearsal. The inventory is **430 → 431**, with
+no original case removed and this one added; the timing inventory stays
+`Total: 40 tests in 9 files`. Inventory is not a pass result.
+
+Two test setup defects found while integrating the smaller catalogue were fixed
+without relaxing their assertions: the right-edge island walk now measures short
+real pointer drags against projected positions instead of a fixed 440-pixel
+swipe; keyboard navigation completes the existing real launch action before
+sending Tab. The original placement, keyboard, completion and timing thresholds
+remain. The focused edge/mobile run returned `3 passed (3.0m)`; keyboard navigation
+in both modes and the mobile journey, each repeated four times with four workers,
+returned `12 passed (3.1m)`. Those focused results did not predict a green full run.
+
+### Complete rehearsal · blocking result
+
+Command: `TASK11_REHEARSAL_NAME=rehearsal-boot-fixed node .scratch/task11/run-rehearsal.mjs`.
+The runner reduced the real delivery files to the three specified lessons, ran
+`pnpm e2e` with four workers, retained the report, and restored the original files.
+Its final browser output is:
+
+```text
+  3 failed
+    [default] › e2e/desktop-learner.spec.ts:21:3 › C 在线端 · 桌面宽度 › 右侧当前对象说明和地图一致，并且同样走完第一节
+    [default] › e2e/mobile-learner.spec.ts:21:3 › A 新学习者 · 在线端 · 手机宽度 › 清空 storage → 落地 → 第一节 → 结算 1/8
+    [default] › e2e/recap-contrast.spec.ts:5:3 › settlement explanatory text follows readable theme ink: 浅色
+  428 passed (30.7m)
+rehearsal: original production catalogue restored byte-for-byte; University HEAD unchanged
+```
+
+The desktop journey pressed Continue but `[data-chest-stage]` remained present
+through the unchanged 10-second assertion. The mobile journey and light-theme
+recap check observed `.loading-trivia` after the chest closed instead of staying
+on the same island for the wrap-up. The recap case failed before reaching its
+contrast assertion; this is not evidence of an ink-contrast defect. The exact
+product root cause is not established by these receipts.
+
+These are **not** real-release inventory exceptions. The passing count is below
+the 430 floor, so the rehearsal fails this task's acceptance. The runner stopped
+before timing (`timing: null`); no 40-pass timing result or successful push is
+claimed. No whole-suite retry or product-flow patch followed this result.
+
+Evidence is local to this checkout, relative to the repository root:
+
+- `.scratch/task11/rehearsal-boot-fixed/browser.log`, `browser-report/index.html`
+  and `browser-test-results/` retain the complete run and failure contexts.
+- `.scratch/task11/rehearsal-boot-fixed/receipt.json` records 1 study / 1 course /
+  3 lessons during rehearsal and byte-for-byte restoration of the original
+  2 studies / 6 courses / 93 lessons, 47 delivery files, imported manifest and
+  lexicon. The pre-commit HEAD stayed `35cd839490df13220e11c5e2f4fde213805a21d9`.
+- `SCRATCH/e2e/学完一节-开宝箱-扔星星-继续-1790946034643.png` is the desktop failure;
+  `SCRATCH/e2e/涟的收尾对应真实完成记录和复习卡-不再另开结算页-1790946410483.png`
+  is the mobile failure. The recap screenshot ends in `1790946782525.png` in the
+  same directory. The passing island screenshots are preserved separately in
+  `.scratch/task11/focused-edge-evidence/`.
+
+Earlier negative evidence is not overwritten: `.scratch/task11/rehearsal/`
+returned `3 failed` / `428 passed (27.5m)` with the two old island setup failures
+and the mobile wrap-up failure. `.scratch/task11/rehearsal-edge-fixed/` was
+cancelled after the authoring keyboard failure and is **not** a complete gate;
+its `interrupted.json` and restoration receipt distinguish cancellation artifacts
+from independently observed failures. Every rehearsal restored production data.
+
+### Fast gate and production separation
+
+After restoration and the final test-code changes, `pnpm verify` exited **0**.
+The full log is `.scratch/task11/verify-after-rehearsal.log`; it includes:
+
+```text
+doc-gov check passed (172 docs).
+doc-gov links passed (162 current files, 331 local links).
+doc-gov audit completed with 0 warning(s).
+doc-gov doctor passed with 0 warning(s).
+```
+
+A fresh scan of the resulting production build,
+`node .scratch/task11/check-delivery-no-leak.mjs`, returned:
+
+```text
+delivery-no-leak: 0 matches in 647 files; 6 production courses / 93 lessons
+```
+
+The scan checks the explicit test marker, every frozen recovery hash and the
+fixture source commit, not old course IDs that production still legitimately
+shares. `.scratch/task11/delivery-no-leak.json` retains its receipt, with the
+previous receipt preserved beside it. No published-catalog entry or production
+recovery package is changed by this checkpoint.
+
+### Resume boundary
+
+The next decision is whether to authorize diagnosis and correction of the
+chest-Continue / wrap-up product flow outside this task's content-root-only
+product-code scope. Keep this task active and its local work intact. A fix must
+retain these failing assertions, then earn a complete browser result at or above
+the standing floor and all 40 timing passes before ordinary push and task 12.
+Do not reset the baseline, skip the journeys, increase their deadlines, change
+production courses to hide the failures, or rewrite the local checkpoint's history.

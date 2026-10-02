@@ -21,7 +21,6 @@ if (
   throw new Error("All four E2E ports must be distinct integers from 1 to 65535");
 }
 export const [ONLINE_PORT, LOCAL_WEB_PORT, LOCAL_API_PORT, GRADING_PORT] = ports;
-export const E2E_STUDIES_ROOT = process.env.E2E_STUDIES_ROOT ?? settings.studiesRoot;
 
 export const ONLINE_ORIGIN = `http://127.0.0.1:${ONLINE_PORT}`;
 export const LOCAL_ORIGIN = `http://127.0.0.1:${LOCAL_WEB_PORT}`;

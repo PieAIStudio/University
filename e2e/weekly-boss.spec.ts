@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "./harness/learner-test.js";
 import { mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { E2E_STUDIES_ROOT } from "./catalogue-paths.mjs";
 import { fileURLToPath } from "node:url";
 
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
@@ -29,15 +30,7 @@ const COURSE = ROLE.course.id;
 
 /** The reference answers, read off the authored exercises (see skip-test.spec.ts). */
 function authoredAnswers(): ReadonlyMap<string, string> {
-  const unitRoot = join(
-    ROOT,
-    "apps/local/studies",
-    STUDY,
-    "courses",
-    COURSE,
-    "units",
-    ROLE.unit.id,
-  );
+  const unitRoot = join(E2E_STUDIES_ROOT, STUDY, "courses", COURSE, "units", ROLE.unit.id);
   const answers = new Map<string, string>();
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir)) {

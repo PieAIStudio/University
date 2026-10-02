@@ -7,6 +7,7 @@ import { join } from "node:path";
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { CATALOGUE_ROLES } from "./catalogue.js";
+import { E2E_STUDIES_ROOT } from "../catalogue-paths.mjs";
 import { emptyProgress, lessonKeyOf } from "../../packages/core/src/progress/document.js";
 import { judgeSkipAnswer, skipTestCandidates } from "../../packages/core/src/progress/skip-test.js";
 import type { LessonRef } from "../../packages/core/src/progress/contract.js";
@@ -28,7 +29,7 @@ export function nativeExerciseAnswers(locator: LessonRef): Map<string, string> {
   };
   walk(
     join(
-      "apps/local/studies",
+      E2E_STUDIES_ROOT,
       locator.studyId,
       "courses",
       locator.courseId,

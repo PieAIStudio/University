@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-02",
+  "sourceCommit": "35cd839490df13220e11c5e2f4fde213805a21d9",
+  "artifacts": [
+    {
+      "file": "source.json.gz",
+      "bytes": 8492,
+      "sha256": "878a1380f376f57b0c8fd27c76ca9065558ba22f39611526f35b6bdf3c3b48b7"
+    },
+    {
+      "file": "ai-literacy.json.gz",
+      "bytes": 2782612,
+      "sha256": "b5a09fb9c4f158be7229f64d1ed48192ce65b21d598cc0894c26e9152e5eab28"
+    },
+    {
+      "file": "browser-ai.json.gz",
+      "bytes": 90478,
+      "sha256": "31b6626d6de7f9a2761287186799f2a17d878ed59b833853932299664efff9ab"
+    }
+  ],
+  "courses": [
+    {
+      "studyId": "ai-literacy",
+      "courseId": "understanding-ai",
+      "originalSha256": "sha256:17963d2cac2b2c9e8f559e7e4e919c7b577d105739754346a202f5b573d9fd41",
+      "fixtureSha256": "sha256:f172d63a233ba33105bd4c94db01dc0e1f165e0baf05b89c7d0adecf0cb29c7c",
+      "lessons": 36
+    },
+    {
+      "studyId": "ai-literacy",
+      "courseId": "ai-for-real-life",
+      "originalSha256": "sha256:802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e",
+      "fixtureSha256": "sha256:b4852e178512cc4fa69cb9e70336665e0dc391180f8bb58e0957b3782cb7a143",
+      "lessons": 30
+    },
+    {
+      "studyId": "browser-ai",
+      "courseId": "run-a-real-project-with-ai",
+      "originalSha256": "sha256:0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08",
+      "fixtureSha256": "sha256:24fd0f018929ad1eb842cd94c1fdc742a14bf8f0b82583c47f3a7792c5c0e961",
+      "lessons": 8
+    },
+    {
+      "studyId": "browser-ai",
+      "courseId": "make-the-cutout-app-yours",
+      "originalSha256": "sha256:d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20",
+      "fixtureSha256": "sha256:5bdce1e2c2f854c9b4a7d90130245f1a53106f8428710a036d011c5b13bcd9bb",
+      "lessons": 9
+    },
+    {
+      "studyId": "browser-ai",
+      "courseId": "search-your-own-photos",
+      "originalSha256": "sha256:b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe",
+      "fixtureSha256": "sha256:1c518f5a856d6c6d6a9bb3c4d974510484dca01a3105ce3f86eadc4dd4f790c0",
+      "lessons": 6
+    }
+  ],
+  "source": {
+    "originalCommits": ["7bdf9a52bbf8158a0918617a8fd9a5fb2f978030"],
+    "fixtureCommit": "89235d6f15e231a03f081ecd1a78a1183c67094d",
+    "files": 7,
+    "bytes": 23613
+  }
+}

@@ -142,6 +142,12 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         // 等待可见的关卡标记按钮就绪
         const markers = page.locator("nav.labels button.label.is-visible");
         await expect(markers.first()).toBeVisible({ timeout: 30_000 });
+        // Native key events do not run locator actionability checks. Complete
+        // the returning learner's real launch gesture before tabbing the map.
+        // Trial does not click/focus a marker; the existing blocker handler
+        // presses the actual ready-only launch control when it covers the map.
+        await markers.first().click({ trial: true });
+        await expect(page.locator(".game-ui-splash--opening")).toHaveCount(0);
 
         // 有界 Tab 导航直到聚焦到实际可见的标记 button
         let focusedMarker = false;
