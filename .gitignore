@@ -67,6 +67,12 @@ docs/reference/借鉴的App/*.MP4
 docs/reference/借鉴的App/*.mp4
 docs/reference/借鉴的App/*.mov
 
+# The Owner's own design references: third-party posts, prompts and their
+# recordings, kept on his machine (task 05 names the card folder that way).
+# Someone else's video and prompt text do not belong in this history.
+docs/reference/卡片-参考-*/
+docs/reference/宝箱与徽章-参考-*/
+
 # Subagent working notes and their screenshots. The findings that matter get
 # written into docs or a commit message; the scratch pad does not.
 SCRATCH/
