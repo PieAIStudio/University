@@ -37,7 +37,6 @@ import {
   islandGeometryBlueprint,
   islandBlueprint,
   projectIslandBlueprint,
-  sampleIslandSurface,
   type IslandBlueprint,
   type IslandUnitVisualToken,
 } from "./island/island-blueprint.js";
@@ -1295,31 +1294,6 @@ export function courseIslandScale(lessons: number, studyId = "course", courseId 
 }
 
 /**
- * Where the ground is under a point on the course island.
- *
- * The blueprint, the terrain mesh, the trail and every marker ask this same
- * continuous rule. That is why a world-map icon can become course ground
- * without a second height approximation or a marker hovering over the turf.
- */
-export function courseSurfaceY(
-  x: number,
-  z: number,
-  lessons: number,
-  studyId = "course",
-  courseId = "course",
-): number {
-  return sampleIslandSurface(
-    islandBlueprint({
-      studyId,
-      courseId,
-      lessonCount: Math.max(1, Math.floor(lessons)),
-    }),
-    x,
-    z,
-  ).y;
-}
-
-/**
  * Lesson stones are the coral pavers on the ivory road. Their colour comes
  * from the one reviewed accent ramp, never a second invented orange. Live is
  * the lightest step so the next lesson still reads first; every other stone
@@ -1437,16 +1411,6 @@ export function layoutCourseLessons(
   } finally {
     ground.dispose();
   }
-}
-
-export function courseLessonMarkers(
-  blueprint: IslandBlueprint,
-  lessons: readonly LessonPlacement[],
-): readonly GridLessonMarker[] {
-  const layout = layoutCourseLessons(blueprint, lessons);
-  layout.footing.geometry?.dispose();
-  layout.inlays.geometry?.dispose();
-  return layout.markers;
 }
 
 /**

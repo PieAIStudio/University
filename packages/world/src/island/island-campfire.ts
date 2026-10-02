@@ -251,7 +251,6 @@ export const CAMPFIRE_FLAME_HEIGHT = 0.4;
  * Fits within the ~0.76m wood pit diameter (~34% coverage).
  */
 export const CAMPFIRE_FLAME_WIDTH = 0.26;
-export const CAMPFIRE_FLAME_DIAMETER = CAMPFIRE_FLAME_WIDTH;
 
 /** Exact low-poly triangle count of the shared flame mesh. */
 export const CAMPFIRE_FLAME_TRIANGLES = 22;

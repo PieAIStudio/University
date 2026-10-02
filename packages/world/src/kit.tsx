@@ -191,11 +191,6 @@ export function useIslandGLTF(src: string) {
   });
 }
 
-/** Where a kit role's model is served, for a projection that needs the raw model. */
-export function kitSource(role: Role): string {
-  return kit[role].src;
-}
-
 /**
  * Several raw kit models through the one loader stack, suspending once. For
  * projections that need a model's skeleton and clips (the course monsters)

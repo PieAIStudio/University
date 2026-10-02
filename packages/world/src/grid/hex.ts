@@ -26,14 +26,6 @@ export function hexKey(cell: HexCoord): string {
   return `${cell.q},${cell.r}`;
 }
 
-export function hexFromKey(key: string): HexCoord {
-  const [q, r] = key.split(",").map(Number);
-  if (!Number.isInteger(q) || !Number.isInteger(r)) {
-    throw new RangeError(`Invalid axial hex key: ${key}`);
-  }
-  return { q, r };
-}
-
 export function hexNeighbor(cell: HexCoord, direction: HexDirection): HexCoord {
   const offset = HEX_DIRECTIONS[direction];
   return { q: cell.q + offset.q, r: cell.r + offset.r };
@@ -60,48 +52,6 @@ export function hexToWorld(
   };
 }
 
-/** Inverse of `hexToWorld`, rounded to the nearest axial cell. */
-export function worldToHex(
-  point: { readonly x: number; readonly z: number },
-  size: number,
-): HexCoord {
-  const q = ((Math.sqrt(3) / 3) * point.x - (1 / 3) * point.z) / size;
-  const r = ((2 / 3) * point.z) / size;
-  const s = -q - r;
-  let roundedQ = Math.round(q);
-  let roundedR = Math.round(r);
-  const roundedS = Math.round(s);
-  const qDelta = Math.abs(roundedQ - q);
-  const rDelta = Math.abs(roundedR - r);
-  const sDelta = Math.abs(roundedS - s);
-  if (qDelta > rDelta && qDelta > sDelta) roundedQ = -roundedR - roundedS;
-  else if (rDelta > sDelta) roundedR = -roundedQ - roundedS;
-  return { q: roundedQ, r: roundedR };
-}
-
-/** Inclusive axial line, useful for filling a gap between two route cells. */
-export function hexLine(first: HexCoord, second: HexCoord): HexCoord[] {
-  const distance = hexDistance(first, second);
-  if (distance === 0) return [{ ...first }];
-  const firstCube = { x: first.q, y: -first.q - first.r, z: first.r };
-  const secondCube = { x: second.q, y: -second.q - second.r, z: second.r };
-  return Array.from({ length: distance + 1 }, (_, index) => {
-    const t = index / distance;
-    const x = firstCube.x + (secondCube.x - firstCube.x) * t;
-    const y = firstCube.y + (secondCube.y - firstCube.y) * t;
-    const z = firstCube.z + (secondCube.z - firstCube.z) * t;
-    const rx = Math.round(x);
-    const ry = Math.round(y);
-    const rz = Math.round(z);
-    const xDelta = Math.abs(rx - x);
-    const yDelta = Math.abs(ry - y);
-    const zDelta = Math.abs(rz - z);
-    const correctedX = xDelta > yDelta && xDelta > zDelta ? -ry - rz : rx;
-    const correctedZ = yDelta > zDelta ? -correctedX - ry : rz;
-    return { q: correctedX, r: correctedZ };
-  });
-}
-
 export function hexRing(center: HexCoord, radius: number): HexCoord[] {
   if (radius === 0) return [{ ...center }];
   const start = {
@@ -126,8 +76,4 @@ export function hexSpiral(center: HexCoord, radius: number): HexCoord[] {
   const cells = [{ ...center }];
   for (let ring = 1; ring <= radius; ring += 1) cells.push(...hexRing(center, ring));
   return cells;
-}
-
-export function compareHex(first: HexCoord, second: HexCoord): number {
-  return first.q - second.q || first.r - second.r;
 }

@@ -253,13 +253,3 @@ export function setIslandTriplanarMaterialState(
     uniforms.uProjectionMode.value = projectionValue(state.projection);
   }
 }
-
-export function getIslandTriplanarUniforms(
-  material: THREE.ShaderMaterial,
-): IslandTriplanarUniforms {
-  const uniforms = material.userData.islandTriplanarUniforms as IslandTriplanarUniforms | undefined;
-  if (!uniforms) {
-    throw new Error("Material was not created by createIslandTriplanarMaterial");
-  }
-  return uniforms;
-}

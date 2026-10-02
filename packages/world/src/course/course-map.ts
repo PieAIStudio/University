@@ -351,8 +351,3 @@ export function courseMarkers(
     })),
   ];
 }
-
-/** The stone the road opens on, or null in a course with nothing to open. */
-export function liveLesson(lessons: readonly LessonPlacement[]): LessonPlacement | null {
-  return lessons.find((lesson) => lesson.state === "live") ?? lessons[0] ?? null;
-}

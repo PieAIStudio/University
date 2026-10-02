@@ -91,7 +91,6 @@ export const COURSE_PATH: PathShape = { step: 4.4, amplitude: 6.4, period: 7 };
 
 /** Kept for the camera: the forward spacing the course shot is framed against. */
 export const COURSE_STEP = COURSE_PATH.step;
-export const COURSE_AMPLITUDE = COURSE_PATH.amplitude;
 
 /**
  * `count` nodes along one road, centred on the origin.

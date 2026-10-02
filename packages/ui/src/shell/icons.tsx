@@ -50,44 +50,6 @@ export function PracticeIcon() {
   );
 }
 
-/** Medal with a ribbon — the league slot. */
-export function LeagueIcon() {
-  return (
-    <Glyph>
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M12 2.2a5.8 5.8 0 1 1 0 11.6A5.8 5.8 0 0 1 12 2.2Zm0 2.4a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8ZM8.7 13.3 6.6 21.4 12 18.6l5.4 2.8-2.1-8.1-1.6.4L12 14.4l-1.7-.7-1.6-.4Z"
-      />
-    </Glyph>
-  );
-}
-
-/** Target — the quests slot. */
-export function QuestsIcon() {
-  return (
-    <Glyph>
-      <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2.2a7.8 7.8 0 1 0 0 15.6A7.8 7.8 0 0 0 12 4.2Zm0 2.6a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 12 6.8Zm0 2.5a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Z"
-      />
-    </Glyph>
-  );
-}
-
-/** Crown — the plan/membership slot. */
-export function PlanIcon() {
-  return (
-    <Glyph>
-      <path
-        fill="currentColor"
-        d="M3.2 16.2 5.1 7.4l4.1 3.6L12 4.6l2.8 6.4 4.1-3.6 1.9 8.8H3.2Zm.6 1.8h16.4v2.4H3.8V18Z"
-      />
-    </Glyph>
-  );
-}
-
 /** Person — the profile slot. */
 export function ProfileIcon() {
   return (
@@ -107,18 +69,6 @@ export function FeedbackIcon() {
       <path
         fill="currentColor"
         d="M5.2 4.4h13.6A2.6 2.6 0 0 1 21.4 7v7.4a2.6 2.6 0 0 1-2.6 2.6h-6.2L7.4 20.8v-3.8H5.2A2.6 2.6 0 0 1 2.6 14.4V7a2.6 2.6 0 0 1 2.6-2.6Z"
-      />
-    </Glyph>
-  );
-}
-
-/** Three dots — the more slot. */
-export function MoreIcon() {
-  return (
-    <Glyph>
-      <path
-        fill="currentColor"
-        d="M5.5 10.4a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm6.5 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Zm6.5 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z"
       />
     </Glyph>
   );
@@ -145,27 +95,6 @@ export function StreakIcon() {
         fillRule="evenodd"
         d="M12.2 2s5.8 5.6 5.8 11.1A6 6 0 0 1 7.4 9.6C9.2 9.8 10.6 7.8 12.2 2Zm-.3 8.4c-1.4 2-2.4 3.3-2.4 5.1a2.7 2.7 0 0 0 5.4 0c0-1.6-.9-3.2-3-5.1Z"
       />
-    </Glyph>
-  );
-}
-
-/** Gem — the credit counter. */
-export function CreditIcon() {
-  return (
-    <Glyph>
-      <path
-        fill="currentColor"
-        d="M7.2 3.4h9.6L21 9.4 12 21.2 3 9.4l4.2-6Zm1.1 1.7L6.2 9h11.6l-2.1-3.9H8.3Z"
-      />
-    </Glyph>
-  );
-}
-
-/** Bolt — the energy/quota counter. */
-export function EnergyIcon() {
-  return (
-    <Glyph>
-      <path fill="currentColor" d="M13.4 2.2 6 13.4h5.3l-1.6 8.4 7.8-12.1h-5.4l1.3-7.5Z" />
     </Glyph>
   );
 }

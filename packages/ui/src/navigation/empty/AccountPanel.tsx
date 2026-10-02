@@ -44,7 +44,6 @@ export const ACCOUNT_SIGNED_IN_TITLE = interfaceTranslator.t(
 export const ACCOUNT_PENDING_LABEL = interfaceTranslator.t(
   "ui.navigation.empty.accountPanel.copy.正在登录",
 );
-export const ACCOUNT_SIGN_IN = interfaceTranslator.t("ui.navigation.empty.accountPanel.copy.登录");
 export const ACCOUNT_SIGN_OUT = interfaceTranslator.t(
   "ui.navigation.empty.accountPanel.copy.退出登录",
 );

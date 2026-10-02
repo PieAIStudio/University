@@ -96,8 +96,6 @@ const styles = {
   },
 } as const satisfies Record<string, MiniatureStyle>;
 
-export const MINIATURE_STYLES: readonly MiniatureStyle[] = Object.values(styles);
-
 const BY_RECIPE: Readonly<Record<string, keyof typeof styles>> = {
   "R01-forest-academy": "garden",
   "R02-river-market": "lagoon",

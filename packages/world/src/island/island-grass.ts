@@ -565,16 +565,3 @@ export function planIslandGrass(
     placements,
   };
 }
-
-/**
- * A small test/diagnostic predicate shared by callers that want to explain
- * why a candidate is not eligible. It reads the same cached field as the
- * planner and never reads or mutates a terrain mesh.
- */
-export function islandGrassPointIsTopSurface(
-  blueprint: IslandBlueprint,
-  point: IslandPoint,
-): boolean {
-  const sample = sampleIslandField(islandFieldFor(blueprint), point.x, point.z);
-  return sample.inside && sample.shore <= ISLAND_GRASS_FIELD_MAX_SHORE;
-}

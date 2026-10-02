@@ -1,11 +1,7 @@
 /** Deterministic camera and scene-data seams for the DEV-only island judge. */
 import { planIslandDressing, type IslandDressingPlan } from "./island-dressing.js";
 import type { IslandBlueprint, IslandPoint } from "./island-blueprint.js";
-import {
-  ISLAND_LOOK_SHOT_IDS,
-  type IslandLookDebugOptions,
-  type IslandLookShotId,
-} from "./island-surface-style.js";
+import { type IslandLookShotId } from "./island-surface-style.js";
 
 export {
   islandLookDebugFromSearch,
@@ -188,15 +184,6 @@ export function islandLookCameraForShot(
     fov,
     distance,
   };
-}
-
-/** A type guard kept beside the one source of valid shot ids. */
-export function isIslandLookShotId(value: unknown): value is IslandLookShotId {
-  return typeof value === "string" && (ISLAND_LOOK_SHOT_IDS as readonly string[]).includes(value);
-}
-
-export function shotIdOf(options: IslandLookDebugOptions): IslandLookShotId | null {
-  return options.shot;
 }
 
 export interface IslandLookSceneSource {

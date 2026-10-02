@@ -525,12 +525,6 @@ export const GRID_BIOMES: readonly GridBiome[] = [
 
 export const GRID_BIOME_BY_ID = new Map(GRID_BIOMES.map((biome) => [biome.id, biome]));
 
-export function gridBiomeById(id: GridBiomeId): GridBiome {
-  const biome = GRID_BIOME_BY_ID.get(id);
-  if (!biome) throw new Error(`Unknown grid biome: ${id}`);
-  return biome;
-}
-
 /** Every asset a biome can place, in one list, for budget and manifest checks. */
 export function gridBiomeAssetIds(biome: GridBiome): readonly string[] {
   return [...new Set([...biome.canopy, ...biome.understory, ...biome.ground, biome.landmark])];

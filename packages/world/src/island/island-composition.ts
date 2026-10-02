@@ -765,24 +765,6 @@ export function evaluateAssembly(
   return { ok: true, baseY, slope: stats.slope, span: stats.span, placements };
 }
 
-export function isAssemblySafe(
-  blueprint: IslandBlueprint,
-  field: IslandField,
-  assembly: AssemblySpec,
-  anchor: IslandRouteAnchor,
-  _routeClearanceDist: number,
-): boolean {
-  return evaluateAssembly(
-    assembly,
-    {
-      blueprint,
-      field,
-      heightAt: (x, z) => sampleIslandSurface(blueprint, x, z).y,
-    },
-    anchor,
-  ).ok;
-}
-
 const SIDE_OFFSETS = [3.7, 4.35, 5.15, 5.9, 6.65] as const;
 const FRACTION_DELTAS = [0, -0.03, 0.03, -0.06, 0.06] as const;
 export const BRIDGE_FRACTIONS = [0.26, 0.34, 0.42, 0.5, 0.58, 0.66] as const;

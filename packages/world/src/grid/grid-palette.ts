@@ -9,8 +9,6 @@ export interface GridPalette {
   readonly accent: number;
 }
 
-export const GRID_PALETTE_ROLES = ["top", "shadow", "cliff", "rim", "road", "accent"] as const;
-
 /**
  * The lower half of the world has one material language. Course identity is
  * carried by the meadow top only; changing it on the cliff or underside turns

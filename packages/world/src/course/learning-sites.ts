@@ -102,12 +102,6 @@ export const LEARNING_SITE_RADIUS: Readonly<Record<MapLearningKind, number>> = {
   challenge: 0.14 * LEARNING_NODE_KIND_SCALE.challenge,
   personal: 0.32 * LEARNING_NODE_KIND_SCALE.personal,
 };
-/** How tall each object stands, so the DOM chip sits above it rather than inside it. */
-export const LEARNING_SITE_HEIGHT: Readonly<Record<MapLearningKind, number>> = {
-  checkpoint: 1.15 * LEARNING_NODE_KIND_SCALE.checkpoint,
-  challenge: 1.32 * LEARNING_NODE_KIND_SCALE.challenge,
-  personal: 0.9 * LEARNING_NODE_KIND_SCALE.personal,
-};
 
 /** Ground the learning nodes stand on: pads, objects, gate posts and stepping stones. */
 export function learningSiteExclusions(

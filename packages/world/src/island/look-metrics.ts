@@ -562,26 +562,3 @@ export function measureIslandLookInBrowser(args: {
     domLabelContrastSamples: domLabelSamples(canvas, image),
   };
 }
-
-export const ISLAND_LOOK_METRIC_NAMES = [
-  "sceneLinearRange",
-  "landCoverage",
-  "landMedianLightness",
-  "landP95Lightness",
-  "landLightnessRise",
-  "backgroundLightnessSpread",
-  "lightnessP2",
-  "lightnessP98",
-  "lightnessStdDev",
-  "grassLightnessSpread",
-  "grassLightnessP95",
-  "grassHueCount",
-  "grassHueSpread",
-  "accentArea",
-  "keyToFillRatio",
-  "propsPerLessonNode",
-  "rimPropShare",
-  "worldPropsPerIsland",
-  "nodeOcclusionShare",
-  "domLabelContrastMin",
-] as const;

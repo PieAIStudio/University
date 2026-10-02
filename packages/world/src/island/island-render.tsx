@@ -15,8 +15,7 @@ import {
   type IslandSurfaceRole,
   type IslandSurfaceStyleId,
 } from "./island-surface-style.js";
-import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
-import { unitRingGeometry, unitSigilArcCount } from "./unit-sigil.js";
+import type { IslandBlueprint } from "./island-blueprint.js";
 import type { HexMap } from "../grid/course-grid.js";
 import {
   createSurfaceMaterialDetail,
@@ -475,40 +474,5 @@ export function IslandRender({
         </>
       ) : null}
     </group>
-  );
-}
-
-const SIGIL_COLOURS = [0x80bd62, 0x5cc6c8, 0xf0b45c, 0xc18fe4, 0x8ea7d8, 0xff9b69] as const;
-
-/** Non-colour unit cue; the geometry survives colour-blind / low-contrast views. */
-export function UnitSigil({
-  sigil,
-  unitIndex,
-  radius,
-  active = false,
-}: {
-  readonly sigil: IslandUnitSigil;
-  readonly unitIndex: number;
-  readonly radius: number;
-  readonly active?: boolean;
-}) {
-  const colour = SIGIL_COLOURS[unitIndex % SIGIL_COLOURS.length]!;
-  const geometry = unitRingGeometry(unitSigilArcCount(sigil));
-  // Sit on the medallion's top face. The shared ring is the same geometry the
-  // instanced engraving uses; this wrapper is the non-instanced studio path.
-  return (
-    <mesh
-      geometry={geometry}
-      position={[0, radius * 0.202, 0]}
-      scale={[radius, 1, radius]}
-      renderOrder={1}
-    >
-      <meshBasicMaterial
-        color={colour}
-        transparent
-        opacity={active ? 0.98 : 0.72}
-        depthWrite={false}
-      />
-    </mesh>
   );
 }

@@ -37,13 +37,6 @@ const FOOTING_ALBEDO = new THREE.Color(MEDALLION_BODY_ALBEDO);
 /** Engraving tint by learner state. The body stays pale sandstone. */
 export const MEDALLION_ENGRAVING_COLOURS = GRID_STOP_RING;
 
-export const MEDALLION_ENGRAVING_OPACITY = {
-  live: 0.96,
-  idle: 0.82,
-  done: 0.62,
-  locked: 0.4,
-} as const;
-
 function medallionProfile(): THREE.Vector2[] {
   return [
     new THREE.Vector2(0, MEDALLION_Y_BOTTOM),

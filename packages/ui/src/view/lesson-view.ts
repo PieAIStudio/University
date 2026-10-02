@@ -139,47 +139,6 @@ export interface AuthoringFocusView extends AuthoringFocus {
 /** @deprecated Use AuthoringFocusView; learner navigation is a different boundary. */
 export type LearningFocus = AuthoringFocusView;
 
-/**
- * Prefers human titles, but never hides a focus that points at nothing. A long
- * run is summarised by where it starts and how long the pinned route is — not
- * the study's total course count (that lives on the shelf).
- */
-/**
- * The focus line, split into the part worth emphasising and the part that
- * merely qualifies it.
- *
- * Previously one string inside one `<strong>`, so the project name, the entry
- * course and the route length were all the same accent orange — three
- * emphases in one sentence, which is the same as none. The question the line
- * answers is "which project am I on"; everything after that is detail, and
- * detail set in the loudest colour on the page competes with the answer.
- */
-export function focusParts(
-  focus: AuthoringFocusView,
-  studies: readonly StudySummary[],
-): { readonly study: string; readonly detail: string } {
-  const study = studies.find((candidate) => candidate.id === focus.studyId);
-  const studyLabel =
-    study?.title ??
-    interfaceTranslator.t("ui.view.lessonview.copy.value0-不在书架上", { value0: focus.studyId });
-  const [head, ...rest] = focus.courseIds;
-  if (!head) return { study: studyLabel, detail: "" };
-  // The stored focus is a list of ids; a course id is not a thing to show
-  // someone. The server resolves them against the shelf, and an id that no
-  // longer matches a course is still better than saying nothing about it.
-  const headLabel = focus.courses?.find((course) => course.id === head)?.title ?? head;
-  return {
-    study: studyLabel,
-    detail:
-      rest.length === 0
-        ? headLabel
-        : interfaceTranslator.t("ui.view.lessonview.copy.从value0开始-主攻路线-value1-门", {
-            value0: headLabel,
-            value1: focus.courseIds.length,
-          }),
-  };
-}
-
 export interface LessonProgress {
   readonly contentRevision: number;
   readonly status: "not-started" | "in-progress" | "completed";

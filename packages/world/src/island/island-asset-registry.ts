@@ -85,14 +85,6 @@ export function setIslandRuntimeAssetOverrides(
   }
 }
 
-export function clearIslandRuntimeAssetOverrides(): void {
-  runtimeOverrides.clear();
-}
-
-export function islandRuntimeAssetOverrideCount(): number {
-  return runtimeOverrides.size;
-}
-
 /** The complete runtime catalog, in manifest order, for authoring pickers. */
 export function islandRuntimeAssets(): readonly IslandRuntimeAsset[] {
   return [...runtimeAssets.values()];
@@ -158,8 +150,4 @@ export function resolveIslandRuntimeAsset(
     requestedAssetId,
     usedFallback: false,
   };
-}
-
-export function islandRuntimeAssetCount(): number {
-  return runtimeAssets.size;
 }
