@@ -2,7 +2,7 @@
 name: write-lesson
 description: Write or revise a real-source University lesson with complete PRIMM (Predict, Run, Investigate, Modify, Make), for ordinary adults new to AI. Use for lesson authoring from a course outline, beginner guidance and teacher voice, everyday relevance, interaction choice, confusing or redundant lesson copy, rewrites, and batch generation through the PRIMM production line. Owns sources, teaching, learner text, cards, independent Make assessment, review, actual Gemini Flash polish and native revision proposals. Not course planning, ordinary coding, refresh orchestration or publication.
 metadata:
-  version: "4.0.0"
+  version: "4.1.0"
 ---
 
 # Write a lesson — a teacher's PRIMM, produced at scale
@@ -25,7 +25,8 @@ finish, and can use in their own life the same day. The measure is the next
 | [evidence-and-failures.md](references/evidence-and-failures.md), [media.md](references/media.md) | Source verification, provenance, licensed media. |
 | [cards-and-exercises.md](references/cards-and-exercises.md) | Card and independent-exercise contracts. |
 | [checklist.md](references/checklist.md) | Acceptance before an Owner sees it. |
-| [pipeline.md](references/pipeline.md), [activities.md](references/activities.md), [variants.md](references/variants.md), [polish-prompt.md](references/polish-prompt.md) | Retained prose/V1/V2 history; `activities.md` is how a lesson activity is placed, written into the prose, tiered and sourced — which component to pick is in `components.md`. Read only for those revisions. |
+| [activities.md](references/activities.md) | Current V3 authoring boundaries, material labels, native landing and unpublished preview; use only the retained step actions. |
+| [pipeline.md](references/pipeline.md), [variants.md](references/variants.md), [polish-prompt.md](references/polish-prompt.md) | Retained prose/V1/V2 history. Read only for those revisions. |
 
 ## The five decisions a teacher makes before writing
 
@@ -45,20 +46,26 @@ designed in this order, and the plan is kept for review:
    Investigate, one change in Modify, one changed purpose in Make.
 4. **The teacher's thread.** One small job told from start to end; every
    screen opens by continuing from what the learner just did; the teacher
-   explains *after* the learner acts (`run.debrief`, `investigate.explanation`,
-   `modify.debrief`).
+   explains *after* the learner acts (step `after`, `send.debriefs`, or
+   `find.found`/`absent`, as appropriate).
 5. **Language an 8–9-year-old can read; content and respect for an adult.**
 
 The contract spells each out; the Detector checks them as F1–F15.
 
 ## PRIMM as the lesson skeleton
 
-Predict → Run → Investigate → Modify → Make, one screen and one main action
-each, 8–12 minutes in all. The skeleton never changes, which keeps the path
+Predict → Run → Investigate → Modify → Make, one main action per step screen,
+8–12 minutes in all. The skeleton never changes, which keeps the path
 predictable for learners and checkable at scale. Variety comes first from a
 different real-life job in every lesson, then from the action chosen inside a
 phase for what the learner must figure out — never from reskinned buttons.
 The contract lists the actions that exist today and those that do not yet.
+
+New work uses the native version-3 step payload. Predict → Run → Investigate →
+Modify → Make stay ordered, with 1–4 actions per phase and 8–12 screens including
+the door and finish. The line's output shape is derived from the existing native
+schema, not a separate step registry. `assemble-steps` remains an explicitly
+manual import and is not evidence that the line wrote a lesson.
 
 PRIMM's authors allow phases to span lessons; completing all five in one lesson
 is our product choice. Adult AI self-study is an application of a programming
@@ -93,6 +100,12 @@ Detector → Fixer (≤2 rounds) → Gemini Flash polish and translation → nat
 dry-run → land → browser play. Writer/Fixer and Detector are different model
 families. A person may still intervene, but every hand edit is logged with the
 pipeline's `note` stage; an unlogged edit makes the run a manual lesson.
+
+An unpublished lesson uses one explicit native authoring project: packet reads,
+samples and CLI writes resolve the same configured root. Preview it with the
+pipeline's isolated projection and `pnpm primm:preview`; never export an unaccepted
+lesson into the formal recovery shelf just to make it readable. Keep the task
+active while the Owner reads it, and feed his feedback through `review` → `fix`.
 
 After a batch, promote each new failure class the Detector found into the
 contract as a rule (with the lesson that exposed it in the principles file),

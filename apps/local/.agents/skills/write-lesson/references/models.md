@@ -32,7 +32,7 @@ The checks are:
 
 | Check | Pass condition | Failure action |
 | --- | --- | --- |
-| `grok models` | Exit status is zero, the output contains a usable model list with at least one model entry, **and** the output does not contain the exact text `You are not authenticated.` | Mark Grok unavailable even if model names were printed; preflight the Codex Writer/fixer fallback. |
+| `grok models` | Exit status is zero, the output contains a usable model list with at least one model entry, **and** the output does not contain the exact text `You are not authenticated.` | Mark Grok unavailable; select the listed Claude-through-agy Writer fallback, then Codex only if that arm is unavailable. |
 | `agy models` | Exit status is zero and the output contains at least one model entry, not only a fetching/status line. | Stop and report. There is no substitute CLI for both Detector and Polisher. |
 
 `grok models` is a special hard check. It can print `You are not
@@ -56,7 +56,10 @@ Do not send a prompt until the preflight has recorded the selected arm and the
 reason. A failed check must either take the explicit fallback below or stop
 with the failure in the run report. Never silently use a different family.
 
-If Grok fails, run this additional fallback preflight before using Codex:
+The current PRIMM Writer chain is Grok → Claude through agy → Codex (Owner task
+12, 2026-10-03; the 2026-09-19 comparison below records its rationale). A successful
+agy listing must contain the selected Claude model; omit Claude's effort flag.
+Only if neither prior Writer arm is usable, run this preflight before Codex:
 
 ```bash
 codex --version
@@ -70,8 +73,8 @@ unlisted id.
 
 Family availability does not erase role boundaries:
 
-- Writer/fixer uses Grok when the Grok preflight passes, otherwise the Codex
-  reasoning family after its own preflight.
+- Writer/fixer uses Grok when available, otherwise the preflighted Claude-through-agy
+  arm, then Codex after its own preflight. Record the exact selected arm.
 - Detector uses Gemini Flash when available, otherwise Claude Sonnet through
   `agy`.
 - Polisher uses Gemini Flash. It has no declared Claude or Codex fallback; if
@@ -89,6 +92,9 @@ Family availability does not erase role boundaries:
 Detector and Polisher = Gemini Flash through `agy`. Override the Writer or Detector
 id with `PRIMM_WRITER_MODEL` / `PRIMM_DETECTOR_MODEL` after the preflight above; keep
 the families distinct. Grok authentication was restored on 2026-09-19.
+
+Set `PRIMM_WRITER_EFFORT` to the selected Writer model's highest listed effort;
+the fallback defaults are historical and may not match a newer model.
 
 **Grok's free tier is not a production Writer.** On 2026-09-19 it answered three
 full calls (one lesson draft, one research query, one partial) and then returned
@@ -139,7 +145,8 @@ report. Do not silently substitute a nearby family.
 | Role | Family | CLI |
 | --- | --- | --- |
 | **Writer / fixer (preferred)** | Grok | `grok` |
-| **Writer / fixer (fallback)** | Codex CLI reasoning family | `codex exec` |
+| **Writer / fixer (first fallback)** | Claude, current listed thinking model | `agy`, no effort flag |
+| **Writer / fixer (last fallback)** | Codex CLI reasoning family | `codex exec` |
 | **Detector (preferred)** | Gemini Flash | `agy` (Antigravity) |
 | **Detector (fallback)** | Claude Sonnet | `agy` |
 | **Polisher** | Gemini Flash | `agy` |
@@ -242,7 +249,7 @@ asked "what is missing?" will always find something. The full argument is in
 Every run report must record the preflight result and the route that actually
 ran. At minimum, name:
 
-- `writer_arm`: `grok` or `codex`, plus the reason for any fallback;
+- `writer_arm`: `grok`, `agy` (Claude), or `codex`, plus the reason for any fallback;
 - the exact Writer/fixer model id and exact effort;
 - the exact Detector model id and exact effort; for Claude, write
   `omitted — agy/Claude rejects --effort`;

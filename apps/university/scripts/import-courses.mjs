@@ -401,7 +401,9 @@ for (const studyId of readdirSync(upstream).sort()) {
           evidenceCount: evidenceCount(lesson.content),
           unlockCount: unlockEntryCount(lesson.content),
           conceptIds: unlockedConceptIds(lesson.content),
-          reviewCardRevisions: Object.fromEntries(lesson.cards.map((card) => [card.id, card.contentRevision])),
+          reviewCardRevisions: Object.fromEntries(
+            lesson.cards.map((card) => [card.id, card.contentRevision]),
+          ),
           // The unit card de-duplicates in lesson order and returns at five.
           // Each lesson's list is already unique and ordered, so keeping its
           // first five can never remove a locator that the unit card would read.
@@ -448,14 +450,19 @@ writeFileSync(join(contentRoot, "manifest.json"), `${JSON.stringify(manifest, nu
 writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf)}\n`);
 // Registration belongs to an authorized Backend rollout, never this importer.
 // Emit only the same published catalogue's identity/revision metadata.
-const cosmeticRules = cosmeticRewardRules(shelf.studies.flatMap((study) =>
-  study.courses.map((course) => ({ ...course, studyId: study.id })),
-));
-writeFileSync(join(contentRoot, "cosmetic-rewards.json"), `${JSON.stringify({
-  version: 1,
-  manifestId: createHash("sha256").update(JSON.stringify(cosmeticRules)).digest("hex"),
-  rules: cosmeticRules,
-})}\n`);
+const cosmeticRules = cosmeticRewardRules(
+  shelf.studies.flatMap((study) =>
+    study.courses.map((course) => ({ ...course, studyId: study.id })),
+  ),
+);
+writeFileSync(
+  join(contentRoot, "cosmetic-rewards.json"),
+  `${JSON.stringify({
+    version: 1,
+    manifestId: createHash("sha256").update(JSON.stringify(cosmeticRules)).digest("hex"),
+    rules: cosmeticRules,
+  })}\n`,
+);
 // The manifest is the tracked half of this: it records exactly which package
 // hash each course came from, so a fresh clone can reproduce the import and a
 // review can be recorded against a version rather than a name.
@@ -532,7 +539,10 @@ if (existsSync(lexiconSource)) {
   const lexicon = JSON.parse(readFileSync(lexiconSource, "utf8"));
   lexiconSenses = lexicon.entries.length;
   writeFileSync(
-    join(projectRoot, "src", "content", "lexicon.json"),
+    resolve(
+      projectRoot,
+      process.env["UNIVERSITY_LEXICON_MANIFEST_PATH"] ?? "src/content/lexicon.json",
+    ),
     `${JSON.stringify(lexicon, null, 2)}\n`,
   );
 } else {

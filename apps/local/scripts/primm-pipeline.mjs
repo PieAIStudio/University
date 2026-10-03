@@ -31,6 +31,17 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { loadUniversityLocalConfig } from "../.university-local-build/server/config/load-config.js";
+import {
+  isStructuralStepPath,
+  realWorldPlanSchema,
+  renderStepLesson,
+  stepAuthoringShape,
+  stepModifyPrompt,
+  stepSampleRequests,
+  stepTeachingIssues,
+} from "./primm-pipeline-step-support.mjs";
+import { prepareUnpublished, prepareUnpublishedPreview } from "./primm-pipeline-authoring.mjs";
 
 const moduleRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(moduleRoot, "../..");
@@ -50,7 +61,7 @@ const WRITER_EFFORT = { grok: "xhigh", agy: "high", codex: "max" };
 const writerSpec = (cli) => ({
   cli,
   model: process.env.PRIMM_WRITER_MODEL ?? WRITER_DEFAULT[cli],
-  effort: WRITER_EFFORT[cli],
+  effort: process.env.PRIMM_WRITER_EFFORT ?? WRITER_EFFORT[cli],
 });
 // A family whose quota ran out is skipped for an hour: grok → Claude (agy) → codex.
 const EXHAUSTED = (cli) => join(repoRoot, `.scratch/primm-engine/.${cli}-exhausted`);
@@ -93,9 +104,18 @@ function args() {
   }
   return { stage, options };
 }
+function authoringProjectRoot() {
+  const root = resolve(process.env.PRIMM_PROJECT_ROOT ?? moduleRoot);
+  return existsSync(root) ? realpathSync(root) : root;
+}
 function studiesRoot() {
-  const config = readJson(join(moduleRoot, "university-local.config.local.json"));
-  return realpathSync(resolve(moduleRoot, config.studiesRoot));
+  // The same native resolver owns optional personal config, environment priority
+  // and the root safety boundary for packet reads and CLI writes.
+  const config = loadUniversityLocalConfig({
+    projectRoot: authoringProjectRoot(),
+    env: process.env,
+  });
+  return realpathSync(config.studiesRoot);
 }
 const latest = (dir) =>
   readdirSync(join(dir, "revisions"))
@@ -135,6 +155,23 @@ function buildPacket(unitId, lessonId, mode, ownerNotes) {
     unit: unitTitle(id),
     lessons: unitLessons(id).map((l) => l.title),
   }));
+  const siblings = unitLessons(unitId);
+  const lessonIndex = siblings.findIndex((lesson) => lesson.id === lessonId);
+  if (unitIndex < 0 || lessonIndex < 0)
+    throw Error("Lesson is absent from its native course outline");
+  const priorSiblings = siblings.slice(0, lessonIndex);
+  if (priorSiblings.length)
+    before.push({ unit: unitTitle(unitId), lessons: priorSiblings.map((lesson) => lesson.title) });
+  const examples = priorSiblings.flatMap((lesson) => {
+    const dir = join(courseDir, "units", unitId, "lessons", lesson.id);
+    const example = readJson(join(dir, "revisions", String(latest(dir)), "manifest.json"));
+    const activity = example.activities?.find(
+      (item) => item.kind === "primm" && item.experienceVersion === 3,
+    );
+    return activity
+      ? [{ lessonId: lesson.id, revision: latest(dir), activity: stripLocales(activity) }]
+      : [];
+  });
   // The verified-evidence library: every source already checked in this study.
   const library = new Map();
   const walk = (dir) => {
@@ -159,6 +196,9 @@ function buildPacket(unitId, lessonId, mode, ownerNotes) {
     title: evidence.sourceTitle,
     publisher: evidence.provenance?.publisher,
     accessedOn: evidence.provenance?.accessedOn,
+    publishedOn: evidence.provenance?.publishedOn,
+    sourceAuthority: evidence.sourceAuthority,
+    evidence,
     supports: evidence.provenance?.supports,
     limitations: evidence.provenance?.limitations,
     order: n,
@@ -185,6 +225,8 @@ function buildPacket(unitId, lessonId, mode, ownerNotes) {
   return {
     createdAt: new Date().toISOString(),
     mode,
+    experienceVersion: 3,
+    storage: { projectRoot: authoringProjectRoot(), studiesRoot: root },
     lesson: { studyId: STUDY, courseId: COURSE, unitId, lessonId, revision: rev },
     course: { title: course.title, description: course.description, audience: course.audience },
     unit: {
@@ -193,6 +235,13 @@ function buildPacket(unitId, lessonId, mode, ownerNotes) {
       lessons: unitLessons(unitId),
     },
     learnerAlreadyMet: before,
+    formExample: examples.length
+      ? {
+          instruction:
+            "这是前一关经 Owner 接受的原生第3版样板。只学习结构、每屏一个动作和老师接话的方式；不得沿用人物、情境、材料、请求或句子。",
+          ...examples[0],
+        }
+      : null,
     outline: {
       title: manifest.title,
       note:
@@ -257,15 +306,24 @@ function spawnCapture(command, argv, { cwd, input, timeoutMs }) {
 async function callModel(role, prompt, schema, outBase, { webSearch = false, accept } = {}) {
   let spec = role === "writer" && WRITER_CLI === "auto" ? writerSpec(nextWriter()) : MODELS[role];
   let release = await acquireSlot(role, spec);
+  let rejectedShape = null;
   try {
     for (let attempt = 1; attempt <= 3; attempt++) {
       const base = attempt === 1 ? outBase : `${outBase}.retry${attempt}`;
-      const { parsed, receipt, stderr } = await callOnce(spec, role, prompt, schema, base, {
+      const attemptPrompt = rejectedShape
+        ? `${prompt}\n\n## 上一次交稿未通过结构检查\n${rejectedShape}\n请返回修正后的完整 JSON，不写检查报告。`
+        : prompt;
+      const { parsed, receipt, stderr } = await callOnce(spec, role, attemptPrompt, schema, base, {
         webSearch,
       });
+      if (receipt.parsed && receipt.exitCode !== 0)
+        throw Error(
+          `A structured result survived a transport failure: ${base}.raw.txt. Inspect/reparse that receipt before starting another model call.`,
+        );
       const quotaGone =
         (spec.cli === "grok" && /usage limit/i.test(stderr)) ||
-        (spec.cli === "agy" && /RESOURCE_EXHAUSTED/.test(stderr) && attempt >= 2);
+        (spec.cli === "agy" && /RESOURCE_EXHAUSTED/.test(stderr)) ||
+        (spec.cli === "codex" && /usage limit|quota.*exceed|insufficient.*credit/i.test(stderr));
       if (quotaGone && role === "writer" && WRITER_CLI === "auto" && spec.cli !== "codex") {
         // This family's quota is gone: mark it for an hour and fall to the next one.
         writeFileSync(EXHAUSTED(spec.cli), String(Date.now()));
@@ -288,6 +346,9 @@ async function callModel(role, prompt, schema, outBase, { webSearch = false, acc
         reason: veto ?? "no structured result",
         stderrTail: stderr.slice(-400),
       });
+      if (quotaGone)
+        throw Error(`${role} (${spec.model}) quota exhausted; stop and retain ${base}.stderr.log`);
+      rejectedShape = veto;
       if (attempt < 3)
         await new Promise((r) =>
           setTimeout(r, /429|RESOURCE_EXHAUSTED|rate/i.test(stderr) ? attempt * 120_000 : 5_000),
@@ -467,7 +528,7 @@ async function stageReparse(dir, S, name) {
   writeJson(join(dir, `draft.v${version}.json`), parsed);
   log(
     dir,
-    `reparse ${name}: complete result recovered from raw output after a late transport error; schema-valid, no veto`,
+    `reparse ${name}: result recovered from raw output after a late transport error; schema=${check.success ? "valid" : "needs-check"}, no veto; native check is still required`,
   );
 }
 /** A lesson draft whose learner text talks about the pipeline is not a lesson. */
@@ -493,22 +554,8 @@ async function schemas() {
   const { z } = await import(
     pathToFileURL(join(repoRoot, "packages/core/node_modules/zod/index.js")).href
   );
-  // The line writes version-2 lessons; version-3 step lessons are hand-written for now.
-  const s = PrimmPayloadSchema.options.find((option) => !("steps" in option.shape)).shape;
   const text = z.string().min(1);
-  const activity = z
-    .object({
-      intro: s.intro,
-      materials: s.materials,
-      starter: s.starter,
-      predict: s.predict,
-      run: s.run.required({ debrief: true, attachmentLabel: true }),
-      investigate: s.investigate,
-      modify: s.modify.required({ debrief: true, workbench: true }),
-      make: s.make.omit({ exerciseId: true }).required({ artifactLabel: true }),
-      finish: s.finish,
-    })
-    .strict();
+  const activity = stepAuthoringShape(PrimmPayloadSchema, z);
   const plan = z
     .object({
       capability: text.describe("一句话：学完能在生活里做成什么"),
@@ -533,6 +580,7 @@ async function schemas() {
       predictUncertainty: text.describe("预想问题针对的是初学者哪一个真实的拿不准"),
       investigateAct: text.describe("探究要让他弄懂什么，为什么选这个玩法"),
       teacherThread: text.describe("用三四句话讲清整节课老师带他做的这一件小事"),
+      realWorld: realWorldPlanSchema(z),
     })
     .strict();
   const draft = z
@@ -649,11 +697,19 @@ ${JSON.stringify(packet, null, 2)}
   其余照常写完，开场先不提案例。sources 只列本课真正用到的 library 条目。
 - starter.operation 和 make.operation 只能从 packet.operations 里选；assetIds 只能用 packet.assets 里的 id。
 - 你看不见图片、听不见录音。关于它们的内容，只能依据 packet.assets[].verifiedFacts；
-  inspect-image 的区域坐标必须原样使用 verifiedFacts.regions 里的某几个（label 和 note 可以改写）。
+  point 的区域坐标必须原样使用 verifiedFacts.regions 里的某几个，不猜坐标。没有核实区域就不用 point。
 - 材料 id、卡片、练习：cards 的数量必须等于 packet.cardIds 的数量。材料 id 用小写英文加连字符。
 - starter.materialIds 与 make.materialIds 不能相同。
-- run.debrief、modify.debrief、investigate.explanation 都是“做完才出现的老师的话”，按合同第 3 节写，
-  不能断言实时结果里一定有的具体内容。
+- 只写原生第 3 版 steps：choose/send/find/point/match/sort/build/make。五段按顺序，每段 1–4 步；
+  加上开场和结尾共 8–12 屏。Run 和 Modify 各恰好一个 send；Make 从唯一的 make 步开始。
+- Predict 的 choose 不设 answerId；可把每个选项连到 starter 或 requests 的 id，Run 用 request: chosen。
+  Modify 用原生 build 的完整问法和 send request: built；build.context 只是显示材料，不会偷偷加进请求。
+- send.after 或 debriefs、各互动 after 都是做完才出现的老师话，不能断言实时答案一定包含某句话。
+- plan.realWorld 在 door/wait/after 各放一条核实事实，标 sourceId/kind/relatesTo/reviewBy；
+  分别用 intro.sourceIds、Run 的 send.wait、finish.didYouKnow 承接。同一个 source 可支持不同事实，
+  但不重复说同一件事。普通事实复核日期不晚于 accessedOn 后 6 个月，研究不晚于 12 个月。
+- sort 小回合每关至多一次，3–6 张同类判断；finish 留一句带走的话、来源事实、今天的一个动作；
+  cards 由宝箱承接。不要生成当前原生结构里不存在的组件或字段。
 - samples.makePrompt 写一个普通初学者在 Make 这一步大概会写的请求（不必完美）。它会被真的运行，给检查者看。
 - 写完做一遍合同第 3 节的“老师连读测试”和第 6 节的自查，再交稿。
 `;
@@ -701,9 +757,21 @@ ${JSON.stringify({ course: packet.course, unit: packet.unit, learnerAlreadyMet: 
 `;
 }
 function fixerPrompt(packet, draft, lint, detector, render) {
+  // A fixer already has the whole draft. Re-sending every old lesson/source
+  // and the form example wastes context and can exceed the host argv limit.
+  const { formExample, storage, outline, library, ...identity } = packet;
+  const selected = new Set(draft.sources?.map((source) => source.id) ?? []);
+  const input = {
+    ...identity,
+    outline: { title: outline.title, note: outline.note },
+    library:
+      draft.plan?.caseSourceId && !draft.plan?.caseNeeded?.trim()
+        ? library.filter((source) => selected.has(source.id))
+        : library,
+  };
   return `# 修改你写的课
 
-你是写这节课的老师。独立检查者扮演初学者读了你的课，机器检查也给了结果。${NO_TOOLS}
+你是写这节课的老师。${detector?.performed === false ? "独立检查者还没有运行：结构不合格，先修机器检查列出的错误，不编造检查者意见。" : "独立检查者扮演初学者读了你的课，机器检查也给了结果。"}${NO_TOOLS}
 
 请修改，返回**完整的新版本**（和原来同样的 JSON 结构，包括 plan），并在 resolutions 里逐条回应
 每个问题：fixed（改了什么）或 rejected（为什么检查者说得不对，引用材料或合同）。
@@ -725,7 +793,7 @@ ${contract()}
 ## 输入包
 
 \`\`\`json
-${JSON.stringify(packet, null, 2)}
+${JSON.stringify(input, null, 2)}
 \`\`\`
 
 ## 你现在的版本
@@ -779,11 +847,12 @@ function sentences(text) {
     .filter(Boolean);
 }
 function lintDraft(draft, packet) {
-  const issues = [];
+  const issues = stepTeachingIssues(draft, packet);
   const add = (code, where, detail) => issues.push({ code, where, detail });
   const a = draft.activity;
   const visible = [];
   const walk = (value, path) => {
+    if (isStructuralStepPath(path)) return;
     if (typeof value === "string") visible.push([path, value]);
     else if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}[${i}]`));
     else if (value && typeof value === "object")
@@ -810,8 +879,10 @@ function lintDraft(draft, packet) {
       if (len > 38) add("F9", path, `句子太长（${len}字）：${s.slice(0, 40)}…`);
     }
   }
-  if (!a.run.debrief?.trim()) add("F4", "activity.run.debrief", "缺少运行后的老师的话");
-  if (!a.modify.debrief?.trim()) add("F4", "activity.modify.debrief", "缺少修改后的老师的话");
+  if (!a.steps) {
+    if (!a.run.debrief?.trim()) add("F4", "activity.run.debrief", "缺少运行后的老师的话");
+    if (!a.modify.debrief?.trim()) add("F4", "activity.modify.debrief", "缺少修改后的老师的话");
+  }
   const same =
     a.make.materialIds.length === a.starter.materialIds.length &&
     a.make.materialIds.every((id) => a.starter.materialIds.includes(id));
@@ -829,7 +900,7 @@ function lintDraft(draft, packet) {
     if (!libraryIds.has(source.id)) add("shape", "sources", `来源不在依据库：${source.id}`);
   if (draft.plan.caseSourceId && !draft.sources.some((s) => s.id === draft.plan.caseSourceId))
     add("shape", "plan.caseSourceId", "选中的案例没有列入 sources");
-  const game = a.investigate.game;
+  const game = a.investigate?.game ?? { kind: "steps" };
   if (game.kind === "sort")
     for (const card of game.cards) {
       const bucket = game.buckets.find((b) => b.id === card.bucketId);
@@ -901,19 +972,18 @@ function draftActivity(draft, packet, existing) {
     title: draft.title,
     brief: a.intro.need,
     goal: a.make.goal,
-    hint: a.investigate.explanation,
+    hint: a.investigate?.explanation ?? a.finish.note,
     takeaway: a.finish.note,
     source: primary.reference,
     method: "PRIMM",
-    experienceVersion: 2,
+    experienceVersion: a.steps ? 3 : 2,
     intro: a.intro,
     sources: [...used, ...stripLocales(kept)],
     materials: a.materials,
     starter: a.starter,
-    predict: a.predict,
-    run: a.run,
-    investigate: a.investigate,
-    modify: a.modify,
+    ...(a.steps
+      ? { steps: a.steps, ...(a.requests ? { requests: a.requests } : {}) }
+      : { predict: a.predict, run: a.run, investigate: a.investigate, modify: a.modify }),
     make: { ...a.make, exerciseId: packet.exerciseIds[0] },
     finish: a.finish,
   };
@@ -978,24 +1048,44 @@ async function sampleRuns(activity, packet) {
         commandId: randomUUID(),
         locale: "zh-CN",
       });
-      return { prompt, text: out.text, model: out.model };
+      return {
+        prompt,
+        text: out.text,
+        model: out.model,
+        characters: [...out.text].length,
+        bytes: Buffer.byteLength(out.text),
+      };
     } catch (error) {
       return { prompt, error: String(error?.code ?? error?.message ?? error) };
     }
   };
-  const modifyPrompt = [
-    activity.starter.prompt,
-    ...activity.modify.workbench.pieces.map((p) => p.text),
-  ].join("\n");
-  const samples = {
-    run: await once("run", activity.starter.prompt),
-    modify: await once("modify", modifyPrompt),
-  };
-  runtime.close?.();
-  return samples;
+  try {
+    if (activity.steps) {
+      const requests = {};
+      const planned = stepSampleRequests(activity);
+      for (const request of planned)
+        requests[request.id] = await once(request.phase, request.prompt);
+      return {
+        run: requests[planned[0].id],
+        modify: await once("modify", stepModifyPrompt(activity)),
+        requests,
+      };
+    }
+    const modifyPrompt = [
+      activity.starter.prompt,
+      ...activity.modify.workbench.pieces.map((p) => p.text),
+    ].join("\n");
+    return {
+      run: await once("run", activity.starter.prompt),
+      modify: await once("modify", modifyPrompt),
+    };
+  } finally {
+    runtime.close?.();
+  }
 }
 
 function renderLearnerScript(activity, draft, samples, makeSample) {
+  if (activity.steps) return renderStepLesson(activity, draft, samples, makeSample);
   const a = activity;
   const materialText = (ids) =>
     a.materials
@@ -1134,7 +1224,13 @@ async function makeSampleRun(activity, packet, prompt) {
       commandId: randomUUID(),
       locale: "zh-CN",
     });
-    return { prompt, text: out.text };
+    return {
+      prompt,
+      text: out.text,
+      model: out.model,
+      characters: [...out.text].length,
+      bytes: Buffer.byteLength(out.text),
+    };
   } catch (error) {
     return { prompt, error: String(error?.code ?? error?.message ?? error) };
   } finally {
@@ -1172,12 +1268,30 @@ function existingPrimm(packet) {
   return (manifest.activities ?? []).find((a) => a.kind === "primm");
 }
 
-async function stageCheck(dir, packet, version, S) {
-  const draft = readJson(join(dir, `draft.v${version}.json`));
+async function stageCheck(dir, packet, version, S, final = false) {
+  const label = final ? "final" : `v${version}`;
+  const draft = final
+    ? readJson(join(dir, "final.json")).draft
+    : readJson(join(dir, `draft.v${version}.json`));
   const parsed = S.zod.draft.safeParse(stripResolutions(draft));
+  if (!parsed.success) {
+    const lint = [{ code: "shape", where: "schema", detail: parsed.error.message }];
+    try {
+      lint.push(...lintDraft(draft, packet));
+    } catch (error) {
+      lint.push({
+        code: "shape",
+        where: "machine-check",
+        detail: `The incomplete draft cannot finish lint: ${error.message}`,
+      });
+    }
+    const render = `〔检查者注：Writer 输出不符合原生步骤结构，未运行模型、未虚构课堂〕\n${parsed.error.message}`;
+    writeJson(join(dir, `lint.${label}.json`), lint);
+    writeFileSync(join(dir, `render.${label}.md`), render);
+    log(dir, `check ${label}: invalid authored structure; no live sample executed`);
+    return { lint, render };
+  }
   const lint = lintDraft(draft, packet);
-  if (!parsed.success)
-    lint.push({ code: "shape", where: "schema", detail: parsed.error.message.slice(0, 2000) });
   const activity = draftActivity(draft, packet, existingPrimm(packet));
   const { PrimmPayloadSchema } = await import(
     pathToFileURL(join(repoRoot, "packages/core/dist/domain/schemas.js")).href
@@ -1191,28 +1305,55 @@ async function stageCheck(dir, packet, version, S) {
   else
     for (const issue of primmIssues(payload.data))
       lint.push({ code: "shape", where: "payload", detail: issue });
-  writeJson(join(dir, `lint.v${version}.json`), lint);
+  writeJson(join(dir, `lint.${label}.json`), lint);
+  if (lint.some((issue) => issue.code === "shape")) {
+    const render = `〔检查者注：原生结构或材料/来源合同未过，不运行无效请求〕\n${JSON.stringify(lint, null, 2)}\n${JSON.stringify(draft, null, 2)}`;
+    writeFileSync(join(dir, `render.${label}.md`), render);
+    log(dir, `check ${label}: native/teaching shape rejected; no live sample executed`);
+    return { lint, render };
+  }
   const samples = await sampleRuns(activity, packet);
   const makeSample = await makeSampleRun(activity, packet, draft.samples.makePrompt);
-  writeJson(join(dir, `samples.v${version}.json`), { ...samples, make: makeSample });
+  writeJson(join(dir, `samples.${label}.json`), { ...samples, make: makeSample });
+  for (const [where, sample] of Object.entries({
+    run: samples.run,
+    modify: samples.modify,
+    make: makeSample,
+    ...(samples.requests ?? {}),
+  }))
+    if (sample.error || !sample.text?.trim())
+      lint.push({ code: "runtime", where, detail: sample.error ?? "Empty real model output" });
+  writeJson(join(dir, `lint.${label}.json`), lint);
   const render = renderLearnerScript(activity, draft, samples, makeSample);
-  writeFileSync(join(dir, `render.v${version}.md`), render);
+  writeFileSync(join(dir, `render.${label}.md`), render);
   log(
     dir,
-    `check v${version}: ${lint.length} machine findings (${lint.filter((l) => l.code === "shape").length} shape); samples ${["run", "modify"].map((k) => (samples[k].error ? `${k}=failed` : `${k}=ok`)).join(" ")}`,
+    `check ${label}: ${lint.length} machine findings (${lint.filter((l) => l.code === "shape").length} shape); samples ${["run", "modify"].map((k) => (samples[k].error ? `${k}=failed` : `${k}=ok`)).join(" ")}`,
   );
+  if (lint.some((issue) => issue.code === "runtime"))
+    throw Error(
+      "A real local-model sample failed; retain its receipt and stop before Detector or publication",
+    );
   return { lint, render };
 }
 const stripResolutions = ({ resolutions, ...rest }) => rest;
 
 async function stageWrite(dir, packet, S) {
   const draft = await callModel("writer", writerPrompt(packet), S.draft, join(dir, "writer.v1"), {
-    accept: lessonVeto,
+    accept: (value) =>
+      S.zod.draft.safeParse(value).success
+        ? lessonVeto(value)
+        : S.zod.draft.safeParse(value).error.message,
   });
   writeJson(join(dir, "draft.v1.json"), draft);
   log(dir, `write v1: ${readJson(join(dir, "writer.v1.receipt.json")).model}`);
 }
 async function stageDetect(dir, packet, version, S) {
+  const machine = readJson(join(dir, `lint.v${version}.json`));
+  if (machine.some((finding) => ["shape", "runtime"].includes(finding.code)))
+    throw Error(
+      "The independent Detector needs a valid lesson and real runs; repair the machine failure first",
+    );
   const draft = readJson(join(dir, `draft.v${version}.json`));
   const render = readFileSync(join(dir, `render.v${version}.md`), "utf8");
   const report = await callModel(
@@ -1231,19 +1372,38 @@ async function stageDetect(dir, packet, version, S) {
   return report;
 }
 /** Fix from the best-scoring version, writing a new latest version: never build on a regression. */
+export function reviewContextForFix(lint, report) {
+  if (lint.some((issue) => issue.code === "runtime"))
+    throw Error(
+      "A failed real run is not a prose defect; inspect the execution failure before another model call",
+    );
+  if (report) return report;
+  if (lint.some((issue) => issue.code === "shape"))
+    return {
+      performed: false,
+      reason: "Native structure must pass before the independent Detector runs",
+    };
+  throw Error("The draft has no independent review; run the Detector first");
+}
 async function stageFix(dir, packet, latestVersion, S, from) {
   const version = from ?? (bestVersion(dir) || latestVersion);
   const next = currentVersion(dir) + 1;
   const draft = readJson(join(dir, `draft.v${version}.json`));
   const lint = readJson(join(dir, `lint.v${version}.json`));
-  const detector = readJson(join(dir, `detector.v${version}.json`));
+  const reportPath = join(dir, `detector.v${version}.json`);
+  const detector = reviewContextForFix(lint, existsSync(reportPath) ? readJson(reportPath) : null);
   const render = readFileSync(join(dir, `render.v${version}.md`), "utf8");
   const fixed = await callModel(
     "writer",
     fixerPrompt(packet, stripResolutions(draft), lint, detector, render),
     S.fixed,
     join(dir, `fixer.v${next}`),
-    { accept: lessonVeto },
+    {
+      accept: (value) =>
+        S.zod.fixed.safeParse(value).success
+          ? lessonVeto(value)
+          : S.zod.fixed.safeParse(value).error.message,
+    },
   );
   writeJson(join(dir, `draft.v${next}.json`), fixed);
   log(
@@ -1278,7 +1438,11 @@ function displayMap(draft) {
   });
   const walk = (value, path) => {
     if (typeof value === "string") {
-      if (/(^|\.)(id|kind|operation|targetId|bucketId|sourceId|assetId)$/.test(path)) return;
+      if (
+        isStructuralStepPath(path) ||
+        /(^|\.)(id|kind|operation|targetId|bucketId|sourceId|assetId)$/.test(path)
+      )
+        return;
       if (/materials\.\d+\.text$/.test(path)) return; // practice material is frozen content
       put(path, value);
     } else if (Array.isArray(value)) value.forEach((v, i) => walk(v, `${path}.${i}`));
@@ -1320,14 +1484,28 @@ const numbers = (s) =>
     .map(Number)
     .sort((a, b) => a - b)
     .join(",");
-function polishIssues(before, after) {
+function polishIssues(before, after, { fixedTitle } = {}) {
   const issues = [];
+  if (fixedTitle !== undefined) {
+    if (before.title !== fixedTitle)
+      throw Error("Owner-fixed title differs from the reviewed title; return through review → fix");
+    if (after.title !== fixedTitle) issues.push("title: Owner-fixed title must stay unchanged");
+  }
   for (const [key, text] of Object.entries(before)) {
     const out = after[key];
     if (typeof out !== "string" || !out.trim()) {
       issues.push(`${key}: missing`);
       continue;
     }
+    // Operational strings were actually run and reviewed. Polish may translate
+    // them later, but must not silently change the Chinese request or targets.
+    if (
+      /(?:starter\.prompt|requests\.\d+\.prompt|steps\.\d+\.(?:pieces\.\d+\.text|terms\.\d+))$/.test(
+        key,
+      ) &&
+      out !== text
+    )
+      issues.push(`${key}: operational text is frozen after review`);
     if (numbers(text) !== numbers(out)) issues.push(`${key}: numbers changed`);
     for (const h of HEDGES)
       if (text.includes(h) && !out.includes(h)) issues.push(`${key}: lost hedge ${h}`);
@@ -1349,10 +1527,21 @@ function polishIssues(before, after) {
   for (const key of Object.keys(after)) if (!(key in before)) issues.push(`${key}: unknown key`);
   return issues;
 }
-async function stagePolish(dir, packet, version, S) {
+async function stagePolish(dir, packet, version, S, { fixedTitle } = {}) {
+  const report = readJson(join(dir, `detector.v${version}.json`));
+  const findings = readJson(join(dir, `lint.v${version}.json`));
+  if (
+    report.verdict !== "ready" ||
+    report.findings.some((finding) => finding.severity !== "minor") ||
+    findings.some((finding) => ["shape", "runtime"].includes(finding.code))
+  )
+    throw Error(
+      "This version is not ready for polish; use review → fix rather than bypassing failed checks",
+    );
   const draft = stripResolutions(readJson(join(dir, `draft.v${version}.json`)));
   const render = readFileSync(join(dir, `render.v${version}.md`), "utf8");
   const before = displayMap(draft);
+  polishIssues(before, before, { fixedTitle });
   const keys = Object.keys(before);
   const stringsSchema = S.z.toJSONSchema(
     S.z.object(Object.fromEntries(keys.map((k) => [k, S.z.string().min(1)]))).strict(),
@@ -1370,6 +1559,7 @@ ${NO_TOOLS}
 3. 不变长：每一条都不能比原文长（可以更短）。口语是更短的句子，不是更多的字。
 4. 称 AI 为“AI”，不用“助手”“助理”。
 5. 键不变，数量不变，返回同样结构的 JSON。
+${fixedTitle === undefined ? "" : `6. Owner 已确定标题，title 必须逐字保留：${fixedTitle}`}
 
 为了理解上下文，这是学习者看到的整节课（只读，不要修改它）：
 
@@ -1387,12 +1577,13 @@ ${JSON.stringify(before, null, 2)}
     stringsSchema,
     join(dir, `polish.v${version}`),
   );
-  const issues = polishIssues(before, polished);
+  const issues = polishIssues(before, polished, { fixedTitle });
   // A rejected key keeps the fixed draft wording: never hand-repair a polish and call it accepted.
   const accepted = Object.fromEntries(
     keys.map((k) => [k, issues.some((i) => i.startsWith(`${k}:`)) ? before[k] : polished[k]]),
   );
   writeJson(join(dir, `polish.v${version}.acceptance.json`), {
+    ...(fixedTitle === undefined ? {} : { fixedTitle }),
     keys: keys.length,
     rejectedKeys: [...new Set(issues.map((i) => i.split(":")[0]))],
     issues,
@@ -1638,6 +1829,8 @@ async function stageAssemble(dir, packet, apply) {
   const display = new Set(activityDisplayStrings(zhActivity));
   for (const key of Object.keys(strings)) if (!display.has(key)) delete strings[key];
   const missing = [...display].filter((s) => !strings[s]);
+  if (missing.length)
+    throw Error(`Translation is incomplete before native revision: ${JSON.stringify(missing)}`);
   const activity = { ...zhActivity, locales: { en: { strings } } };
   // Evidence: keep every existing record, add each newly used library source once.
   const evidence = [...manifest.evidence];
@@ -1729,7 +1922,7 @@ async function stageAssemble(dir, packet, apply) {
   });
   log(
     dir,
-    `assemble r${rev + 1}: ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}; missing en strings: ${missing.length}`,
+    `assemble r${rev + 1}: ${apply ? "APPLIED via native dry-run + revise" : "native dry-run validated (not applied)"}; missing en strings: ${missing.length}`,
   );
 }
 
@@ -1740,16 +1933,21 @@ async function nativeApply(dir, root, apply) {
   );
   const run = (argv) =>
     executeUniversityLocalCli({
-      projectRoot: moduleRoot,
+      projectRoot: authoringProjectRoot(),
       cwd: repoRoot,
-      env: {},
+      env: process.env,
       command: parseUniversityLocalCli(argv),
     });
   const receipts = [];
-  if (!apply) return receipts;
+  if (realpathSync(root) !== studiesRoot())
+    throw Error("Native proposal and CLI must use the same authoring root");
   // Native revise only accepts a stale (open-for-edit) course; the batch's
   // `finish` stage reactivates it. Opening an already open course is a no-op.
   const course = readJson(join(root, STUDY, "courses", COURSE, "course.json"));
+  if (course.status !== "stale" && !apply)
+    throw Error(
+      "Native dry-run requires an open-for-edit authoring course; prepare the unpublished project first",
+    );
   if (course.status !== "stale")
     receipts.push({
       args: "open-for-edit",
@@ -1760,16 +1958,17 @@ async function nativeApply(dir, root, apply) {
     args: "revise --dry-run",
     result: await run(["course", "revise", "--study", STUDY, "--input", input, "--dry-run"]),
   });
-  receipts.push({
-    args: "revise",
-    result: await run(["course", "revise", "--study", STUDY, "--input", input]),
-  });
+  if (apply)
+    receipts.push({
+      args: "revise",
+      result: await run(["course", "revise", "--study", STUDY, "--input", input]),
+    });
   return receipts;
 }
 
 /**
- * Land a version-3 step lesson written by hand (the line does not write steps
- * yet). Input: { activity, exercise: { title, rubric, en }, cards: [{ front,
+ * Retained explicitly manual step-lesson import, not the automated Writer path.
+ * Input: { activity, exercise: { title, rubric, en }, cards: [{ front,
  * back, en }] }. Same evidence, card/exercise identities and native path as
  * `assemble`; every display string must already carry its English.
  */
@@ -1891,20 +2090,24 @@ async function stageAssembleSteps(dir, packet, inputFile, apply, replace) {
   writeJson(join(dir, apply ? "native-apply.json" : "native-proposal-check.json"), { receipts });
   log(
     dir,
-    `MANUAL assemble-steps r${rev + 1}: hand-written version-3 lesson from ${inputFile}${replace ? ` replacing the old lesson (retired assets: ${retireAssetIds.join(", ") || "none"})` : ""}; ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}`,
+    `MANUAL assemble-steps r${rev + 1}: hand-written version-3 lesson from ${inputFile}${replace ? ` replacing the old lesson (retired assets: ${retireAssetIds.join(", ") || "none"})` : ""}; ${apply ? "APPLIED via native dry-run + revise" : "native dry-run validated (not applied)"}`,
   );
 }
 
 /** Once per batch, after every lesson's `assemble --apply`: reactivate, then export recovery. */
 async function stageFinish(dir) {
+  if (authoringProjectRoot() !== moduleRoot)
+    throw Error(
+      "An unpublished authoring project cannot export into the formal recovery shelf; prepare its isolated preview instead",
+    );
   const { executeUniversityLocalCli, parseUniversityLocalCli } = await import(
     pathToFileURL(join(moduleRoot, ".university-local-build/server/cli.js")).href
   );
   const run = (argv) =>
     executeUniversityLocalCli({
-      projectRoot: moduleRoot,
+      projectRoot: authoringProjectRoot(),
       cwd: repoRoot,
-      env: {},
+      env: process.env,
       command: parseUniversityLocalCli(argv),
     });
   const receipts = [
@@ -2030,107 +2233,156 @@ function stageStatus() {
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
-const { stage, options } = args();
-if (stage === "status") {
-  stageStatus();
-  process.exit(0);
-}
-if (!stage || !options.lesson) {
-  console.error(
-    "Usage: primm-pipeline.mjs <packet|write|check|detect|fix|polish|assemble|run|note> --lesson <unit>/<lesson>",
-  );
-  process.exit(2);
-}
-const [unitId, lessonId] = String(options.lesson).split("/");
-const dir = runDir(lessonId);
-mkdirSync(dir, { recursive: true });
-const packetFile = join(dir, "packet.json");
-if (stage === "note") {
-  log(dir, `MANUAL: ${options.text}`);
-  process.exit(0);
-}
-if (stage === "packet" || (stage === "run" && !existsSync(packetFile))) {
-  const notes = options["owner-notes"] ? readFileSync(options["owner-notes"], "utf8") : null;
-  writeJson(packetFile, buildPacket(unitId, lessonId, options.mode ?? "new", notes));
-  log(dir, `packet: ${lessonId} (${options.mode ?? "new"})`);
-  if (stage === "packet") process.exit(0);
-}
-const packet = readJson(packetFile);
-// Cases verified by `research` after the packet was built join the library.
-if (existsSync(join(dir, "research.accepted.json")))
-  for (const source of readJson(join(dir, "research.accepted.json")).sources)
-    if (!packet.library.some((entry) => entry.url === source.url)) packet.library.push(source);
-const S = await schemas();
-const version = currentVersion(dir);
-if (stage === "research") {
-  const draft = version ? readJson(join(dir, `draft.v${version}.json`)) : null;
-  await stageResearch(
-    dir,
-    packet,
-    S,
-    options.need ?? draft?.plan.caseNeeded ?? packet.outline.title,
-  );
-} else if (stage === "write") await stageWrite(dir, packet, S);
-else if (stage === "check") await stageCheck(dir, packet, version, S);
-else if (stage === "detect") await stageDetect(dir, packet, version, S);
-else if (stage === "fix")
-  await stageFix(dir, packet, version, S, options.from ? Number(options.from) : undefined);
-else if (stage === "polish")
-  await stagePolish(dir, packet, Number(options.version ?? bestVersion(dir)), S);
-else if (stage === "assemble") await stageAssemble(dir, packet, !!options.apply);
-else if (stage === "assemble-steps")
-  await stageAssembleSteps(dir, packet, String(options.input), !!options.apply, !!options.replace);
-else if (stage === "finish") await stageFinish(dir);
-else if (stage === "review") {
-  // A person's reading goes into the same fix loop as the Detector's, marked as theirs.
-  const v = Number(options.version ?? bestVersion(dir));
-  const file = join(dir, `detector.v${v}.json`);
-  const report = readJson(file);
-  report.findings.push({
-    code: "HUMAN",
-    severity: options.severity ?? "major",
-    where: options.where ?? "whole lesson",
-    quote: options.quote ?? "",
-    problem: String(options.text),
-  });
-  report.verdict = "revise";
-  writeJson(file, report);
-  log(dir, `MANUAL review of v${v} (${options.severity ?? "major"}): ${options.text}`);
-} else if (stage === "reparse") await stageReparse(dir, S, options.name ?? "writer.v1");
-else if (stage === "run") {
-  const rounds = Number(options.rounds ?? 2);
-  if (!version) await stageWrite(dir, packet, S);
-  let v = currentVersion(dir);
-  for (let round = 0; ; round++) {
-    if (!existsSync(join(dir, `render.v${v}.md`))) await stageCheck(dir, packet, v, S);
-    const report = existsSync(join(dir, `detector.v${v}.json`))
-      ? readJson(join(dir, `detector.v${v}.json`))
-      : await stageDetect(dir, packet, v, S);
-    const lint = readJson(join(dir, `lint.v${v}.json`));
-    const plan = readJson(join(dir, `draft.v${v}.json`)).plan;
-    // Research when the writer found no fitting verified case, or said the one it used is weak.
-    if (
-      (!plan.caseSourceId || plan.caseNeeded?.trim()) &&
-      !existsSync(join(dir, "research.checked.json"))
-    ) {
-      const found = await stageResearch(dir, packet, S, plan.caseNeeded || packet.outline.title);
-      for (const source of found)
-        if (!packet.library.some((e) => e.url === source.url)) packet.library.push(source);
-    }
-    const serious =
-      report.findings.filter((f) => f.severity !== "minor").length +
-      lint.filter((l) => l.code === "shape").length +
-      (plan.caseSourceId ? 0 : 1);
-    if ((!serious && report.verdict === "ready") || round >= rounds) break;
-    // A fix that scores worse than an earlier version ends the loop; the next fix
-    // would start from the worse text. Polish picks the best version anyway.
-    if (v > 1 && versionScore(dir, v) > versionScore(dir, bestVersion(dir))) break;
-    await stageFix(dir, packet, v, S);
-    v = currentVersion(dir);
+async function main() {
+  const { stage, options } = args();
+  if (stage === "status") {
+    stageStatus();
+    process.exit(0);
   }
-  const best = bestVersion(dir);
-  log(
-    dir,
-    `run: stopped at v${v}; best is v${best} (score ${versionScore(dir, best)}); polish uses the best version`,
-  );
-} else throw Error(`Unknown stage ${stage}`);
+  if (!stage || !options.lesson) {
+    console.error(
+      "Usage: primm-pipeline.mjs <packet|write|check|detect|fix|polish|assemble|run|note> --lesson <unit>/<lesson>",
+    );
+    process.exit(2);
+  }
+  const [unitId, lessonId] = String(options.lesson).split("/");
+  const dir = runDir(lessonId);
+  mkdirSync(dir, { recursive: true });
+  const packetFile = join(dir, "packet.json");
+  if (stage === "prepare-unpublished") {
+    if (!process.env.PRIMM_PROJECT_ROOT)
+      throw Error("Choose an explicit PRIMM_PROJECT_ROOT for the unpublished native shelf");
+    const receipt = await prepareUnpublished({
+      projectRoot: authoringProjectRoot(),
+      recoveryRoot: resolve(
+        options.recovery ?? join(moduleRoot, "course-proposals/recovery", STUDY),
+      ),
+      studyId: STUDY,
+      courseId: COURSE,
+    });
+    writeJson(join(dir, "unpublished-authoring.json"), receipt);
+    log(dir, `prepared unpublished native authoring: ${receipt.studiesRoot}`);
+    process.exit(0);
+  }
+  if (stage === "preview") {
+    const receipt = await prepareUnpublishedPreview({ projectRoot: authoringProjectRoot() });
+    writeJson(join(dir, "preview.json"), receipt);
+    log(dir, `UNIVERSITY_PRIMM_PREVIEW_ROOT=${dirname(receipt.manifestPath)} pnpm primm:preview`);
+    process.exit(0);
+  }
+  if (stage === "note") {
+    log(dir, `MANUAL: ${options.text}`);
+    process.exit(0);
+  }
+  if (stage === "packet" || (stage === "run" && !existsSync(packetFile))) {
+    const notes = options["owner-notes"] ? readFileSync(options["owner-notes"], "utf8") : null;
+    writeJson(packetFile, buildPacket(unitId, lessonId, options.mode ?? "new", notes));
+    log(dir, `packet: ${lessonId} (${options.mode ?? "new"})`);
+    if (stage === "packet") process.exit(0);
+  }
+  const packet = readJson(packetFile);
+  if (
+    packet.storage &&
+    (packet.storage.projectRoot !== authoringProjectRoot() ||
+      packet.storage.studiesRoot !== studiesRoot())
+  )
+    throw Error(
+      "The packet belongs to a different authoring root; select its original PRIMM_PROJECT_ROOT",
+    );
+  // Cases verified by `research` after the packet was built join the library.
+  if (existsSync(join(dir, "research.accepted.json")))
+    for (const source of readJson(join(dir, "research.accepted.json")).sources)
+      if (!packet.library.some((entry) => entry.url === source.url)) packet.library.push(source);
+  const S = await schemas();
+  const version = currentVersion(dir);
+  if (stage === "research") {
+    const draft = version ? readJson(join(dir, `draft.v${version}.json`)) : null;
+    await stageResearch(
+      dir,
+      packet,
+      S,
+      options.need ?? draft?.plan.caseNeeded ?? packet.outline.title,
+    );
+  } else if (stage === "write") await stageWrite(dir, packet, S);
+  else if (stage === "check") await stageCheck(dir, packet, version, S, !!options.final);
+  else if (stage === "detect") await stageDetect(dir, packet, version, S);
+  else if (stage === "fix")
+    await stageFix(dir, packet, version, S, options.from ? Number(options.from) : undefined);
+  else if (stage === "polish")
+    await stagePolish(dir, packet, Number(options.version ?? bestVersion(dir)), S, {
+      fixedTitle: options["fixed-title"],
+    });
+  else if (stage === "assemble") await stageAssemble(dir, packet, !!options.apply);
+  else if (stage === "assemble-steps")
+    await stageAssembleSteps(
+      dir,
+      packet,
+      String(options.input),
+      !!options.apply,
+      !!options.replace,
+    );
+  else if (stage === "finish") await stageFinish(dir);
+  else if (stage === "review") {
+    // A person's reading goes into the same fix loop as the Detector's, marked as theirs.
+    const v = Number(options.version ?? bestVersion(dir));
+    const file = join(dir, `detector.v${v}.json`);
+    const report = readJson(file);
+    report.findings.push({
+      code: "HUMAN",
+      severity: options.severity ?? "major",
+      where: options.where ?? "whole lesson",
+      quote: options.quote ?? "",
+      problem: String(options.text),
+    });
+    report.verdict = "revise";
+    writeJson(file, report);
+    log(dir, `MANUAL review of v${v} (${options.severity ?? "major"}): ${options.text}`);
+  } else if (stage === "reparse") await stageReparse(dir, S, options.name ?? "writer.v1");
+  else if (stage === "run") {
+    const rounds = Number(options.rounds ?? 2);
+    if (!version) await stageWrite(dir, packet, S);
+    let v = currentVersion(dir);
+    for (let round = 0; ; round++) {
+      if (!existsSync(join(dir, `render.v${v}.md`))) await stageCheck(dir, packet, v, S);
+      const lint = readJson(join(dir, `lint.v${v}.json`));
+      if (lint.some((issue) => issue.code === "runtime"))
+        throw Error("A real sample failed; inspect it before continuing the authoring run");
+      const report = lint.some((issue) => issue.code === "shape")
+        ? null
+        : existsSync(join(dir, `detector.v${v}.json`))
+          ? readJson(join(dir, `detector.v${v}.json`))
+          : await stageDetect(dir, packet, v, S);
+      const plan = readJson(join(dir, `draft.v${v}.json`)).plan;
+      // Research when the writer found no fitting verified case, or said the one it used is weak.
+      if (
+        (!plan.caseSourceId || plan.caseNeeded?.trim()) &&
+        !existsSync(join(dir, "research.checked.json"))
+      ) {
+        const found = await stageResearch(dir, packet, S, plan.caseNeeded || packet.outline.title);
+        for (const source of found)
+          if (!packet.library.some((e) => e.url === source.url)) packet.library.push(source);
+      }
+      const serious =
+        (report?.findings.filter((f) => f.severity !== "minor").length ?? 0) +
+        lint.filter((l) => l.code === "shape").length +
+        (plan.caseSourceId ? 0 : 1);
+      if ((!serious && report?.verdict === "ready") || round >= rounds) break;
+      // A fix that scores worse than an earlier version ends the loop; the next fix
+      // would start from the worse text. Polish picks the best version anyway.
+      if (v > 1 && versionScore(dir, v) > versionScore(dir, bestVersion(dir))) break;
+      await stageFix(dir, packet, v, S);
+      v = currentVersion(dir);
+    }
+    const best = bestVersion(dir);
+    log(
+      dir,
+      `run: stopped at v${v}; best is v${best} (score ${versionScore(dir, best)}); polish uses the best version`,
+    );
+  } else throw Error(`Unknown stage ${stage}`);
+}
+
+// Importing the pipeline for its own tests must never start a model or write a
+// run directory. CLI execution remains the same single native-authoring path.
+export { schemas, draftActivity, lintDraft, displayMap, polishIssues, buildPacket, callModel };
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url)
+  await main();

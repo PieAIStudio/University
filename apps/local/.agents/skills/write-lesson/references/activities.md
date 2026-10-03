@@ -1,233 +1,67 @@
-# 课内活动：放哪儿，怎么写进课文
+# 第 3 版课内步骤与材料
 
-Current pilot: complete PRIMM, native `primm` activity. The five phases do not
-change to fit the board. Choose meaningful operations within Investigate/Modify;
-Make is independently assessed native work. `interaction-path` below describes
-stored V1/V2 compatibility, not the current method.
+新课使用一个原生 `primm` 活动，`experienceVersion: 3`；阶段固定为猜、跑、看、改、做，
+每个 `steps[]` 是一屏、一个动作。动作要练到本关承诺的能力，不是给课文配装饰。
+完整教学规则只有 [teaching-contract.md](teaching-contract.md) 一份。
 
-The everyday pilot uses `experienceVersion: 2`. Plan five distinct learner acts,
-not five copies of a choice board: predict an output; place the prepared material
-into a conversation and send it; investigate by manipulating the relevant object;
-build an editable request from partial phrases and own words, then execute it;
-change the input/purpose and independently make something useful. The fragments
-are writing scaffolding, not a magic correct answer. Previous observations can
-carry into Modify; Make does not prefill the solution. Reuse existing game engines
-when the task fits, and add a typed shared operation only for a concrete need.
+## 新课选择范围
 
-这一页讲的是**课内活动**（`LessonActivityKindSchema` 那 15 种里可独立配的引擎）
-怎么用：放在课文哪一段、怎么点名、难度和轮换、出处怎么记。
+当前原生步骤只有 `choose`、`send`、`find`、`point`、`match`、`sort`、`build`、`make`。
+各自允许的阶段、所需材料和真正的完成条件，查 [components.md](components.md) 中
+`分步·v3` 的行，再由原生 `PrimmPayloadSchema` 和 `primmIssues` 校验。
+本页不另抄一套组件登记表；旧课型及试玩目录中的名字不能当成新的 `steps[].kind`。
 
-**配哪一种不在这里**，在 [components.md](components.md)——那是唯一一张组件表，
-课内活动、PRIMM 分步、调查关和 3D 都在同一张上，每行都标着能放哪儿。课内活动和
-PRIMM 分步不是两套平行的选择，是两层：分步长在 `primm` 这一个课内活动里面。
-两边都有一个 `sort`，通关条件不同——照名字选就会选错。
+先确定学习者要做的判断，再选动作。预想是记录选择，不设 `answerId` 判成答题；
+需要把选择真的发给 AI 时，每个选项指向一个有效请求，Run 用 `request: "chosen"`。
+`match` 使用这些请求各自真正运行的回答，不拿作者编的回答冒充实时结果。
+`find` 同时写“找到”和“没有找到”两种解释；不把课程押在 AI 必须说出某句话上。
+`point` 只使用输入包中已核实的图片区域，不能让看不见图的 Writer 猜坐标。
 
-实现、载荷字段和引擎规则在
-[shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
+Modify 的 `build` 用原生引擎验证每种允许的拼法。`context` 只是显示的材料，
+**不会自动加入请求**；完整问法必须来自真正选中的 pieces，随后 send 发的正是它。
+Make 换材料和用途，学习者独立写请求、运行并改成自己的作品，绑定原有评分练习身份。
+阶段和请求 id、正确拼法及出处 id 都是结构，不交给润色或翻译模型改写。
 
-决定在**挑变体的同一步**做，不是课文写完之后再想。写完再配，配出来的一定是
-"给这段话找个游戏"，而不是"这件事本来就该动手才懂"。
+一关加上开场和结尾共 8–12 屏。小回合不是第二套题库：一关至多一组 `sort`，
+3–6 个同类判断。原生游戏规则仍须全部执行，不靠把错误当完成缩短课程。
 
-## Stored V2: choose the learning action first (compatibility)
+## 材料清单与诚实标签
 
-V2 uses one `interaction-path` as the continuous host, with `pedagogyVersion: 2`.
-Its small decisions, material inspection, assembly/repair and exhaustive state
-experiments can span several teaching responsibilities. Those steps are not new
-large game engines, nor does every responsibility require an extra interaction.
+| 读者面对的材料 | 必须交代什么 |
+| --- | --- |
+| 作者编的生活练习 | 标签明确“练习”；发给 AI 的正文不混入“虚构”等解释；保留真实生活会有的冗余和长度 |
+| 第一手网页或仓库代码 | 发布者、原始地址、支持的事实、限制与核对日期；代码额外钉住 commit、路径和行号 |
+| 图片、音频 | 来源、授权及原有署名；点图坐标或录音内容必须经过主机核实；合成音频明确标合成 |
+| `runLog`：历史运行记录 | 真实执行的命令/请求、时间、环境、结果和失败状态；标签写清是历史记录，不是本次实时运行 |
+| `code`：代码材料 | 它来自哪个固定版本、为什么看这段；教学改写必须标明，不说是原仓库原文，不擅自执行 |
+| `town`：关系示意材料 | 明确是教学示意，不是现实案例或数据证据；每个对象和关系均须有本课可解释的依据 |
 
-The native 13 activities below remain available for tasks that actually fit their
-models. Claude's short and arcade prototypes are research entries in the catalogue,
-not additional valid `ActivityKind` values. Extract a typed reusable mechanism only
-when a real lesson needs it; do not drop executable prototype HTML into course JSON.
+`runLog`、`code`、`town` 在这里是材料职责，不是凭空新增的原生步骤枚举。
+当前可写入的文本材料类型仍是 `practice`、`source-summary`、`teaching-draft`；
+后两种必须引用真实的 `sourceId`。某种交互需要现有 schema 没有的能力时，报告缺口，
+不能把未知字段塞进 JSON，也不能把模拟截图说成实时执行。
 
-Repetition is judged by learning: a changed condition or less help may be useful
-practice, while a different hand gesture may still repeat the same trivial answer.
-There is no automatic “second game harms learning” rule. Preserve the current
-technical activity-array bound for legacy payloads; one V2 path can contain several
-bounded steps without creating six independent games.
+真实世界的三处材料依 [教学合同第 2 节](teaching-contract.md#2-真实世界三处各说一件和本关有关的事)：
+开场接到本人的需要，Run 等待时一条相关事实，结尾一句可带走的事实。
+审核元数据保存在 `plan.realWorld`，显示仍走原生 `intro.sourceIds`、`send.wait` 和
+`finish.didYouKnow`；不要另加没有消费者的产品字段。
 
-If no native mechanic fits, name the desired action, the closest engine and the
-concrete missing capability. Do not invent numerical budgets, scales, facts or code
-to satisfy an engine. New capability needs typed inputs, truthful feedback, native
-source/recovery validation and browser evidence before it can be course-ready.
+## 写进原生课文
 
-For an `experiment`, write every boolean-control combination explicitly. Its
-result is the current simulation, not a promise about a live AI. Useful alternatives
-can be accepted; all-on is not automatically best. A learner who already required
-“保留时间” must not be told “你没要求时间” when the result omits it.
+使用稳定的活动身份和 `::play{#活动id}`。井号简写不是 `{id=…}`。
+短课文只负责引入活动与回看，不能把组件中的材料、答案和教师文字重复写一份。
+标题回答这一步的问题；老师的话在动作之后出现，解释学习者实际做过的事。
 
-## 选哪一种：见 components.md
+所有来源从本次已核实的输入包取。公开来源写 `{ label, url }`，仓库源码使用原生
+证据定位；没有明确来源时不填一个看起来相关的网址交差。别把快照 id 当 commit。
 
-这里原本有一张十三行的玩法表。它已经废除——组件表只剩一张，在
-[components.md](components.md)，那一张同时包含课内活动、PRIMM 分步和 3D，
-每一行的「怎么算过」都是从引擎读的。
+## 落地与预览
 
-本文件其余部分讲的是**课内活动这一类怎么用**：放在课文哪一段、怎么写进课文、
-难度和轮换、出处怎么记。选哪个组件不在这里。
+内容只有原生 CLI 一个写入者：准备未发布作者项目 → open-for-edit → 原生 dry-run →
+revise → 核对 → 在未发布项目中 reactivate → 构建隔离预览。
+`stale` 是编辑状态，不是可读的完成状态；必须真实打开课程验证。
 
-## 放在哪一步：三个位置，含义不同
-
-| 角色          | 位置                                 | 它在做什么                             |
-| ------------- | ------------------------------------ | -------------------------------------- |
-| `observe`     | `## 先猜一下` **之前**               | 让读者先看见现象，预测题才有材料可依据 |
-| `demonstrate` | 中段之内                             | 把一段讲不清的机制演一遍               |
-| `apply`       | `## 答案` 与中段之后、`## 自检` 之前 | 刚学完，第一次自己用                   |
-
-**`demonstrate` 永远不能代替评分练习。** 看懂一个演示不等于自己会做，
-所以练习照旧是单独一道，单独作答。
-
-`observe` 有一条硬线：它**不能泄题**。放在预测之前的组件只呈现现象，不给结论——
-玩完之后那个问题还得是悬着的。
-
-## 写进课文的方式：点名，不是并排
-
-组件不能凭空出现在两段之间。**课文里要有一句把读者交给它**，
-说清楚接下来要做什么、做完能看出什么。
-
-```markdown
-你已经知道两边各能碰到什么了。自己连一次试试——连错的地方，
-那趟"请求"会当场走不过去。
-
-::play{#what-each-one-can-reach}
-```
-
-写法是 `::play{#组件id}`，**井号简写，不是 `{id=…}`**。后者在这条渲染管线里
-会被当成一个名叫 `id=…` 的空属性，加引号则整条指令都不成立。
-
-**课文只指向组件，不复述它的内容。** 把组件里的节点、数值、答案再讲一遍，
-等于同一件事写了两份，改一份另一份就开始撒谎。
-
-## 面向读者的字：直说，不要比喻
-
-组件里的每一句都要在当前可见材料与任务中**独自**读懂；不能依赖已经消失的上下文。
-V2 的现实背景与具名材料负责铺垫，操作说明负责告诉读者此刻做什么。
-
-- **标题就是这一关要回答的问题**，别写成意象。
-  `谁能碰你的电脑？` 是标题；`各自的手，能伸到哪` 不是——读者得先解开比喻，
-  才知道自己在干什么。
-- **`brief` 要说清楚"手上要做的动作"**，不是这一关的意义。
-  读者看完 `brief` 就该知道从哪下手。
-- **不许出现只有我们懂的词**。`探针`、`节点`、`因果关系`、`可达`
-  这些是引擎内部的说法，写给读者时一律换成大白话（`这一趟走不走得通`、`方块`）。
-- **节点名越短越好，长的部分放 `note`**。`网页里的 AI` 配一句
-  `你打开一个网页，在框里打字`，比 `网页上会聊天的那个` 强——后者读者得读两遍
-  才知道在指什么。
-
-### connect：如果有一个节点要连出多条线，必须说出来
-
-这是实测栽过的一条。`chat-ai-versus-doing-ai` 左边两个方块、右边三个，
-其中一个方块要连出**三条**线。读者理所当然把它读成一对一配对，连了两条就卡死，
-以为组件坏了——而且**看不出来自己漏了**，因为界面当时只说"已接 2 条"。
-
-界面已经补上了"一共几条"，但载荷这边也要配合：
-
-- `brief` 里点明可以一对多，例如"能碰到几样就连几条"；
-- 那条最容易被漏掉的线，`why` 里直接说"所以这条线也要连"；
-- 六个 connect 里有两个是一对多。**一对多不是错**，但它是默认读法的例外，
-  例外必须写出来。
-
-## 旧式独立组件的数量、难度、轮换（不规定 PRIMM 阶段）
-
-- 旧式课文载荷仍沿用原有数量边界；这不是研究证明多个相关操作有害。
-  PRIMM 用一个方法载荷编排五阶段，不能把旧式数量上限解释成每节只准一个学习动作。
-- **难度跟着单元走**：前 1/3 用 `intro`，中间 `practice`，收口的那节可以 `challenge`。
-- **同一单元里最多两节连用同一种玩法**，和变体轮换是同一条线。第三节还要用同一种，
-  就在 agent report 里说明为什么这是诚实的选择，而不是硬凑一个别的。
-- **一个单元里配上的组件如果全是同一种**，即使不相邻，也在 report 里说一句。
-  可能这个单元讲的本来就是同一类关系（读一段代码追谁连着谁，就该全是 `connect`），
-  也可能是没认真看别的九种——这两种情况看起来一模一样，只有写的人分得清。
-
-## 落地之后：把课程恢复成 active
-
-`course open-for-edit` 会把课程和它的单元置为 `stale`，因为 `course revise` 拒绝
-改动 active 的容器。**而 stale 的课程在阅读器里打不开**——读者看到的是
-「课程资料没有打开」，正文一个字都没有。
-
-所有闸门对此一律绿灯：linter 干净、`check:activities` 说 ok、引擎接受载荷、
-连页面标题都正确解析出新修订的标题。**只有真的在浏览器里打开那一节才看得见。**
-
-所以顺序是固定的，而且 reactivate 必须在最后（reactivate 之后就改不动了）：
-
-```
-open-for-edit  →  revise（一节或多节）  →  验证  →  reactivate
-```
-
-```bash
-cd apps/local
-node scripts/university-local.mjs course reactivate \
-  --study <study> --course <course> --snapshot <snapshot-id>
-```
-
-2026-09-10 实测：三个并行 agent 各改一门课，两个把课程留在 stale 就交付了，
-它们跑的每一条检查都是绿的。
-
-## 出处：网址或者仓库里的位置，看这节课引的是哪一种
-
-组件的 `source` 跟着这节课的出处走，两种形状都行：
-
-- 课引的是已核实的公开网页 → `{ label, url }`，网址必须是这节课出处列表里已有的。
-  如果引用的是 GitHub 源码，必须钉在具体 commit 上，不能用会移动的 `blob/main`。
-  新闻、研究、官方资料及真实案例使用其真实页面与 provenance，不给网页编造 commit。
-- 课引的是仓库里的代码 → `{ label, path }`。行号和 commit **你不用填**，
-  `pick-activity.mjs` 会按你选中的那条出处补上 `line` / `lineEnd` / `commit`。
-
-`label` 只写"这个位置为什么重要"的白话。**不要把路径或行号再抄一遍**——读者看到的
-收条已经是 `worker.js:8@7bdf9a52` 这个形状，标签里再写一遍就是同一件事说两次。
-
-**不许为了填这个字段去找一个新链接。** 一节课引的是 `worker.js:8`，组件的出处就是
-`worker.js:8`；borrow 一个 MDN 页面来把字段填满，等于给读者一条通向别处的假线索。
-
-（这条曾经只允许网址，结果 browser-ai 二十一节里有十五节在技术上配不了组件——
-不是因为不该配，是因为字段形状替课程做了决定。后来又发现两件同类的事：`commit`
-一度是自由字符串，快照号 `git-7bdf9a52bbf8` 和它钉的 commit `7bdf9a52bbf8158a…`
-前十二位一样，模型三次里有两次把前者当后者填了进去，收条上印出 `@git-7bdf`；
-`line` 一度只能存一个数，于是"1–4 行的三个 import"被截成了第 1 行——那是 React
-的 import，跟标签说的完全不是一回事。现在这三样都由脚本从出处里取，不再由谁去抄。）
-
-`pnpm check:activities` 会核对这些：会移动的分支、钉错的 commit、快照里没有的文件、
-超出文件长度的行号。它跑的是真数据，所以红了就是真的。
-
-## 交付之前：让引擎判，不要自己判
-
-载荷写完，**跑一遍它自己的引擎**，确认这份情境真的能被解开。
-`isValidProgramActivity`、`evaluateHunt` 的 `"invalid-activity"` 这类判定就在引擎里，
-它们比任何一份手抄的规格都新。
-
-这也是以后改组件时的变更影响分析：**引擎改了，把所有情境的解重跑一遍，
-跑不通的就是受影响的课。** 不需要另建登记表或依赖图。
-
-## 三档难度：一个组件，学习者自己切
-
-一个组件可以写三份载荷，学习者在组件头部自己切 **入门 / 进阶 / 挑战**。
-
-写法是给它们同一个 `family`：
-
-```json
-"activities": [
-  { "id": "wiring-intro",     "family": "wiring", "difficulty": "intro",     "kind": "connect", ... },
-  { "id": "wiring-practice",  "family": "wiring", "difficulty": "practice",  "kind": "connect", ... },
-  { "id": "wiring-challenge", "family": "wiring", "difficulty": "challenge", "kind": "connect", ... }
-]
-```
-
-**三条硬规则**，schema 和闸门各拦一遍：
-
-1. 同一个 `family` 里 **kind 必须相同**。三档是同一个组件的三个难度，跑在同一个引擎上；
-   把连线板和归类台凑成一组，切过去的人会以为是坏了。
-2. 同一个 `family` 里 **难度不能重复**。
-3. 正文只写**一个** `::play{#id}`，指向三个里的任意一个即可——切档的入口在组件自己身上。
-   写三个 marker 就是在一页上放三个组件。
-
-**默认从入门开始**（V5 §难度：「默认先提供入门」），不是你在正文里指的那一档。
-完成记录里存的是学习者真正做的那一档，不是默认档。
-
-### 什么时候值得写三档
-
-不是每节都要。判断标准是**这一关的难点有没有可调的量**：
-
-- 连线板：节点多少、有没有分支和失败路径 → 可调，值得。
-- 归类台：桶的数量、有没有「两个都像」的诱饵 → 可调，值得。
-- 调参台：要同时满足几个约束 → 可调，值得。
-- 只有一个正确答案、去掉任何一点就不成立的关卡 → 不值得，写一档就好。
-
-只写一档完全合法；实际覆盖以当前发布包为准，`family` 不填就是一档。
+任务 12 的第四关在 Owner 阅读前不能写进正式 recovery 或配送目录。生产线的
+`prepare-unpublished`、`preview` 与既有 `pnpm primm:preview` 共同提供未发布阅读，
+读取和写入都经同一个原生配置根目录。详细命令、修订和收据规则在
+[primm-pipeline.md](primm-pipeline.md)。改变已接受的前三关或发布第四关不属于写课许可。

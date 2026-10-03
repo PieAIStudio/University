@@ -13,11 +13,11 @@ table is the judgment checklist. These are the acceptance items around it.
 - [judgment] The real case proves real use in plain words, then hands over to the learner's life; nothing later drills or examines the case (F2).
 - [judgment] Read the teacher's lines in order (contract §3): one small job, each screen continuing from the last action, no line reusable in another lesson unchanged.
 - [judgment] Reading level: an 8–9-year-old can read every sentence; no designer vocabulary or unexplained product names (F7, F9); adult content and tone (F13).
-- [machine] `run.debrief`, `modify.debrief` present; the UI shows them only after an actual result, and `investigate.explanation` only after the operation.
+- [machine] V3 `send.after` or request-bound `debriefs` follow actual Run/Modify results; interaction feedback follows the operation. Retained V2 uses its own existing debrief fields.
 - [judgment] Debriefs stay true for any plausible live output (F10); checked against at least one real sample run.
 - [judgment] Predict targets a genuine beginner uncertainty and cannot be answered by reading the request (F3).
 - [judgment] Investigate operates on this run's material, result or the gap between them; cards and choices do not print their answers (F5, F15).
-- [machine] Native `primm` payload has all five phases, valid references, a bound explain exercise, different Make material, `experienceVersion: 2` operations.
+- [machine] Native `primm` V3 has all five phases, valid references, a bound explain exercise and different Make material. Run/Modify each send once; Make starts with the independent task. Door/wait/after source metadata is verified; at most one 3–6-item small round.
 - [process] Run executes the exact prepared input; Modify executes the visible edited input; unavailable/replay/live never conflated.
 - [judgment] Make changes material and purpose; checklist and placeholder guide without giving the answer (F11).
 - [machine] Practice material text sent to AI has no practice/fiction meta-note (F12).

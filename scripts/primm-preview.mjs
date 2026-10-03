@@ -11,9 +11,11 @@ import {
   createLocalWhisperTranscriber,
 } from "../apps/university-ai/.primm-preview-build/src/primm/local-transport.js";
 import { createPrimmPreviewServer } from "../apps/university-ai/.primm-preview-build/src/primm/http.js";
+import { resolvePrimmPreviewSource } from "./primm-preview-source.mjs";
 const root = fileURLToPath(new URL("..", import.meta.url));
 if (!process.argv.includes("--owner-preview")) throw Error("Explicit --owner-preview required");
 const withApp = process.argv.includes("--with-app");
+const source = resolvePrimmPreviewSource(root, process.env.UNIVERSITY_PRIMM_PREVIEW_ROOT);
 function previewPort(name, fallback) {
   const value = Number(process.env[name] ?? fallback);
   if (!Number.isInteger(value) || value < 1024 || value > 65535)
@@ -43,8 +45,8 @@ if (withApp) await requireFree(appPort);
 const runtime = createPrimmRuntime({
   transport: createLocalOllamaTransport(),
   resolveLesson: createCanonicalPrimmResolver({
-    contentRoot: join(root, "apps/university/content"),
-    recoveryRoot: join(root, "apps/local/course-proposals/recovery/ai-literacy"),
+    contentRoot: source.contentRoot,
+    recoveryRoot: source.recoveryRoot,
   }),
   transcriber: createLocalWhisperTranscriber({
     python:
@@ -67,7 +69,16 @@ server.listen(apiPort, "127.0.0.1", () => {
     `PRIMM owner preview ready at ${apiOrigin}; real local model, max100 explicit commands.`,
   );
   if (withApp) {
-    const appEnv = { ...process.env, VITE_UNIVERSITY_PRIMM_PREVIEW_URL: apiOrigin };
+    const appEnv = {
+      ...process.env,
+      ...source.appEnvironment,
+      VITE_UNIVERSITY_PRIMM_PREVIEW_URL: apiOrigin,
+    };
+    console.log(
+      source.unpublished
+        ? `UNPUBLISHED Owner reading: ${source.studyId}/${source.courseId}; ${appOrigin}`
+        : `Published catalogue preview: ${appOrigin}`,
+    );
     for (const key of Object.keys(appEnv)) {
       if (!key.startsWith("VITE_") && /(?:API_KEY|SECRET|TOKEN|PASSWORD|SERVICE_ROLE)/i.test(key))
         delete appEnv[key];
