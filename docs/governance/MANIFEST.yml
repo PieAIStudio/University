@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-02T06:38:11.794Z
+generated_at: 2026-10-03T03:02:23.091Z
 generator_version: doc-gov@0.14.2
 docs_count: 172
 docs:
@@ -221,13 +221,6 @@ docs:
     canonical: true
     last_reviewed: 2026-10-02
     pinned: false
-  - id: PLAN-11-TEST-CATALOGUE
-    path: docs/plans/active/11-test-catalogue.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-10-02
-    pinned: false
   - id: PLAN-12-PIPELINE-STEP-LESSONS
     path: docs/plans/active/12-pipeline-writes-step-lessons.md
     type: plan
@@ -311,6 +304,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-11-TEST-CATALOGUE
+    path: docs/plans/completed/11-test-catalogue.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-03
     pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/completed/ai-foundations-revival.md

@@ -248,9 +248,11 @@ for (const width of [1440, 390]) {
     const ceremony = page.locator(".rank-promotion [data-emblem-animating]");
     await expect(ceremony).toHaveAttribute("data-emblem-animating", "true");
     await expect(ceremony).toHaveAttribute("data-emblem-animating", "false");
-    await page
-      .locator(".rank-promotion")
-      .screenshot({ path: `${OUTPUT}/synthetic-${width}-promotion.png` });
+    // The receipt auto-dismisses: capture its settled frame without waiting
+    // for element stability until the subject has already left the DOM.
+    const clip = await page.locator(".rank-promotion").boundingBox();
+    expect(clip).not.toBeNull();
+    await page.screenshot({ path: `${OUTPUT}/synthetic-${width}-promotion.png`, clip: clip! });
     consoleErrors.assertClean();
   });
 }

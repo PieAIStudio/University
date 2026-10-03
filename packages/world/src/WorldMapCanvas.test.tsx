@@ -13,7 +13,17 @@ import * as THREE from "three";
 import { WorldMapCanvas, type MapViewportCommands } from "./WorldMapCanvas.js";
 
 vi.mock("./Stage.js", () => ({
-  Stage: ({ children }: { readonly children?: ReactNode }) => <div data-stage>{children}</div>,
+  Stage: ({
+    children,
+    sceneKey,
+  }: {
+    readonly children?: ReactNode;
+    readonly sceneKey?: string;
+  }) => (
+    <div data-stage data-scene-key={sceneKey}>
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock("./camera/controls.js", () => ({
@@ -31,6 +41,38 @@ vi.mock("./Maps.js", () => ({
 }));
 
 describe("WorldMapCanvas rewrite marker", () => {
+  it("keeps the resource identity through a chest return without enabling overview on the chest", async () => {
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    const props = {
+      sceneKey: "course:s/c",
+      world: null,
+      cameraFrom: [0, 0, 1] as const,
+      lookAt: [0, 0, 0] as const,
+      learnerAt: null,
+      avatarRecipe: null,
+      avatarSignedIn: false,
+      skyStudyId: "s",
+      markers: [],
+      onPick: () => undefined,
+      onHover: () => undefined,
+    };
+    try {
+      await act(async () => root.render(withInterfaceLocale(<WorldMapCanvas {...props} />)));
+      const stage = host.querySelector("[data-stage]");
+      expect(stage?.getAttribute("data-scene-key")).toBe("course:s/c");
+      expect(host.querySelector(".stagewrap")?.hasAttribute("data-map-view")).toBe(false);
+      await act(async () =>
+        root.render(withInterfaceLocale(<WorldMapCanvas {...props} courseViewKey="s/c" />)),
+      );
+      expect(host.querySelector("[data-stage]")).toBe(stage);
+      expect(stage?.getAttribute("data-scene-key")).toBe("course:s/c");
+      expect(host.querySelector(".stagewrap")?.hasAttribute("data-map-view")).toBe(true);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
   it("keeps one full canvas viewport without an empty toolbar lane as hints retire", async () => {
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     const host = document.createElement("div");

@@ -1,7 +1,16 @@
 import { useCallback, useState } from "react";
+import type { View } from "@pieai/university-core";
 import type { SceneLoadProgress } from "@pieai/university-world/WorldMapCanvas.js";
 
 export type SceneFailure = "context-lost" | "webgl-unavailable";
+
+/** Reading, opening a chest and returning all retain the same course scene.
+ * Real asset loading and context loss still invalidate its readiness normally. */
+export function sceneKeyForView(view: View): string {
+  return view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
+    ? `course:${view.studyId}/${view.courseId}`
+    : view.kind;
+}
 
 /** Keep Stage readiness and map interaction feedback together. */
 export function useSceneInteraction(sceneKey = "scene") {

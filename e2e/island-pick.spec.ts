@@ -16,6 +16,7 @@ import { navigateMapBreadcrumb } from "./harness/map-actions.js";
 import { namedStep } from "./harness/step.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 import { withProject } from "./harness/project.js";
+import { calibratedPanGain, measureIslandPan } from "./harness/island-pan-gain.js";
 
 /**
  * The object-side entry action must follow the island, not pin to a screen corner.
@@ -191,7 +192,7 @@ async function pickLeftishIsland(page: Page): Promise<Box> {
 async function pickRightEdgeIsland(page: Page): Promise<Box> {
   await waitForCourseLabelLayout(page);
   let snapshot = await visibleCourseSnapshot(page);
-  const rightmost = snapshot.sort((a, b) => center(b.box).x - center(a.box).x)[0];
+  const rightmost = snapshot.toSorted((a, b) => center(b.box).x - center(a.box).x)[0];
   if (!rightmost) throw new Error("地图上没有可见的课名");
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
@@ -211,42 +212,55 @@ async function pickRightEdgeIsland(page: Page): Promise<Box> {
   // keep its identity fixed for the actual click and all placement assertions.
   let current = rightmost;
   let gain = 1;
-  const moves: { pointerDx: number; marker: string; x: number; gain: number }[] = [];
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    const beforeX = center(current.box).x;
-    const remaining = wantX - beforeX;
-    if (Math.abs(remaining) <= 12) break;
-    const dx = Math.sign(remaining) * Math.min(Math.abs(remaining / gain) * 0.75, 50);
-    await page.mouse.move(fromX, fromY);
-    await page.mouse.down();
-    await page.mouse.move(fromX + dx, fromY, { steps: 12 });
-    await page.mouse.up();
-    await waitForCourseLabelLayout(page);
-    const after = await visibleCourseSnapshot(page);
-    const commonBefore = snapshot.find(({ id }) => after.some((entry) => entry.id === id));
-    const commonAfter = after.find(({ id }) => id === commonBefore?.id);
-    if (commonBefore && commonAfter) {
-      const measuredGain = (center(commonAfter.box).x - center(commonBefore.box).x) / dx;
-      if (measuredGain <= 0) throw new Error("真实拖动没有把课程岛向预期方向平移");
-      gain = measuredGain;
+  let calibrated = false;
+  const moves: {
+    pointerDx: number;
+    marker: string;
+    x: number;
+    gain: number;
+    calibration?: "measured" | "retained";
+    measurement?: ReturnType<typeof measureIslandPan>;
+  }[] = [];
+  try {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const beforeX = center(current.box).x;
+      const remaining = wantX - beforeX;
+      if (Math.abs(remaining) <= 12) break;
+      const dx = Math.sign(remaining) * Math.min(Math.abs(remaining / gain) * 0.75, 50);
+      const move: (typeof moves)[number] = { pointerDx: dx, marker: current.id, x: beforeX, gain };
+      moves.push(move);
+      await page.mouse.move(fromX, fromY);
+      await page.mouse.down();
+      await page.mouse.move(fromX + dx, fromY, { steps: 12 });
+      await page.mouse.up();
+      await waitForCourseLabelLayout(page);
+      const after = await visibleCourseSnapshot(page);
+      // Edge labels can switch placement while the camera keeps panning. Use
+      // all shared names' median, or a central non-target name for a small sample.
+      move.measurement = measureIslandPan(snapshot, after, dx, canvasBox, current.id);
+      const measuredGain = move.measurement.gain;
+      gain = calibratedPanGain(measuredGain, calibrated ? gain : null);
+      calibrated = true;
+      move.calibration = measuredGain === null ? "retained" : "measured";
+      move.gain = gain;
+      const next = after.toSorted((a, b) => center(b.box).x - center(a.box).x)[0];
+      if (!next) throw new Error("短距离平移后没有真实可见的课程岛");
+      snapshot = after;
+      current = next;
     }
-    const next = after.sort((a, b) => center(b.box).x - center(a.box).x)[0];
-    if (!next) throw new Error("短距离平移后没有真实可见的课程岛");
-    moves.push({ pointerDx: dx, marker: next.id, x: center(next.box).x, gain });
-    snapshot = after;
-    current = next;
+    expect(
+      Math.abs(center(current.box).x - wantX),
+      "实际选中的课程岛须真正到达右边缘",
+    ).toBeLessThanOrEqual(12);
+    const clicked = await clickCourseLabel(page, courseLabel(page, current.id));
+    expect(center(clicked).x, "翻边验收必须实际点到右侧岛").toBeGreaterThan(viewport.width * 0.62);
+    return clicked;
+  } finally {
+    await test.info().attach("right-edge-pointer-approach", {
+      body: JSON.stringify({ marker: current.id, wantX, moves }, null, 2),
+      contentType: "application/json",
+    });
   }
-  await test.info().attach("right-edge-pointer-approach", {
-    body: JSON.stringify({ marker: current.id, wantX, moves }, null, 2),
-    contentType: "application/json",
-  });
-  expect(
-    Math.abs(center(current.box).x - wantX),
-    "实际选中的课程岛须真正到达右边缘",
-  ).toBeLessThanOrEqual(12);
-  const clicked = await clickCourseLabel(page, courseLabel(page, current.id));
-  expect(center(clicked).x, "翻边验收必须实际点到右侧岛").toBeGreaterThan(viewport.width * 0.62);
-  return clicked;
 }
 
 /** Everything the follow-card projector treats as opaque, in viewport pixels.

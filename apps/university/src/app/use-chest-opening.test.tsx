@@ -195,6 +195,27 @@ describe("chest rewards and callbacks keep their original record and owner", () 
     expect(card().stage).toBe("closed");
     expect(done).not.toHaveBeenCalled();
   });
+  it("does not reopen the chest when a late star callback arrives after Continue", async () => {
+    vi.useFakeTimers();
+    await render();
+    await finish();
+    await act(async () => result.begin(locator));
+    await act(async () => card().onOpen());
+    await act(async () => result.opening!.onPhase?.("settled"));
+    await act(async () => card().onThrow());
+    const starDone = result.opening!.throwing!.onDone!;
+    // The existing six-second fallback wins the race against a slow scene.
+    await act(async () => vi.advanceTimersByTimeAsync(6000));
+    expect(card().stage).toBe("done");
+    await act(async () => card().onContinue());
+    expect(result.overlay).toBeNull();
+    // The real renderer may finish during the camera's 950ms return.
+    await act(async () => starDone());
+    expect(result.overlay, "a stale animation must not resurrect the Continue button").toBeNull();
+    await act(async () => vi.advanceTimersByTimeAsync(950));
+    expect(result.active).toBe(false);
+    expect(done).toHaveBeenCalledExactlyOnceWith(locator);
+  });
   it("does not detach a pressed button or discard its event while this same guest is being adopted", async () => {
     const change = controlledAdoption();
     paint = true;

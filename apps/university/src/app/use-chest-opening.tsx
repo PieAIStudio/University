@@ -322,7 +322,16 @@ export function useChestOpening({
       guard: flow.guard?.stop ?? null,
       throwing: {
         started: flow.stage === "throwing" || flow.stage === "done" || flow.stage === "leaving",
-        onDone: () => update({ stage: "done" }),
+        // The deadline may have finished the throw before the renderer does.
+        // A late flee callback must never move a leaving chest back to done.
+        onDone: () =>
+          setFlow((current) =>
+            current?.key === flow.key &&
+            current.owner === readOwner() &&
+            current.stage === "throwing"
+              ? { ...current, stage: "done" }
+              : current,
+          ),
       },
       onPhase: (phase) => {
         if (phase === "settled")

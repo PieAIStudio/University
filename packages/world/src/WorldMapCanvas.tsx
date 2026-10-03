@@ -47,6 +47,7 @@ export interface MapViewportCommands {
  */
 export function WorldMapCanvas({
   commandsRef,
+  sceneKey,
   dataReady = true,
   world,
   cameraFrom,
@@ -89,6 +90,8 @@ export function WorldMapCanvas({
   courseViewKey = null,
 }: {
   readonly className?: string;
+  /** Resource identity may outlive a route's camera/overview capabilities. */
+  readonly sceneKey?: string;
   readonly dataReady?: boolean;
   readonly commandsRef?: RefObject<MapViewportCommands | null>;
   readonly world: WorldMap | null;
@@ -296,7 +299,7 @@ export function WorldMapCanvas({
       <div className="map-viewport">
         <Stage
           cameraFrom={framedFrom}
-          sceneKey={courseViewKey ?? `world:${skyStudyId ?? "none"}`}
+          sceneKey={sceneKey ?? courseViewKey ?? `world:${skyStudyId ?? "none"}`}
           onSceneProgress={onSceneProgress}
           dataReady={dataReady}
           cameraFar={activeOverview?.far}

@@ -139,7 +139,7 @@ import { useCoursePathActions } from "./course-path-actions";
 import { useIslandLookStage, useIslandLookView } from "./island-look-view";
 import { useMistakeSummary } from "./mistake-summary";
 import { useSceneCamera } from "./scene-camera";
-import { useSceneInteraction } from "./scene-interaction";
+import { sceneKeyForView, useSceneInteraction } from "./scene-interaction";
 import { useStudyContext } from "./study-context";
 import { readNavigationFocus } from "./navigation-focus.js";
 import { DomainInterest } from "./DomainInterest.js";
@@ -225,7 +225,7 @@ export function App() {
     onRendererUnavailable,
     retryScene: retrySceneState,
     onMapInteract,
-  } = useSceneInteraction(mapRouteKey);
+  } = useSceneInteraction(sceneKeyForView(view));
   const retryScene = useCallback(() => {
     resetWebGLContextProbe();
     retrySceneState();
@@ -790,6 +790,7 @@ export function App() {
     studioMap ? null : (
       <WorldMapCanvas
         commandsRef={mapCommands}
+        sceneKey={inCourse ? sceneKeyForView(view) : undefined}
         dataReady={!waitingForData}
         key={sceneAttempt}
         hidden={!showMap}
