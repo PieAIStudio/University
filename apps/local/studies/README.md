@@ -37,3 +37,8 @@ artifacts, notes, and other authoring material remain here by design. Learner
 progress, answers, marks, review state, vocabulary, favourites, practice
 history, and settings use the shared SwimmerBackend account document; any
 SQLite/browser copy here is only a cache, migration source, or offline outbox.
+
+On 2026-10-03 task 13 moved the retired local course trees for `turing-pact`,
+`general` and `ai-foundations` into `../course-proposals/retired/`. Their
+source snapshots and learner stores remain intact here; these studies stay
+archived and are not learner catalogue entries.

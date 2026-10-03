@@ -1,5 +1,11 @@
 # Locked course packages
 
+Current location: the formerly locked courses are retired under
+[`../retired/task13-20261003/locked/`](../retired/task13-20261003/locked/).
+Task 13 keeps only the accepted first three step lessons in `recovery/`.
+This file preserves the earlier locking rationale; the entries below are history,
+not instructions to restore or offer these courses.
+
 These are exported course packages that are deliberately **not** in delivery.
 `recovery/` is what the product bakes and ships — `import-courses.mjs`,
 `check-published-catalog.mjs`, `check-export-freshness.mjs`,

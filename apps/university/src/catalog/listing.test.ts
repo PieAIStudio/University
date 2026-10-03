@@ -42,37 +42,11 @@ describe("the 2D directory against the library the map uses", () => {
     const fromLibrary = libraryCourseCount();
     expect(listing.totals.courses).toBe(fromLibrary);
     expect(listing.studies.flatMap((study) => study.courses).length).toBe(fromLibrary);
-    /*
-      The literal is the point of this line: the two sides above could agree
-      with each other while both silently dropping a study, and this is what
-      would catch that. R40 deliberately retired 12 courses from R39's 48 and
-      added the 61-lesson AI foundations course. On 2026-09-12 everything but
-      `browser-ai` was locked — moved to `apps/local/course-proposals/locked/`,
-      which nothing in the delivery path reads — because all 29 interactive
-      activities live in `browser-ai` and the rest predate the contract that
-      requires one in every lesson. They come back a package at a time as each
-      is rewritten, and this line is where that has to be confirmed by a person.
-      This moves only when the recovery transport deliberately changes.
-    */
-    // Approved addition: two source-grounded beginner paths, not restoration
-    // of the locked technical AI course. Keep the literal outside generated data.
-    expect(fromLibrary).toBe(6);
-    expect(library.studies.map((study) => study.studyId)).toEqual(["ai-literacy", "browser-ai"]);
-    expect(
-      library.studies
-        .find((study) => study.studyId === "ai-literacy")
-        ?.courses.map((course) => course.courseId),
-    ).toEqual(["understanding-ai", "ai-for-real-life"]);
-    expect(
-      library.studies
-        .find((study) => study.studyId === "browser-ai")
-        ?.courses.map((course) => course.courseId)
-        .sort(),
-    ).toEqual([
-      "make-the-cutout-app-yours",
-      "run-a-real-project-with-ai",
-      "search-your-own-photos",
-      "when-a-project-is-too-big-to-read",
+    // Owner T1, task 13: only the three accepted V3 lessons remain in release.
+    expect(fromLibrary).toBe(1);
+    expect(library.studies.map((study) => study.studyId)).toEqual(["ai-literacy"]);
+    expect(library.studies[0]!.courses.map((course) => course.courseId)).toEqual([
+      "understanding-ai",
     ]);
   });
 
@@ -103,20 +77,13 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    /*
-      Approved catalogue, not counts derived from the same generated input.
-      Hand-written so that content appearing or vanishing has to be looked at by
-      a person rather than absorbed by a formula — and it worked: restoring the
-      browser-ai curriculum moved this and turned the suite red until somebody
-      confirmed the new numbers. 469 and 37 are what `check-content-revisions`
-      counts off the studies on disk; 117 is the unit count in the packages the
-      map loads. The 2026-09-12 lock took them from 117 and 469 to the shipped
-      `browser-ai` curriculum alone; `check-content-revisions` counts the same
-      27 lessons across 4 courses off the studies on disk.
-    */
-    // The new release adds 11 units / 66 lessons; the original 9 / 27 remain.
-    expect(listing.totals.units).toBe(20);
-    expect(listing.totals.lessons).toBe(93);
+    expect(listing.totals.units).toBe(1);
+    expect(listing.totals.lessons).toBe(3);
+    expect(listing.studies[0]!.courses[0]!.units[0]!.lessons.map((lesson) => lesson.id)).toEqual([
+      "ask-about-a-picture",
+      "sound-words-and-meaning",
+      "name-the-result",
+    ]);
   });
 
   it("folds the generated shelf into the same directory read model", () => {
@@ -124,7 +91,7 @@ describe("the 2D directory against the library the map uses", () => {
   });
 
   it("lays independent courses flat instead of inventing a chain (synthetic shelf)", () => {
-    const base = (shelf as Shelf).studies.find((study) => study.id === "browser-ai")!.courses[0]!;
+    const base = (shelf as Shelf).studies[0]!.courses[0]!;
     const courses = ["first", "second", "third"].map((id) => ({
       ...base,
       id,
@@ -140,60 +107,48 @@ describe("the 2D directory against the library the map uses", () => {
     expect(flat.courses.map((course) => course.id)).toEqual(courses.map((course) => course.id));
   });
 
-  /*
-    The shipped chain, whatever its length. This read the fourteen-layer
-    `turing-pact` climb until that package was locked on 2026-09-12; what it
-    actually guards is that a study whose courses declare prerequisites renders
-    as an ordered climb rather than a flat shelf, and `browser-ai` still does
-    that across four courses. The depth literal moves with the shipped set on
-    purpose — this file tests the directory against the library the map really
-    loads, so it is the place a catalogue change has to be looked at.
-  */
-  it("keeps the shipped climb readable as depth order", () => {
-    const pact = listingOf().studies.find((study) => study.id === "browser-ai");
-    expect(pact).toBeDefined();
-    expect(pact!.flat).toBe(false);
-    const depths = pact!.courses.map((course) => course.depth);
-    expect(Math.max(...depths)).toBe(3);
-    expect(depths).toEqual([...depths].sort((left, right) => left - right));
-    const withPrereq = pact!.courses.filter((course) => course.prerequisiteCourseIds.length > 0);
-    expect(withPrereq.length).toBeGreaterThan(0);
-    expect(withPrereq.every((course) => course.prerequisiteTitles.length > 0)).toBe(true);
+  // Structural prerequisite coverage uses a synthetic chain, independent of release inventory.
+  const base = (shelf as Shelf).studies[0]!.courses[0]!;
+  const chain: Shelf = {
+    studies: [
+      {
+        id: "chain-fixture",
+        title: "Synthetic chain",
+        courses: ["foundation", "second", "third", "fourth"].map((id, index, ids) => ({
+          ...base,
+          id,
+          title: id,
+          prerequisiteCourseIds: index ? [ids[index - 1]!] : [],
+        })),
+      },
+    ],
+  };
+  it("keeps a synthetic climb readable as depth order", () => {
+    const study = assembleCatalogListingFromShelf(chain, progressSource()).studies[0]!;
+    expect(study.flat).toBe(false);
+    expect(study.courses.map((course) => course.depth)).toEqual([0, 1, 2, 3]);
+    expect(
+      study.courses
+        .filter((course) => course.depth > 0)
+        .every((course) => course.prerequisiteTitles.length === 1),
+    ).toBe(true);
   });
 
   it("marks locked courses idle until every in-study prerequisite is finished", () => {
-    const empty = listingOf();
-    const locked = empty.studies
-      .find((study) => study.id === "browser-ai")
-      ?.courses.find((course) => course.id === "make-the-cutout-app-yours");
-    expect(locked?.state).toBe("idle");
-    expect(locked?.prerequisiteCourseIds).toEqual(["run-a-real-project-with-ai"]);
-
-    const packaged = packagedCourses();
-    const preface = packaged.get("browser-ai/run-a-real-project-with-ai");
-    expect(preface).toBeDefined();
-    for (const unit of preface!.units) {
+    const empty = assembleCatalogListingFromShelf(chain, progressSource());
+    expect(empty.studies[0]!.courses.find((course) => course.id === "second")?.state).toBe("idle");
+    expect(
+      empty.studies[0]!.courses.find((course) => course.id === "second")?.prerequisiteCourseIds,
+    ).toEqual(["foundation"]);
+    for (const unit of base.units)
       for (const lesson of unit.lessons) {
-        advanceLesson(lessonKey("browser-ai", preface!.id, lesson.id), lesson.contentRevision);
+        advanceLesson(lessonKey("chain-fixture", "foundation", lesson.id), lesson.contentRevision);
       }
-    }
-
-    const opened = listingOf();
-    const next = opened.studies
-      .find((study) => study.id === "browser-ai")
-      ?.courses.find((course) => course.id === "make-the-cutout-app-yours");
-    /*
-      Reachable is the claim; whether it is also the accented one is the
-      accent rule's business. With a single shipped study the course that just
-      opened is also the shallowest open course, so it arrives as `live` rather
-      than `open` — both mean the prerequisite gate let go, and `idle`,
-      `locked` and `done` all still fail here.
-    */
-    expect(["open", "live"]).toContain(next?.state);
-    const done = opened.studies
-      .find((study) => study.id === "browser-ai")
-      ?.courses.find((course) => course.id === "run-a-real-project-with-ai");
-    expect(done?.state).toBe("done");
+    const opened = assembleCatalogListingFromShelf(chain, progressSource()).studies[0]!;
+    expect(["open", "live"]).toContain(
+      opened.courses.find((course) => course.id === "second")?.state,
+    );
+    expect(opened.courses.find((course) => course.id === "foundation")?.state).toBe("done");
   });
 
   it("accents one live course the same way the world map does: shallowest open, then most lessons", () => {

@@ -1,0 +1,1997 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "understanding-ai",
+    "title": "认识 AI，从这里开始",
+    "description": "从一张真实照片和一个小问题开始，学会交代任务、辨认依据、检查结果，并决定什么事情仍由你作主。",
+    "audience": "完全初学的成年人；不需要编程经验。可先用本课提供的真实公开材料完成判断与小作品。",
+    "objectives": [
+      "用真实材料区分回答、查找与执行。",
+      "说明自己的任务，核对来源、范围与重要条件。",
+      "在新情境中选择工具、帮助程度与需要自己确认的步骤。"
+    ],
+    "locales": {
+      "en": {
+        "title": "Understanding AI: From Fear to Confidence",
+        "description": "Start with real examples, try small decisions, and learn when AI can help, what to check and which choices stay yours. No programming required.",
+        "audience": "Adult beginners. No programming experience is required. Start with the real public material provided in the course.",
+        "objectives": [
+          "Distinguish an answer, a lookup and an action using real source material.",
+          "Describe a task and check its sources, scope and important conditions.",
+          "Choose tools, useful help and human checks when the situation changes."
+        ]
+      }
+    },
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "trackId": null,
+    "units": [
+      {
+        "id": "first-useful-step",
+        "title": "先让它帮上一点忙",
+        "objective": "用真实公开材料提出一个可完成、可检查的小请求。",
+        "locales": {
+          "en": {
+            "title": "Your first useful step",
+            "objective": "Choose a small useful result and tell a response, a lookup and an action apart."
+          }
+        },
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "ask-about-a-picture",
+            "title": "让 AI 帮你写消息，怎么才能像你自己说的？",
+            "content": "# 让 AI 帮你写消息，怎么才能像你自己说的？\n\n真实用法：Google 在 Gmail 里放了一个「帮我写」。写出草稿以后，还能点「更正式」「更详细」「更简短」「润色」，一下换一种说法。说什么是一回事，怎么说，是另一回事。\n\n老同学阿杰明天过生日。你想在他生日这天发一段祝福，又不想写得太客套。\n\n你们平时聊天很随便。AI 写出来要是像贺卡上的套话，他一眼就看出来不是你写的。\n\n::play{#ask-about-a-picture-v2}\n\nAI 写初稿，你来定稿。\n\n[Google：Gmail 的「帮我写」可以一键换口气](https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html) · [Kobak 等：从多出来的词看 AI 改过的论文](https://arxiv.org/abs/2406.07016) · [Doshi、Hauser：看过 AI 点子的故事更像了](https://arxiv.org/abs/2312.00506)\n",
+            "locales": {
+              "en": {
+                "title": "When AI helps you write a message, how do you make it sound like you?",
+                "content": "# When AI helps you write a message, how do you make it sound like you?\n\nA real use: Google put Help me write into Gmail. After it drafts an email, you can tap Formalize, Elaborate, Shorten or Polish to say it another way. What you say is one thing; how you say it is another.\n\nYour old classmate Jay has a birthday tomorrow. You want to send him a birthday message that doesn't sound stiff.\n\nYou two always talk casually. If AI writes something that sounds like a greeting card, he will know at once it wasn't you.\n\n::play{#ask-about-a-picture-v2}\n\nAI writes the first draft; you write the final one.\n\n[Google: Gmail's Help me write can change the tone in one tap](https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html) · [Kobak et al.: excess vocabulary in AI-assisted papers](https://arxiv.org/abs/2406.07016) · [Doshi and Hauser: stories written with AI ideas look more alike](https://arxiv.org/abs/2312.00506)\n"
+              }
+            },
+            "contentRevision": 15,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html",
+                "sourceTitle": "Refine emails faster with updates to Help me write in Gmail",
+                "sourceAuthority": "first-party",
+                "provenance": {
+                  "type": "official-document",
+                  "publisher": "Google Workspace",
+                  "publishedOn": "2024-08-20",
+                  "accessedOn": "2026-09-30",
+                  "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                  "supports": "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。",
+                  "limitations": "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。",
+                  "locales": {
+                    "en": {
+                      "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                      "supports": "After Gmail's Help me write drafts an email, you can refine it with Formalize, Elaborate, Shorten and the later Polish option.",
+                      "limitations": "A product announcement: it shows the feature exists, not how many people use it or how well it works."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://arxiv.org/abs/2406.07016",
+                "sourceTitle": "Delving into LLM-assisted writing in biomedical publications through excess vocabulary",
+                "sourceAuthority": "research",
+                "provenance": {
+                  "type": "research",
+                  "publisher": "arXiv (Science Advances, 2025)",
+                  "publishedOn": "2024-06-11",
+                  "accessedOn": "2026-09-30",
+                  "locator": "Abstract: at least 13.5% of 2024 abstracts were processed with LLMs; Results, Figure 2: delves",
+                  "supports": "分析 2010–2024 年 1500 多万篇 PubMed 摘要；一些风格词突然变多，例如 delves；估计 2024 年至少 13.5% 的摘要经过大模型处理。发表于《科学进展》2025 年 7 月。",
+                  "limitations": "说的是英文医学论文，不是日常消息；13.5% 是估计的最低值。",
+                  "locales": {
+                    "en": {
+                      "locator": "Abstract: at least 13.5% of 2024 abstracts were processed with LLMs; Results, Figure 2: delves",
+                      "supports": "An analysis of over 15 million PubMed abstracts from 2010 to 2024: some style words, such as delves, jumped in frequency, and at least 13.5% of 2024 abstracts were estimated to be processed with LLMs. Published in Science Advances, July 2025.",
+                      "limitations": "It is about English medical papers, not everyday messages; 13.5% is an estimated lower bound."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://arxiv.org/abs/2312.00506",
+                "sourceTitle": "Generative artificial intelligence enhances creativity but reduces the diversity of novel content",
+                "sourceAuthority": "research",
+                "provenance": {
+                  "type": "research",
+                  "publisher": "arXiv",
+                  "publishedOn": "2023-12-01",
+                  "accessedOn": "2026-09-30",
+                  "locator": "However, GenAI-enabled stories are more similar to each other than stories by humans alone.",
+                  "supports": "看过 AI 点子的写作者，故事被评得更有创意、写得更好；但这些故事彼此更相似。",
+                  "limitations": "实验写的是短篇故事，不是日常消息。",
+                  "locales": {
+                    "en": {
+                      "locator": "However, GenAI-enabled stories are more similar to each other than stories by humans alone.",
+                      "supports": "Writers who saw AI ideas produced stories rated more creative and better written, but those stories were more similar to each other.",
+                      "limitations": "The experiment was about short stories, not everyday messages."
+                    }
+                  }
+                }
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ask-about-a-picture-card-1",
+                "kind": "basic",
+                "front": "只跟 AI 说「帮我写一段祝福」，它多半会写成什么样？",
+                "locales": {
+                  "en": {
+                    "front": "If you only ask AI to \"write a birthday message\", what will it probably write?",
+                    "back": "Probably stock phrases anyone could use. It has never heard how you talk, so it writes the most common kind."
+                  }
+                },
+                "back": "多半写成谁都能用的套话。它没见过你怎么说话，只能写最常见的那种。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html",
+                    "sourceTitle": "Refine emails faster with updates to Help me write in Gmail",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2024-08-20",
+                      "accessedOn": "2026-09-30",
+                      "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                      "supports": "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。",
+                      "limitations": "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。",
+                      "locales": {
+                        "en": {
+                          "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                          "supports": "After Gmail's Help me write drafts an email, you can refine it with Formalize, Elaborate, Shorten and the later Polish option.",
+                          "limitations": "A product announcement: it shows the feature exists, not how many people use it or how well it works."
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "ask-about-a-picture-card-2",
+                "kind": "basic",
+                "front": "想让 AI 写得像你，最稳的办法是什么？",
+                "locales": {
+                  "en": {
+                    "front": "What is the surest way to make AI write like you?",
+                    "back": "Show it two or three things you once wrote to this person and have it follow them. Then read it through and adjust it."
+                  }
+                },
+                "back": "给它看两三段你以前写给这个人的话，让它照着写。写完你再读一遍、改一改。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html",
+                    "sourceTitle": "Refine emails faster with updates to Help me write in Gmail",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2024-08-20",
+                      "accessedOn": "2026-09-30",
+                      "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                      "supports": "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。",
+                      "limitations": "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。",
+                      "locales": {
+                        "en": {
+                          "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                          "supports": "After Gmail's Help me write drafts an email, you can refine it with Formalize, Elaborate, Shorten and the later Polish option.",
+                          "limitations": "A product announcement: it shows the feature exists, not how many people use it or how well it works."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "ask-about-a-picture-exercise",
+                "kind": "explain",
+                "title": "给王姐写中秋祝福",
+                "prompt": "中秋快到了，你想给部门领导王姐发一条祝福。你跟王姐说话客气，但也不会太隆重。下面是你以前发给她的两条消息。\n让 AI 写得像你平时跟王姐说话。写好你自己改一遍，再定稿。",
+                "locales": {
+                  "en": {
+                    "title": "A Mid-Autumn greeting for Linda",
+                    "prompt": "The Mid-Autumn Festival is coming, and you want to send a greeting to Linda, your department head. You're polite with her, but never over the top. Below are two messages you once sent her.\nGet AI to write it the way you usually talk to Linda. Then go over it yourself before you settle on it.",
+                    "rubric": [
+                      "The request says who it is for (Linda, the department head) and what for (a Mid-Autumn Festival greeting).",
+                      "The request has AI write the way you usually talk to Linda: it uses the messages you once sent her, or says clearly how it should sound (polite, not over the top).",
+                      "The final version reads like something you would send Linda: a fitting form of address, and no stock ceremonial phrases."
+                    ]
+                  }
+                },
+                "rubric": [
+                  "请求说清了写给谁（王姐，部门领导）、为了什么（中秋祝福）。",
+                  "请求让 AI 照你平时跟王姐说话的方式写：用上了以前发给她的消息，或者说清了口气（客气，但不隆重）。",
+                  "定稿读起来像你会发给王姐的话：称呼得当，没有「值此佳节」「谨致」这类套话。"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html",
+                    "sourceTitle": "Refine emails faster with updates to Help me write in Gmail",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2024-08-20",
+                      "accessedOn": "2026-09-30",
+                      "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                      "supports": "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。",
+                      "limitations": "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。",
+                      "locales": {
+                        "en": {
+                          "locator": "When using Gemini to refine emails, users can choose from the following options: Formalize, Elaborate and Shorten.",
+                          "supports": "After Gmail's Help me write drafts an email, you can refine it with Formalize, Elaborate, Shorten and the later Polish option.",
+                          "limitations": "A product announcement: it shows the feature exists, not how many people use it or how well it works."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "ask-about-a-picture-v2",
+                "kind": "primm",
+                "role": "apply",
+                "difficulty": "intro",
+                "title": "让 AI 帮你写消息，怎么才能像你自己说的？",
+                "brief": "学会让 AI 照你平时的说法写消息。",
+                "goal": "让 AI 写的消息，读起来像你自己说的。",
+                "takeaway": "想让 AI 写得像你，就给它看两三段你以前写给这个人的话。它写完，你再改成自己的。",
+                "hint": "给它看你以前写给这个人的话。",
+                "source": {
+                  "label": "Google：Gmail 的「帮我写」可以一键换口气",
+                  "url": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html"
+                },
+                "locales": {
+                  "en": {
+                    "strings": {
+                      "让 AI 帮你写消息，怎么才能像你自己说的？": "When AI helps you write a message, how do you make it sound like you?",
+                      "学会让 AI 照你平时的说法写消息。": "Learn to have AI write a message the way you usually talk.",
+                      "让 AI 写的消息，读起来像你自己说的。": "Get a message from AI that reads as if you wrote it yourself.",
+                      "想让 AI 写得像你，就给它看两三段你以前写给这个人的话。它写完，你再改成自己的。": "To make AI write like you, show it two or three things you once wrote to this person. When it is done, make it your own.",
+                      "给它看你以前写给这个人的话。": "Show it what you once wrote to this person.",
+                      "Google：Gmail 的「帮我写」可以一键换口气": "Google: Gmail's Help me write can change the tone in one tap",
+                      "老同学阿杰明天过生日。你想在他生日这天发一段祝福，又不想写得太客套。": "Your old classmate Jay has a birthday tomorrow. You want to send him a birthday message that doesn't sound stiff.",
+                      "你们平时聊天很随便。AI 写出来要是像贺卡上的套话，他一眼就看出来不是你写的。": "You two always talk casually. If AI writes something that sounds like a greeting card, he will know at once it wasn't you.",
+                      "真实用法：Google 在 Gmail 里放了一个「帮我写」。写出草稿以后，还能点「更正式」「更详细」「更简短」「润色」，一下换一种说法。说什么是一回事，怎么说，是另一回事。": "A real use: Google put Help me write into Gmail. After it drafts an email, you can tap Formalize, Elaborate, Shorten or Polish to say it another way. What you say is one thing; how you say it is another.",
+                      "Google 的官方更新说：用 Gemini 改邮件时，可以选更正式、更详细、更简短，后来又加了润色。": "Google's official update says that when you refine an email with Gemini you can choose Formalize, Elaborate or Shorten, and Polish was added later.",
+                      "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。": "After Gmail's Help me write drafts an email, you can refine it with Formalize, Elaborate, Shorten and the later Polish option.",
+                      "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。": "A product announcement: it shows the feature exists, not how many people use it or how well it works.",
+                      "2024 年 8 月": "August 2024",
+                      "Kobak 等：从多出来的词看 AI 改过的论文": "Kobak et al.: excess vocabulary in AI-assisted papers",
+                      "研究者比较了 2010–2024 年 1500 多万篇医学论文摘要的用词，发现 AI 流行以后，有些词突然多了起来。": "The researchers compared the words in over 15 million medical abstracts from 2010 to 2024 and found some words suddenly became common once AI spread.",
+                      "分析 2010–2024 年 1500 多万篇 PubMed 摘要；一些风格词突然变多，例如 delves；估计 2024 年至少 13.5% 的摘要经过大模型处理。发表于《科学进展》2025 年 7 月。": "An analysis of over 15 million PubMed abstracts from 2010 to 2024: some style words, such as delves, jumped in frequency, and at least 13.5% of 2024 abstracts were estimated to be processed with LLMs. Published in Science Advances, July 2025.",
+                      "说的是英文医学论文，不是日常消息；13.5% 是估计的最低值。": "It is about English medical papers, not everyday messages; 13.5% is an estimated lower bound.",
+                      "2024 年 6 月首发，2025 年 7 月正式发表": "First posted June 2024; published July 2025",
+                      "Doshi、Hauser：看过 AI 点子的故事更像了": "Doshi and Hauser: stories written with AI ideas look more alike",
+                      "一个在线实验：写短故事前看过 AI 点子的人，故事被评得更好，可故事之间更像了。": "An online experiment: people who saw AI ideas before writing a short story were rated as writing better, but their stories were more alike.",
+                      "看过 AI 点子的写作者，故事被评得更有创意、写得更好；但这些故事彼此更相似。": "Writers who saw AI ideas produced stories rated more creative and better written, but those stories were more similar to each other.",
+                      "实验写的是短篇故事，不是日常消息。": "The experiment was about short stories, not everyday messages.",
+                      "2023 年 12 月首发，2024 年 3 月修订": "First posted December 2023; revised March 2024",
+                      "阿杰的生日（练习）": "Jay's birthday (practice)",
+                      "明天是老同学阿杰的生日。你想在微信上给他发一段生日祝福。": "Tomorrow is your old classmate Jay's birthday. You want to text him a birthday message.",
+                      "你以前发给王姐（部门领导）的两条消息（练习）": "Two messages you once sent Linda, your department head (practice)",
+                      "1. 王姐，方案我改好了，发您邮箱了，您有空看一下。\n2. 收到，明天上午十点前我把数据补齐。谢谢王姐提醒！": "1. Hi Linda, I've revised the plan and emailed it to you. Have a look when you get a moment.\n2. Got it, I'll fill in the missing data by 10 tomorrow morning. Thanks for the reminder, Linda!",
+                      "帮我写一段生日祝福。": "Write me a birthday message.",
+                      "帮我给老同学写一段生日祝福，口气随便一点，像朋友之间说话。": "Write a birthday message to my old classmate. Keep it casual, like friends talking.",
+                      "帮我给老同学阿杰写一段生日祝福。照下面这两条我以前发给他的消息的说话方式写：\n1. 杰哥，周六球局还缺人不？缺的话我叫上小刘，啤酒我带。\n2. 哈哈哈你发的那张照片笑死我了，发型像刚睡醒。改天约饭！": "Write a birthday message to my old classmate Jay. Write it the way I talk in these two messages I once sent him:\n1. Big Jay, still short a player for Saturday's game? If so I'll bring Leo. Beer's on me.\n2. Hahaha that photo you sent killed me, your hair looks like you just rolled out of bed. Dinner soon!",
+                      "记住你选的这句，马上发出去试试。": "Remember the one you chose. Now send it and see.",
+                      "你想让这段祝福读起来像你平时说话。哪一句最可能做到？": "You want this message to sound like the way you usually talk. Which request is most likely to get that?",
+                      "把你选的那句发给 AI": "Send the request you chose to AI",
+                      "阿杰的生日": "Jay's birthday",
+                      "你知道吗：有研究者数了 1500 多万篇医学论文摘要的用词，发现 AI 流行以后，有些词突然多了起来，比如 delves（深入探讨）。他们估计，2024 年至少有 13.5% 的摘要经过 AI 处理。AI 也有自己的口头禅。": "Did you know? Researchers counted the words in over 15 million medical paper abstracts and found that once AI spread, some words suddenly became common, such as \"delves\". They estimate at least 13.5% of 2024 abstracts went through AI. AI has its own pet phrases.",
+                      "你只说了要写祝福，没说用什么口气。看看它写出来，像不像你会发给阿杰的话。": "You only asked for a birthday message, not how it should sound. See whether what it wrote sounds like something you would send Jay.",
+                      "你说了「随便一点」。看看它理解的随便，和你平时的随便是不是一回事。": "You said \"casual\". See whether its idea of casual is the same as your own.",
+                      "你给它看了你以前发给阿杰的两条消息。看看它有没有学到你平时的说法。": "You showed it two messages you once sent Jay. See whether it picked up the way you talk.",
+                      "三句请求，各换来了哪段祝福？": "Three requests: which message did each one get?",
+                      "不是这个。对照一下：请求里说了用什么口气吗？给它看过你的话吗？": "Not this one. Compare: did the request say how it should sound? Did it show your own words?",
+                      "多数时候是这样：只说「写祝福」，它就写贺卡上的话；说「随便一点」，它换几个语气词；给它看你的话，它才照着你的说法写。": "Most of the time it goes like this: just \"a birthday message\" gets greeting-card words; \"casual\" swaps in a few chatty words; only your own messages get it writing the way you talk.",
+                      "你平时叫他「杰哥」，约球时说「啤酒我带」。这些句子，哪些像你会发给他的？": "You call him \"Big Jay\" and say \"beer's on me\" when you arrange a game. Which of these lines sound like something you'd send him?",
+                      "像你会发的": "Sounds like you",
+                      "不像你会发的": "Doesn't sound like you",
+                      "祝你生日快乐，福如东海，寿比南山！": "Happy birthday! May your fortune be as vast as the sea and your life as long as the mountains!",
+                      "这是给长辈祝寿的话。": "This is how you toast an elderly relative.",
+                      "你平时跟阿杰说「笑死我了」，不会突然说「寿比南山」。": "With Jay you say \"that killed me\"; you wouldn't suddenly wish him a life as long as the mountains.",
+                      "杰哥生日快乐！今晚老地方？": "Happy birthday, Big Jay! Usual place tonight?",
+                      "你平时就叫他杰哥，也爱直接约。": "You always call him Big Jay, and you like to just make plans.",
+                      "再看看你以前的消息：你就是这么叫他、这么约他的。": "Look at your old messages again: that is exactly how you address him and make plans.",
+                      "在这个特别的日子里，愿你前程似锦。": "On this special day, may your future shine bright.",
+                      "像贺卡上印好的字。": "It reads like words printed in a card.",
+                      "你那两条消息里，没有一句是这种书面话。": "Neither of your two messages has any formal wording like this.",
+                      "又老一岁，头发还够用不哈哈": "Another year older, still got enough hair? Haha",
+                      "你们就是这样互相开玩笑的。": "This is how you two tease each other.",
+                      "你笑过他的发型像刚睡醒。开这种玩笑，正是你们的说话方式。": "You once joked his hair looked like he'd just rolled out of bed. Teasing like this is how you two talk.",
+                      "愿你的每一天都充满阳光与希望。": "May every day of yours be full of sunshine and hope.",
+                      "谁都能用的套话。": "A stock phrase anyone could use.",
+                      "这句发给谁都行。正因为发给谁都行，才不像你专门写给他的。": "You could send this to anyone. That is exactly why it doesn't sound written for him.",
+                      "啤酒我带，蛋糕你自己买": "Beer's on me, the cake's on you",
+                      "和你约球时说「啤酒我带」是一个口气。": "Same tone as \"beer's on me\" when you arranged the game.",
+                      "你上次约球也是说「啤酒我带」，这就是你的口气。": "You said \"beer's on me\" last time too. That's your voice.",
+                      "AI 没见过你怎么说话。你不交代，它就写谁都能用的话。给它看两三段你写过的，它才有得学。": "AI has never heard how you talk. If you don't tell it, it writes lines anyone could use. Show it two or three things you wrote, and it has something to learn from.",
+                      "现在要发给阿杰了。拼一句请求，让它照你的说法写": "Now it's time to send it to Jay. Build a request that has it write the way you talk",
+                      "原来那句：帮我写一段生日祝福。": "The original request: Write me a birthday message.",
+                      "帮我给老同学阿杰写一段生日祝福，": "Write a birthday message to my old classmate Jay,",
+                      "三句以内，": "three sentences at most,",
+                      "照我以前发给他的这两条消息的说话方式写：「杰哥，周六球局还缺人不？缺的话我叫上小刘，啤酒我带。」「哈哈哈你发的那张照片笑死我了，发型像刚睡醒。改天约饭！」": "in the way I talk in these two messages I once sent him: \"Big Jay, still short a player for Saturday's game? If so I'll bring Leo. Beer's on me.\" \"Hahaha that photo you sent killed me, your hair looks like you just rolled out of bed. Dinner soon!\"",
+                      "越隆重越好，": "the grander the better,",
+                      "你们平时不这么说话。太隆重了，他反而觉得见外。": "That's not how you two talk. Too grand and he'll feel you're keeping your distance.",
+                      "用李白的口气写，": "written like a famous poet,",
+                      "好玩，但读起来就不是你了。想玩可以另外试。": "Fun, but then it isn't you. Try that another time if you like.",
+                      "还差一点：先说写给谁，再说照你以前的消息写。": "Almost: first say who it's for, then say to write it like your old messages.",
+                      "写给谁、照谁的说法，都说清了。": "Now it says who it is for and whose way of talking to follow.",
+                      "发出去看看": "Send it and see",
+                      "对照一下：它学到你的哪些说法了？有没有哪个词，你平时不会这么说？": "Compare: which of your ways of talking did it pick up? Is there any word you would never actually say?",
+                      "换一个人：给领导发一条中秋祝福。你来写请求": "Someone else now: send your manager a Mid-Autumn Festival greeting. You write the request",
+                      "你定稿的这条，会直接发给王姐吗？": "Would you send your final version to Linda as it is?",
+                      "会，读着像我": "Yes, it sounds like me",
+                      "好。发之前再看一眼称呼对不对。": "Good. Check how you address her once more before sending.",
+                      "差不多，我又改了几个词": "Nearly, I changed a few words",
+                      "这就对了：AI 写初稿，你来定稿。": "That's the idea: AI writes the first draft, you write the final one.",
+                      "还是不像我": "It still doesn't sound like me",
+                      "再多给它看一两段你写给王姐的话，或者直接告诉它哪一句不像。": "Show it one or two more things you wrote to Linda, or tell it which line doesn't sound like you.",
+                      "给王姐写中秋祝福": "A Mid-Autumn greeting for Linda",
+                      "中秋快到了，你想给部门领导王姐发一条祝福。你跟王姐说话客气，但也不会太隆重。下面是你以前发给她的两条消息。": "The Mid-Autumn Festival is coming, and you want to send a greeting to Linda, your department head. You're polite with her, but never over the top. Below are two messages you once sent her.",
+                      "让 AI 写得像你平时跟王姐说话。写好你自己改一遍，再定稿。": "Get AI to write it the way you usually talk to Linda. Then go over it yourself before you settle on it.",
+                      "写给谁？照什么说话方式写？": "Who is it for? Whose way of talking should it follow?",
+                      "说清楚写给谁、是什么节日。": "Say who it is for and which festival.",
+                      "让它照你以前写给王姐的话，或者说清楚口气。": "Have it follow what you once wrote to Linda, or say clearly how it should sound.",
+                      "读一遍，删掉你平时不会说的套话。": "Read it through and cut any stock phrase you would never say.",
+                      "发给王姐的中秋祝福": "Mid-Autumn greeting for Linda",
+                      "学会了！": "You've got it!",
+                      "AI 写初稿，你来定稿。": "AI writes the first draft; you write the final one.",
+                      "你知道吗：有两位研究者做过一个在线实验：一部分人写短故事之前，先看了 AI 给的点子。这些人的故事被评得写得更好，可故事和故事之间更像了。所以用 AI 写东西时，把你自己的说法交给它。": "Did you know? Two researchers ran an online experiment: some people saw AI ideas before writing a short story. Their stories were rated better written, but the stories were more alike. So when you write with AI, give it your own way of saying things.",
+                      "下次要发一段不好写的消息，先把你以前发给这个人的两三句话贴给 AI。": "Next time a message is hard to write, first paste two or three things you once sent this person into the AI."
+                    }
+                  }
+                },
+                "method": "PRIMM",
+                "experienceVersion": 3,
+                "intro": {
+                  "situation": "老同学阿杰明天过生日。你想在他生日这天发一段祝福，又不想写得太客套。",
+                  "need": "你们平时聊天很随便。AI 写出来要是像贺卡上的套话，他一眼就看出来不是你写的。",
+                  "connection": "真实用法：Google 在 Gmail 里放了一个「帮我写」。写出草稿以后，还能点「更正式」「更详细」「更简短」「润色」，一下换一种说法。说什么是一回事，怎么说，是另一回事。",
+                  "sourceIds": [
+                    "lib-75947a34"
+                  ]
+                },
+                "sources": [
+                  {
+                    "id": "lib-75947a34",
+                    "reference": {
+                      "label": "Google：Gmail 的「帮我写」可以一键换口气",
+                      "url": "https://workspaceupdates.googleblog.com/2024/08/refine-emails-faster-with-help-me-write-gmail.html"
+                    },
+                    "note": "Google 的官方更新说：用 Gemini 改邮件时，可以选更正式、更详细、更简短，后来又加了润色。",
+                    "summary": "Gmail 的「帮我写」写出草稿后，可以选 Formalize、Elaborate、Shorten，以及后来加入的 Polish 来改写。",
+                    "limitation": "这是产品公告，只说明有这个功能，不说明多少人在用，也不说明改得好不好。",
+                    "date": "2024 年 8 月"
+                  },
+                  {
+                    "id": "lib-068d2ea3",
+                    "reference": {
+                      "label": "Kobak 等：从多出来的词看 AI 改过的论文",
+                      "url": "https://arxiv.org/abs/2406.07016"
+                    },
+                    "note": "研究者比较了 2010–2024 年 1500 多万篇医学论文摘要的用词，发现 AI 流行以后，有些词突然多了起来。",
+                    "summary": "分析 2010–2024 年 1500 多万篇 PubMed 摘要；一些风格词突然变多，例如 delves；估计 2024 年至少 13.5% 的摘要经过大模型处理。发表于《科学进展》2025 年 7 月。",
+                    "limitation": "说的是英文医学论文，不是日常消息；13.5% 是估计的最低值。",
+                    "date": "2024 年 6 月首发，2025 年 7 月正式发表"
+                  },
+                  {
+                    "id": "lib-1e399e86",
+                    "reference": {
+                      "label": "Doshi、Hauser：看过 AI 点子的故事更像了",
+                      "url": "https://arxiv.org/abs/2312.00506"
+                    },
+                    "note": "一个在线实验：写短故事前看过 AI 点子的人，故事被评得更好，可故事之间更像了。",
+                    "summary": "看过 AI 点子的写作者，故事被评得更有创意、写得更好；但这些故事彼此更相似。",
+                    "limitation": "实验写的是短篇故事，不是日常消息。",
+                    "date": "2023 年 12 月首发，2024 年 3 月修订"
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "jay-birthday",
+                    "label": "阿杰的生日（练习）",
+                    "kind": "practice",
+                    "text": "明天是老同学阿杰的生日。你想在微信上给他发一段生日祝福。"
+                  },
+                  {
+                    "id": "linda-messages",
+                    "label": "你以前发给王姐（部门领导）的两条消息（练习）",
+                    "kind": "practice",
+                    "text": "1. 王姐，方案我改好了，发您邮箱了，您有空看一下。\n2. 收到，明天上午十点前我把数据补齐。谢谢王姐提醒！"
+                  }
+                ],
+                "starter": {
+                  "prompt": "帮我写一段生日祝福。",
+                  "materialIds": [
+                    "jay-birthday"
+                  ],
+                  "assetIds": [],
+                  "operation": "text"
+                },
+                "requests": [
+                  {
+                    "id": "ask-casual",
+                    "prompt": "帮我给老同学写一段生日祝福，口气随便一点，像朋友之间说话。"
+                  },
+                  {
+                    "id": "ask-my-way",
+                    "prompt": "帮我给老同学阿杰写一段生日祝福。照下面这两条我以前发给他的消息的说话方式写：\n1. 杰哥，周六球局还缺人不？缺的话我叫上小刘，啤酒我带。\n2. 哈哈哈你发的那张照片笑死我了，发型像刚睡醒。改天约饭！"
+                  }
+                ],
+                "steps": [
+                  {
+                    "kind": "choose",
+                    "id": "guess-how",
+                    "phase": "predict",
+                    "title": "你想让这段祝福读起来像你平时说话。哪一句最可能做到？",
+                    "options": [
+                      {
+                        "id": "plain",
+                        "label": "帮我写一段生日祝福。",
+                        "requestId": "starter"
+                      },
+                      {
+                        "id": "casual",
+                        "label": "帮我给老同学写一段生日祝福，口气随便一点，像朋友之间说话。",
+                        "requestId": "ask-casual"
+                      },
+                      {
+                        "id": "my-way",
+                        "label": "帮我给老同学阿杰写一段生日祝福。照下面这两条我以前发给他的消息的说话方式写：\n1. 杰哥，周六球局还缺人不？缺的话我叫上小刘，啤酒我带。\n2. 哈哈哈你发的那张照片笑死我了，发型像刚睡醒。改天约饭！",
+                        "requestId": "ask-my-way"
+                      }
+                    ],
+                    "after": "记住你选的这句，马上发出去试试。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-choice",
+                    "phase": "run",
+                    "title": "把你选的那句发给 AI",
+                    "request": "chosen",
+                    "attachmentLabel": "阿杰的生日",
+                    "wait": {
+                      "text": "你知道吗：有研究者数了 1500 多万篇医学论文摘要的用词，发现 AI 流行以后，有些词突然多了起来，比如 delves（深入探讨）。他们估计，2024 年至少有 13.5% 的摘要经过 AI 处理。AI 也有自己的口头禅。",
+                      "sourceId": "lib-068d2ea3"
+                    },
+                    "debriefs": [
+                      {
+                        "requestId": "starter",
+                        "text": "你只说了要写祝福，没说用什么口气。看看它写出来，像不像你会发给阿杰的话。"
+                      },
+                      {
+                        "requestId": "ask-casual",
+                        "text": "你说了「随便一点」。看看它理解的随便，和你平时的随便是不是一回事。"
+                      },
+                      {
+                        "requestId": "ask-my-way",
+                        "text": "你给它看了你以前发给阿杰的两条消息。看看它有没有学到你平时的说法。"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "match",
+                    "id": "match-asks",
+                    "phase": "investigate",
+                    "title": "三句请求，各换来了哪段祝福？",
+                    "requestIds": [
+                      "starter",
+                      "ask-casual",
+                      "ask-my-way"
+                    ],
+                    "miss": "不是这个。对照一下：请求里说了用什么口气吗？给它看过你的话吗？",
+                    "after": "多数时候是这样：只说「写祝福」，它就写贺卡上的话；说「随便一点」，它换几个语气词；给它看你的话，它才照着你的说法写。"
+                  },
+                  {
+                    "kind": "sort",
+                    "id": "sounds-like-you",
+                    "phase": "investigate",
+                    "title": "你平时叫他「杰哥」，约球时说「啤酒我带」。这些句子，哪些像你会发给他的？",
+                    "buckets": [
+                      {
+                        "id": "like-you",
+                        "label": "像你会发的"
+                      },
+                      {
+                        "id": "not-you",
+                        "label": "不像你会发的"
+                      }
+                    ],
+                    "cards": [
+                      {
+                        "id": "long-life",
+                        "text": "祝你生日快乐，福如东海，寿比南山！",
+                        "bucketId": "not-you",
+                        "why": "这是给长辈祝寿的话。",
+                        "miss": "你平时跟阿杰说「笑死我了」，不会突然说「寿比南山」。"
+                      },
+                      {
+                        "id": "big-jay",
+                        "text": "杰哥生日快乐！今晚老地方？",
+                        "bucketId": "like-you",
+                        "why": "你平时就叫他杰哥，也爱直接约。",
+                        "miss": "再看看你以前的消息：你就是这么叫他、这么约他的。"
+                      },
+                      {
+                        "id": "bright-future",
+                        "text": "在这个特别的日子里，愿你前程似锦。",
+                        "bucketId": "not-you",
+                        "why": "像贺卡上印好的字。",
+                        "miss": "你那两条消息里，没有一句是这种书面话。"
+                      },
+                      {
+                        "id": "hair-joke",
+                        "text": "又老一岁，头发还够用不哈哈",
+                        "bucketId": "like-you",
+                        "why": "你们就是这样互相开玩笑的。",
+                        "miss": "你笑过他的发型像刚睡醒。开这种玩笑，正是你们的说话方式。"
+                      },
+                      {
+                        "id": "sunshine",
+                        "text": "愿你的每一天都充满阳光与希望。",
+                        "bucketId": "not-you",
+                        "why": "谁都能用的套话。",
+                        "miss": "这句发给谁都行。正因为发给谁都行，才不像你专门写给他的。"
+                      },
+                      {
+                        "id": "beer",
+                        "text": "啤酒我带，蛋糕你自己买",
+                        "bucketId": "like-you",
+                        "why": "和你约球时说「啤酒我带」是一个口气。",
+                        "miss": "你上次约球也是说「啤酒我带」，这就是你的口气。"
+                      }
+                    ],
+                    "after": "AI 没见过你怎么说话。你不交代，它就写谁都能用的话。给它看两三段你写过的，它才有得学。"
+                  },
+                  {
+                    "kind": "build",
+                    "id": "build-ask",
+                    "phase": "modify",
+                    "title": "现在要发给阿杰了。拼一句请求，让它照你的说法写",
+                    "context": "原来那句：帮我写一段生日祝福。",
+                    "pieces": [
+                      {
+                        "id": "who",
+                        "text": "帮我给老同学阿杰写一段生日祝福，"
+                      },
+                      {
+                        "id": "short",
+                        "text": "三句以内，"
+                      },
+                      {
+                        "id": "my-way",
+                        "text": "照我以前发给他的这两条消息的说话方式写：「杰哥，周六球局还缺人不？缺的话我叫上小刘，啤酒我带。」「哈哈哈你发的那张照片笑死我了，发型像刚睡醒。改天约饭！」"
+                      },
+                      {
+                        "id": "grand",
+                        "text": "越隆重越好，",
+                        "why": "你们平时不这么说话。太隆重了，他反而觉得见外。"
+                      },
+                      {
+                        "id": "poet",
+                        "text": "用李白的口气写，",
+                        "why": "好玩，但读起来就不是你了。想玩可以另外试。"
+                      }
+                    ],
+                    "answers": [
+                      [
+                        "who",
+                        "short",
+                        "my-way"
+                      ],
+                      [
+                        "who",
+                        "my-way"
+                      ]
+                    ],
+                    "hint": "还差一点：先说写给谁，再说照你以前的消息写。",
+                    "after": "写给谁、照谁的说法，都说清了。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-built",
+                    "phase": "modify",
+                    "title": "发出去看看",
+                    "request": "built",
+                    "attachmentLabel": "阿杰的生日",
+                    "after": "对照一下：它学到你的哪些说法了？有没有哪个词，你平时不会这么说？"
+                  },
+                  {
+                    "kind": "make",
+                    "id": "make-own",
+                    "phase": "make",
+                    "title": "换一个人：给领导发一条中秋祝福。你来写请求"
+                  },
+                  {
+                    "kind": "choose",
+                    "id": "self-check",
+                    "phase": "make",
+                    "title": "你定稿的这条，会直接发给王姐吗？",
+                    "options": [
+                      {
+                        "id": "sounds-like-me",
+                        "label": "会，读着像我",
+                        "after": "好。发之前再看一眼称呼对不对。"
+                      },
+                      {
+                        "id": "changed-words",
+                        "label": "差不多，我又改了几个词",
+                        "after": "这就对了：AI 写初稿，你来定稿。"
+                      },
+                      {
+                        "id": "not-me",
+                        "label": "还是不像我",
+                        "after": "再多给它看一两段你写给王姐的话，或者直接告诉它哪一句不像。"
+                      }
+                    ]
+                  }
+                ],
+                "make": {
+                  "title": "给王姐写中秋祝福",
+                  "scenario": "中秋快到了，你想给部门领导王姐发一条祝福。你跟王姐说话客气，但也不会太隆重。下面是你以前发给她的两条消息。",
+                  "goal": "让 AI 写得像你平时跟王姐说话。写好你自己改一遍，再定稿。",
+                  "materialIds": [
+                    "linda-messages"
+                  ],
+                  "assetIds": [],
+                  "operation": "text",
+                  "promptPlaceholder": "写给谁？照什么说话方式写？",
+                  "checklist": [
+                    "说清楚写给谁、是什么节日。",
+                    "让它照你以前写给王姐的话，或者说清楚口气。",
+                    "读一遍，删掉你平时不会说的套话。"
+                  ],
+                  "exerciseId": "ask-about-a-picture-exercise",
+                  "artifactLabel": "发给王姐的中秋祝福"
+                },
+                "finish": {
+                  "title": "学会了！",
+                  "note": "AI 写初稿，你来定稿。",
+                  "didYouKnow": {
+                    "text": "你知道吗：有两位研究者做过一个在线实验：一部分人写短故事之前，先看了 AI 给的点子。这些人的故事被评得写得更好，可故事和故事之间更像了。所以用 AI 写东西时，把你自己的说法交给它。",
+                    "sourceId": "lib-1e399e86"
+                  },
+                  "today": "下次要发一段不好写的消息，先把你以前发给这个人的两三句话贴给 AI。"
+                }
+              }
+            ]
+          },
+          {
+            "id": "sound-words-and-meaning",
+            "title": "想给消息配表情，怎么让 AI 帮你挑？",
+            "content": "# 想给消息配表情，怎么让 AI 帮你挑？\n\n真实用法：你的手机输入法早就在这么做了。iPhone 打字时会建议表情；能配的表情不止一个时，它会列出几个让你挑。它只出主意，用哪个由你点。\n\n下周六公司组织团建：先爬山，再在山脚烧烤。通知由你发到公司群里。\n\n你想加几个表情，让通知看着热闹些，大家愿意报名。可表情太多，一个个翻太慢，也拿不准哪个合适。\n\n::play{#sound-words-and-meaning-v2}\n\n它出主意，你拿主意。\n\n[Apple：iPhone 会建议表情，由你来点](https://support.apple.com/en-us/102507) · [Unicode：哪些表情用得最多](https://home.unicode.org/emoji/emoji-frequency/) · [Miller 等：同一个表情，大家读出的意思不一样](https://ojs.aaai.org/index.php/ICWSM/article/view/14757)\n",
+            "locales": {
+              "en": {
+                "title": "Want emoji in a message? How do you get AI to help you pick?",
+                "content": "# Want emoji in a message? How do you get AI to help you pick?\n\nA real use: your phone keyboard already does this. As you type on an iPhone it suggests emoji, and when more than one could fit it shows you options to choose from. It only suggests; you tap the one you want.\n\nNext Saturday your company has a team outing: a hike, then a barbecue at the foot of the hill. You are the one posting the notice in the company group chat.\n\nYou want a few emoji so the notice looks lively and people sign up. But there are so many emoji that scrolling through them is slow, and you aren't sure which ones fit.\n\n::play{#sound-words-and-meaning-v2}\n\nIt suggests; you decide.\n\n[Apple: iPhone suggests emoji, and you tap to choose](https://support.apple.com/en-us/102507) · [Unicode: which emoji are used most](https://home.unicode.org/emoji/emoji-frequency/) · [Miller et al.: people read the same emoji differently](https://ojs.aaai.org/index.php/ICWSM/article/view/14757)\n"
+              }
+            },
+            "contentRevision": 9,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://support.apple.com/en-us/102507",
+                "sourceTitle": "Use emoji on your iPhone and iPad",
+                "sourceAuthority": "first-party",
+                "provenance": {
+                  "type": "official-document",
+                  "publisher": "Apple",
+                  "accessedOn": "2026-09-30",
+                  "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                  "supports": "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。",
+                  "limitations": "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。",
+                  "locales": {
+                    "en": {
+                      "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                      "supports": "As you type you see suggestions for emoji you may want; when more than one emoji could be used, the Quick Reply field shows options to choose from.",
+                      "limitations": "It describes Apple's keyboard, not an AI chat tool; other phones work differently."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://home.unicode.org/emoji/emoji-frequency/",
+                "sourceTitle": "Emoji Frequency (2019 data, archive)",
+                "sourceAuthority": "open-data",
+                "provenance": {
+                  "type": "public-data",
+                  "publisher": "Unicode Consortium",
+                  "accessedOn": "2026-09-30",
+                  "locator": "Those in Group 11 and beyond are below median frequency (and less than 1/2048 the frequency of 😂).",
+                  "supports": "2019 年排序：最常用的是 😂 和 ❤️；第 11 组及以后低于中位数，使用频率不到 😂 的 1/2048。",
+                  "limitations": "是全球汇总的 2019 年存档数据；不同地区、不同软件里的排名会不一样。",
+                  "locales": {
+                    "en": {
+                      "locator": "Those in Group 11 and beyond are below median frequency (and less than 1/2048 the frequency of 😂).",
+                      "supports": "The 2019 ranking: the most used are 😂 and ❤️; group 11 and beyond are below the median, at less than 1/2048 the frequency of 😂.",
+                      "limitations": "Archived 2019 data pooled worldwide; rankings differ by region and app."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://ojs.aaai.org/index.php/ICWSM/article/view/14757",
+                "sourceTitle": "“Blissfully Happy” or “Ready to Fight”: Varying Interpretations of Emoji",
+                "sourceAuthority": "research",
+                "provenance": {
+                  "type": "research",
+                  "publisher": "ICWSM 2016 (AAAI)",
+                  "accessedOn": "2026-09-30",
+                  "locator": "they disagreed on whether the sentiment was positive, neutral, or negative 25% of the time",
+                  "supports": "看同一个表情的同一种画法，参与者对它是正面、中性还是负面，有 25% 的时候意见不一；跨平台看不同画法，分歧更大。",
+                  "limitations": "研究的是英文用户和 2016 年的表情画法。",
+                  "locales": {
+                    "en": {
+                      "locator": "they disagreed on whether the sentiment was positive, neutral, or negative 25% of the time",
+                      "supports": "Looking at the same rendering of an emoji, participants disagreed on whether it was positive, neutral or negative 25% of the time; across platforms the disagreement grew.",
+                      "limitations": "It studied English-speaking users and 2016 emoji designs."
+                    }
+                  }
+                }
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "sound-words-and-meaning-card-1",
+                "kind": "basic",
+                "front": "想让 AI 帮你挑表情，怎么问更有用？",
+                "locales": {
+                  "en": {
+                    "front": "When you want AI's help picking emoji, what is the more useful way to ask?",
+                    "back": "Ask for a few options for each line with a reason for each; then pick yourself."
+                  }
+                },
+                "back": "让它一句一句给几个候选，说明为什么；最后由你来挑。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://support.apple.com/en-us/102507",
+                    "sourceTitle": "Use emoji on your iPhone and iPad",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Apple",
+                      "accessedOn": "2026-09-30",
+                      "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                      "supports": "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。",
+                      "limitations": "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。",
+                      "locales": {
+                        "en": {
+                          "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                          "supports": "As you type you see suggestions for emoji you may want; when more than one emoji could be used, the Quick Reply field shows options to choose from.",
+                          "limitations": "It describes Apple's keyboard, not an AI chat tool; other phones work differently."
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "sound-words-and-meaning-card-2",
+                "kind": "basic",
+                "front": "为什么画脸的表情要多想一下？",
+                "locales": {
+                  "en": {
+                    "front": "Why think twice about face emoji?",
+                    "back": "Different people can read the same face emoji in different ways. Think first about who will read it."
+                  }
+                },
+                "back": "同一个画脸的表情，不同的人可能读出不同的意思。先想想是发给谁看。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://support.apple.com/en-us/102507",
+                    "sourceTitle": "Use emoji on your iPhone and iPad",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Apple",
+                      "accessedOn": "2026-09-30",
+                      "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                      "supports": "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。",
+                      "limitations": "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。",
+                      "locales": {
+                        "en": {
+                          "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                          "supports": "As you type you see suggestions for emoji you may want; when more than one emoji could be used, the Quick Reply field shows options to choose from.",
+                          "limitations": "It describes Apple's keyboard, not an AI chat tool; other phones work differently."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "sound-words-and-meaning-exercise",
+                "kind": "explain",
+                "title": "给家族群的寿宴通知配表情",
+                "prompt": "这周日全家给奶奶过八十大寿，通知要发在家族群里。群里有爷爷奶奶，也有上小学的侄子。\n让 AI 一句一句给表情候选，你挑出长辈也看得懂的。",
+                "locales": {
+                  "en": {
+                    "title": "Emoji for the family birthday lunch notice",
+                    "prompt": "This Sunday the family is celebrating Grandma's 80th birthday, and the notice goes in the family group chat. The group has the grandparents in it, and a nephew in primary school too.\nGet AI to suggest emoji line by line, and pick the ones the grandparents will understand too.",
+                    "rubric": [
+                      "The request says the notice goes in the family group and older relatives will read it.",
+                      "The request asks AI for a few emoji options per line rather than adding them for you.",
+                      "The emoji kept in the final version were chosen by you and are unlikely to be misread by older relatives; unclear face emoji are dropped or swapped for emoji of things."
+                    ]
+                  }
+                },
+                "rubric": [
+                  "请求说了通知发在家族群、有长辈会看。",
+                  "请求让 AI 一句一句给几个表情候选，而不是直接替你加好。",
+                  "定稿里留下的表情由你挑过，长辈看了不容易误会；拿不准的画脸表情删掉或换成画东西的。"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://support.apple.com/en-us/102507",
+                    "sourceTitle": "Use emoji on your iPhone and iPad",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Apple",
+                      "accessedOn": "2026-09-30",
+                      "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                      "supports": "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。",
+                      "limitations": "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。",
+                      "locales": {
+                        "en": {
+                          "locator": "If there's more than one emoji that you can use, the Quick Reply field shows you options to choose from.",
+                          "supports": "As you type you see suggestions for emoji you may want; when more than one emoji could be used, the Quick Reply field shows options to choose from.",
+                          "limitations": "It describes Apple's keyboard, not an AI chat tool; other phones work differently."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "sound-words-and-meaning-v2",
+                "kind": "primm",
+                "role": "apply",
+                "difficulty": "intro",
+                "title": "想给消息配表情，怎么让 AI 帮你挑？",
+                "brief": "学会让 AI 一句一句给表情候选，由你来挑。",
+                "goal": "让 AI 出主意，你拿主意：表情最后由你挑。",
+                "takeaway": "让 AI 一句一句给你几个候选，再由你来挑。发给谁看，只有你知道。",
+                "hint": "每一句要几个候选，由你来挑。",
+                "source": {
+                  "label": "Apple：iPhone 会建议表情，由你来点",
+                  "url": "https://support.apple.com/en-us/102507"
+                },
+                "locales": {
+                  "en": {
+                    "strings": {
+                      "想给消息配表情，怎么让 AI 帮你挑？": "Want emoji in a message? How do you get AI to help you pick?",
+                      "学会让 AI 一句一句给表情候选，由你来挑。": "Learn to have AI suggest emoji line by line, and pick them yourself.",
+                      "让 AI 出主意，你拿主意：表情最后由你挑。": "AI suggests, you decide: the emoji you keep are your choice.",
+                      "让 AI 一句一句给你几个候选，再由你来挑。发给谁看，只有你知道。": "Have AI give you a few options for each line, then pick yourself. Only you know who will read it.",
+                      "每一句要几个候选，由你来挑。": "Ask for a few options per line and pick yourself.",
+                      "Apple：iPhone 会建议表情，由你来点": "Apple: iPhone suggests emoji, and you tap to choose",
+                      "下周六公司组织团建：先爬山，再在山脚烧烤。通知由你发到公司群里。": "Next Saturday your company has a team outing: a hike, then a barbecue at the foot of the hill. You are the one posting the notice in the company group chat.",
+                      "你想加几个表情，让通知看着热闹些，大家愿意报名。可表情太多，一个个翻太慢，也拿不准哪个合适。": "You want a few emoji so the notice looks lively and people sign up. But there are so many emoji that scrolling through them is slow, and you aren't sure which ones fit.",
+                      "真实用法：你的手机输入法早就在这么做了。iPhone 打字时会建议表情；能配的表情不止一个时，它会列出几个让你挑。它只出主意，用哪个由你点。": "A real use: your phone keyboard already does this. As you type on an iPhone it suggests emoji, and when more than one could fit it shows you options to choose from. It only suggests; you tap the one you want.",
+                      "Apple 的帮助页说：打字时会看到表情建议；能用的表情不止一个时，会列出选项让你选。": "Apple's help page says you see emoji suggestions as you type, and when more than one emoji could be used it shows options to choose from.",
+                      "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。": "As you type you see suggestions for emoji you may want; when more than one emoji could be used, the Quick Reply field shows options to choose from.",
+                      "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。": "It describes Apple's keyboard, not an AI chat tool; other phones work differently.",
+                      "页面持续更新": "The page is updated over time",
+                      "Unicode：哪些表情用得最多": "Unicode: which emoji are used most",
+                      "给全世界的文字和表情编号的 Unicode 联盟，按多个来源的使用频率给表情排了序。": "The Unicode Consortium, which numbers the world's characters and emoji, ranked emoji by how often they are used across several sources.",
+                      "2019 年排序：最常用的是 😂 和 ❤️；第 11 组及以后低于中位数，使用频率不到 😂 的 1/2048。": "The 2019 ranking: the most used are 😂 and ❤️; group 11 and beyond are below the median, at less than 1/2048 the frequency of 😂.",
+                      "是全球汇总的 2019 年存档数据；不同地区、不同软件里的排名会不一样。": "Archived 2019 data pooled worldwide; rankings differ by region and app.",
+                      "2019 年数据": "2019 data",
+                      "Miller 等：同一个表情，大家读出的意思不一样": "Miller et al.: people read the same emoji differently",
+                      "明尼苏达大学的研究者请人解读常用表情，发现同一个表情，大家的理解常常对不上。": "University of Minnesota researchers asked people to interpret popular emoji and found they often disagreed about the same one.",
+                      "看同一个表情的同一种画法，参与者对它是正面、中性还是负面，有 25% 的时候意见不一；跨平台看不同画法，分歧更大。": "Looking at the same rendering of an emoji, participants disagreed on whether it was positive, neutral or negative 25% of the time; across platforms the disagreement grew.",
+                      "研究的是英文用户和 2016 年的表情画法。": "It studied English-speaking users and 2016 emoji designs.",
+                      "2016 年": "2016",
+                      "团建通知（练习）": "Team outing notice (practice)",
+                      "下周六公司团建！早上八点公司门口集合，一起去爬香山。\n中午在山脚烧烤，食材公司全包。\n记得穿运动鞋，带上水和防晒霜。": "Team outing next Saturday! Meet at the office gate at 8 am and we'll hike up Fragrant Hills together.\nBarbecue at the foot of the hill at noon, all food paid by the company.\nWear trainers and bring water and sunscreen.",
+                      "寿宴通知（练习）": "Birthday lunch notice (practice)",
+                      "这周日中午十二点，全家给奶奶过八十大寿。\n地点在老街的福满楼饭店，二楼包间。\n大家不用带礼物，人到就好。": "This Sunday at noon, the whole family is celebrating Grandma's 80th birthday.\nIt's at Fortune House restaurant on Old Street, private room on the second floor.\nNo need to bring gifts, just come.",
+                      "给这段通知加上表情。": "Add emoji to this notice.",
+                      "给这段通知推荐几个合适的表情，每个说一下为什么。": "Suggest a few emoji that suit this notice, and say why for each one.",
+                      "这段通知一共三句。每一句推荐两三个表情，说一下为什么，我自己来挑。": "This notice has three lines. Suggest two or three emoji for each line and say why. I'll pick them myself.",
+                      "团建通知": "Team outing notice",
+                      "你想给这条通知配上合适的表情。哪种问法最能帮上你？": "You want the right emoji for this notice. Which way of asking helps you most?",
+                      "记住你选的这句，马上发出去试试。": "Remember the one you chose. Now send it and see.",
+                      "把你选的那句，连同通知一起发给 AI": "Send the request you chose to AI, together with the notice",
+                      "你知道吗：Unicode（给全世界的文字和表情编号的组织）统计过 2019 年的数据，用得最多的两个表情是 😂 和 ❤️。排在后一半的表情，用的次数都不到 😂 的两千分之一。": "Did you know? Unicode, the group that numbers the world's characters and emoji, ranked 2019 usage: the two most used emoji were 😂 and ❤️. Every emoji in the bottom half was used less than one two-thousandth as often as 😂.",
+                      "你让它直接加。看看它加的表情是不是你想要的；想换一个的话，你手里还有没有别的可选。": "You asked it to add them directly. See whether the emoji it added are the ones you want, and whether you have anything else to choose from if you'd like to swap one.",
+                      "你让它推荐一些。看看这些表情，你能不能一下子看出哪个该放在哪一句。": "You asked it to suggest some. See whether you can tell at a glance which emoji goes with which line.",
+                      "你让它一句一句推荐。看看每一句是不是都有几个可以挑。": "You asked for suggestions line by line. See whether every line has a few to choose from.",
+                      "在它的回答里，点出它给「带上水和防晒霜」这句配的表情": "In its answer, tap the emoji it gave the line about bringing water and sunscreen",
+                      "防晒": "sunscreen",
+                      "💧": "💧",
+                      "🧴": "🧴",
+                      "找到了。这几个里，你会用哪个？": "Found it. Which of these would you use?",
+                      "对。它没有给这句单独配，你得自己从一堆里分。下次在请求里写上「每一句推荐两三个」。": "Right. It didn't give this line its own emoji, so you'd have to sort them out yourself. Next time, ask for two or three per line.",
+                      "这些表情发到公司群里，你放心直接用吗？谁会看这条通知，只有你知道。": "Would you use these emoji in the company group chat without a second thought? Only you know who will read the notice.",
+                      "放心用": "Safe to use",
+                      "看对象再用": "Depends who reads it",
+                      "⏰ 闹钟": "⏰ alarm clock",
+                      "意思很直：提醒时间。": "Its meaning is plain: a reminder about the time.",
+                      "闹钟就是闹钟，大家读出来的意思差不多。": "An alarm clock is an alarm clock; people read it much the same way.",
+                      "😁 咧嘴笑": "😁 grinning face",
+                      "有人读成开心，有人读成尴尬地咧嘴。": "Some read it as happy, some as an awkward grimace.",
+                      "画脸的表情最容易被读岔。同一个 😁，有人觉得开心，有人觉得尴尬。": "Faces are the easiest emoji to misread. The same 😁 looks happy to some and awkward to others.",
+                      "⛰️ 山": "⛰️ mountain",
+                      "画的就是山，配爬山正好。": "It's a mountain, just right for a hike.",
+                      "山就是山，不太会被读成别的意思。": "A mountain is a mountain; it's hard to read as anything else.",
+                      "😘 飞吻": "😘 blowing a kiss",
+                      "发给好朋友没问题，发到公司群可能有人觉得别扭。": "Fine for close friends, but some people may find it odd in a company group.",
+                      "飞吻是亲近的人之间用的。公司群里有领导、有新同事，先想想再用。": "A blown kiss is for people you're close to. The company group has managers and new colleagues, so think first.",
+                      "💧 水滴": "💧 droplet",
+                      "提醒带水，一看就懂。": "A reminder to bring water; anyone gets it.",
+                      "配在「带上水」后面，意思很直。": "Next to \"bring water\", its meaning is plain.",
+                      "🙃 倒过来的笑脸": "🙃 upside-down face",
+                      "有人觉得俏皮，有人读成「呵呵」「无语」。": "Some find it playful; others read it as sarcasm or exasperation.",
+                      "这个表情很多人用来表示无奈或说反话。发在通知里，容易让人多想。": "Many people use it for sarcasm or giving up. In a notice, it can make people wonder what you mean.",
+                      "画东西的表情，意思一般比较直；画脸的表情，最容易被读岔。所以 AI 给的候选里，画脸的那些，你要想想是发给谁看。": "Emoji of things usually mean just that; emoji of faces are the easiest to misread. So among the AI's suggestions, think about who will read it before you use the faces.",
+                      "拼一句请求：让它一句一句给候选，还要知道发在哪": "Build a request: options for each line, and it knows where the notice goes",
+                      "原来那句：给这段通知加上表情。": "The original request: Add emoji to this notice.",
+                      "这段通知一共三句，": "This notice has three lines,",
+                      "是发在公司群里的，": "it's going in the company group chat,",
+                      "每一句推荐两三个表情，说一下为什么，": "suggest two or three emoji for each line and say why,",
+                      "我自己来挑。": "and I'll pick them myself.",
+                      "直接帮我加到句子里，": "put them straight into the lines,",
+                      "它替你挑好了，你就没得选了。": "Then it chooses for you and you have nothing to pick from.",
+                      "表情越多越好，": "the more emoji the better,",
+                      "表情一多，时间地点反而不显眼了。": "With lots of emoji, the time and place get lost.",
+                      "还差一点：说清一共几句、发在哪、每句要几个候选，最后说由你来挑。": "Almost: say how many lines, where it's going, how many options per line, and that you'll pick.",
+                      "发在哪、一句一句、要候选、由你挑，都说清了。": "Now it says where it goes, line by line, options, and that you pick.",
+                      "发出去看看": "Send it and see",
+                      "对照一下：有没有哪一个，你打算不用？不用就删。最后留哪几个，由你定。": "Compare: is there one you won't use? Then drop it. Which ones stay is up to you.",
+                      "换一件事：给家族群发奶奶的寿宴通知。你来写请求": "Something new: post Grandma's birthday lunch notice in the family group. You write the request",
+                      "你最后留下的表情，是谁挑的？": "Who picked the emoji you kept?",
+                      "我从它的候选里挑的": "I picked from its options",
+                      "好。它出主意，你拿主意。": "Good. It suggests, you decide.",
+                      "它加好的，我没怎么动": "It added them and I left them",
+                      "至少读一遍，删掉拿不准的，尤其是画脸的那些。": "At least read it through and drop any you're unsure of, especially the faces.",
+                      "我自己又加了几个": "I added a few of my own",
+                      "很好。它给的只是候选，不是标准答案。": "Great. What it gives you are options, not the right answer.",
+                      "给家族群的寿宴通知配表情": "Emoji for the family birthday lunch notice",
+                      "这周日全家给奶奶过八十大寿，通知要发在家族群里。群里有爷爷奶奶，也有上小学的侄子。": "This Sunday the family is celebrating Grandma's 80th birthday, and the notice goes in the family group chat. The group has the grandparents in it, and a nephew in primary school too.",
+                      "让 AI 一句一句给表情候选，你挑出长辈也看得懂的。": "Get AI to suggest emoji line by line, and pick the ones the grandparents will understand too.",
+                      "让它怎么推荐？这条通知是给谁看的？": "How should it suggest them? Who will read the notice?",
+                      "说了是发在家族群、有长辈看。": "Say it goes in the family group and the grandparents will read it.",
+                      "让它一句一句给几个候选。": "Ask for a few options for each line.",
+                      "最后留下的表情是你挑的，长辈看了不会误会。": "The emoji you keep are your choice, and the grandparents won't misread them.",
+                      "发在家族群的寿宴通知": "Birthday lunch notice for the family group",
+                      "学会了！": "You've got it!",
+                      "它出主意，你拿主意。": "It suggests; you decide.",
+                      "你知道吗：2016 年，美国明尼苏达大学的研究者请人解读一批常用表情。看的是同一个表情、同一种画法，大家对它是开心、中性还是不开心，仍有四分之一的时候意见不一；换到画法不同的手机上，分歧更大。所以最后挑表情的，得是知道谁会看的你。": "Did you know? In 2016, researchers at the University of Minnesota asked people to interpret popular emoji. Even looking at the same emoji drawn the same way, people disagreed a quarter of the time about whether it was happy, neutral or unhappy, and across phones that draw it differently they disagreed even more. So the one picking the emoji should be you, who knows who will read it.",
+                      "下次发群通知，让 AI 一句一句给你表情候选，你来挑。": "Next time you post a group notice, have AI suggest emoji line by line, and you pick."
+                    }
+                  }
+                },
+                "method": "PRIMM",
+                "experienceVersion": 3,
+                "intro": {
+                  "situation": "下周六公司组织团建：先爬山，再在山脚烧烤。通知由你发到公司群里。",
+                  "need": "你想加几个表情，让通知看着热闹些，大家愿意报名。可表情太多，一个个翻太慢，也拿不准哪个合适。",
+                  "connection": "真实用法：你的手机输入法早就在这么做了。iPhone 打字时会建议表情；能配的表情不止一个时，它会列出几个让你挑。它只出主意，用哪个由你点。",
+                  "sourceIds": [
+                    "lib-49bcde78"
+                  ]
+                },
+                "sources": [
+                  {
+                    "id": "lib-49bcde78",
+                    "reference": {
+                      "label": "Apple：iPhone 会建议表情，由你来点",
+                      "url": "https://support.apple.com/en-us/102507"
+                    },
+                    "note": "Apple 的帮助页说：打字时会看到表情建议；能用的表情不止一个时，会列出选项让你选。",
+                    "summary": "输入时会建议可能想用的表情；有多个表情可用时，Quick Reply 栏会列出选项供选择。",
+                    "limitation": "说的是苹果输入法的功能，不是 AI 聊天工具；不同手机做法不同。",
+                    "date": "页面持续更新"
+                  },
+                  {
+                    "id": "lib-76251bbd",
+                    "reference": {
+                      "label": "Unicode：哪些表情用得最多",
+                      "url": "https://home.unicode.org/emoji/emoji-frequency/"
+                    },
+                    "note": "给全世界的文字和表情编号的 Unicode 联盟，按多个来源的使用频率给表情排了序。",
+                    "summary": "2019 年排序：最常用的是 😂 和 ❤️；第 11 组及以后低于中位数，使用频率不到 😂 的 1/2048。",
+                    "limitation": "是全球汇总的 2019 年存档数据；不同地区、不同软件里的排名会不一样。",
+                    "date": "2019 年数据"
+                  },
+                  {
+                    "id": "lib-2045c26d",
+                    "reference": {
+                      "label": "Miller 等：同一个表情，大家读出的意思不一样",
+                      "url": "https://ojs.aaai.org/index.php/ICWSM/article/view/14757"
+                    },
+                    "note": "明尼苏达大学的研究者请人解读常用表情，发现同一个表情，大家的理解常常对不上。",
+                    "summary": "看同一个表情的同一种画法，参与者对它是正面、中性还是负面，有 25% 的时候意见不一；跨平台看不同画法，分歧更大。",
+                    "limitation": "研究的是英文用户和 2016 年的表情画法。",
+                    "date": "2016 年"
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "outing-notice",
+                    "label": "团建通知（练习）",
+                    "kind": "practice",
+                    "text": "下周六公司团建！早上八点公司门口集合，一起去爬香山。\n中午在山脚烧烤，食材公司全包。\n记得穿运动鞋，带上水和防晒霜。"
+                  },
+                  {
+                    "id": "birthday-feast-notice",
+                    "label": "寿宴通知（练习）",
+                    "kind": "practice",
+                    "text": "这周日中午十二点，全家给奶奶过八十大寿。\n地点在老街的福满楼饭店，二楼包间。\n大家不用带礼物，人到就好。"
+                  }
+                ],
+                "starter": {
+                  "prompt": "给这段通知加上表情。",
+                  "materialIds": [
+                    "outing-notice"
+                  ],
+                  "assetIds": [],
+                  "operation": "text"
+                },
+                "requests": [
+                  {
+                    "id": "ask-some",
+                    "prompt": "给这段通知推荐几个合适的表情，每个说一下为什么。"
+                  },
+                  {
+                    "id": "ask-each-line",
+                    "prompt": "这段通知一共三句。每一句推荐两三个表情，说一下为什么，我自己来挑。"
+                  }
+                ],
+                "steps": [
+                  {
+                    "kind": "choose",
+                    "id": "guess-how",
+                    "phase": "predict",
+                    "title": "你想给这条通知配上合适的表情。哪种问法最能帮上你？",
+                    "options": [
+                      {
+                        "id": "insert",
+                        "label": "给这段通知加上表情。",
+                        "requestId": "starter"
+                      },
+                      {
+                        "id": "some",
+                        "label": "给这段通知推荐几个合适的表情，每个说一下为什么。",
+                        "requestId": "ask-some"
+                      },
+                      {
+                        "id": "each-line",
+                        "label": "这段通知一共三句。每一句推荐两三个表情，说一下为什么，我自己来挑。",
+                        "requestId": "ask-each-line"
+                      }
+                    ],
+                    "after": "记住你选的这句，马上发出去试试。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-choice",
+                    "phase": "run",
+                    "title": "把你选的那句，连同通知一起发给 AI",
+                    "request": "chosen",
+                    "attachmentLabel": "团建通知",
+                    "wait": {
+                      "text": "你知道吗：Unicode（给全世界的文字和表情编号的组织）统计过 2019 年的数据，用得最多的两个表情是 😂 和 ❤️。排在后一半的表情，用的次数都不到 😂 的两千分之一。",
+                      "sourceId": "lib-76251bbd"
+                    },
+                    "debriefs": [
+                      {
+                        "requestId": "starter",
+                        "text": "你让它直接加。看看它加的表情是不是你想要的；想换一个的话，你手里还有没有别的可选。"
+                      },
+                      {
+                        "requestId": "ask-some",
+                        "text": "你让它推荐一些。看看这些表情，你能不能一下子看出哪个该放在哪一句。"
+                      },
+                      {
+                        "requestId": "ask-each-line",
+                        "text": "你让它一句一句推荐。看看每一句是不是都有几个可以挑。"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "find",
+                    "id": "find-last-line",
+                    "phase": "investigate",
+                    "title": "在它的回答里，点出它给「带上水和防晒霜」这句配的表情",
+                    "terms": [
+                      "防晒",
+                      "💧",
+                      "🧴"
+                    ],
+                    "found": "找到了。这几个里，你会用哪个？",
+                    "absent": "对。它没有给这句单独配，你得自己从一堆里分。下次在请求里写上「每一句推荐两三个」。"
+                  },
+                  {
+                    "kind": "sort",
+                    "id": "safe-or-not",
+                    "phase": "investigate",
+                    "title": "这些表情发到公司群里，你放心直接用吗？谁会看这条通知，只有你知道。",
+                    "buckets": [
+                      {
+                        "id": "safe",
+                        "label": "放心用"
+                      },
+                      {
+                        "id": "depends",
+                        "label": "看对象再用"
+                      }
+                    ],
+                    "cards": [
+                      {
+                        "id": "alarm",
+                        "text": "⏰ 闹钟",
+                        "bucketId": "safe",
+                        "why": "意思很直：提醒时间。",
+                        "miss": "闹钟就是闹钟，大家读出来的意思差不多。"
+                      },
+                      {
+                        "id": "grin",
+                        "text": "😁 咧嘴笑",
+                        "bucketId": "depends",
+                        "why": "有人读成开心，有人读成尴尬地咧嘴。",
+                        "miss": "画脸的表情最容易被读岔。同一个 😁，有人觉得开心，有人觉得尴尬。"
+                      },
+                      {
+                        "id": "mountain",
+                        "text": "⛰️ 山",
+                        "bucketId": "safe",
+                        "why": "画的就是山，配爬山正好。",
+                        "miss": "山就是山，不太会被读成别的意思。"
+                      },
+                      {
+                        "id": "kiss",
+                        "text": "😘 飞吻",
+                        "bucketId": "depends",
+                        "why": "发给好朋友没问题，发到公司群可能有人觉得别扭。",
+                        "miss": "飞吻是亲近的人之间用的。公司群里有领导、有新同事，先想想再用。"
+                      },
+                      {
+                        "id": "droplet",
+                        "text": "💧 水滴",
+                        "bucketId": "safe",
+                        "why": "提醒带水，一看就懂。",
+                        "miss": "配在「带上水」后面，意思很直。"
+                      },
+                      {
+                        "id": "upside-down",
+                        "text": "🙃 倒过来的笑脸",
+                        "bucketId": "depends",
+                        "why": "有人觉得俏皮，有人读成「呵呵」「无语」。",
+                        "miss": "这个表情很多人用来表示无奈或说反话。发在通知里，容易让人多想。"
+                      }
+                    ],
+                    "after": "画东西的表情，意思一般比较直；画脸的表情，最容易被读岔。所以 AI 给的候选里，画脸的那些，你要想想是发给谁看。"
+                  },
+                  {
+                    "kind": "build",
+                    "id": "build-ask",
+                    "phase": "modify",
+                    "title": "拼一句请求：让它一句一句给候选，还要知道发在哪",
+                    "context": "原来那句：给这段通知加上表情。",
+                    "pieces": [
+                      {
+                        "id": "three",
+                        "text": "这段通知一共三句，"
+                      },
+                      {
+                        "id": "where",
+                        "text": "是发在公司群里的，"
+                      },
+                      {
+                        "id": "each",
+                        "text": "每一句推荐两三个表情，说一下为什么，"
+                      },
+                      {
+                        "id": "me",
+                        "text": "我自己来挑。"
+                      },
+                      {
+                        "id": "auto",
+                        "text": "直接帮我加到句子里，",
+                        "why": "它替你挑好了，你就没得选了。"
+                      },
+                      {
+                        "id": "more",
+                        "text": "表情越多越好，",
+                        "why": "表情一多，时间地点反而不显眼了。"
+                      }
+                    ],
+                    "answers": [
+                      [
+                        "three",
+                        "where",
+                        "each",
+                        "me"
+                      ],
+                      [
+                        "where",
+                        "three",
+                        "each",
+                        "me"
+                      ]
+                    ],
+                    "hint": "还差一点：说清一共几句、发在哪、每句要几个候选，最后说由你来挑。",
+                    "after": "发在哪、一句一句、要候选、由你挑，都说清了。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-built",
+                    "phase": "modify",
+                    "title": "发出去看看",
+                    "request": "built",
+                    "attachmentLabel": "团建通知",
+                    "after": "对照一下：有没有哪一个，你打算不用？不用就删。最后留哪几个，由你定。"
+                  },
+                  {
+                    "kind": "make",
+                    "id": "make-own",
+                    "phase": "make",
+                    "title": "换一件事：给家族群发奶奶的寿宴通知。你来写请求"
+                  },
+                  {
+                    "kind": "choose",
+                    "id": "self-check",
+                    "phase": "make",
+                    "title": "你最后留下的表情，是谁挑的？",
+                    "options": [
+                      {
+                        "id": "picked",
+                        "label": "我从它的候选里挑的",
+                        "after": "好。它出主意，你拿主意。"
+                      },
+                      {
+                        "id": "kept-all",
+                        "label": "它加好的，我没怎么动",
+                        "after": "至少读一遍，删掉拿不准的，尤其是画脸的那些。"
+                      },
+                      {
+                        "id": "added-more",
+                        "label": "我自己又加了几个",
+                        "after": "很好。它给的只是候选，不是标准答案。"
+                      }
+                    ]
+                  }
+                ],
+                "make": {
+                  "title": "给家族群的寿宴通知配表情",
+                  "scenario": "这周日全家给奶奶过八十大寿，通知要发在家族群里。群里有爷爷奶奶，也有上小学的侄子。",
+                  "goal": "让 AI 一句一句给表情候选，你挑出长辈也看得懂的。",
+                  "materialIds": [
+                    "birthday-feast-notice"
+                  ],
+                  "assetIds": [],
+                  "operation": "text",
+                  "promptPlaceholder": "让它怎么推荐？这条通知是给谁看的？",
+                  "checklist": [
+                    "说了是发在家族群、有长辈看。",
+                    "让它一句一句给几个候选。",
+                    "最后留下的表情是你挑的，长辈看了不会误会。"
+                  ],
+                  "exerciseId": "sound-words-and-meaning-exercise",
+                  "artifactLabel": "发在家族群的寿宴通知"
+                },
+                "finish": {
+                  "title": "学会了！",
+                  "note": "它出主意，你拿主意。",
+                  "didYouKnow": {
+                    "text": "你知道吗：2016 年，美国明尼苏达大学的研究者请人解读一批常用表情。看的是同一个表情、同一种画法，大家对它是开心、中性还是不开心，仍有四分之一的时候意见不一；换到画法不同的手机上，分歧更大。所以最后挑表情的，得是知道谁会看的你。",
+                    "sourceId": "lib-2045c26d"
+                  },
+                  "today": "下次发群通知，让 AI 一句一句给你表情候选，你来挑。"
+                }
+              }
+            ]
+          },
+          {
+            "id": "name-the-result",
+            "title": "一封长邮件要回，怎么让 AI 帮你？",
+            "content": "# 一封长邮件要回，怎么让 AI 帮你？\n\n真实用法：Gmail 的手机版会在长邮件的最上面放一张 AI 摘要卡片，把来回好几封的要点合在一起。先看清要做什么，再回信，Google 也是这样帮人读长邮件的。\n\n你负责公司年会的杂事。行政部的李经理发来一封长邮件，说了一大堆，你得回复她。\n\n邮件里夹着好几件要你做的事，每件都有截止时间。漏掉一件，就会耽误大家。\n\n::play{#name-the-result-v2}\n\n它整理、它写；答应什么，你来定。\n\n[Google：Gmail 在长邮件上面放摘要卡片](https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html) · [微软：上班族平均每天收 117 封邮件](https://www.microsoft.com/en-us/worklab/work-trend-index/breaking-down-infinite-workday) · [Jakesch 等：一怀疑是 AI 写的，就没那么信了](https://sml.stanford.edu/publications/hancock-jt/ai-mediated-communication-how-perception-profile-text-was-written-ai)\n",
+            "locales": {
+              "en": {
+                "title": "A long email to answer: how do you get AI to help?",
+                "content": "# A long email to answer: how do you get AI to help?\n\nA real use: the Gmail phone app puts an AI summary card at the top of long emails, pulling together the key points from all the replies. See what needs doing first, then reply: that's how Google helps people read long emails too.\n\nYou're handling the odd jobs for the company's year-end party. Ms. Li from the admin department has sent you a long email about all sorts of things, and you need to reply.\n\nTucked into the email are several things you have to do, each with a deadline. Miss one and everyone is held up.\n\n::play{#name-the-result-v2}\n\nIt sorts and it writes; what to promise is up to you.\n\n[Google: Gmail puts a summary card on top of long emails](https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html) · [Microsoft: the average worker gets 117 emails a day](https://www.microsoft.com/en-us/worklab/work-trend-index/breaking-down-infinite-workday) · [Jakesch et al.: suspected AI writing is trusted less](https://sml.stanford.edu/publications/hancock-jt/ai-mediated-communication-how-perception-profile-text-was-written-ai)\n"
+              }
+            },
+            "contentRevision": 9,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html",
+                "sourceTitle": "New Gemini summary cards now available in the Gmail app on Android and iOS devices",
+                "sourceAuthority": "first-party",
+                "provenance": {
+                  "type": "official-document",
+                  "publisher": "Google Workspace",
+                  "publishedOn": "2025-05-29",
+                  "accessedOn": "2026-09-30",
+                  "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                  "supports": "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。",
+                  "limitations": "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。",
+                  "locales": {
+                    "en": {
+                      "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                      "supports": "For longer emails or threads with several replies, the Gmail app shows a Gemini summary card at the top of the email, pulling together the key points of the thread.",
+                      "limitations": "A product announcement: it shows the feature exists, not whether the summaries are accurate or complete."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://www.microsoft.com/en-us/worklab/work-trend-index/breaking-down-infinite-workday",
+                "sourceTitle": "Breaking down the infinite workday",
+                "sourceAuthority": "first-party",
+                "provenance": {
+                  "type": "public-data",
+                  "publisher": "Microsoft WorkLab",
+                  "publishedOn": "2025-06-17",
+                  "accessedOn": "2026-09-30",
+                  "locator": "The average worker receives 117 emails daily—most of them skimmed in under 60 seconds.",
+                  "supports": "平均每位员工每天收到 117 封邮件，大多数不到 60 秒就被扫过去了。",
+                  "limitations": "来自微软自己产品的使用数据，只代表用微软办公软件的人。",
+                  "locales": {
+                    "en": {
+                      "locator": "The average worker receives 117 emails daily—most of them skimmed in under 60 seconds.",
+                      "supports": "The average worker receives 117 emails a day, most of them skimmed in under 60 seconds.",
+                      "limitations": "It comes from usage data of Microsoft's own products and only reflects people who use them."
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://sml.stanford.edu/publications/hancock-jt/ai-mediated-communication-how-perception-profile-text-was-written-ai",
+                "sourceTitle": "AI-Mediated Communication: How the Perception that Profile Text was Written by AI Affects Trustworthiness",
+                "sourceAuthority": "research",
+                "provenance": {
+                  "type": "research",
+                  "publisher": "CHI '19 (Stanford Social Media Lab)",
+                  "publishedOn": "2019-05-02",
+                  "accessedOn": "2026-09-30",
+                  "locator": "Only when participants thought they saw a mixed set of AI- and human-written profiles, they mistrusted hosts whose profiles were labeled as or suspected to be written by AI.",
+                  "supports": "只有当读者以为自己看到的介绍里混着 AI 写的和人写的，被标为或被怀疑是 AI 写的房东，才被觉得不太可信。",
+                  "limitations": "研究的是民宿房东的自我介绍，不是工作邮件。",
+                  "locales": {
+                    "en": {
+                      "locator": "Only when participants thought they saw a mixed set of AI- and human-written profiles, they mistrusted hosts whose profiles were labeled as or suspected to be written by AI.",
+                      "supports": "Only when participants thought they saw a mix of AI- and human-written profiles did they mistrust hosts whose profiles were labeled as or suspected to be written by AI.",
+                      "limitations": "It studied home-sharing host profiles, not work emails."
+                    }
+                  }
+                }
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "name-the-result-card-1",
+                "kind": "basic",
+                "front": "一封长邮件要回，第一步让 AI 做什么？",
+                "locales": {
+                  "en": {
+                    "front": "When you have a long email to answer, what do you have AI do first?",
+                    "back": "First have it list what you need to do, each with its deadline. Once that's clear, have it write the reply from the list."
+                  }
+                },
+                "back": "先让它列出要你做的事，每件写上截止时间。看清了，再让它照着写回信。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html",
+                    "sourceTitle": "New Gemini summary cards now available in the Gmail app on Android and iOS devices",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2025-05-29",
+                      "accessedOn": "2026-09-30",
+                      "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                      "supports": "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。",
+                      "limitations": "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。",
+                      "locales": {
+                        "en": {
+                          "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                          "supports": "For longer emails or threads with several replies, the Gmail app shows a Gemini summary card at the top of the email, pulling together the key points of the thread.",
+                          "limitations": "A product announcement: it shows the feature exists, not whether the summaries are accurate or complete."
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "name-the-result-card-2",
+                "kind": "basic",
+                "front": "AI 写的回信，发之前要看什么？",
+                "locales": {
+                  "en": {
+                    "front": "What do you check in an AI-written reply before sending it?",
+                    "back": "Whether it promised or decided anything on your behalf that you never said. If so, delete it or change it."
+                  }
+                },
+                "back": "看它有没有替你答应、替你决定了你没说过的事。有就删掉或改掉。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html",
+                    "sourceTitle": "New Gemini summary cards now available in the Gmail app on Android and iOS devices",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2025-05-29",
+                      "accessedOn": "2026-09-30",
+                      "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                      "supports": "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。",
+                      "limitations": "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。",
+                      "locales": {
+                        "en": {
+                          "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                          "supports": "For longer emails or threads with several replies, the Gmail app shows a Gemini summary card at the top of the email, pulling together the key points of the thread.",
+                          "limitations": "A product announcement: it shows the feature exists, not whether the summaries are accurate or complete."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "name-the-result-exercise",
+                "kind": "explain",
+                "title": "回复班主任的长邮件",
+                "prompt": "孩子的班主任王老师发来一封长邮件：下周五春游，要交费、签回执、选午餐套餐，还提醒了带什么。你得回复她。\n先让 AI 列出要你做的事和截止时间，再让它帮你写回信。选哪个套餐、孩子有没有过敏，由你来定。",
+                "locales": {
+                  "en": {
+                    "title": "Reply to the class teacher's long email",
+                    "prompt": "Your child's class teacher, Ms. Wang, has sent a long email: a spring trip next Friday, with a fee to pay, a slip to sign, a lunch option to choose, and a reminder of what to bring. You need to reply.\nFirst have AI list what you need to do and by when, then have it help you write the reply. Which lunch option and whether your child has allergies are for you to decide.",
+                    "rubric": [
+                      "The request first has AI list what the email asks you to do, with deadlines (the fee, the reply slip, the lunch option, allergy notes and so on).",
+                      "Decisions such as which lunch option and whether the child has allergies were written into the request or the final reply by you, not made up by AI.",
+                      "The final reply does not promise anything you did not intend, and does not invent information that is not in the email."
+                    ]
+                  }
+                },
+                "rubric": [
+                  "请求先让 AI 列出邮件里要你做的事，并带上截止时间（交费、回执、午餐套餐、过敏说明等）。",
+                  "选哪个套餐、孩子有没有过敏这类决定，是你自己写进请求或定稿的，不是让 AI 替你编。",
+                  "定稿回信没有替你答应你没打算做的事，也没有编造邮件里没有的信息。"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html",
+                    "sourceTitle": "New Gemini summary cards now available in the Gmail app on Android and iOS devices",
+                    "sourceAuthority": "first-party",
+                    "provenance": {
+                      "type": "official-document",
+                      "publisher": "Google Workspace",
+                      "publishedOn": "2025-05-29",
+                      "accessedOn": "2026-09-30",
+                      "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                      "supports": "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。",
+                      "limitations": "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。",
+                      "locales": {
+                        "en": {
+                          "locator": "summaries will be available at the top of the email content for messages where a summary is helpful, such as longer email threads or messages with several replies",
+                          "supports": "For longer emails or threads with several replies, the Gmail app shows a Gemini summary card at the top of the email, pulling together the key points of the thread.",
+                          "limitations": "A product announcement: it shows the feature exists, not whether the summaries are accurate or complete."
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "name-the-result-v2",
+                "kind": "primm",
+                "role": "apply",
+                "difficulty": "intro",
+                "title": "一封长邮件要回，怎么让 AI 帮你？",
+                "brief": "学会先让 AI 列出要你做的事，再让它照着写回信。",
+                "goal": "回长邮件时，一件事也不漏，也不替自己乱答应。",
+                "takeaway": "先让 AI 列出要你做的事和截止时间，再让它照着写回信。发出去之前，你自己读一遍。",
+                "hint": "先让它列事，再让它写信。",
+                "source": {
+                  "label": "Google：Gmail 在长邮件上面放摘要卡片",
+                  "url": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html"
+                },
+                "locales": {
+                  "en": {
+                    "strings": {
+                      "一封长邮件要回，怎么让 AI 帮你？": "A long email to answer: how do you get AI to help?",
+                      "学会先让 AI 列出要你做的事，再让它照着写回信。": "Learn to have AI list what you need to do first, then write the reply from that list.",
+                      "回长邮件时，一件事也不漏，也不替自己乱答应。": "Answer a long email without missing a task or promising something you didn't mean to.",
+                      "先让 AI 列出要你做的事和截止时间，再让它照着写回信。发出去之前，你自己读一遍。": "First have AI list what you need to do and by when, then have it write the reply from that. Read it yourself before you send it.",
+                      "先让它列事，再让它写信。": "List the tasks first, then write the reply.",
+                      "Google：Gmail 在长邮件上面放摘要卡片": "Google: Gmail puts a summary card on top of long emails",
+                      "你负责公司年会的杂事。行政部的李经理发来一封长邮件，说了一大堆，你得回复她。": "You're handling the odd jobs for the company's year-end party. Ms. Li from the admin department has sent you a long email about all sorts of things, and you need to reply.",
+                      "邮件里夹着好几件要你做的事，每件都有截止时间。漏掉一件，就会耽误大家。": "Tucked into the email are several things you have to do, each with a deadline. Miss one and everyone is held up.",
+                      "真实用法：Gmail 的手机版会在长邮件的最上面放一张 AI 摘要卡片，把来回好几封的要点合在一起。先看清要做什么，再回信，Google 也是这样帮人读长邮件的。": "A real use: the Gmail phone app puts an AI summary card at the top of long emails, pulling together the key points from all the replies. See what needs doing first, then reply: that's how Google helps people read long emails too.",
+                      "Google 的官方更新说：长邮件、回复很多的邮件，最上面会出现 Gemini 摘要，把要点合在一起。": "Google's official update says that long emails and threads with many replies get a Gemini summary at the top that brings the key points together.",
+                      "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。": "For longer emails or threads with several replies, the Gmail app shows a Gemini summary card at the top of the email, pulling together the key points of the thread.",
+                      "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。": "A product announcement: it shows the feature exists, not whether the summaries are accurate or complete.",
+                      "2025 年 5 月": "May 2025",
+                      "微软：上班族平均每天收 117 封邮件": "Microsoft: the average worker gets 117 emails a day",
+                      "微软工作趋势报告的一份专题，根据自己产品的使用数据描述人们一天的工作节奏。": "A special report in Microsoft's Work Trend Index describing people's working day from usage data of its own products.",
+                      "平均每位员工每天收到 117 封邮件，大多数不到 60 秒就被扫过去了。": "The average worker receives 117 emails a day, most of them skimmed in under 60 seconds.",
+                      "来自微软自己产品的使用数据，只代表用微软办公软件的人。": "It comes from usage data of Microsoft's own products and only reflects people who use them.",
+                      "2025 年 6 月 17 日": "17 June 2025",
+                      "Jakesch 等：一怀疑是 AI 写的，就没那么信了": "Jakesch et al.: suspected AI writing is trusted less",
+                      "研究者让人读民宿房东的自我介绍，看大家知道其中有 AI 写的以后，还信不信这些房东。": "Researchers had people read home-sharing hosts' profiles and looked at whether they still trusted the hosts once they knew some profiles were written by AI.",
+                      "只有当读者以为自己看到的介绍里混着 AI 写的和人写的，被标为或被怀疑是 AI 写的房东，才被觉得不太可信。": "Only when participants thought they saw a mix of AI- and human-written profiles did they mistrust hosts whose profiles were labeled as or suspected to be written by AI.",
+                      "研究的是民宿房东的自我介绍，不是工作邮件。": "It studied home-sharing host profiles, not work emails.",
+                      "2019 年 5 月": "May 2019",
+                      "李经理的邮件（练习）": "Ms. Li's email (practice)",
+                      "小林你好：\n今年年会定在 12 月 20 日（周五）晚上，地点还没定。我看了两家：望京的云景酒店和国贸附近的星河会所，价格差不多。你有空去实地看一下，周四下班前告诉我哪家更合适。\n另外，各部门的参会人数要统计一下，麻烦你周三中午前汇总给我，按部门列。去年有人临时加人，最后座位不够，这次一定提前定好。\n节目方面，市场部说想出一个小品，技术部还没报。主持人我想从年轻同事里找一位，你看看谁合适，下周一前推荐一个人给我。\n预算的事我在跟财务谈，你先不用管。\n辛苦了！\n李经理": "Hi Lin,\nThis year's party is set for the evening of Friday 20 December; the venue isn't decided yet. I've looked at two places: the Cloudview Hotel in Wangjing and the Galaxy Club near Guomao, and the prices are about the same. When you have time, please go and see them, and tell me by the end of Thursday which one suits us better.\nAlso, we need a headcount from each department. Please collect it and send it to me by noon on Wednesday, listed by department. Last year people were added at the last minute and we ran out of seats, so this time let's settle it early.\nAs for the show, Marketing wants to put on a sketch, and Engineering hasn't signed up yet. For the host, I'd like one of our younger colleagues. Have a think about who would be good and suggest someone to me by next Monday.\nI'm sorting out the budget with Finance, so you don't need to worry about that.\nThanks for all your help!\nMs. Li",
+                      "班主任王老师的邮件（练习）": "Email from Ms. Wang, the class teacher (practice)",
+                      "各位家长好：\n下周五（4 月 18 日）我们去植物园春游。费用 80 元，包括门票和大巴，请在周二前通过班级群接龙交费。\n回执请家长签字，周三让孩子带回学校。\n午餐有两种套餐：A 是饭团和水果，B 是三明治和酸奶，请在回执上勾选。孩子如果有过敏，请写在回执背面。\n当天请穿校服和运动鞋，带水壶，不要带零食和贵重物品。\n谢谢配合！\n王老师": "Dear parents,\nNext Friday (18 April) we are going on a spring trip to the botanical garden. The cost is 80 yuan, covering tickets and the coach. Please pay by Tuesday by adding your name to the list in the class group chat.\nPlease sign the reply slip and have your child bring it back to school on Wednesday.\nThere are two lunch options: A is rice balls and fruit, B is a sandwich and yoghurt. Please tick one on the reply slip. If your child has any allergies, please write them on the back of the slip.\nOn the day, children should wear school uniform and trainers and bring a water bottle. No snacks or valuables, please.\nThank you!\nMs. Wang",
+                      "帮我回复这封邮件。": "Write a reply to this email for me.",
+                      "先帮我列出这封邮件里要我做的事，每件写上截止时间。": "First list the things this email asks me to do, with the deadline for each.",
+                      "帮我把这封邮件总结成一句话。": "Sum up this email in one sentence for me.",
+                      "李经理的邮件": "Ms. Li's email",
+                      "这封邮件很长，你要回复。哪种问法最能帮上你？": "This email is long and you have to reply. Which way of asking helps you most?",
+                      "记住你选的这句，马上发出去试试。": "Remember the one you chose. Now send it and see.",
+                      "把你选的那句，连同李经理的邮件一起发给 AI": "Send the request you chose to AI, together with Ms. Li's email",
+                      "你知道吗：微软 2025 年的一份报告说，上班族平均每天要收 117 封邮件，大多数不到一分钟就扫过去了。": "Did you know? A 2025 Microsoft report says the average worker receives 117 emails a day, and most are skimmed in under a minute.",
+                      "你让它直接回。看看它的回信里，有没有替你答应了你还没决定的事。": "You asked it to reply straight away. See whether its reply promises anything you haven't decided yet.",
+                      "你让它先列事情。看看每件事有没有写上截止时间。": "You asked it to list the tasks first. See whether each task has its deadline.",
+                      "你只要了一句话。看看这一句，够不够让你知道要做哪几件事。": "You asked for one sentence. See whether that one sentence tells you everything you have to do.",
+                      "在它的回答里，点出最先要办完的那一件事": "In its answer, tap the task that has to be done first",
+                      "周三": "Wednesday",
+                      "对，周三中午前就要交人数，这件先办。": "Right. The headcount is due by Wednesday noon, so that comes first.",
+                      "对。它没写哪天要办完，你分不出先后。下次在请求里加一句「每件写上截止时间」。": "Right. It didn't say when anything is due, so you can't tell what comes first. Next time, add \"with the deadline for each\" to your request.",
+                      "三句请求，各换来了什么？": "Three requests: what did each one get?",
+                      "不是这个。对照一下：请求是让它回信、列事，还是只要一句话？": "Not this one. Compare: did the request ask for a reply, a list of tasks, or just one sentence?",
+                      "多数时候是这样：直接说「回复」，它会替你把话说满；先让它列事，你才看得清要做什么；只要一句话，事情就漏了。": "Most of the time it goes like this: \"reply\" gets it promising things on your behalf; listing the tasks first lets you see what needs doing; one sentence leaves tasks out.",
+                      "回这封邮件，哪些事可以交给 AI，哪些得你自己定？它整理得快，可它不认识你的同事，也不知道你忙不忙得过来。": "Answering this email, which jobs can you hand to AI, and which must you decide yourself? It sorts things fast, but it doesn't know your colleagues or whether you have the time.",
+                      "交给 AI": "Hand to AI",
+                      "你自己定": "You decide",
+                      "把长邮件里要做的事列出来": "List the tasks in the long email",
+                      "这是整理，它做得又快又全。": "That's sorting, and it does it quickly and thoroughly.",
+                      "列清单是整理的活，它比你快。你要做的是核对它有没有漏。": "Making a list is sorting work, and it's faster than you. Your job is to check it didn't miss anything.",
+                      "决定推荐谁当主持人": "Decide who to suggest as host",
+                      "你认识同事，它不认识。": "You know your colleagues; it doesn't.",
+                      "它不认识你的同事。让它定，它只能编一个名字。": "It doesn't know your colleagues. Leave it to decide and all it can do is make up a name.",
+                      "把回信写得客气、通顺": "Make the reply polite and smooth",
+                      "改措辞是它擅长的。": "Wording is what it's good at.",
+                      "措辞交给它，又快又稳。你要看的是意思对不对。": "Hand it the wording; it's quick and reliable. What you check is whether the meaning is right.",
+                      "答应周四前看完两家场地": "Promise to see both venues by Thursday",
+                      "这是你的承诺，得你真能做到。": "That's your promise, so you have to be able to keep it.",
+                      "答应了就得做到。这几天排不排得开，只有你知道。": "A promise has to be kept. Only you know whether you can fit it in these next few days.",
+                      "把我说的三点理成一段话": "Turn my three points into one paragraph",
+                      "内容是你给的，它帮你理顺。": "You gave the content; it just tidies it up.",
+                      "内容已经是你定的了，让它理顺就好。": "You've already decided the content, so let it tidy it up.",
+                      "回信要不要抄送给你的领导": "Whether to copy your manager on the reply",
+                      "这关系到公司里的规矩和人情，它不知道。": "That depends on your company's customs and relationships, which it doesn't know.",
+                      "抄送给谁，牵涉到你们公司的规矩，它不知道。": "Who to copy depends on how things work at your company, and it doesn't know that.",
+                      "整理、改措辞，交给它；答应什么、推荐谁，得你定。回信里每一句答应，都是你在答应。": "Sorting and wording go to AI; what to promise and who to suggest are yours. Every promise in the reply is you promising.",
+                      "拼一句请求，让它照邮件里的事写回信": "Build a request that has it write the reply from the tasks in the email",
+                      "它能帮你列事、写信；答应什么、推荐谁，由你来定。": "It can list the tasks and write the letter; what to promise and who to suggest are yours to decide.",
+                      "照邮件里要我做的三件事，": "Following the three things the email asks me to do,",
+                      "帮我写一封回信：": "write a reply for me:",
+                      "人数周三中午前给她，场地周四给答复；": "headcount to her by Wednesday noon, an answer on the venue by Thursday;",
+                      "主持人我想推荐小周，先问问李经理的意见；": "for host I'd like to suggest Zoe, and ask what Ms. Li thinks;",
+                      "客气、简短。": "polite and short.",
+                      "主持人你帮我挑一个，": "pick a host for me,",
+                      "它不认识你的同事，只能编一个。": "It doesn't know your colleagues, so it can only make one up.",
+                      "写得越长越显得认真，": "the longer the more serious it looks,",
+                      "李经理要的是答复，不是篇幅。": "Ms. Li wants answers, not length.",
+                      "还差一点：先说照邮件里的事写回信，再写上你做的两个决定，最后说要什么口气。": "Almost: say to write the reply from the tasks in the email, add the two decisions you made, then say what tone you want.",
+                      "事情照邮件里的来，决定是你做的。": "The tasks come from the email; the decisions are yours.",
+                      "发出去看看": "Send it and see",
+                      "发出去之前读一遍：有没有哪句话，是你没说过、它自己加的？有就删掉。": "Read it before sending: is there anything you never said that it added on its own? If so, delete it.",
+                      "换一件事：回复孩子班主任的长邮件。你来写请求": "Something new: reply to a long email from your child's class teacher. You write the request",
+                      "你定稿的回信里，有没有替你答应了你没打算做的事？": "Does your final reply promise anything you didn't intend to do?",
+                      "没有，每句都是我定的": "No, I decided every line",
+                      "好。回信里每一句答应，都是你在答应。": "Good. Every promise in the reply is you promising.",
+                      "有一句我没说过，已经删了": "There was a line I never said, and I deleted it",
+                      "对。这正是发之前要读一遍的原因。": "Right. That's exactly why you read it before sending.",
+                      "没细看": "I didn't look closely",
+                      "再读一遍再发。它写得快，也容易替你把话说满。": "Read it again before sending. It writes fast, and it's quick to promise things for you.",
+                      "回复班主任的长邮件": "Reply to the class teacher's long email",
+                      "孩子的班主任王老师发来一封长邮件：下周五春游，要交费、签回执、选午餐套餐，还提醒了带什么。你得回复她。": "Your child's class teacher, Ms. Wang, has sent a long email: a spring trip next Friday, with a fee to pay, a slip to sign, a lunch option to choose, and a reminder of what to bring. You need to reply.",
+                      "先让 AI 列出要你做的事和截止时间，再让它帮你写回信。选哪个套餐、孩子有没有过敏，由你来定。": "First have AI list what you need to do and by when, then have it help you write the reply. Which lunch option and whether your child has allergies are for you to decide.",
+                      "先让它做什么？哪些事由你来定？": "What should it do first? What will you decide yourself?",
+                      "先让它列出要你做的事，每件带上截止时间。": "First have it list what you need to do, each with its deadline.",
+                      "套餐、过敏这些决定，是你自己写进请求的。": "Decisions like the lunch option and allergies are ones you wrote into the request yourself.",
+                      "发之前读一遍，删掉它替你加的话。": "Read it before sending and delete anything it added for you.",
+                      "回给王老师的邮件": "Reply to Ms. Wang",
+                      "学会了！": "You've got it!",
+                      "它整理、它写；答应什么，你来定。": "It sorts and it writes; what to promise is up to you.",
+                      "你知道吗：2019 年，斯坦福大学等地的研究者做过一组实验，让人读民宿房东的自我介绍。当大家以为这些介绍里混着 AI 写的，那些被当成或被怀疑是 AI 写的，房东就显得没那么可信。所以 AI 写完，改成你自己的话再发。": "Did you know? In 2019, researchers at Stanford and elsewhere had people read home-sharing hosts' profiles. When readers believed some profiles were written by AI, the hosts whose profiles seemed AI-written came across as less trustworthy. So when AI has written something, put it in your own words before you send it.",
+                      "下次收到长邮件，先让 AI 列出要你做的事和截止时间。": "Next time a long email arrives, first have AI list what you need to do and by when."
+                    }
+                  }
+                },
+                "method": "PRIMM",
+                "experienceVersion": 3,
+                "intro": {
+                  "situation": "你负责公司年会的杂事。行政部的李经理发来一封长邮件，说了一大堆，你得回复她。",
+                  "need": "邮件里夹着好几件要你做的事，每件都有截止时间。漏掉一件，就会耽误大家。",
+                  "connection": "真实用法：Gmail 的手机版会在长邮件的最上面放一张 AI 摘要卡片，把来回好几封的要点合在一起。先看清要做什么，再回信，Google 也是这样帮人读长邮件的。",
+                  "sourceIds": [
+                    "lib-f3aa3bb7"
+                  ]
+                },
+                "sources": [
+                  {
+                    "id": "lib-f3aa3bb7",
+                    "reference": {
+                      "label": "Google：Gmail 在长邮件上面放摘要卡片",
+                      "url": "https://workspaceupdates.googleblog.com/2025/05/gemini-summary-cards-gmail-app.html"
+                    },
+                    "note": "Google 的官方更新说：长邮件、回复很多的邮件，最上面会出现 Gemini 摘要，把要点合在一起。",
+                    "summary": "对长邮件或多次回复的邮件，Gmail 手机版会在邮件内容顶部显示 Gemini 摘要卡片，汇总整串邮件的要点。",
+                    "limitation": "这是产品公告，只说明有这个功能；摘要是否准确、有没有漏掉什么，公告没说。",
+                    "date": "2025 年 5 月"
+                  },
+                  {
+                    "id": "lib-02f59f72",
+                    "reference": {
+                      "label": "微软：上班族平均每天收 117 封邮件",
+                      "url": "https://www.microsoft.com/en-us/worklab/work-trend-index/breaking-down-infinite-workday"
+                    },
+                    "note": "微软工作趋势报告的一份专题，根据自己产品的使用数据描述人们一天的工作节奏。",
+                    "summary": "平均每位员工每天收到 117 封邮件，大多数不到 60 秒就被扫过去了。",
+                    "limitation": "来自微软自己产品的使用数据，只代表用微软办公软件的人。",
+                    "date": "2025 年 6 月 17 日"
+                  },
+                  {
+                    "id": "lib-4fdd1482",
+                    "reference": {
+                      "label": "Jakesch 等：一怀疑是 AI 写的，就没那么信了",
+                      "url": "https://sml.stanford.edu/publications/hancock-jt/ai-mediated-communication-how-perception-profile-text-was-written-ai"
+                    },
+                    "note": "研究者让人读民宿房东的自我介绍，看大家知道其中有 AI 写的以后，还信不信这些房东。",
+                    "summary": "只有当读者以为自己看到的介绍里混着 AI 写的和人写的，被标为或被怀疑是 AI 写的房东，才被觉得不太可信。",
+                    "limitation": "研究的是民宿房东的自我介绍，不是工作邮件。",
+                    "date": "2019 年 5 月"
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "ms-li-email",
+                    "label": "李经理的邮件（练习）",
+                    "kind": "practice",
+                    "text": "小林你好：\n今年年会定在 12 月 20 日（周五）晚上，地点还没定。我看了两家：望京的云景酒店和国贸附近的星河会所，价格差不多。你有空去实地看一下，周四下班前告诉我哪家更合适。\n另外，各部门的参会人数要统计一下，麻烦你周三中午前汇总给我，按部门列。去年有人临时加人，最后座位不够，这次一定提前定好。\n节目方面，市场部说想出一个小品，技术部还没报。主持人我想从年轻同事里找一位，你看看谁合适，下周一前推荐一个人给我。\n预算的事我在跟财务谈，你先不用管。\n辛苦了！\n李经理"
+                  },
+                  {
+                    "id": "ms-wang-email",
+                    "label": "班主任王老师的邮件（练习）",
+                    "kind": "practice",
+                    "text": "各位家长好：\n下周五（4 月 18 日）我们去植物园春游。费用 80 元，包括门票和大巴，请在周二前通过班级群接龙交费。\n回执请家长签字，周三让孩子带回学校。\n午餐有两种套餐：A 是饭团和水果，B 是三明治和酸奶，请在回执上勾选。孩子如果有过敏，请写在回执背面。\n当天请穿校服和运动鞋，带水壶，不要带零食和贵重物品。\n谢谢配合！\n王老师"
+                  }
+                ],
+                "starter": {
+                  "prompt": "帮我回复这封邮件。",
+                  "materialIds": [
+                    "ms-li-email"
+                  ],
+                  "assetIds": [],
+                  "operation": "text"
+                },
+                "requests": [
+                  {
+                    "id": "ask-list",
+                    "prompt": "先帮我列出这封邮件里要我做的事，每件写上截止时间。"
+                  },
+                  {
+                    "id": "ask-one-line",
+                    "prompt": "帮我把这封邮件总结成一句话。"
+                  }
+                ],
+                "steps": [
+                  {
+                    "kind": "choose",
+                    "id": "guess-how",
+                    "phase": "predict",
+                    "title": "这封邮件很长，你要回复。哪种问法最能帮上你？",
+                    "options": [
+                      {
+                        "id": "reply",
+                        "label": "帮我回复这封邮件。",
+                        "requestId": "starter"
+                      },
+                      {
+                        "id": "list",
+                        "label": "先帮我列出这封邮件里要我做的事，每件写上截止时间。",
+                        "requestId": "ask-list"
+                      },
+                      {
+                        "id": "one-line",
+                        "label": "帮我把这封邮件总结成一句话。",
+                        "requestId": "ask-one-line"
+                      }
+                    ],
+                    "after": "记住你选的这句，马上发出去试试。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-choice",
+                    "phase": "run",
+                    "title": "把你选的那句，连同李经理的邮件一起发给 AI",
+                    "request": "chosen",
+                    "attachmentLabel": "李经理的邮件",
+                    "wait": {
+                      "text": "你知道吗：微软 2025 年的一份报告说，上班族平均每天要收 117 封邮件，大多数不到一分钟就扫过去了。",
+                      "sourceId": "lib-02f59f72"
+                    },
+                    "debriefs": [
+                      {
+                        "requestId": "starter",
+                        "text": "你让它直接回。看看它的回信里，有没有替你答应了你还没决定的事。"
+                      },
+                      {
+                        "requestId": "ask-list",
+                        "text": "你让它先列事情。看看每件事有没有写上截止时间。"
+                      },
+                      {
+                        "requestId": "ask-one-line",
+                        "text": "你只要了一句话。看看这一句，够不够让你知道要做哪几件事。"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "find",
+                    "id": "find-first-task",
+                    "phase": "investigate",
+                    "title": "在它的回答里，点出最先要办完的那一件事",
+                    "terms": [
+                      "周三"
+                    ],
+                    "found": "对，周三中午前就要交人数，这件先办。",
+                    "absent": "对。它没写哪天要办完，你分不出先后。下次在请求里加一句「每件写上截止时间」。"
+                  },
+                  {
+                    "kind": "match",
+                    "id": "match-asks",
+                    "phase": "investigate",
+                    "title": "三句请求，各换来了什么？",
+                    "requestIds": [
+                      "starter",
+                      "ask-list",
+                      "ask-one-line"
+                    ],
+                    "miss": "不是这个。对照一下：请求是让它回信、列事，还是只要一句话？",
+                    "after": "多数时候是这样：直接说「回复」，它会替你把话说满；先让它列事，你才看得清要做什么；只要一句话，事情就漏了。"
+                  },
+                  {
+                    "kind": "sort",
+                    "id": "who-decides",
+                    "phase": "investigate",
+                    "title": "回这封邮件，哪些事可以交给 AI，哪些得你自己定？它整理得快，可它不认识你的同事，也不知道你忙不忙得过来。",
+                    "buckets": [
+                      {
+                        "id": "ai",
+                        "label": "交给 AI"
+                      },
+                      {
+                        "id": "you",
+                        "label": "你自己定"
+                      }
+                    ],
+                    "cards": [
+                      {
+                        "id": "list-tasks",
+                        "text": "把长邮件里要做的事列出来",
+                        "bucketId": "ai",
+                        "why": "这是整理，它做得又快又全。",
+                        "miss": "列清单是整理的活，它比你快。你要做的是核对它有没有漏。"
+                      },
+                      {
+                        "id": "pick-host",
+                        "text": "决定推荐谁当主持人",
+                        "bucketId": "you",
+                        "why": "你认识同事，它不认识。",
+                        "miss": "它不认识你的同事。让它定，它只能编一个名字。"
+                      },
+                      {
+                        "id": "polish",
+                        "text": "把回信写得客气、通顺",
+                        "bucketId": "ai",
+                        "why": "改措辞是它擅长的。",
+                        "miss": "措辞交给它，又快又稳。你要看的是意思对不对。"
+                      },
+                      {
+                        "id": "promise-venues",
+                        "text": "答应周四前看完两家场地",
+                        "bucketId": "you",
+                        "why": "这是你的承诺，得你真能做到。",
+                        "miss": "答应了就得做到。这几天排不排得开，只有你知道。"
+                      },
+                      {
+                        "id": "tidy-points",
+                        "text": "把我说的三点理成一段话",
+                        "bucketId": "ai",
+                        "why": "内容是你给的，它帮你理顺。",
+                        "miss": "内容已经是你定的了，让它理顺就好。"
+                      },
+                      {
+                        "id": "copy-boss",
+                        "text": "回信要不要抄送给你的领导",
+                        "bucketId": "you",
+                        "why": "这关系到公司里的规矩和人情，它不知道。",
+                        "miss": "抄送给谁，牵涉到你们公司的规矩，它不知道。"
+                      }
+                    ],
+                    "after": "整理、改措辞，交给它；答应什么、推荐谁，得你定。回信里每一句答应，都是你在答应。"
+                  },
+                  {
+                    "kind": "build",
+                    "id": "build-ask",
+                    "phase": "modify",
+                    "title": "拼一句请求，让它照邮件里的事写回信",
+                    "context": "它能帮你列事、写信；答应什么、推荐谁，由你来定。",
+                    "pieces": [
+                      {
+                        "id": "from",
+                        "text": "照邮件里要我做的三件事，"
+                      },
+                      {
+                        "id": "write",
+                        "text": "帮我写一封回信："
+                      },
+                      {
+                        "id": "dates",
+                        "text": "人数周三中午前给她，场地周四给答复；"
+                      },
+                      {
+                        "id": "host",
+                        "text": "主持人我想推荐小周，先问问李经理的意见；"
+                      },
+                      {
+                        "id": "tone",
+                        "text": "客气、简短。"
+                      },
+                      {
+                        "id": "pick",
+                        "text": "主持人你帮我挑一个，",
+                        "why": "它不认识你的同事，只能编一个。"
+                      },
+                      {
+                        "id": "long",
+                        "text": "写得越长越显得认真，",
+                        "why": "李经理要的是答复，不是篇幅。"
+                      }
+                    ],
+                    "answers": [
+                      [
+                        "from",
+                        "write",
+                        "dates",
+                        "host",
+                        "tone"
+                      ],
+                      [
+                        "from",
+                        "write",
+                        "host",
+                        "dates",
+                        "tone"
+                      ]
+                    ],
+                    "hint": "还差一点：先说照邮件里的事写回信，再写上你做的两个决定，最后说要什么口气。",
+                    "after": "事情照邮件里的来，决定是你做的。"
+                  },
+                  {
+                    "kind": "send",
+                    "id": "send-built",
+                    "phase": "modify",
+                    "title": "发出去看看",
+                    "request": "built",
+                    "attachmentLabel": "李经理的邮件",
+                    "after": "发出去之前读一遍：有没有哪句话，是你没说过、它自己加的？有就删掉。"
+                  },
+                  {
+                    "kind": "make",
+                    "id": "make-own",
+                    "phase": "make",
+                    "title": "换一件事：回复孩子班主任的长邮件。你来写请求"
+                  },
+                  {
+                    "kind": "choose",
+                    "id": "self-check",
+                    "phase": "make",
+                    "title": "你定稿的回信里，有没有替你答应了你没打算做的事？",
+                    "options": [
+                      {
+                        "id": "all-mine",
+                        "label": "没有，每句都是我定的",
+                        "after": "好。回信里每一句答应，都是你在答应。"
+                      },
+                      {
+                        "id": "deleted-one",
+                        "label": "有一句我没说过，已经删了",
+                        "after": "对。这正是发之前要读一遍的原因。"
+                      },
+                      {
+                        "id": "not-checked",
+                        "label": "没细看",
+                        "after": "再读一遍再发。它写得快，也容易替你把话说满。"
+                      }
+                    ]
+                  }
+                ],
+                "make": {
+                  "title": "回复班主任的长邮件",
+                  "scenario": "孩子的班主任王老师发来一封长邮件：下周五春游，要交费、签回执、选午餐套餐，还提醒了带什么。你得回复她。",
+                  "goal": "先让 AI 列出要你做的事和截止时间，再让它帮你写回信。选哪个套餐、孩子有没有过敏，由你来定。",
+                  "materialIds": [
+                    "ms-wang-email"
+                  ],
+                  "assetIds": [],
+                  "operation": "text",
+                  "promptPlaceholder": "先让它做什么？哪些事由你来定？",
+                  "checklist": [
+                    "先让它列出要你做的事，每件带上截止时间。",
+                    "套餐、过敏这些决定，是你自己写进请求的。",
+                    "发之前读一遍，删掉它替你加的话。"
+                  ],
+                  "exerciseId": "name-the-result-exercise",
+                  "artifactLabel": "回给王老师的邮件"
+                },
+                "finish": {
+                  "title": "学会了！",
+                  "note": "它整理、它写；答应什么，你来定。",
+                  "didYouKnow": {
+                    "text": "你知道吗：2019 年，斯坦福大学等地的研究者做过一组实验，让人读民宿房东的自我介绍。当大家以为这些介绍里混着 AI 写的，那些被当成或被怀疑是 AI 写的，房东就显得没那么可信。所以 AI 写完，改成你自己的话再发。",
+                    "sourceId": "lib-4fdd1482"
+                  },
+                  "today": "下次收到长邮件，先让 AI 列出要你做的事和截止时间。"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -110,7 +110,8 @@ function requireActiveCourse(
   studyId: string,
   courseId: string,
 ): CourseManifest {
-  readStudy(studiesRoot, studyId);
+  if (readStudy(studiesRoot, studyId).status !== "active")
+    throw new HttpError(410, "Study has been retired; learner history is preserved");
   if (!existsSync(getCoursePaths(studiesRoot, studyId, courseId).manifest)) {
     throw new HttpError(404, "Course does not exist in this study");
   }

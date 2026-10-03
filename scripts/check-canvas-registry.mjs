@@ -21,7 +21,12 @@ const IGNORED_DIRECTORIES = new Set([".git", "dist", "node_modules"]);
 // for a learner to read. Their `<Canvas>` mounts are not ours to register, and
 // they only exist on a machine that has actually registered a study — so a gate
 // that walked into them would pass in CI and fail on the author's laptop.
-const IGNORED_PATHS = new Set([join(ROOT, "apps", "local", "studies")]);
+const IGNORED_PATHS = new Set([
+  join(ROOT, "apps", "local", "studies"),
+  // Retirement preserves those same external checkouts outside the runtime shelf.
+  // No product source imports this archive.
+  join(ROOT, "apps", "local", "course-proposals", "retired"),
+]);
 
 const CANVAS_MOUNTS = [
   {

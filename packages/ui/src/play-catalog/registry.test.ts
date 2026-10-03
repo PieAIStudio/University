@@ -7,7 +7,11 @@ describe("the play lab's one inventory", () => {
   it("offers the lesson actions, the sample lessons and the island games, each named in both locales", () => {
     const entries = createCatalog();
     expect(entries.filter((entry) => entry.group === "native")).toHaveLength(13);
-    expect(entries.filter((entry) => entry.group === "paths")).toHaveLength(6);
+    expect(entries.filter((entry) => entry.group === "paths").map((entry) => entry.id)).toEqual([
+      "path:ask-about-a-picture",
+      "path:sound-words-and-meaning",
+      "path:name-the-result",
+    ]);
     expect(entries.filter((entry) => entry.group === "three").map((entry) => entry.id)).toEqual([
       "three:courtyard",
       "three:links",
@@ -17,8 +21,8 @@ describe("the play lab's one inventory", () => {
       "three:blocks",
     ]);
     expect(new Set(entries.map((entry) => entry.id)).size).toBe(entries.length);
-    expect(entries.find((entry) => entry.id === "path:follow-a-claim")?.href).toContain(
-      "check-what-matters/follow-a-claim",
+    expect(entries.find((entry) => entry.id === "path:name-the-result")?.href).toContain(
+      "first-useful-step/name-the-result",
     );
     for (const entry of entries)
       for (const key of [entry.name, entry.action, entry.controls]) {

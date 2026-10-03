@@ -4,14 +4,7 @@
   "publishedAt": "0.3.0",
   "studies": {
     "ai-literacy": [
-      "understanding-ai",
-      "ai-for-real-life"
-    ],
-    "browser-ai": [
-      "make-the-cutout-app-yours",
-      "run-a-real-project-with-ai",
-      "search-your-own-photos",
-      "when-a-project-is-too-big-to-read"
+      "understanding-ai"
     ]
   }
 }

@@ -167,6 +167,20 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       };
     }
   }
+  if (
+    positionals.length === 2 &&
+    positionals[0] === "study" &&
+    positionals[1] === "retire-content"
+  ) {
+    rejectUnrelatedOptions(values, ["study", "input", "out", "dry-run"]);
+    return {
+      kind: "study-retire-content",
+      studyId: required(values.study, "study"),
+      inputPath: required(values.input, "input"),
+      outDirectory: required(values.out, "out"),
+      dryRun: values["dry-run"] ?? false,
+    };
+  }
   if (positionals.length === 3 && positionals[0] === "course" && positionals[1] === "recovery") {
     if (positionals[2] === "export") {
       rejectUnrelatedOptions(values, ["study", "out"]);
@@ -374,9 +388,10 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
     };
   }
   if (positionals.length === 2 && positionals[0] === "study" && positionals[1] === "describe") {
-    rejectUnrelatedOptions(values, ["study", "description"]);
+    rejectUnrelatedOptions(values, ["study", "description", "locales-file"]);
     return {
       kind: "study-describe",
+      ...(values["locales-file"] ? { localesPath: values["locales-file"] } : {}),
       studyId: required(values.study, "study"),
       description: required(values.description, "description"),
     };

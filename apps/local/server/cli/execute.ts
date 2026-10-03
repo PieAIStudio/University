@@ -22,6 +22,7 @@ import {
 import { addCourseLessons } from "../workflows/add-lessons.js";
 import { clearAuthoringFocus, setAuthoringFocus, showAuthoringFocus } from "../workflows/focus.js";
 import { createCourse } from "../workflows/create-course.js";
+import { retireStudyContent } from "../workflows/retire-content.js";
 import {
   openCourseForEdit,
   reactivateCourse,
@@ -84,6 +85,17 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
   if (input.command.kind === "help") return { help: HELP };
   const config = loadUniversityLocalConfig({ projectRoot: input.projectRoot, env: input.env });
   switch (input.command.kind) {
+    case "study-retire-content":
+      return retireStudyContent({
+        studiesRoot: config.studiesRoot,
+        studyId: input.command.studyId,
+        proposal: readProposal(
+          resolve(input.cwd ?? process.cwd(), input.command.inputPath),
+          "Retirement",
+        ),
+        outDirectory: resolve(input.cwd ?? process.cwd(), input.command.outDirectory),
+        dryRun: input.command.dryRun,
+      });
     case "status":
       return getHostStudyStatus({
         studiesRoot: config.studiesRoot,
@@ -454,6 +466,15 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
           config.studiesRoot,
           input.command.studyId,
           input.command.description,
+          new Date(),
+          input.command.localesPath
+            ? LocaleMap(LocalizedStudySchema).parse(
+                readProposal(
+                  resolve(input.cwd ?? process.cwd(), input.command.localesPath),
+                  "Study locales",
+                ),
+              )
+            : undefined,
         ),
       };
     case "study-create":

@@ -37,8 +37,8 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-03
 
-**11 → 12 → 13 → 14 → 16 → 17.** Task 11 has been pushed; start task 12 now,
-not after the refactor. The writing pipeline is the beta bottleneck and the Owner
+**11 → 12 → 13 → 18 → 14 → 16 → 17.** Tasks 11 and 12 have been pushed; task 12 awaits Owner reading.
+Complete task 13, then run task 18 before 14. The writing pipeline is the beta bottleneck and the Owner
 needs its fourth lesson early. This replaces the prior after-17 instruction.
 Tasks 06, 09 and 15 remain Owner-held and are skipped until their stated authority
 or factual prerequisites are supplied; candidate-package availability does not
@@ -48,7 +48,13 @@ When task 12 has passed its gates and produced the unpublished fourth lesson,
 commit/push its pipeline changes, leave it active as **awaiting Owner reading**,
 provide `pnpm primm:preview` with full-length real answers, and proceed to 13.
 Return to 12 through review → fix when feedback arrives. Task 13 must preserve
-that unpublished fourth lesson; task 14 moves pipeline writes through the same
+that unpublished fourth lesson. Owner added
+[18: required facts must survive grading](../../plans/active/18-grading-must-catch-dropped-facts.md)
+on 2026-10-03 under the freeze exception for a feature that did not actually work:
+**after 13, before 14**, using the preserved real false-pass answer for a stable
+regression, repairing preview and delivery enforcement, and re-evaluating the
+fourth lesson's samples. Its typo waits for Owner feedback in task 12.
+Task 14 moves pipeline writes through the same
 content-root configuration. Task 16's A stage is local-only and goes to Claude;
 task 17 stops after R0 for Claude review and retains pipeline tests plus a native
 dry-run at every stage. Each task pack owns its detailed acceptance boundary.

@@ -36,6 +36,7 @@ import { swimmerBackendClient } from "../account/identity";
 import { createSupabaseProgressRemoteStore } from "../account/progress-remote";
 import { withProductAnalyticsProgress } from "../analytics/productAnalytics";
 import { withRankPromotion } from "./rank-promotion.js";
+import { isReviewCardAvailable } from "./content-availability.js";
 
 export { lessonKey };
 
@@ -46,7 +47,9 @@ export { lessonKey };
  * screen, so a `trackEvent` beside either one would count half the saves.
  * Wrapping the port once is the only place that sees all of them.
  */
-const learning = withRankPromotion(withProductAnalyticsProgress(createBrowserProgressPort()));
+const learning = withRankPromotion(
+  withProductAnalyticsProgress(createBrowserProgressPort({ isReviewCardAvailable })),
+);
 export const progressPort: ProgressPort = learning.progress;
 export const rankPromotions = learning.promotions;
 export const progressRemoteStore: ProgressRemoteStore | null = swimmerBackendClient

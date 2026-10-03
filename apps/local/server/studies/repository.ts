@@ -101,14 +101,16 @@ export function setStudyDescription(
   studyId: string,
   description: string,
   now = new Date(),
+  locales?: StudyManifest["locales"],
 ): StudyManifest {
   const text = description.trim();
   if (!text) throw new Error("Study description must not be empty");
   const study = readStudy(studiesRoot, studyId);
-  if (study.description === text) return study;
+  if (study.description === text && locales === undefined) return study;
   const updated = StudyManifestSchema.parse({
     ...study,
     description: text,
+    ...(locales === undefined ? {} : { locales }),
     updatedAt: now.toISOString(),
   });
   writeJsonAtomically(getStudyPaths(studiesRoot, studyId).manifest, updated);

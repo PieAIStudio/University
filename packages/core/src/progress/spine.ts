@@ -92,6 +92,7 @@ const STUDY_SPINES: Readonly<Record<string, readonly string[]>> = {
 
   // 31 门：foundations 九连 + 深度 9（9门初稿）+ 深度 10（6门）+ 深度 11（3门）+ 深度 12–13 + 收尾实践（2门）
   "turing-pact": [
+    // Retired study; retained solely for historical ordering, never offered by the active shelf.
     // --- Foundations 九连（深度 0–8，单线地基）---
     // 深度 0：在开始之前：App、代码、和你
     "foundations-before-zero",

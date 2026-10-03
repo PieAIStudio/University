@@ -32,9 +32,10 @@ Commands:
   snapshot open --study <study-id> [--snapshot <snapshot-id>]
   snapshot close --study <study-id> [--snapshot <snapshot-id>]
   study create --study <study-id> --title <text> [--source <absolute-path>] [--ref <git-ref>] [--locales-file <path>]
-  study describe --study <study-id> --description <text>
+  study describe --study <study-id> --description <text> [--locales-file <path>]
   study source rebind --study <study-id> --source <absolute-path> [--ref <git-ref>]
   study archive --study <study-id>
+  study retire-content --study <study-id> --input <proposal.json> --out <archive-directory> [--dry-run]
   study unarchive --study <study-id>
   airlock promote --airlock <absolute-path> --upstream <absolute-path> [--ref <git-ref>] [--acknowledge-dirty-excluded]
   airlock doctor --airlock <absolute-path> [--study <study-id>]
@@ -220,6 +221,7 @@ interface StudyStatusCommand {
 }
 
 interface StudyDescribeCommand {
+  readonly localesPath?: string;
   readonly kind: "study-describe";
   readonly studyId: string;
   readonly description: string;
@@ -297,6 +299,13 @@ interface HelpCommand {
 }
 
 export type UniversityLocalCliCommand =
+  | {
+      readonly kind: "study-retire-content";
+      readonly studyId: string;
+      readonly inputPath: string;
+      readonly outDirectory: string;
+      readonly dryRun: boolean;
+    }
   | StatusCommand
   | CaptureCommand
   | KnowledgeListCommand

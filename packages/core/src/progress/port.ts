@@ -51,7 +51,10 @@ import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
 import { exerciseGradeOutcome } from "../ports/grading.js";
 
-export function createProgressPort(options: { readonly persistence: Persistence }): ProgressPort {
+export function createProgressPort(options: {
+  readonly persistence: Persistence;
+  readonly isReviewCardAvailable?: (card: CardProgress) => boolean;
+}): ProgressPort {
   const { persistence } = options;
   const cache = createAccountCache(persistence);
   let state = cache.load(null);
@@ -319,7 +322,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
 
   function dueCards(asOf = Date.now()) {
     return Object.values(state.cards)
-      .filter((card) => card.dueAt <= asOf)
+      .filter((card) => card.dueAt <= asOf && (options.isReviewCardAvailable?.(card) ?? true))
       .sort((a, b) => a.dueAt - b.dueAt);
   }
 
@@ -328,8 +331,10 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     const endDate = new Date(start);
     endDate.setDate(endDate.getDate() + 1);
     const end = endDate.getTime();
-    return Object.values(state.cards).filter((card) => card.dueAt >= start && card.dueAt < end)
-      .length;
+    return Object.values(state.cards).filter(
+      (card) =>
+        card.dueAt >= start && card.dueAt < end && (options.isReviewCardAvailable?.(card) ?? true),
+    ).length;
   }
 
   /**

@@ -71,6 +71,11 @@ export function useFirstMeeting({
     );
   };
 
+  useEffect(() => {
+    const only = paths.length === 1 ? paths[0] : undefined;
+    if (welcome.visible && only) choose(only, false);
+  }, [welcome.visible, paths]);
+
   /** The scene has framed the first stone on this attempt; the guide may point at it. */
   const introductionReady = (lessonId: string) => {
     setFirstMeeting((current) =>
@@ -85,7 +90,7 @@ export function useFirstMeeting({
   };
 
   const invitation: WelcomeInvitation | null =
-    welcome.visible && paths.length > 0
+    welcome.visible && paths.length > 1
       ? {
           choices: paths,
           onChoose: choose,

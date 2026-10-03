@@ -20,7 +20,7 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
-const studyId = args.find((value) => !value.startsWith("--")) ?? "turing-pact";
+const studyId = args.find((value) => !value.startsWith("--")) ?? "ai-literacy";
 const limitFlag = args.indexOf("--limit");
 const limit = limitFlag === -1 ? 40 : Number(args[limitFlag + 1] ?? 40);
 

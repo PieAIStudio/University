@@ -23,6 +23,8 @@ import { readSharesPresence } from "./shares-presence.js";
 
 const FIXTURE_ADA = { userId: "fixture-ada", displayName: "Ada" };
 const FIXTURE_LIN = { userId: "fixture-lin", displayName: "Lin" };
+// Retired-course identity retained only by this isolated development fixture.
+// It never supplies a learner catalogue entry or a production destination.
 const FIXTURE_LESSON = {
   studyId: "turing-pact",
   courseId: "foundations-before-zero",
@@ -58,8 +60,8 @@ export function createBrowserPresencePort(self?: PresenceSelf): PresencePort {
       seeAs: { [me.userId]: "group" },
     });
     lin.publishLocation({
-      studyId: "turing-pact",
-      courseId: "foundations-before-zero",
+      studyId: FIXTURE_LESSON.studyId,
+      courseId: FIXTURE_LESSON.courseId,
       lessonId: null,
     });
   }

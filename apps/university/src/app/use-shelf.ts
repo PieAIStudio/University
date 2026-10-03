@@ -6,6 +6,7 @@ import type { ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 
 import { contentPort } from "../ports/index";
+import { registerReviewShelf } from "../progress/content-availability.js";
 
 export function useShelf() {
   /*
@@ -47,7 +48,10 @@ export function useShelf() {
     void contentPort
       .shelf()
       .then((next) => {
-        if (alive) setShelf(next);
+        if (alive) {
+          registerReviewShelf(next.studies);
+          setShelf(next);
+        }
       })
       .catch(reportError);
     return () => {

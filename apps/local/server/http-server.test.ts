@@ -26,7 +26,12 @@ import { writeKnowledgeNoteRevision } from "./knowledge/repository.js";
 import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { cardContentKey, knowledgeCardContentKey, lessonContentKey } from "./learning/types.js";
 import { getStudyPaths } from "./studies/paths.js";
-import { createStudy, registerLocalGitSource, setDefaultCourse } from "./studies/repository.js";
+import {
+  createStudy,
+  registerLocalGitSource,
+  setDefaultCourse,
+  setStudyStatus,
+} from "./studies/repository.js";
 import { setAuthoringFocus } from "./workflows/focus.js";
 import { createCleanSnapshot } from "./studies/snapshots.js";
 
@@ -460,6 +465,16 @@ describe("UniversityLocal loopback API", () => {
     const post = await fetch(`${base}/api/health`, { method: "POST" });
     expect(foreignStatus).toBe(403);
     expect(post.status).toBe(405);
+  });
+
+  it("blocks direct reads from an archived study while preserving its lesson", async () => {
+    const fixture = makeLearningProject();
+    const { base } = await start(fixture.projectRoot);
+    expect((await fetch(`${base}${fixture.lessonPath}`)).status).toBe(200);
+    setStudyStatus(fixture.studiesRoot, "sample", "archived");
+    expect((await fetch(`${base}${fixture.lessonPath}`)).status).toBe(410);
+    setStudyStatus(fixture.studiesRoot, "sample", "active");
+    expect((await fetch(`${base}${fixture.lessonPath}`)).status).toBe(200);
   });
 
   it("never sends answers in GET views and protects answer-revealing mutations", async () => {

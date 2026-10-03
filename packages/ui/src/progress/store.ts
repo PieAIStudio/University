@@ -25,8 +25,10 @@ import { createBrowserPersistence } from "./browser-persistence.js";
 
 export { createBrowserPersistence } from "./browser-persistence.js";
 
-export function createBrowserProgressPort(): ProgressPort {
-  const port = createProgressPort({ persistence: createBrowserPersistence() });
+export function createBrowserProgressPort(
+  options: Pick<Parameters<typeof createProgressPort>[0], "isReviewCardAvailable"> = {},
+): ProgressPort {
+  const port = createProgressPort({ persistence: createBrowserPersistence(), ...options });
   const current = port.accountData();
   const legacyFavourites = readLocalFavourites();
   if (current.favourites.items.length === 0 && legacyFavourites.items.length > 0) {

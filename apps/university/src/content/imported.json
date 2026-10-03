@@ -1,5 +1,5 @@
 {
-  "importedAt": "2026-10-01",
+  "importedAt": "2026-10-03",
   "evidenceMode": "auto",
   "studies": [
     {
@@ -21,67 +21,10 @@
             }
           },
           "isBeingRewritten": false,
-          "sha256": "sha256:17963d2cac2b2c9e8f559e7e4e919c7b577d105739754346a202f5b573d9fd41",
-          "packageBytes": 1915270,
-          "servedBytes": 1054793,
-          "lessons": 36
-        },
-        {
-          "courseId": "ai-for-real-life",
-          "title": "用 AI，把日常事情做好",
-          "locales": {
-            "en": {
-              "title": "AI for Real Life"
-            }
-          },
-          "isBeingRewritten": false,
-          "sha256": "sha256:802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e",
-          "packageBytes": 3684589,
-          "servedBytes": 770369,
-          "lessons": 30
-        }
-      ]
-    },
-    {
-      "studyId": "browser-ai",
-      "title": "学会用 AI 做应用",
-      "defaultCourseId": null,
-      "courses": [
-        {
-          "courseId": "run-a-real-project-with-ai",
-          "title": "用 AI 把一个真实开源项目跑起来",
-          "isBeingRewritten": false,
-          "sha256": "sha256:0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08",
-          "packageBytes": 137466,
-          "servedBytes": 109620,
-          "lessons": 8
-        },
-        {
-          "courseId": "make-the-cutout-app-yours",
-          "title": "把这个抠图应用改成你的",
-          "isBeingRewritten": false,
-          "sha256": "sha256:d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20",
-          "packageBytes": 151609,
-          "servedBytes": 118290,
-          "lessons": 9
-        },
-        {
-          "courseId": "search-your-own-photos",
-          "title": "把搜图改成搜你自己的相册",
-          "isBeingRewritten": false,
-          "sha256": "sha256:b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe",
-          "packageBytes": 100924,
-          "servedBytes": 80318,
-          "lessons": 6
-        },
-        {
-          "courseId": "when-a-project-is-too-big-to-read",
-          "title": "当项目大到读不完",
-          "isBeingRewritten": false,
-          "sha256": "sha256:82ba7108a8343096db0e99aa4c1b2cee7319b1cbfabbdf119b5794c2ed7f2dc8",
-          "packageBytes": 74958,
-          "servedBytes": 57679,
-          "lessons": 4
+          "sha256": "sha256:3d883d9efcb699232bd51e41ec937fd147a183e09ddc43954698cdf06014d9c3",
+          "packageBytes": 158086,
+          "servedBytes": 113038,
+          "lessons": 3
         }
       ]
     }

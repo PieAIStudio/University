@@ -81,7 +81,7 @@ without losing the first.
 It can, but only with two rules the model does not follow unasked.
 
 **What an unbounded polish does.** Three lessons — short, median and long, from
-`turing-pact/foundations-before-zero` — polished by `gemini-3.7-flash-high`
+the now-retired `turing-pact/foundations-before-zero` — polished by `gemini-3.7-flash-high`
 with instructions to change wording only. It kept every evidence anchor, every
 code span, every heading and every fence. It also, across those three lessons:
 
