@@ -154,3 +154,12 @@ For each stage, report:
 - what was deleted and why it was safe;
 - the screenshots;
 - what remains for the next stage.
+
+## R0 execution handoff (2026-10-04)
+
+The required refactor skill was applied. Baseline and target-shape evidence is in
+`.scratch/task17/r0-baseline.md`: 79 files under `apps/university/src/app`,
+`apps/university/src/app/App.tsx` at 1478 lines, 3432 syntactic export
+declarations across the candidate source inventory, and 1279 tracked docs files.
+The baseline keeps the delivered task 18 gates at 431 browser and 40 timing cases.
+The first unit is app topology; no behavior or lesson bytes move in R1.
