@@ -2,7 +2,7 @@
 id: PLAN-18-GRADING-MUST-CATCH-DROPPED-FACTS
 title: "18 · Grading must catch dropped required facts"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-10-03
@@ -120,3 +120,40 @@ teaching correction returns to task 12's review → fix after Owner feedback.
 
 Move this plan to completed in its single delivery commit only when these gates
 are met. Then continue to 14 according to the queue.
+
+## 7 Delivery record
+
+The exact preserved answer is in
+`apps/university-ai/src/primm/fixtures/task18-dropped-facts.json`; it was copied
+from `owner-reading-1280/receipt.json` without model regeneration. Its fixture
+hash is recorded in the file, together with the recovery package hash and the
+fourth lesson's native activity/exercise. The red reproduction is
+`.scratch/overnight-20261003/task18-red-before-fix.json` and its unchanged log is
+`.scratch/overnight-20261003/task18-red-before-fix.log`: before the repair, the
+existing runtime decision returned a pass for the 166-character answer. The
+post-fix runtime regression is `runtime.test.ts`; it keeps the original answer
+failing, fails each of photo, one-week deadline and one-month delay separately,
+and passes a complete answer plus the faithful `现场图` paraphrase.
+
+The rule now lives in the shared `@pieai/university-core` helper
+`requiredFactCoverage`. Native preview grading atomizes every authored criterion
+into quoted facts and rejects fabricated or incomplete evidence; delivery sends
+the authored PRIMM checklist to the metered service, which applies the same
+helper before returning a host pass. The browser port still keeps the AI-source
+boundary and only sends the public checklist; the service cannot independently
+authenticate that client-supplied checklist against a published package. This is
+an existing delivery-content boundary and is recorded for Owner review rather
+than widening this freeze repair.
+
+The saved fourth-lesson sample evaluator is
+`.scratch/overnight-20261003/task18-sample-evaluate.mjs`, run against the saved
+v7 response with a deterministic structured fact grader (no new model output).
+Receipt: `.scratch/overnight-20261003/task18-sample-evaluate.json`.
+Results: `samples.v7.make` (169 Unicode characters) changed from the historical
+false pass to **fail**, the preserved original (166 characters) is **fail**, and
+the separately retained Owner-corrected work (206 characters) is **pass**.
+Criterion 3 fails on both missing photo evidence and missing one-week deadline;
+the corrected work passes both. The sample output is a new run identity and does
+not replace task 12's receipts or prose. The existing preview screenshots remain
+the native browser evidence; the new runtime and delivery boundary tests are the
+regression evidence for the grading outcome.

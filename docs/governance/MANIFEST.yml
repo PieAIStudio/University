@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-03T14:05:45.490Z
+generated_at: 2026-10-03T18:31:04.974Z
 generator_version: doc-gov@0.14.2
 docs_count: 176
 docs:
@@ -256,13 +256,6 @@ docs:
     canonical: true
     last_reviewed: 2026-10-03
     pinned: false
-  - id: PLAN-18-GRADING-MUST-CATCH-DROPPED-FACTS
-    path: docs/plans/active/18-grading-must-catch-dropped-facts.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-10-03
-    pinned: false
   - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
     path: docs/plans/completed/00-ai-literacy-commercial-release.md
     type: plan
@@ -335,6 +328,13 @@ docs:
     pinned: false
   - id: PLAN-13-RETIRE-OLD-COURSES
     path: docs/plans/completed/13-retire-old-courses.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-03
+    pinned: false
+  - id: PLAN-18-GRADING-MUST-CATCH-DROPPED-FACTS
+    path: docs/plans/completed/18-grading-must-catch-dropped-facts.md
     type: plan
     status: completed
     canonical: true

@@ -258,6 +258,7 @@ function requestFor(
   commandId = COMMAND_ID,
   answer = "我的解释",
   prompt = "为什么？",
+  criteria: string[] = [],
 ): Request {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -271,6 +272,7 @@ function requestFor(
       exerciseId: "explain",
       prompt,
       funding,
+      criteria,
     }),
   });
 }
@@ -425,6 +427,28 @@ function freeQuotaFixture(events: string[], initialRemaining = "400") {
 }
 
 describe("University metered grading service", () => {
+  it("delivery grading cannot pass when an authored criterion reports a missing fact", async () => {
+    const fixtureState = fixture();
+    fixtureState.complete.mockImplementationOnce(async () => ({
+      content: JSON.stringify({
+        passed: true,
+        evaluation: "看起来完成了。",
+        extensions: [],
+        facts: [{ criterion: 0, requirement: "照片信息", from: "missing", quote: "" }],
+      }),
+      raw: { provider: "fake" },
+      usage: { inputTokens: 12, outputTokens: 8, totalTokens: 20, providerCost: "0.000023" },
+    }));
+    const response = await handleGradeRequest(
+      requestFor("valid-token", "wallet", COMMAND_ID, "一段完整答案", "请保留所有事实", [
+        "照片信息",
+      ]),
+      fixtureState.deps,
+    );
+    expect(response.status).toBe(200);
+    expect((await response.json()).hostGrade).toMatchObject({ passed: false });
+  });
+
   it("records known provider usage without recording the prompt or answer", async () => {
     const fixtureState = fixture();
     const usage = usageLedgerFixture();

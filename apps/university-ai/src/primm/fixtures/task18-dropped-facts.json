@@ -1,0 +1,487 @@
+{
+  "source": "task12 owner-reading-1280/receipt.json",
+  "sourceRevision": 7,
+  "lessonRef": {
+    "studyId": "ai-literacy",
+    "courseId": "understanding-ai",
+    "unitId": "first-useful-step",
+    "lessonId": "edit-one-part"
+  },
+  "contentRevision": 7,
+  "exerciseId": "edit-one-part-exercise",
+  "prompt": "帮我把第四段改得客气一点，别的不要动。",
+  "finalWork": "王姐你好，我是3栋502的李明，去年8月搬进来的。  \n上个月15号我找你说过，厨房水龙头一直滴水，晚上嗒嗒响。18号师傅来看了一眼说要换零件，之后就没消息了。  \n现在水龙头还在滴，卫生间墙角也开始起皮发霉了，大概有半个手掌那么大。  \n你们收着我六千块押金，希望你们能安排师傅尽快处理一下水龙头和墙角的问题，感谢您的理解与配合。",
+  "omittedFacts": ["照片信息", "这周内安排维修", "拖了一个月的维修延误"],
+  "sha256": "preserved-in-task12-receipt",
+  "fixtureSha256": "sha256:f0987dd07a590cefe42b80b2b26b37e8b0059699b7dfaa7758d4f5b4144e095a",
+  "recoverySha256": "sha256:c531fd9d75af4edec254d8529f42f62dca4558b497ccf09ed5512971e8f0d409",
+  "activity": {
+    "id": "edit-one-part-v2",
+    "kind": "primm",
+    "role": "apply",
+    "difficulty": "intro",
+    "title": "只想改一句，怎么让 AI 别动整条？",
+    "brief": "你想让客服认真处理，又不想吵起来。请 AI 帮忙换个说法，怎么说才好？",
+    "goal": "自己写要求，让 AI 只改那段语气。拿到回答后对对事实和要求，改到能放心发给房东。",
+    "takeaway": "下次想换一句说法，先告诉 AI 改哪一句，想要什么语气，哪些不要动。拿到回答，对对事实再发出去。",
+    "hint": "下次想换一句说法，先告诉 AI 改哪一句，想要什么语气，哪些不要动。拿到回答，对对事实再发出去。",
+    "source": {
+      "label": "OpenAI：只改一段话的写作工具",
+      "url": "https://openai.com/index/introducing-canvas/"
+    },
+    "locales": {
+      "en": {
+        "strings": {
+          "只想改一句，怎么让 AI 别动整条？": "You only want to change one sentence—how do you keep AI from touching the whole message?",
+          "OpenAI：只改一段话的写作工具": "OpenAI: A writing tool that changes only one section",
+          "它能选中草稿里的一段单独改，正是本课「只改一部分」的真实例子。": "It lets you select a single passage in a draft to change on its own, which is a real-world example of this lesson's idea of 'changing only one part.'",
+          "OpenAI：写请求的建议": "OpenAI: Tips for writing requests",
+          "官方建议要求越具体，AI 越容易照做。「说清改哪句、不改哪句」就是这个道理。": "Official guidance suggests that the more specific your request is, the easier it is for AI to follow. Being clear about which sentence to change and which not to touch works the same way.",
+          "你给快递客服写了条消息。单号、日期和地址都在，只是中间有一句太冲了。": "You wrote a message to delivery customer service. The tracking number, date, and address are all there, but one sentence in the middle sounds too harsh.",
+          "你想让客服认真处理，又不想吵起来。请 AI 帮忙换个说法，怎么说才好？": "You want customer service to take it seriously without starting an argument. When asking AI to rephrase it, what is the best way to say it?",
+          "OpenAI 是一家做 AI 的公司。它介绍过一种工具，让人挑出一段话请 AI 帮忙改。": "OpenAI is an AI company. They introduced a tool that lets people pick out a single section and ask AI to help change it.",
+          "给快递客服的消息（练习）": "Message to delivery customer service (Practice)",
+          "给房东的催修消息（练习）": "Follow-up message to the landlord about repairs (Practice)",
+          "帮我把这条消息改客气一点。": "Help me make this message more polite.",
+          "只改第三句的语气，别的都不要动。": "Only change the tone of the third sentence; do not touch anything else.",
+          "帮我重新写一条投诉快递延迟的消息，语气别太冲。": "Help me rewrite a message complaining about delivery delays, without sounding too harsh.",
+          "这条投诉消息，你会怎么请 AI 帮忙改？": "For this complaint message, how would you ask AI to help change it?",
+          "记住你选的这句，咱们发出去试试。": "Remember the option you chose, and let's send it to see what happens.",
+          "发出去，看看 AI 改了哪里": "Send it, and see what AI changed",
+          "给快递客服的消息": "Message to delivery customer service",
+          "OpenAI 建议改文字时说清语气。催件想把话说平和，直接把要求告诉 AI。": "OpenAI suggests being clear about the tone when editing text. If you want a calmer tone while following up on a package, tell AI your requirement directly.",
+          "你只说了改客气，没说改哪句。想看改得合不合适，先分清原消息里哪些要保住。": "You only asked to make it more polite, without saying which sentence to change. To see if the edit works, first sort out what needs to be kept in the original message.",
+          "你说了只改第三句，还没说想要什么语气。先分清哪些内容要保住，再核对刚才的回答。": "You asked to change only the third sentence, but you haven't said what tone you want yet. First sort out what content needs to be kept, then check the reply you just got.",
+          "你让 AI 重新写一条，别的话也可能跟着变。先分清哪些要保住，再核对刚才的回答。": "You asked AI to rewrite the whole message, so other sentences may change too. First sort out what needs to be kept, then check the reply you just got.",
+          "先看原消息：哪些要保住，哪些可以换语气？": "First look at the original message: what needs to be kept, and what can take a different tone?",
+          "要保住的事实和要求": "Facts and requests to keep",
+          "可以换说法的语气": "Tone that can be rephrased",
+          "你好，我的快递单号是 YT9088763421，9月25日下的单。": "Hello, my tracking number is YT9088763421, and the order was placed on September 25.",
+          "客服查包裹，全靠单号和下单日期。": "Customer service relies entirely on the tracking number and order date to look up the package.",
+          "这句有快递单号和下单日期。客服靠它们找包裹，改了就找不到了。": "This sentence has the tracking number and order date. Customer service relies on them to find the package; if they change, it cannot be found.",
+          "你们承诺三天送到，现在都10月1日了还没收到。": "You promised delivery within three days, and it is already October 1 and I still haven't received it.",
+          "说好三天送到，现在还没收到，这就是你投诉的原因。": "It was promised in three days and still hasn't arrived—that is the reason for your complaint.",
+          "这句讲清了该几天送、几号还没到。少了这些，客服不知道你为什么投诉。": "This sentence clearly states how many days it was supposed to take and what date it still hadn't arrived. Without this, customer service won't know why you are complaining.",
+          "你们就是这样做生意的？一点信用都没有。": "Is this how you do business? You have zero credibility.",
+          "这句只是在发脾气，没有新的事实。": "This sentence is just venting frustration; it contains no new facts.",
+          "拿掉这句，事实和要求全都在。所以它只是说话的语气，不是事实。": "If you take this sentence out, all the facts and requests are still there. So it is just tone of voice, not a fact.",
+          "麻烦查一下现在到哪了，如果今天还到不了，我要申请退款。": "Please check where it is now. If it still doesn't arrive today, I will request a refund.",
+          "查件和退款是你的要求，要是改了，就不是你想办的事了。": "Tracking the package and asking for a refund are your requests. If they get changed, it is no longer what you want done.",
+          "这句写了你要客服办什么。改掉了，对方就不知道你是要查件还是退款。": "This sentence states what you need customer service to do. If it is changed, they won't know whether you want a status check or a refund.",
+          "我的收货地址是天河区黄埔大道128号。": "My delivery address is No. 128 Huangpu Avenue, Tianhe District.",
+          "地址错一个字就寄到别处。": "If even one character in the address is wrong, it will be delivered somewhere else.",
+          "收货地址要是错了，客服帮你处理也白费。": "If the delivery address is wrong, any help customer service gives you will be wasted.",
+          "你分清了要留的内容和能改的语气。回看 AI 的回答，先看今天不到就退款的要求在不在。": "You sorted out what content to keep and what tone can be changed. Looking back at AI's reply, first check whether the request for a refund if it doesn't arrive today is still there.",
+          "在刚才的回答里找找「退款」": "Look for \"refund\" in the reply you just got",
+          "退款": "refund",
+          "找到「退款」还要看整句。要是把「我要申请退款」改成「可能申请退款」，要求就变了。": "Even if you find \"refund\", check the full sentence. If \"I will request a refund\" was changed to \"I might request a refund\", your request has changed.",
+          "没找到「退款」，不一定漏了要求。看看有没有换个说法，保住今天不到就退钱的意思。": "Not finding \"refund\" doesn't always mean the request was missed. Check if it was rephrased while keeping the meaning of getting your money back if it doesn't arrive today.",
+          "拼一句清楚的请求，告诉 AI 改哪里、不改哪里": "Put together a clear request to tell AI what to change and what not to touch",
+          "先从这句改起：帮我把这条消息改客气一点。": "Start by improving this sentence: Help me make this message more polite.",
+          "只改第三句，": "Only change the third sentence,",
+          "把发脾气的语气改得平和一些。": "make the angry tone a bit calmer.",
+          "其他四句保持原样。": "Keep the other four sentences as they are.",
+          "把改好的整条消息发给我。": "Send me the full revised message.",
+          "越客气越好，": "Make it as polite as possible,",
+          "投诉得让对方重视。太客气了，客服可能觉得不急。咱们要的是平和，不是道歉。": "A complaint needs to be taken seriously. If it is too polite, customer service might not treat it as urgent. We want calm, not an apology.",
+          "再帮我加上手机号，": "Also add my phone number,",
+          "原消息里没写手机号。加新东西是另一回事，现在先把语气改好。": "The original message didn't include a phone number. Adding new details is a separate step; for now, let's focus on fixing the tone first.",
+          "先说改哪一句，再说改成什么语气，最后交代哪些不能动。": "First say which sentence to change, then say what tone to change it to, and finally specify what cannot be touched.",
+          "改哪一句、改成什么语气、哪些不能动——三件事全说清了。": "Which sentence to change, what tone to use, and what cannot be touched—all three things are made completely clear.",
+          "再发一次，其他四句还跟原来一样吗？": "Send it again: are the other four sentences still the same as before?",
+          "对照原消息看看其他四句，特别是退款要求。要是 AI 多改了，就把原句换回来再用。": "Check the other four sentences against the original message, especially the refund request. If AI changed more than asked, swap back the original sentences before using it.",
+          "换条消息：给房东催修，这次你来划范围": "Try another message: Following up with your landlord about repairs—this time, you set the boundaries",
+          "改好的这条消息，你会直接发给王姐吗？": "Would you send this revised message directly to Sister Wang?",
+          "会，事实都对，语气也合适了": "Yes, the facts are all correct, and the tone feels right now",
+          "好！发之前再看一眼日期、金额和维修情况对不对。": "Great! Before sending, take one last look to make sure the dates, amounts, and repair details are correct.",
+          "差不多，我又改了几个词": "Almost, but I tweaked a few words myself",
+          "这就对啦：AI 改初稿，你来定稿。": "That is the right way: AI writes the first draft, and you make the final call.",
+          "还不太满意": "Not quite satisfied yet",
+          "再跟 AI 说说哪句不对劲。或者你直接改几个字，比从头来还快。": "Tell AI which sentence still feels off. Or just change a few words yourself—it is often faster than starting over.",
+          "给房东催修，自己划范围": "Follow up with your landlord about repairs: set the boundaries yourself",
+          "你给房东王姐写了条催修消息。报修经过、漏水发霉都写清了，只是中间有一段太冲。": "You wrote a follow-up message to your landlord, Sister Wang. The repair history, water leak, and mold are all clearly stated, but one section in the middle sounds too harsh.",
+          "自己写要求，让 AI 只改那段语气。拿到回答后对对事实和要求，改到能放心发给房东。": "Write your own request asking AI to change only the tone of that section. Once you get the reply, check the facts and requests until you feel confident sending it to the landlord.",
+          "你想改哪一段的语气？哪些日期和金额不能动？": "Which section's tone do you want to change? Which dates and amounts must not be touched?",
+          "催修语气变客气了，押金金额、报修日期和维修进度都没被删。": "The follow-up tone became more polite, and the deposit amount, repair report date, and repair progress were not deleted.",
+          "楼栋号、房号和搬入时间都对。水龙头滴水、墙角起皮发霉都没变。": "The building number, apartment number, and move-in date are all correct. The dripping faucet, peeling paint, and mold in the corner were kept unchanged.",
+          "没有编造房东没说过的话或没做过的事。": "Nothing was made up that the landlord never said or did.",
+          "其余段落保持原样。照片信息和这周内安排维修的要求都在。": "The remaining sections remain as they were. The photo details and the request to schedule repairs within this week are both there.",
+          "准备发给房东的催修消息": "Repair follow-up message ready to send to the landlord",
+          "划好范围，事实你来守": "Set the boundaries, protect the facts yourself",
+          "下次想换一句说法，先告诉 AI 改哪一句，想要什么语气，哪些不要动。拿到回答，对对事实再发出去。": "Next time you want to rephrase a sentence, first tell AI which sentence to change, what tone you want, and what not to touch. When you get the reply, check the facts before sending it out.",
+          "OpenAI 建议把要求说具体。「只改第三句、其他不动」就清楚说明了改哪里。": "OpenAI suggests making requests specific. Saying \"Only change the third sentence; keep the rest untouched\" clearly explains where to make changes.",
+          "找一条你写过没发的消息，挑出一句想换说法的。跟 AI 说清改哪句、留哪句，去试一次。": "Find a message you drafted but haven't sent, and pick a sentence you'd like to rephrase. Tell AI clearly which sentence to change and which to keep, and give it a try.",
+          "你好，我的快递单号是 YT9088763421，9月25日下的单。\n你们承诺三天送到，现在都10月1日了还没收到。\n你们就是这样做生意的？一点信用都没有。\n麻烦查一下现在到哪了，如果今天还到不了，我要申请退款。\n我的收货地址是天河区黄埔大道128号。": "Hello, my tracking number is YT9088763421, and the order was placed on September 25.\nYou promised delivery within three days, but it is already October 1 and I still haven't received it.\nIs this how you do business? You have no credibility whatsoever.\nPlease check where it is now. If it still doesn't arrive today, I will request a refund.\nMy delivery address is No. 128 Huangpu Avenue, Tianhe District.",
+          "王姐你好，我是3栋502的李明，去年8月搬进来的。\n上个月15号我找你说过，厨房水龙头一直滴水，晚上嗒嗒响。18号师傅来看了一眼说要换零件，之后就没消息了。\n现在水龙头还在滴，卫生间墙角也开始起皮发霉了，大概有半个手掌那么大。\n你们收着我六千块押金。修个水龙龙头拖了一个月都没人管。真是只管收钱不管事。\n我拍了照片，水龙头和墙角各两张，需要的话发你。麻烦这周内安排人来修一下。": "Hello Ms. Wang, I'm Li Ming from Unit 502, Building 3. I moved in last August.\nOn the 15th of last month, I told you that the kitchen faucet keeps dripping and makes clicking sounds at night. On the 18th, a technician came to take a look and said parts needed to be replaced, but there has been no news since.\nNow the faucet is still dripping, and the corner of the bathroom wall has also started peeling and getting moldy, about the size of half a palm.\nYou are holding my 6,000 yuan deposit. Fixing a faucet has dragged on for a month without anyone dealing with it. You really only care about collecting money and nothing else.\nI took photos—two of the faucet and two of the wall corner—which I can send to you if needed. Please arrange for someone to come and fix it this week.",
+          "Canvas 发布介绍": "Canvas Launch Introduction",
+          "OpenAI 的 Canvas 发布介绍；本课用的是里面的写作协作场景。": "OpenAI's Canvas launch introduction; this lesson uses the writing collaboration scenario from it.",
+          "这份介绍里讲了：在草稿旁并排改写、选中某段单独提意见、直接动手改，还有恢复早期版本。": "This introduction covered: side-by-side rewriting next to the draft, selecting a section to give specific feedback, making direct edits, and restoring earlier versions.",
+          "这些是 2024 年发布时的功能，不保证现在每个账户界面都一样，也不能证明某条修改请求一定成功。这节课不教当前界面的按钮顺序。": "These were features at the time of the 2024 launch. There is no guarantee that every account interface looks the same today, nor does it prove that any particular edit request will always succeed. This lesson does not teach the order of buttons in the current interface.",
+          "2024-10-03": "2024-10-03",
+          "NASA：2023 年观月夜公告": "NASA: 2023 Observe the Moon Night Announcement",
+          "NASA 的2023年观月夜历史公告；这是本课草稿活动事实的出处。": "NASA's 2023 International Observe the Moon Night historical announcement; this is the source of the activity facts in this lesson draft.",
+          "公告邀请公众于2023年10月21日美国东部夏令时间（EDT）晚6点至9点，到马里兰州格林贝尔特的戈达德游客中心参加活动。活动风雨无阻，无需报名。项目包括日食艺术创作、太空岩石展示、用饼干演示月相和月球着陆器设计活动。": "The announcement invites the public to attend the event at the Goddard Visitor Center in Greenbelt, Maryland, on 2023-10-21 from 6 to 9 PM Eastern Daylight Time (EDT). Rain or shine, no registration required. Activities include eclipse art creation, space rock displays, demonstrating moon phases with cookies, and lunar lander design activities.",
+          "这是已经过去的活动。本课草稿是教学改写，不是 NASA 官方通知。没有指定目标时区时，不能直接换算 EDT 时间。": "This is a past event. This lesson draft is an educational rewrite, not an official NASA notice. Without a specified target time zone, EDT cannot be directly converted.",
+          "2023-10-16": "2023-10-16",
+          "发布内容描述了在写作草稿旁并排工作、选定特定段落以获取针对性反馈、直接进行编辑以及恢复早期版本的功能。": "The launch described working beside a writing draft, selecting passages for targeted feedback, making direct edits and restoring earlier versions.",
+          "这些是产品发布时的历史功能，不能保证如今每个账户都拥有完全相同的界面。本课程讲授的是受控修改方法，而非某个特定产品的具体按钮操作顺序。": "Historical launch features, not a guarantee that every account has the same interface today. The course teaches controlled revision, not a product-specific button sequence.",
+          "该指南建议提出清晰具体的请求、提供相关的背景信息、在需要时明确指定语气，并对生成的结果进行审查和优化。": "The guidance recommends clear requests, relevant context, an explicit tone when needed, and reviewing and refining the result.",
+          "这属于指导建议，并非证明必然能提高生产力的实证实验。没有任何特定的提示词能够保证结果绝对正确。": "Guidance, not an experiment proving a guaranteed productivity gain. No special phrase guarantees correctness."
+        }
+      }
+    },
+    "method": "PRIMM",
+    "experienceVersion": 3,
+    "intro": {
+      "situation": "你给快递客服写了条消息。单号、日期和地址都在，只是中间有一句太冲了。",
+      "need": "你想让客服认真处理，又不想吵起来。请 AI 帮忙换个说法，怎么说才好？",
+      "connection": "OpenAI 是一家做 AI 的公司。它介绍过一种工具，让人挑出一段话请 AI 帮忙改。",
+      "sourceIds": ["lib-4bf8f189"]
+    },
+    "sources": [
+      {
+        "id": "lib-4bf8f189",
+        "reference": {
+          "label": "OpenAI：只改一段话的写作工具",
+          "url": "https://openai.com/index/introducing-canvas/"
+        },
+        "note": "它能选中草稿里的一段单独改，正是本课「只改一部分」的真实例子。",
+        "summary": "发布内容描述了在写作草稿旁并排工作、选定特定段落以获取针对性反馈、直接进行编辑以及恢复早期版本的功能。",
+        "limitation": "这些是产品发布时的历史功能，不能保证如今每个账户都拥有完全相同的界面。本课程讲授的是受控修改方法，而非某个特定产品的具体按钮操作顺序。"
+      },
+      {
+        "id": "lib-c2fe2d97",
+        "reference": {
+          "label": "OpenAI：写请求的建议",
+          "url": "https://help.openai.com/en/articles/10032626-prompt-engineering-best-practices-for-chatgpt"
+        },
+        "note": "官方建议要求越具体，AI 越容易照做。「说清改哪句、不改哪句」就是这个道理。",
+        "summary": "该指南建议提出清晰具体的请求、提供相关的背景信息、在需要时明确指定语气，并对生成的结果进行审查和优化。",
+        "limitation": "这属于指导建议，并非证明必然能提高生产力的实证实验。没有任何特定的提示词能够保证结果绝对正确。"
+      },
+      {
+        "id": "source-1",
+        "reference": {
+          "label": "Canvas 发布介绍",
+          "url": "https://openai.com/index/introducing-canvas/"
+        },
+        "note": "OpenAI 的 Canvas 发布介绍；本课用的是里面的写作协作场景。",
+        "summary": "这份介绍里讲了：在草稿旁并排改写、选中某段单独提意见、直接动手改，还有恢复早期版本。",
+        "limitation": "这些是 2024 年发布时的功能，不保证现在每个账户界面都一样，也不能证明某条修改请求一定成功。这节课不教当前界面的按钮顺序。",
+        "date": "2024-10-03"
+      },
+      {
+        "id": "source-2",
+        "reference": {
+          "label": "NASA：2023 年观月夜公告",
+          "url": "https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/"
+        },
+        "note": "NASA 的2023年观月夜历史公告；这是本课草稿活动事实的出处。",
+        "summary": "公告邀请公众于2023年10月21日美国东部夏令时间（EDT）晚6点至9点，到马里兰州格林贝尔特的戈达德游客中心参加活动。活动风雨无阻，无需报名。项目包括日食艺术创作、太空岩石展示、用饼干演示月相和月球着陆器设计活动。",
+        "limitation": "这是已经过去的活动。本课草稿是教学改写，不是 NASA 官方通知。没有指定目标时区时，不能直接换算 EDT 时间。",
+        "date": "2023-10-16"
+      }
+    ],
+    "materials": [
+      {
+        "id": "delivery-complaint",
+        "label": "给快递客服的消息（练习）",
+        "text": "你好，我的快递单号是 YT9088763421，9月25日下的单。\n你们承诺三天送到，现在都10月1日了还没收到。\n你们就是这样做生意的？一点信用都没有。\n麻烦查一下现在到哪了，如果今天还到不了，我要申请退款。\n我的收货地址是天河区黄埔大道128号。",
+        "kind": "practice"
+      },
+      {
+        "id": "landlord-repair",
+        "label": "给房东的催修消息（练习）",
+        "text": "王姐你好，我是3栋502的李明，去年8月搬进来的。\n上个月15号我找你说过，厨房水龙头一直滴水，晚上嗒嗒响。18号师傅来看了一眼说要换零件，之后就没消息了。\n现在水龙头还在滴，卫生间墙角也开始起皮发霉了，大概有半个手掌那么大。\n你们收着我六千块押金。修个水龙龙头拖了一个月都没人管。真是只管收钱不管事。\n我拍了照片，水龙头和墙角各两张，需要的话发你。麻烦这周内安排人来修一下。",
+        "kind": "practice"
+      }
+    ],
+    "starter": {
+      "prompt": "帮我把这条消息改客气一点。",
+      "materialIds": ["delivery-complaint"],
+      "assetIds": [],
+      "operation": "text"
+    },
+    "steps": [
+      {
+        "kind": "choose",
+        "id": "guess-approach",
+        "phase": "predict",
+        "title": "这条投诉消息，你会怎么请 AI 帮忙改？",
+        "options": [
+          {
+            "id": "polite",
+            "label": "帮我把这条消息改客气一点。",
+            "requestId": "starter"
+          },
+          {
+            "id": "precise",
+            "label": "只改第三句的语气，别的都不要动。",
+            "requestId": "ask-precise"
+          },
+          {
+            "id": "rewrite",
+            "label": "帮我重新写一条投诉快递延迟的消息，语气别太冲。",
+            "requestId": "ask-rewrite"
+          }
+        ],
+        "after": "记住你选的这句，咱们发出去试试。"
+      },
+      {
+        "kind": "send",
+        "id": "send-choice",
+        "phase": "run",
+        "title": "发出去，看看 AI 改了哪里",
+        "request": "chosen",
+        "attachmentLabel": "给快递客服的消息",
+        "wait": {
+          "text": "OpenAI 建议改文字时说清语气。催件想把话说平和，直接把要求告诉 AI。",
+          "sourceId": "lib-c2fe2d97"
+        },
+        "debriefs": [
+          {
+            "requestId": "starter",
+            "text": "你只说了改客气，没说改哪句。想看改得合不合适，先分清原消息里哪些要保住。"
+          },
+          {
+            "requestId": "ask-precise",
+            "text": "你说了只改第三句，还没说想要什么语气。先分清哪些内容要保住，再核对刚才的回答。"
+          },
+          {
+            "requestId": "ask-rewrite",
+            "text": "你让 AI 重新写一条，别的话也可能跟着变。先分清哪些要保住，再核对刚才的回答。"
+          }
+        ]
+      },
+      {
+        "kind": "sort",
+        "id": "sort-facts-tone",
+        "phase": "investigate",
+        "title": "先看原消息：哪些要保住，哪些可以换语气？",
+        "buckets": [
+          {
+            "id": "keep-facts",
+            "label": "要保住的事实和要求"
+          },
+          {
+            "id": "change-tone",
+            "label": "可以换说法的语气"
+          }
+        ],
+        "cards": [
+          {
+            "id": "tracking",
+            "text": "你好，我的快递单号是 YT9088763421，9月25日下的单。",
+            "bucketId": "keep-facts",
+            "why": "客服查包裹，全靠单号和下单日期。",
+            "miss": "这句有快递单号和下单日期。客服靠它们找包裹，改了就找不到了。"
+          },
+          {
+            "id": "promise",
+            "text": "你们承诺三天送到，现在都10月1日了还没收到。",
+            "bucketId": "keep-facts",
+            "why": "说好三天送到，现在还没收到，这就是你投诉的原因。",
+            "miss": "这句讲清了该几天送、几号还没到。少了这些，客服不知道你为什么投诉。"
+          },
+          {
+            "id": "anger",
+            "text": "你们就是这样做生意的？一点信用都没有。",
+            "bucketId": "change-tone",
+            "why": "这句只是在发脾气，没有新的事实。",
+            "miss": "拿掉这句，事实和要求全都在。所以它只是说话的语气，不是事实。"
+          },
+          {
+            "id": "action",
+            "text": "麻烦查一下现在到哪了，如果今天还到不了，我要申请退款。",
+            "bucketId": "keep-facts",
+            "why": "查件和退款是你的要求，要是改了，就不是你想办的事了。",
+            "miss": "这句写了你要客服办什么。改掉了，对方就不知道你是要查件还是退款。"
+          },
+          {
+            "id": "address",
+            "text": "我的收货地址是天河区黄埔大道128号。",
+            "bucketId": "keep-facts",
+            "why": "地址错一个字就寄到别处。",
+            "miss": "收货地址要是错了，客服帮你处理也白费。"
+          }
+        ],
+        "after": "你分清了要留的内容和能改的语气。回看 AI 的回答，先看今天不到就退款的要求在不在。"
+      },
+      {
+        "kind": "find",
+        "id": "find-refund-request",
+        "phase": "investigate",
+        "title": "在刚才的回答里找找「退款」",
+        "terms": ["退款"],
+        "found": "找到「退款」还要看整句。要是把「我要申请退款」改成「可能申请退款」，要求就变了。",
+        "absent": "没找到「退款」，不一定漏了要求。看看有没有换个说法，保住今天不到就退钱的意思。"
+      },
+      {
+        "kind": "build",
+        "id": "build-request",
+        "phase": "modify",
+        "title": "拼一句清楚的请求，告诉 AI 改哪里、不改哪里",
+        "context": "先从这句改起：帮我把这条消息改客气一点。",
+        "pieces": [
+          {
+            "id": "which",
+            "text": "只改第三句，"
+          },
+          {
+            "id": "tone",
+            "text": "把发脾气的语气改得平和一些。"
+          },
+          {
+            "id": "keep",
+            "text": "其他四句保持原样。"
+          },
+          {
+            "id": "return-message",
+            "text": "把改好的整条消息发给我。"
+          },
+          {
+            "id": "sweet",
+            "text": "越客气越好，",
+            "why": "投诉得让对方重视。太客气了，客服可能觉得不急。咱们要的是平和，不是道歉。"
+          },
+          {
+            "id": "add-phone",
+            "text": "再帮我加上手机号，",
+            "why": "原消息里没写手机号。加新东西是另一回事，现在先把语气改好。"
+          }
+        ],
+        "answers": [
+          ["which", "tone", "keep", "return-message"],
+          ["which", "keep", "tone", "return-message"],
+          ["which", "tone", "keep"],
+          ["which", "keep", "tone"]
+        ],
+        "hint": "先说改哪一句，再说改成什么语气，最后交代哪些不能动。",
+        "after": "改哪一句、改成什么语气、哪些不能动——三件事全说清了。"
+      },
+      {
+        "kind": "send",
+        "id": "send-built",
+        "phase": "modify",
+        "title": "再发一次，其他四句还跟原来一样吗？",
+        "request": "built",
+        "attachmentLabel": "给快递客服的消息",
+        "after": "对照原消息看看其他四句，特别是退款要求。要是 AI 多改了，就把原句换回来再用。"
+      },
+      {
+        "kind": "make",
+        "id": "make-own",
+        "phase": "make",
+        "title": "换条消息：给房东催修，这次你来划范围"
+      },
+      {
+        "kind": "choose",
+        "id": "self-check",
+        "phase": "make",
+        "title": "改好的这条消息，你会直接发给王姐吗？",
+        "options": [
+          {
+            "id": "ready",
+            "label": "会，事实都对，语气也合适了",
+            "after": "好！发之前再看一眼日期、金额和维修情况对不对。"
+          },
+          {
+            "id": "tweaked",
+            "label": "差不多，我又改了几个词",
+            "after": "这就对啦：AI 改初稿，你来定稿。"
+          },
+          {
+            "id": "not-right",
+            "label": "还不太满意",
+            "after": "再跟 AI 说说哪句不对劲。或者你直接改几个字，比从头来还快。"
+          }
+        ]
+      }
+    ],
+    "requests": [
+      {
+        "id": "ask-precise",
+        "prompt": "只改第三句的语气，别的都不要动。"
+      },
+      {
+        "id": "ask-rewrite",
+        "prompt": "帮我重新写一条投诉快递延迟的消息，语气别太冲。"
+      }
+    ],
+    "make": {
+      "title": "给房东催修，自己划范围",
+      "scenario": "你给房东王姐写了条催修消息。报修经过、漏水发霉都写清了，只是中间有一段太冲。",
+      "goal": "自己写要求，让 AI 只改那段语气。拿到回答后对对事实和要求，改到能放心发给房东。",
+      "materialIds": ["landlord-repair"],
+      "assetIds": [],
+      "operation": "text",
+      "promptPlaceholder": "你想改哪一段的语气？哪些日期和金额不能动？",
+      "checklist": [
+        "催修语气变客气了，押金金额、报修日期和维修进度都没被删。",
+        "楼栋号、房号和搬入时间都对。水龙头滴水、墙角起皮发霉都没变。",
+        "没有编造房东没说过的话或没做过的事。",
+        "其余段落保持原样。照片信息和这周内安排维修的要求都在。"
+      ],
+      "artifactLabel": "准备发给房东的催修消息",
+      "exerciseId": "edit-one-part-exercise"
+    },
+    "finish": {
+      "title": "划好范围，事实你来守",
+      "note": "下次想换一句说法，先告诉 AI 改哪一句，想要什么语气，哪些不要动。拿到回答，对对事实再发出去。",
+      "didYouKnow": {
+        "text": "OpenAI 建议把要求说具体。「只改第三句、其他不动」就清楚说明了改哪里。",
+        "sourceId": "lib-c2fe2d97"
+      },
+      "today": "找一条你写过没发的消息，挑出一句想换说法的。跟 AI 说清改哪句、留哪句，去试一次。"
+    }
+  },
+  "exercise": {
+    "id": "edit-one-part-exercise",
+    "kind": "explain",
+    "title": "给房东催修",
+    "prompt": "你给房东王姐写了条催修消息。报修经过、漏水发霉都写清了，只是中间有一段太冲。\n自己写要求，让 AI 只改那段语气。拿到回答后对对事实和要求，改到能放心发给房东。",
+    "locales": {
+      "en": {
+        "title": "Follow up with the landlord about repairs",
+        "prompt": "You wrote a follow-up message to your landlord, Sister Wang. The repair history, water leak, and mold are all clearly stated, but one section in the middle sounds too harsh.\nWrite your own request asking AI to change only the tone of that section. Once you get the reply, check the facts and requests until you feel confident sending it to the landlord.",
+        "rubric": [
+          "The follow-up tone became more polite, and the deposit amount, repair report date, and repair progress were not deleted.",
+          "The building number, apartment number, and move-in date are all correct. The dripping faucet, peeling paint, and mold in the corner were kept unchanged.",
+          "Nothing was made up that the landlord never said or did.",
+          "The request only asks AI to change the section where the follow-up sounded too harsh. The remaining sections remain as they were, including the photo details and the request to schedule repairs within this week."
+        ]
+      }
+    },
+    "rubric": [
+      "催修语气变客气了，押金金额、报修日期和维修进度都没被删。",
+      "楼栋号、房号和搬入时间都对。水龙头滴水、墙角起皮发霉都没变。",
+      "没有编造房东没说过的话或没做过的事。",
+      "请求只让 AI 改催修太冲的那段。其余段落保持原样，包括照片信息和这周内安排维修的要求。"
+    ],
+    "evidence": [
+      {
+        "kind": "fact",
+        "sourceUrl": "https://openai.com/index/introducing-canvas/",
+        "sourceTitle": "Introducing canvas",
+        "sourceAuthority": "first-party",
+        "provenance": {
+          "type": "case-study",
+          "publisher": "OpenAI",
+          "publishedOn": "2024-10-03",
+          "accessedOn": "2026-09-15",
+          "locator": "与 ChatGPT 协作的新方式；写作功能",
+          "supports": "发布内容描述了在写作草稿旁并排工作、选定特定段落以获取针对性反馈、直接进行编辑以及恢复早期版本的功能。",
+          "limitations": "这些是产品发布时的历史功能，不能保证如今每个账户都拥有完全相同的界面。本课程讲授的是受控修改方法，而非某个特定产品的具体按钮操作顺序。",
+          "locales": {
+            "en": {
+              "locator": "A new way to work with ChatGPT; writing features",
+              "supports": "The launch described working beside a writing draft, selecting passages for targeted feedback, making direct edits and restoring earlier versions.",
+              "limitations": "Historical launch features, not a guarantee that every account has the same interface today. The course teaches controlled revision, not a product-specific button sequence."
+            }
+          }
+        }
+      }
+    ]
+  },
+  "exerciseRevision": 7
+}

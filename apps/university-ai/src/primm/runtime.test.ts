@@ -12,6 +12,7 @@ import {
 } from "./local-transport.js";
 import { articleText, fetchApprovedSource } from "./sources.js";
 import { RunSchema, type CanonicalPrimm } from "./content.js";
+import droppedFactsFixture from "./fixtures/task18-dropped-facts.json";
 
 const ref = {
   studyId: "ai-literacy",
@@ -40,6 +41,19 @@ function setup(
             from: "finalWork",
             quote: JSON.parse(request.messages.at(-1)!.content as string).finalWork.slice(0, 40),
           },
+          facts: [
+            {
+              criterion: 0,
+              requirement: "当前作品",
+              evidence: {
+                from: "finalWork",
+                quote: JSON.parse(request.messages.at(-1)!.content as string).finalWork.slice(
+                  0,
+                  40,
+                ),
+              },
+            },
+          ],
         })
       : "真正调用了注入的测试模型",
     raw: {},
@@ -72,6 +86,186 @@ afterEach(async () => {
 });
 
 describe("bounded PRIMM runtime", () => {
+  it("prevents SW-T12-001 even when the model passes the preserved incomplete work", async () => {
+    const complete = vi.fn(async (request: Parameters<ChatCompletionTransport["complete"]>[0]) => {
+      if (!request.responseFormat) return { content: "a real landlord repair draft", raw: {} };
+      const payload = JSON.parse(request.messages.at(-1)!.content as string);
+      const missingFourth = String(payload.requirement).includes("照片");
+      return {
+        content: JSON.stringify({
+          outcome: "pass",
+          evaluation: missingFourth
+            ? "照片和维修期限等必需事实不在作品中。"
+            : "这一项看起来已经完成。",
+          extensions: [],
+          evidence: { from: "finalWork", quote: payload.finalWork.slice(0, 18) },
+          facts: missingFourth
+            ? [
+                { criterion: 3, requirement: "照片信息", evidence: { from: "missing", quote: "" } },
+                {
+                  criterion: 3,
+                  requirement: "这周内安排维修",
+                  evidence: { from: "missing", quote: "" },
+                },
+                {
+                  criterion: 3,
+                  requirement: "拖了一个月的维修延误",
+                  evidence: { from: "missing", quote: "" },
+                },
+              ]
+            : [
+                {
+                  criterion: Number(payload.criterion),
+                  requirement: "当前作品",
+                  evidence: { from: "finalWork", quote: payload.finalWork.slice(0, 18) },
+                },
+              ],
+        }),
+        raw: {},
+      };
+    });
+    const lesson: CanonicalPrimm = {
+      activity: droppedFactsFixture.activity as unknown as CanonicalPrimm["activity"],
+      contentRevision: 7,
+      exerciseRevision: 7,
+      exercise: {
+        id: droppedFactsFixture.exerciseId,
+        prompt: "你给房东写了催修消息。",
+        rubric: [
+          "催修语气变客气了，押金金额、报修日期和维修进度都没被删。",
+          "楼栋号、房号和搬入时间都对。水龙头滴水、墙角起皮发霉都没变。",
+          "没有编造房东没说过的话或没做过的事。",
+          "请求只让 AI 改催修太冲的那段。其余段落保持原样，包括照片信息和这周内安排维修的要求。",
+        ],
+      },
+      assets: [],
+      fingerprint: "task18-preserved-r7",
+    };
+    const runtime = createPrimmRuntime({
+      transport: { provider: "task18-fixed-replay", complete },
+      resolveLesson: async () => lesson,
+    });
+    const request = {
+      ...input("make"),
+      lessonRef: droppedFactsFixture.lessonRef,
+      contentRevision: 7,
+      prompt: droppedFactsFixture.prompt,
+    };
+    const result = await runtime.run(request);
+    const decision = await runtime.grade({
+      locator: droppedFactsFixture.lessonRef,
+      contentRevision: 7,
+      exerciseId: droppedFactsFixture.exerciseId,
+      commandId: randomUUID(),
+      answer: JSON.stringify({
+        kind: "primm-make",
+        request,
+        resultRequestId: result.requestId,
+        finalWork: droppedFactsFixture.finalWork,
+      }),
+    });
+    expect(decision.hostGrade?.outcome).toBe("fail");
+    expect(droppedFactsFixture.omittedFacts).toHaveLength(3);
+  });
+
+  it("fails each dropped fact while keeping complete and paraphrased work passing", async () => {
+    const completeWork = `${droppedFactsFixture.finalWork}\n我拍了照片，水龙头和墙角各两张，请在这周内安排人来修；这次维修已经拖了一个月。`;
+    const complete = vi.fn(async (request: Parameters<ChatCompletionTransport["complete"]>[0]) => {
+      if (!request.responseFormat) return { content: "a real landlord repair draft", raw: {} };
+      const payload = JSON.parse(request.messages.at(-1)!.content as string);
+      const facts = String(payload.requirement).includes("照片")
+        ? [
+            ["照片信息", "照片"],
+            ["这周内安排维修", "这周"],
+            ["拖了一个月的维修延误", "一个月"],
+          ].map(([requirement, marker]) => ({
+            criterion: Number(payload.criterion),
+            requirement,
+            evidence:
+              payload.finalWork.includes(marker) ||
+              (marker === "照片" && payload.finalWork.includes("现场图"))
+                ? {
+                    from: "finalWork",
+                    quote: payload.finalWork.includes(marker) ? marker : "现场图",
+                  }
+                : { from: "missing", quote: "" },
+          }))
+        : [
+            {
+              criterion: Number(payload.criterion),
+              requirement: "其他事实",
+              evidence: { from: "finalWork", quote: payload.finalWork.slice(0, 12) },
+            },
+          ];
+      return {
+        content: JSON.stringify({
+          outcome: "pass",
+          evaluation: "逐项核对作品中的事实。",
+          extensions: [],
+          evidence: { from: "finalWork", quote: payload.finalWork.slice(0, 12) },
+          facts,
+        }),
+        raw: {},
+      };
+    });
+    const lesson: CanonicalPrimm = {
+      activity: droppedFactsFixture.activity as unknown as CanonicalPrimm["activity"],
+      contentRevision: 7,
+      exerciseRevision: 7,
+      exercise: {
+        id: droppedFactsFixture.exerciseId,
+        prompt: "你给房东写了催修消息。",
+        rubric: [
+          "催修语气变客气了，押金金额、报修日期和维修进度都没被删。",
+          "楼栋号、房号和搬入时间都对。水龙头滴水、墙角起皮发霉都没变。",
+          "没有编造房东没说过的话或没做过的事。",
+          "请求只让 AI 改催修太冲的那段。其余段落保持原样，包括照片信息和这周内安排维修的要求。",
+        ],
+      },
+      assets: [],
+      fingerprint: "task18-preserved-r7-fact-cases",
+    };
+    const runtime = createPrimmRuntime({
+      transport: { provider: "task18-fixed-fact-cases", complete },
+      resolveLesson: async () => lesson,
+    });
+    const request = {
+      ...input("make"),
+      lessonRef: droppedFactsFixture.lessonRef,
+      contentRevision: 7,
+    };
+    const result = await runtime.run(request);
+    const grade = (finalWork: string) =>
+      runtime.grade({
+        locator: droppedFactsFixture.lessonRef,
+        contentRevision: 7,
+        exerciseId: droppedFactsFixture.exerciseId,
+        commandId: randomUUID(),
+        answer: JSON.stringify({
+          kind: "primm-make",
+          request,
+          resultRequestId: result.requestId,
+          finalWork,
+        }),
+      });
+    await expect(grade(droppedFactsFixture.finalWork)).resolves.toMatchObject({
+      hostGrade: { outcome: "fail", passed: false },
+    });
+    for (const marker of ["照片", "这周", "一个月"]) {
+      const missingOne = completeWork.replace(marker, "");
+      await expect(grade(missingOne)).resolves.toMatchObject({
+        hostGrade: { outcome: "fail", passed: false },
+      });
+    }
+    await expect(grade(completeWork)).resolves.toMatchObject({
+      hostGrade: { outcome: "pass", passed: true },
+    });
+    await expect(
+      grade(completeWork.replace("照片，水龙头和墙角各两张", "拍了现场图，分别留了两张")),
+    ).resolves.toMatchObject({
+      hostGrade: { outcome: "pass", passed: true },
+    });
+  });
   it("grades only the current Make material, never unrelated historical case facts", async () => {
     const { runtime, lesson, complete } = setup();
     lesson.activity.materials.push({
@@ -240,6 +434,12 @@ describe("bounded PRIMM runtime", () => {
               evaluation: "Quoted problem",
               extensions: [],
               evidence: { from: "finalWork", quote: "old erroneous words" },
+              facts: [
+                {
+                  requirement: "原句",
+                  evidence: { from: "finalWork", quote: "old erroneous words" },
+                },
+              ],
             })
           : "old erroneous words",
         raw: {},
@@ -273,6 +473,7 @@ describe("bounded PRIMM runtime", () => {
               evaluation: "x".repeat(2000),
               extensions: [],
               evidence: { from: "missing", quote: "" },
+              facts: [],
               confidence: "high",
             })
           : "a real run",

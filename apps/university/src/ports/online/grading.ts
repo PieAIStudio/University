@@ -136,6 +136,12 @@ export function createOnlineGradingPort(options: {
               return token;
             },
             attemptCount: count,
+            criteria:
+              (
+                lesson?.activities?.find((activity) => activity.kind === "primm") as
+                  | { make?: { checklist?: readonly string[] } }
+                  | undefined
+              )?.make?.checklist ?? [],
           });
           return saveResult(result);
         } catch (error) {
@@ -222,6 +228,7 @@ async function submitToMeteredService(options: {
   readonly prompt: string;
   readonly readAccessToken: () => Promise<string | null>;
   readonly attemptCount: number;
+  readonly criteria: readonly string[];
 }): Promise<ExerciseAttemptResult> {
   const accessToken = await options.readAccessToken();
   if (!accessToken) {
@@ -245,6 +252,7 @@ async function submitToMeteredService(options: {
         exerciseId: options.input.exerciseId,
         prompt: options.prompt,
         funding: options.input.meteredFunding ?? "wallet",
+        criteria: options.criteria,
       }),
     });
     const body = await readMeteredResponse(response);
