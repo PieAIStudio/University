@@ -5,6 +5,7 @@ import { useI18n } from "../i18n/index.js";
 import { AI_MODES, getLabExamples } from "../learning-play/LearningPlayLab.js";
 import { getExampleFamily } from "../learning-play/difficulty-examples.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
+import type { ShelfStudy } from "../content/port.js";
 import {
   CATALOG_GROUPS,
   createCatalog,
@@ -50,9 +51,11 @@ function NativePlay({ kind }: { readonly kind: NativeKind }) {
 }
 
 export function PlayCatalog({
+  studies,
   renderThree,
   learner = false,
 }: {
+  readonly studies: readonly ShelfStudy[];
   /** Library presentation reuses every playable activity; author diagnostics
    * stay out of it. */
   readonly learner?: boolean;
@@ -60,7 +63,7 @@ export function PlayCatalog({
 }) {
   const interfaceTranslator = useI18n();
   const { locale } = useI18n();
-  const entries = useMemo(() => createCatalog(), []);
+  const entries = useMemo(() => createCatalog(studies), [studies]);
   const groups = CATALOG_GROUPS;
   const title = interfaceTranslator.t(learner ? "album.courseware" : "gallery.title");
   const groupLabel = (id: CatalogGroup | "all") =>

@@ -3,13 +3,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { InterfaceLanguageProvider } from "../i18n/react.js";
 import { PlayCatalog } from "./PlayCatalog.js";
+import { sampleShelf } from "./test-shelf.js";
 
 function render(learner: boolean) {
   history.replaceState(null, "", learner ? "/library/courseware" : "/play-lab/catalog");
   const node = document.createElement("div");
   node.innerHTML = renderToStaticMarkup(
     <InterfaceLanguageProvider locale="en">
-      <PlayCatalog learner={learner} />
+      <PlayCatalog learner={learner} studies={sampleShelf()} />
     </InterfaceLanguageProvider>,
   );
   return node;

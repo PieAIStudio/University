@@ -258,7 +258,7 @@ export function MainRouter({
       {view.kind === "play-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           {view.collection === "catalog" ? (
-            <PlayCatalogRoute />
+            <PlayCatalogRoute shelf={shelf} />
           ) : view.collection === "prop-finish" ? (
             <PropFinishRoute />
           ) : view.collection === "wax-island" ? (
@@ -455,6 +455,7 @@ export function MainRouter({
       {LIBRARY_VIEW_TAB[view.kind] ? (
         <Suspense fallback={<RouteFallback />}>
           <LibraryHost
+            shelf={shelf}
             key={progressPort.syncState().userId ?? "guest"}
             tab={libraryTabOf(view)}
             studyId={focusedStudyId}

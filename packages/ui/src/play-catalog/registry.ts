@@ -1,7 +1,8 @@
 import { toPath, type ActivityKind } from "@pieai/university-core";
 import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
 import type { PlainMessageKey } from "../i18n/types.js";
-import { SAMPLE_PATHS } from "./sample-paths.js";
+import { samplePathsOf } from "./sample-paths.js";
+import type { ShelfStudy } from "../content/port.js";
 import { THREE_GAMES, type ThreeGame } from "./three-games.js";
 export { THREE_GAMES, type ThreeGame } from "./three-games.js";
 
@@ -30,7 +31,7 @@ const itemKey = (id: string, field: "name" | "action" | "controls") =>
  * were deleted on 2026-10-01 (Owner G3); their screenshots stay in
  * docs/reference/interaction-components/album.html.
  */
-export function createCatalog(): readonly CatalogEntry[] {
+export function createCatalog(studies: readonly ShelfStudy[]): readonly CatalogEntry[] {
   const native: CatalogEntry[] = [...FOUNDATION_MODES, ...AI_MODES].map((kind) => ({
     id: `native:${kind}`,
     group: "native",
@@ -40,7 +41,7 @@ export function createCatalog(): readonly CatalogEntry[] {
     controls: itemKey(kind, "controls"),
     scope: "gallery.nativeScope",
   }));
-  const paths: CatalogEntry[] = SAMPLE_PATHS.map(({ id, unitId }) => ({
+  const paths: CatalogEntry[] = samplePathsOf(studies).map(({ id, unitId }) => ({
     id: `path:${id}`,
     group: "paths",
     name: `gallery.lesson.${id}`,

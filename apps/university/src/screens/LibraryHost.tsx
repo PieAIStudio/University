@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { ANTI_PATTERN_ENTRIES, CONCEPT_ENTRIES, type KnowledgeAlbum } from "@pieai/university-core";
 import { LibrarySurface } from "@pieai/university-ui";
 import type { KnowledgeNoteView } from "@pieai/university-ui/view/lesson-view.js";
+import type { Shelf } from "@pieai/university-ui/content/port.js";
 
 import { LEXICON } from "../lesson/language";
 import { WORLD, type LibraryTab, type View } from "@pieai/university-core";
@@ -27,12 +28,14 @@ const Courseware = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
  * here, and there must not be one.
  */
 export function LibraryHost({
+  shelf,
   tab,
   studyId,
   onOpen,
   album,
   sound = false,
 }: {
+  readonly shelf: Shelf | null;
   tab: LibraryTab;
   /** Whose notes. The capsule already names this series; the tab follows it. */
   studyId: string | null;
@@ -71,7 +74,7 @@ export function LibraryHost({
       courseware={
         tab === "courseware" ? (
           <Suspense fallback={<RouteFallback />}>
-            <Courseware learner />
+            <Courseware learner shelf={shelf} />
           </Suspense>
         ) : null
       }

@@ -1,4 +1,8 @@
-export const SAMPLE_PATHS = [
+import type { ShelfStudy } from "../content/port.js";
+
+// Known sample identities include retired lessons for historical/test catalogues.
+// An identity is offered only when that exact lesson exists on the loaded shelf.
+const SAMPLE_PATHS = [
   {
     id: "ask-about-a-picture",
     unitId: "first-useful-step",
@@ -11,4 +15,18 @@ export const SAMPLE_PATHS = [
     id: "name-the-result",
     unitId: "first-useful-step",
   },
+  { id: "edit-one-part", unitId: "first-useful-step" },
+  { id: "answer-or-search", unitId: "first-useful-step" },
+  { id: "follow-a-claim", unitId: "check-what-matters" },
 ] as const;
+
+export function samplePathsOf(studies: readonly ShelfStudy[]) {
+  const course = studies
+    .find((study) => study.id === "ai-literacy")
+    ?.courses.find((course) => course.id === "understanding-ai");
+  return SAMPLE_PATHS.filter((path) =>
+    course?.units.some(
+      (unit) => unit.id === path.unitId && unit.lessons.some((lesson) => lesson.id === path.id),
+    ),
+  );
+}

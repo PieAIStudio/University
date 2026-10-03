@@ -275,3 +275,68 @@ verbatim counts, source and remote heads, and the immediately preceding load
 and Playwright process check. Delivery is claimed only if that receipt confirms
 success; failure stops the queue. No Actions acceptance or deployment is started.
 After delivery, task 18 runs before task 14, as the Owner requested on 2026-10-03.
+
+
+### Push-gate integration repair under the revised Owner instruction
+
+The first ordinary push of `3b2ed566dc28c62ca6f090a964dd5246c197a08f`
+finished without interruption on 2026-10-03. Its unchanged complete gate said:
+
+```text
+7 failed
+424 passed (28.3m)
+```
+
+Exit 1, no remote delivery; timing did not run. The source commit and original
+`push-receipt.json`, `push.log` and `push-first-failure/` remain intact. Six
+failures are four `menu-doors` cases and two `play-catalog` cases: the release
+sample-path reduction also fixed the test browser's paths to three, despite its
+independently loaded six-path frozen catalogue. The seventh was the delivery
+1600-pixel real globe click in `world-delivery`.
+
+Owner's newer instruction requires each failing case to run alone twice before
+a gate stop. Both one-worker isolated checks returned `6 failed` and
+`2 passed (5.0m)`: all six directory cases failed consistently; the original
+globe-click case passed both times, as did one additional narrow-rail case
+selected by the name filter. This is eight collected cases, not a change to the
+431-case full inventory. Logs are `failed-cases-isolated-1.log` and
+`failed-cases-isolated-2.log`. The stable catalogue failures required a fix;
+they were not dismissed as machine load. No renderer or pointer assertion changed.
+
+The play catalogue now receives the same already-loaded shelf used by the map
+and Library. Historical sample identities are offered only if their exact
+course/unit/lesson exists on that shelf: three paths for the release, six for
+the frozen test catalogue, and no dead lesson links before material arrives.
+It does not add retired lessons to delivery or copy course content. The browser
+specs and their 25-entry expectations stay unchanged. A regression first said
+`2 failed | 2 passed (4)`; after repair, the focused UI suite said
+`6 passed (6)`. Evidence is `catalogue-shelf-red.log` and
+`catalogue-shelf-green.log`.
+
+The Owner explicitly requested one separate documentation commit for the new
+night order, recorded as `140cc802`. The necessary gate repair is a follow-up
+commit rather than rewriting the existing task commit. This is the recorded
+deviation from one task/one commit; it preserves history and original failure
+evidence under the Owner's autonomous-repair authority. No subsequent task's
+implementation begins before task 13's repaired full gates deliver successfully.
+The revised work queue governs isolation, load checks, bounded push retries and
+required stops. Later successful receipt counts, if any, are preserved separately;
+the first failed receipt is never overwritten or relabeled as a pass.
+
+
+`catalogue-repair-release/receipt.json` and its two real Chrome screenshots show
+22 entries and exactly the three retained lesson paths at 1280 and 390 pixels,
+with zero page errors. Both screenshots were visually read. A fresh six-tree
+protection check remains byte-identical, and the Owner's r7 preview responds.
+These new catalogue captures supplement the original 20-screen retirement set;
+they do not replace it or the task-12 reading receipts.
+
+
+After this repair, `pnpm verify` exits 0 in `verify-after-push-repair.log`:
+UI `713 passed` (two new regressions), all other unit totals unchanged;
+`176 docs`, `166 current files, 340 local links`, audit/doctor `0 warning(s)`.
+The six formerly red browser cases now say `6 passed (3.2m)` in
+`catalogue-repair-browser.log`, with every original assertion retained.
+The follow-up ordinary push is recorded separately under
+`.scratch/overnight-20261003/13-repair-push/`; its receipt is the authority for
+full complete/timing results and final remote delivery, not the focused pass.
