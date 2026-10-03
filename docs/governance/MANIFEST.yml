@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-03T18:31:04.974Z
+generated_at: 2026-10-03T19:22:26.799Z
 generator_version: doc-gov@0.14.2
 docs_count: 176
 docs:
@@ -228,13 +228,6 @@ docs:
     canonical: true
     last_reviewed: 2026-10-03
     pinned: false
-  - id: PLAN-14-CONTENT-REPOSITORY
-    path: docs/plans/active/14-content-repository.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-10-03
-    pinned: false
   - id: PLAN-15-ACCOUNT-CENTER-ADOPTION
     path: docs/plans/active/15-account-center-and-closeout-adoption.md
     type: plan
@@ -328,6 +321,13 @@ docs:
     pinned: false
   - id: PLAN-13-RETIRE-OLD-COURSES
     path: docs/plans/completed/13-retire-old-courses.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-03
+    pinned: false
+  - id: PLAN-14-CONTENT-REPOSITORY
+    path: docs/plans/completed/14-content-repository.md
     type: plan
     status: completed
     canonical: true
