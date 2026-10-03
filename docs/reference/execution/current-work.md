@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-03
 domain: execution
 tags:
   - current-work
@@ -58,7 +58,7 @@ New mainline work follows the applicable lanes below.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Next mainline work | The queue in [the work queue](work-queue.md), in filename order. `06-` (remote cosmetics activation) and `09-` (legal facts) wait on the Owner and are stepped over. Then: [11 · test catalogue (completed)](../../plans/completed/11-test-catalogue.md), [12 · the production line writes step lessons](../../plans/active/12-pipeline-writes-step-lessons.md), [13 · old courses retire](../../plans/active/13-retire-old-courses.md), [14 · content moves to its own repository](../../plans/active/14-content-repository.md). University reached a clean baseline on 2026-10-02: only `main`, locally and on the remote; the convergence pass (plans retired, `PrimmSteps.tsx` and `App.tsx` split — see the [app module map](../../../apps/university/src/app/README.md) — the house store, unused declarations, stray reports) is on `main` with verify, 430 browser and 40 timing tests green. From here the Owner directs Codex through these task packs; Claude writes and reviews them |
+| Next mainline work | Owner 2026-10-03: [11 · test catalogue (delivered)](../../plans/completed/11-test-catalogue.md) → [12 · pipeline writes lesson four, immediately next](../../plans/active/12-pipeline-writes-step-lessons.md) → [13 · old courses retire](../../plans/active/13-retire-old-courses.md) → [14 · content repository](../../plans/active/14-content-repository.md) → [16 · UIKit 3 adoption](../../plans/active/16-uikit-3-adoption.md) → [17 · deep refactor](../../plans/active/17-deep-refactor.md). [The work queue](work-queue.md) owns the protocol. Task 12 stays active while awaiting Owner reading and then permits 13 to proceed; its fourth lesson stays unpublished and protected. `06-`, `09-` and [15 · account center](../../plans/active/15-account-center-and-closeout-adoption.md) remain Owner-held. Task 16 A and task 17 R0 each stop for Claude review. |
 | English reading aids missing on PRIMM lessons | [PRIMM reading tools gap](primm-reading-tools-gap.md): the PRIMM reader ships without foreign-language mode or the reading-detail toggle, so an English learner meets five lessons in a row without them. Recorded rather than fixed on 2026-09-21 by Owner ruling, and the browser gate no longer raises it — this document is the only alarm left |
 | Four-course archipelago draws three names | [Archipelago framing gap](archipelago-framing-gap.md): the world camera does not avoid the opaque right rail the way the course overview does, so one of `browser-ai`'s four course names is not drawn and an island dragged to the right edge has no room for its entry button. Recorded rather than fixed on 2026-09-21; the browser gates no longer require the fourth name, so this document is the only alarm left |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |

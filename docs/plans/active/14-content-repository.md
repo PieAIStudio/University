@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-02
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-03
 domain: execution
 tags:
   - content
@@ -43,14 +43,17 @@ superseded_by: null
 
   Also decide where the delivery lexicon `apps/local/data/vocabulary/` belongs.
   The release build reads it.
-- **Every reader of that content.** All of these must read the new location
-  through one configured root, not a second copy:
+- **Every reader and writer of that content.** All of these must use the new
+  location through one configured root, not a second copy:
   - `import-courses.mjs` (`pnpm content`);
   - `check-published-catalog.mjs`, `check-export-freshness.mjs`,
     `check-content-revisions.mjs` and `pull-taxonomy.mjs`;
   - the authoring server's studies root (`university-local.config.json`,
     `UNIVERSITY_LOCAL_STUDIES_ROOT`);
-  - the PRIMM production line;
+  - the PRIMM production line, including its lesson/proposal write destinations
+    and native-CLI apply path introduced by task `12-`. Move those destinations
+    with the content repository and derive them from the same configured root,
+    not a separate pipeline setting or hard-coded old directory;
   - the release build in `vercel.json`, which passes
     `--recovery-root apps/local/course-proposals/recovery` and is built locally
     where the private study sources exist.
@@ -113,6 +116,9 @@ Also required:
   - `pnpm content` imports the shipped lessons;
   - the authoring server opens a study;
   - the production line's `status` command lists its lessons;
+  - the pipeline's own tests and a native dry-run prove that its writes/proposals
+    target that same configured content root; preserve lesson four's contents,
+    revision identities, receipts and unpublished/Owner-review state during the move;
   - the release build's dry run (`pnpm delivery:build` with the content root)
     produces an artifact that contains the shipped lessons.
 

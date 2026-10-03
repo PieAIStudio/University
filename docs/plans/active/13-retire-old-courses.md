@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-02
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-03
 domain: execution
 tags:
   - content
@@ -40,6 +40,12 @@ superseded_by: null
 - **What stays.** The version-3 step lessons: today, the first three lessons of
   `ai-literacy` / `understanding-ai`, unit `first-useful-step`. If task `12-` has
   produced a lesson the Owner accepted, it stays too.
+- **Fourth-lesson protection (Owner 2026-10-03).** Task `12-` runs before this
+  task. Until the Owner has read and accepted its new fourth lesson, leave that
+  draft/revision and its writing receipts untouched and unpublished. Do not
+  retire, delete, replace or export it as part of retiring its old predecessor.
+  Once accepted, retain it with lessons 1–3. An active task 12 waiting only for
+  Owner reading does not block this task's other authorized retirement work.
 - **The mechanics that are not wired.** The fields `archived` on a study,
   `retired` on a lesson and `retained` in the catalogue have zero readers, so
   setting them changes nothing. Real retirement has so far meant moving a whole
@@ -124,6 +130,9 @@ Also required:
     lessons;
   - a learner session seeded with progress and due cards on removed lessons,
     showing no error and no broken card.
+- **Pending fourth lesson.** Record its authoring identity, revision/hash and
+  unpublished state before and after retirement. It must remain readable in the
+  Owner preview without being added to delivery before acceptance.
 - **Restore rehearsal.** Restore one retired course into a scratch copy from the
   retired area alone. Report what that took.
 - **Search proof.** A repository search for each retired study id finds only the

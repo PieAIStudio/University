@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-02
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-03
 domain: execution
 tags:
   - write-lesson
@@ -24,7 +24,10 @@ superseded_by: null
 
 - Repository `/Users/yuanfei/PieAI/University`, branch `main`. Queue rules are in
   [the work queue](../../reference/execution/work-queue.md).
-- Depends on: none. This task is independent of `11-`, `13-` and `14-`.
+- **Order (Owner 2026-10-03): immediately after `11-test-catalogue.md` is pushed.**
+  The writing pipeline is the beta bottleneck; the Owner must be able to read its
+  fourth lesson early. Do not wait for tasks `13-`, `14-`, `16-` or `17-`.
+  This replaces the earlier instruction to wait for the refactor.
 - Before using the course-authoring skills, read `apps/local/AGENTS.md`.
 - **Where things stand.** The first three lessons of `ai-literacy` /
   `understanding-ai`, unit `first-useful-step`, are version-3 step lessons. They
@@ -114,8 +117,12 @@ summarised in the commit body:
 - If he asks for changes, they go back through the line's `review` → `fix` loop.
   Hand edits are logged with `note`, and a lesson with hand edits does not count as
   written by the line.
-- If the Owner has not read it yet, commit the line's changes, keep this task in
-  `active/` with "awaiting the Owner's reading", and step over it.
+- If lesson four is ready but the Owner has not read it yet, pass the required
+  gates, commit and push the line's changes, and keep this task in `active/` marked
+  **"awaiting the Owner's reading / 等 Owner 阅读"**. Keep the fourth lesson
+  unpublished, provide the real preview, then proceed to task `13-`.
+  Return here for `review` → `fix` when the Owner's feedback arrives; neither
+  retiring old courses nor refactoring may stand in for his reading.
 
 Not acceptable as proof: the detector returning `ready`; a lesson read only with
 short or placeholder answers.
@@ -132,6 +139,9 @@ short or placeholder answers.
 - Gate numbers verbatim.
 - What changed in the rules, the line, and their tests.
 - How many rounds the lesson took, and the line's score history.
-- The Owner's verdict, verbatim.
+- The Owner's verdict, verbatim, or the explicit awaiting-reading state.
+- A directly openable `127.0.0.1` reading URL served by `pnpm primm:preview`,
+  with actual full-length model answers and their measured lengths, not short
+  placeholder answers. State clearly that the fourth lesson is unpublished.
 - Failure classes the detector found that the contract does not name yet, as
   candidates for the next rule change.

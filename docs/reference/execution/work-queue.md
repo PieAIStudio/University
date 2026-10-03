@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: "human"
 created: 2026-09-13
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-03
 domain: "execution"
 tags:
   - work-queue
@@ -25,7 +25,8 @@ One agent, one task at a time, on `main`. No branches, no worktrees, no parallel
 lanes. This page is the running protocol; starting a working session takes one
 instruction: *read this page, then begin.*
 
-Queued tasks live in `docs/plans/active/`, sorted by filename. Finished ones move
+Queued tasks live in `docs/plans/active/`. Follow the explicit Owner order below;
+filename order is the fallback for entries not covered by it. Finished ones move
 to `docs/plans/completed/`.
 
 Task packs are written with the user-scope `task-pack-queue` skill, which
@@ -34,11 +35,30 @@ the queue is changing the same code.
 
 ## Details
 
+### Current Owner order · 2026-10-03
+
+**11 → 12 → 13 → 14 → 16 → 17.** Task 11 has been pushed; start task 12 now,
+not after the refactor. The writing pipeline is the beta bottleneck and the Owner
+needs its fourth lesson early. This replaces the prior after-17 instruction.
+Tasks 06, 09 and 15 remain Owner-held and are skipped until their stated authority
+or factual prerequisites are supplied; candidate-package availability does not
+release task 15.
+
+When task 12 has passed its gates and produced the unpublished fourth lesson,
+commit/push its pipeline changes, leave it active as **awaiting Owner reading**,
+provide `pnpm primm:preview` with full-length real answers, and proceed to 13.
+Return to 12 through review → fix when feedback arrives. Task 13 must preserve
+that unpublished fourth lesson; task 14 moves pipeline writes through the same
+content-root configuration. Task 16's A stage is local-only and goes to Claude;
+task 17 stops after R0 for Claude review and retains pipeline tests plus a native
+dry-run at every stage. Each task pack owns its detailed acceptance boundary.
+
 ### How to run it
 
-1. List `docs/plans/active/` and sort by filename. Take the **first unfinished**
-   task. Re-read the directory before every task — do not carry a remembered
-   list, because the queue changes while you work.
+1. Re-read `docs/plans/active/` before every task. Take the **first unfinished,
+   unblocked task** in the current Owner order, applying each pack's explicit
+   skip/wait rules; use filename order for other entries. Do not carry a
+   remembered list, because the queue changes while you work.
 2. Read that task document in full. It is self-contained by design, and it is
    the only authority for its own scope.
 3. Do the work. Run the gates the document names.
@@ -56,6 +76,9 @@ the queue is changing the same code.
 | complete | `pnpm e2e`, also run by `pre-push` | the real browser product | 430 passed / 0 failed |
 | timing | `pnpm e2e:timing`, also run by `pre-push` | frame-time and loading budgets | 40 passed / 0 failed |
 
+The current browser floor is **431**, with all 40 timing cases retained: task 11's
+[actual push receipt](../../plans/completed/11-test-catalogue.md) records delivery
+at `73a8b587` on 2026-10-03. The table above remains the dated pre-task baseline.
 The first baseline, 2026-09-13 at `9f5bc900`, was 137 docs and 235 browser tests.
 When the default ports are busy, run the suites on another block with
 `E2E_ONLINE_PORT`, `E2E_LOCAL_WEB_PORT`, `E2E_LOCAL_API_PORT` and

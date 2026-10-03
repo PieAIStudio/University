@@ -137,13 +137,14 @@ passes only because specs were skipped.
 - One sentence on what changed and why.
 - Anything noticed but not done, as candidates for later tasks.
 
-## 7 Execution evidence · accepted locally 2026-10-03
+## 7 Execution evidence · delivered 2026-10-03
 
-**Local acceptance is complete:** reduced catalogue `431 passed (25.2m)`, normal
-catalogue `431 passed (27.7m)`, timing `40 passed (6.6m)`, and `pnpm verify` exit 0.
-The production files are restored byte-for-byte. The final evidence below owns
-this conclusion; the chronological failed attempts remain preserved, not current
-blockers. The normal pre-push gate must still complete before delivery is reported.
+**Task 11 is delivered.** The Owner-authorized second push completed the unchanged
+pre-push gates: `431 passed (25.1m)` and `40 passed (6.1m)`. Local and remote `main`
+are at `73a8b587`, with `d08df8ec` preserved as its parent. The earlier standalone
+reduced/normal catalogue and timing checks remain valid, with production bytes
+restored. The final receipt below owns the current conclusion; prior failed
+attempts and tool-stop records are chronological evidence, not current blockers.
 
 ### Implemented boundary
 
@@ -690,3 +691,164 @@ and lexicon is
 No course was retired or published by task 11. The Owner authorized one
 append-only follow-up commit above `d08df8ec`; that checkpoint is neither amended
 nor squashed. Pending queue packs remain separate from this task's delivery.
+
+### Actual pre-push failure and tool-stop record · 2026-10-03
+
+The explicit-path follow-up commit was created as
+`73a8b587a7a2d27f289fb125ef80ac457d42d8c5`, with parent
+`d08df8ec0c3b6a8925f674603e1385d8e19ebf1f`. Commit hooks passed:
+`172 docs`, `162 current files, 332 local links`, zero audit warnings.
+The real `git push origin main` was started once from a clean working tree.
+Its existing pre-push command remained unchanged and was not interrupted:
+
+```sh
+E2E_ONLINE_PORT=18693 E2E_LOCAL_WEB_PORT=18694 E2E_LOCAL_API_PORT=18695 E2E_GRADING_PORT=18696 pnpm e2e:all
+```
+
+It completed with exit 1 and the original browser result:
+
+```text
+  4 failed
+    [default] › e2e/primm.spec.ts:535:7 › PRIMM steps authoring zh-CN ask-about-a-picture: one action per screen, teacher after it, one ending
+    [default] › e2e/world-play-integration.spec.ts:39:7 › S 课程岛与学习玩法的整合边界 › authoring 1440px 真实导航往返不丢系列、课程或地图入口
+    [default] › e2e/X.ai-literacy-english.spec.ts:31:7 › X delivery ai-for-real-life/words-for-a-real-reader: every English lesson, source and image is readable
+    [default] › e2e/Y.english-campus.spec.ts:95:5 › Y English campus delivery › planet, study, course and lesson share one readable English journey
+  427 passed (32.8m)
+```
+
+The PRIMM and X cases reported `page.goto: Target page, context or browser has been closed`.
+The world-play and Y cases reported that course entry had not taken effect and
+its entry button was no longer visible (`harness/map-actions.ts:163`). Those are
+observed failure symptoms, not a diagnosed cause. No focused rerun or repair was
+started after this result. The hook did not reach its timing command; the prior
+standalone `40 passed (6.6m)` remains separate evidence, not a successful push.
+
+The push receipt records these exact host load averages:
+
+```text
+11:05  up 1 day, 19:37, 1 user, load averages: 7.74 9.67 17.00
+11:38  up 1 day, 20:10, 1 user, load averages: 95.76 111.65 87.33
+```
+
+The load rose sharply, but that alone does not prove why these four cases failed.
+The failed push left `main` two commits ahead of `origin/main`; the latter remained
+`35cd839490df13220e11c5e2f4fde213805a21d9`. No force push, hook bypass, amendment,
+squash or second push was attempted. The complete raw log, receipt, HTML report
+and test results are preserved under `.scratch/task11/pre-push-failure-73a8b587/`.
+The original log/receipt are `.scratch/task11/push-task11.log` and `push-task11.json`.
+The owned listeners on 18693–18696 were absent after the push terminated.
+
+**A separate read-only preparation request was safety-blocked while that push was
+already running.** It attempted to list headings from the existing interaction
+specification for later queue work. It did not execute. Exact tool request:
+
+```json
+{
+  "tool": "WebCodex-Mac.run_process",
+  "arguments": {
+    "project": "agent:device-c7e3c2df3e0d49e0:university-95b71956",
+    "session_id": "wc_sess_pOUdWikESH1-Hlo0",
+    "executable": "node",
+    "args": [
+      "--input-type=module",
+      "-e",
+      "import fs from 'node:fs'; const s=fs.readFileSync('docs/reference/interaction-components/spec.html','utf8'); for(const m of s.matchAll(/<h([23])[^>]*>([\\s\\S]*?)<\\/h\\1>/g)) console.log(m.index, m[2].replace(/<[^>]*>/g,'').trim());"
+    ],
+    "purpose": "diagnostic"
+  }
+}
+```
+
+Exact rejection:
+
+```text
+This tool call was blocked by OpenAI because we couldn't determine the safety status of the request.
+```
+
+There was no alternate entry point or retry of that effect. New implementation,
+validation and queue edits stopped. The already-running push was only observed
+to its natural terminal result, honoring the Owner's instruction not to interrupt
+its gates; only the existing failure evidence and this required stop record were
+then saved. This post-push record is an uncommitted documentation-only change.
+
+The separate queue-doc commit has NOT been made. Its four original documents
+(12, 15, 16 and 17, including the latest AuthKit candidate information) remain in
+stash `de1b7c8a76150db603dccfdf0af372fba39f8ff3`, label
+`task11-pending-queue-docs`; their saved hashes are in
+`.scratch/task11/queue-docs-before-stash.sha256`. This stash was not applied or dropped.
+
+The Owner's 2026-10-03 order is retained as the next documentation instruction,
+effective only after task 11 pushes: **11 → 12 → 13 → 14 → 16 → 17**; task 15
+remains Owner-held. Its required amendments have not yet been applied: 12 starts
+immediately after 11, keeps lesson four unpublished and stays active while waiting
+for Owner reading, with later feedback routed through review → fix; 13 preserves
+that unpublished lesson and retains it with 1–3 only after acceptance; 14 moves
+pipeline writes with the same configured content root; 17 depends on 12 and runs
+pipeline tests plus one dry-run after every stage; both queue indexes must match.
+After that separate document commit/push, task 12 must provide a real
+`pnpm primm:preview` reading path with full-length answers. No lesson-four draft,
+preview or task-12 implementation was produced in this continuation.
+
+### Owner-authorized load recheck and successful delivery · 2026-10-03
+
+On the exact unchanged `73a8b587` candidate, the four cases that failed during
+pre-push were each executed twice, serially on the isolated 18893–18896 test
+ports. The test list was checked before execution: exactly eight executions from
+four original cases, not eight different tests. No product code, assertions,
+clock or test deadline changed. The result was:
+
+```text
+Running 8 tests using 1 worker
+  8 passed (4.2m)
+```
+
+All eight were expected passes, with zero failures, flaky cases or skips. The
+complete command, case identities and receipts are in
+`.scratch/task11/overload-recheck/focused-receipt.json`, with `focused.log`,
+`focused-results.json`, `focused-report/` and `focused-test-results/` beside it.
+The before/after host observations were:
+
+```text
+12:30  up 1 day, 21:02, 1 user, load averages: 5.71 5.70 7.95
+12:34  up 1 day, 21:06, 1 user, load averages: 10.19 8.33 8.48
+```
+
+This sample did not reproduce the four failures. It supports investigating host
+contention, but does not prove that load was their sole cause.
+
+The single additional push authorized by the Owner started only after checking
+that the one-minute load was below 20 and no other Playwright process was running.
+The working tree was clean, HEAD unchanged, and the remote had not diverged. The
+previous stop record was saved separately rather than silently discarded.
+The preflight and final host observations were:
+
+```text
+12:35  up 1 day, 21:06, 1 user, load averages: 8.71 8.12 8.40
+13:06  up 1 day, 21:38, 1 user, load averages: 7.62 11.36 15.99
+```
+
+The normal `git push origin main` ran the complete existing hook without a
+bypass, interruption or further retry. Its raw terminal result was:
+
+```text
+  431 passed (25.1m)
+  40 passed (6.1m)
+To https://github.com/PieAIStudio/University.git
+   35cd8394..73a8b587  main -> main
+```
+
+Exit code was 0. Both `main` and `origin/main` resolved to
+`73a8b587a7a2d27f289fb125ef80ac457d42d8c5`; ahead/behind was `0 0`.
+The full push log, gate summaries, preflight process check and minute-by-minute
+load samples are retained in `.scratch/task11/overload-recheck/push.log` and
+`push-receipt.json`. `push-report/` and `push-test-results/` retain the final hook
+lane's report; the earlier complete browser reports remain in their own run
+directories. Owned push-test listeners were absent after completion.
+
+After delivery, both the temporary stop-record stash and the exact queued-doc
+stash `de1b7c8a76150db603dccfdf0af372fba39f8ff3` were applied by SHA. All five
+restored files matched their saved SHA-256 values before only those two matched
+stash entries were dropped. `overload-recheck/stash-restoration.json` records the
+operation. The separate documentation change now carries the Owner's effective
+11 → 12 → 13 → 14 → 16 → 17 order and its unpublished-fourth-lesson protections;
+no course content, kit version or learner data is changed by that documentation.
