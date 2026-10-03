@@ -13,7 +13,7 @@ import {
   navigateMapBreadcrumb,
   selectMapDestination,
 } from "./harness/map-actions.js";
-import { mapDomainForStudy } from "../apps/university/src/app/map-domain-catalog.js";
+import { mapDomainForStudy } from "../apps/university/src/app/map/map-domain-catalog.js";
 
 const SHOTS = process.env.R50_EVIDENCE_DIR ?? "/tmp/world-after";
 

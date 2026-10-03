@@ -14,7 +14,7 @@ import "@pieai/university-ui/cosmetics/cosmetics.css";
 import "@pieai/university-ui/house/house.css";
 import "@pieai/university-ui/capability/capability.css";
 import "@pieai/university-ui/cta/liquid-cta.css";
-import { App } from "./app/App";
+import { App } from "./app/composition/App";
 import { LiquidCtaTransitionLayer } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 /*
   Every stylesheet `packages/ui` ships, in both shells, always.

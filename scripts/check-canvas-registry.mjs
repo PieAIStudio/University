@@ -38,7 +38,7 @@ const CANVAS_MOUNTS = [
     purpose: "persistent navigation avatar",
   },
   {
-    path: "apps/university/src/app/ProfileAvatar.tsx",
+    path: "apps/university/src/app/learner/ProfileAvatar.tsx",
     purpose: "profile-page avatar",
   },
   {

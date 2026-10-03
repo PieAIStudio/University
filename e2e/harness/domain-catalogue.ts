@@ -1,7 +1,7 @@
 import {
   mapDomainCatalog,
   mapDomainForStudy,
-} from "../../apps/university/src/app/map-domain-catalog.js";
+} from "../../apps/university/src/app/map/map-domain-catalog.js";
 import { CATALOGUE_ROLES, SECONDARY_STUDY, SHIPPED_CATALOGUE } from "./catalogue.js";
 
 /** Domain interaction probes choose roles from the release, not from a memory

@@ -34,7 +34,7 @@ describe("createOnlinePresencePort", () => {
   });
 
   it("is not imported by the running app", () => {
-    const app = readFileSync(join(root, "src/app/App.tsx"), "utf8");
+    const app = readFileSync(join(root, "src/app/composition/App.tsx"), "utf8");
     expect(app).not.toMatch(/createOnlinePresencePort/);
     expect(app).not.toMatch(/from ["'].*account\/presence["']/);
   });

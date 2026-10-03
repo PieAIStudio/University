@@ -6,7 +6,7 @@
  * Canvas mount registry (the source gate checks this list):
  *   - `packages/world/src/Stage.tsx` — world, map and planet renderer
  *   - `packages/world/src/avatar/AvatarChip.tsx` — persistent navigation avatar
- *   - `apps/university/src/app/ProfileAvatar.tsx` — profile-page avatar
+ *   - `apps/university/src/app/learner/ProfileAvatar.tsx` — profile-page avatar
  *   - `apps/university/src/avatar-lab/AvatarLab.tsx` — avatar-workshop preview
  *
  * This file documents the world renderer's answers to the portfolio's

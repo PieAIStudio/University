@@ -9,7 +9,7 @@ import { LEXICON } from "../lesson/language";
 import { WORLD, type LibraryTab, type View } from "@pieai/university-core";
 import { contentPort } from "../ports";
 import { FAVOURITES_STORE } from "./FavouritesHost";
-import { mapDomainForStudy } from "../app/map-domain-catalog.js";
+import { mapDomainForStudy } from "../app/map/map-domain-catalog.js";
 import { RouteFallback } from "./lazy.js";
 
 const Courseware = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));

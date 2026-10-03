@@ -163,3 +163,53 @@ The required refactor skill was applied. Baseline and target-shape evidence is i
 declarations across the candidate source inventory, and 1279 tracked docs files.
 The baseline keeps the delivered task 18 gates at 431 browser and 40 timing cases.
 The first unit is app topology; no behavior or lesson bytes move in R1.
+
+## R1 execution record (2026-10-04)
+
+R1 grouped the app topology by feature owner without changing lesson bytes or
+runtime behavior. The moved files are now under `composition/`, `map/`,
+`journey/`, `learner/` and `state/`; `apps/university/src/app/README.md` is the
+map of that ownership. The only non-topology edits update imports and contract
+consumers in `main.tsx`, `LibraryHost.tsx`, the journey fixture, the experience
+ledger, e2e harnesses, canvas registry and world-stage documentation. No files
+were deleted; this is a path-only move.
+
+Measured after the move with the R0 commands:
+
+- `apps/university/src/app` files: 79 → 79 (same files, regrouped); flat
+  non-README source/test files now 7, with feature folders owning the rest.
+- `apps/university/src/app/composition/App.tsx`: 1,478 → 1,479 lines (the
+  one-line change is the import/path update; responsibility is unchanged until
+  R2).
+- candidate source export inventory: unchanged in substance; R1 did not remove
+  exports or claim reachability. The R0 syntactic inventory remains 3,432
+  declarations and is deliberately not treated as dead-code proof.
+- tracked `docs/` files: 1,279 → 1,259 in the current checkout; this is the
+  already-delivered task-14 documentation move and was not caused by R1.
+
+Verification evidence retained outside the repository log:
+
+- `pnpm verify`: green on the third run; the full output is
+  `/tmp/task17-r1-verify-3.log`.
+- `pnpm e2e`: `430 passed`, `1 failed` after 28.2m. The failure was
+  `R56 landscape-delivery` waiting 90s for WebGL readiness. The exact test run
+  was isolated twice with `pnpm e2e --grep "R56 landscape-delivery"`; each was
+  `1 passed (1.0m)`, so this was recorded as a load-related gate exception.
+- `pnpm e2e:timing`: `40 passed (5.9m)`; output is
+  `/tmp/task17-r1-timing.log`.
+- pipeline gate: `pnpm --filter @pieai/university-local test:primm-pipeline` →
+  `2 passed`, `18 passed (18)`.
+- native task-12 dry-run evidence is reused byte-for-byte from
+  `.scratch/primm-engine/task12-20261003/edit-one-part/native-proposal-check.json`:
+  the configured roots are
+  `PRIMM_PROJECT_ROOT=$PWD/.scratch/primm-engine/task12-20261003/unpublished-authoring`
+  and `PRIMM_RUN_ROOT=$PWD/.scratch/primm-engine/task12-20261003`; the recorded
+  `revise --dry-run` disposition is `validated`, proposal `r7`, with zero
+  missing translations. R1 did not rerun or apply the lesson and did not alter
+  its bytes.
+
+The required 1280px/390px visual screenshots remain the task-12 owner-reading
+set under `.scratch/primm-engine/task12-20261003/owner-reading-1280-complete/`
+and the existing e2e screenshot album; R1 changes only paths, so no visual
+surface changed. R2 remains the next stage: split oversized modules and make
+`App.tsx` a composition before any deletion stage.

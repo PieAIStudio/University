@@ -13,7 +13,7 @@ import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { NerveI18nProvider } from "@pieai/swimmer-nerve-kit/i18n/react";
 import { nerveLanguage } from "../src/nerve-language.js";
 import { MapGuide } from "../src/guide/MapGuide.js";
-import { useJourney } from "../src/app/use-journey.js";
+import { useJourney } from "../src/app/journey/use-journey.js";
 import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/swimmer-ui-kit/liquid-presence.css";
 import "@pieai/swimmer-nerve-kit/interaction.css";
