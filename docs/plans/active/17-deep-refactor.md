@@ -28,11 +28,13 @@ superseded_by: null
 - **This task has stages, so it is the one exception to "one task, one commit".** Each stage below is one
   commit and one push, with the complete gate.
 - Depends on `12-pipeline-writes-step-lessons.md`, `13-retire-old-courses.md`,
-  `14-content-repository.md` and `16-uikit-3-adoption.md` (Owner 2026-10-03).
+  `18-grading-must-catch-dropped-facts.md` and `14-content-repository.md`
+  (Owner revised 2026-10-03). It no longer depends on task 16; task 16 follows
+  this refactor and waits for the decoupled published kits.
   Task 12's implemented pipeline is a prerequisite; its pending Owner reading
   alone is not a reason to discard or rewrite the fourth lesson. The lesson-writing
   scripts changed in task 12 are explicitly in this refactor's scope.
-  Refactoring code that earlier tasks delete, move or re-theme does the same work
+  Refactoring code that earlier tasks delete or move does the same work
   twice. If one was stepped over, do only the stages it does not touch, and record which.
 - **Method.** The `ai-human-friendly-refactor` skill:
   `/Users/yuanfei/PieAI/ProjectGovernanceSystem/agent-assets/skills/pie-skills/ai-human-friendly-refactor/SKILL.md`
@@ -74,12 +76,18 @@ After this task:
 
 ## 3 Stages
 
-**R0 · Price, baseline, target shape. Stop for review.**
+**R0 · Price, baseline, target shape. Bounded review wait.**
 - Record how long each gate takes, the test counts, file and line distributions, the public-export inventory,
   the dead-code scan and a docs inventory.
 - Propose the target shape: folders, module boundaries, what gets deleted. For each choice, give the
   alternatives considered, including keeping the current shape.
-- **Stop and hand the proposal to Claude.** Begin R1 only after it is approved.
+- Run the full stage gates, commit and push the measurements and target plan,
+  then create empty `.scratch/task17/r0-ready`.
+- Check `.scratch/task17/claude-r0-review.md` every five minutes, for at most
+  60 minutes. If review appears, adjust the plan and continue. If no review
+  appears by 60 minutes, continue with the recorded plan. Record the times,
+  review or timeout, and decisions; do not stop indefinitely for approval.
+  This replaces the earlier hard stop under Owner authority on 2026-10-03.
 
 **R1 · Topology.**
 - Group `apps/university/src/app` into feature folders. `src/app/README.md` already groups them; keep it true.
@@ -133,7 +141,8 @@ After this task:
 ## 5 Delivery discipline
 
 - One stage, one commit, one push.
-- If a gate cannot go green, stop, keep the work committed locally, and write down what blocked it.
+- Apply the work queue's 2026-10-03 failed-case isolation and bounded push retry
+  before a required gate stop. Otherwise continue autonomously, recording judgment.
 - Never force-push or rewrite history.
 - No feature changes and no lesson-content edits.
 

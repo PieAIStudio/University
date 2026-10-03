@@ -25,8 +25,15 @@ superseded_by: null
 
 - Repository `/Users/yuanfei/PieAI/University`, branch `main`; queue rules in
   [the work queue](../../reference/execution/work-queue.md).
-- Depends on: `11-test-catalogue.md`. Independent of `12-`, `13-`, `14-`. **All three candidates are ready (2026-10-03).**
-- **The three candidates.** None of them is published yet. University's full gates are the
+- Depends on `17-deep-refactor.md`; do this after task 17, not before it.
+- **Held by Owner on 2026-10-03.** Wait for published stable UIKit `3.0.0`,
+  decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1`. The kits must no longer
+  depend on each other: University injects UIKit controls and the authentication
+  client into the kits. Refactor first, then adopt the new interfaces.
+- The earlier candidate list below is historical evidence only. Its coupled
+  NerveKit and AuthKit `0.8.0-rc.0` do not satisfy the new prerequisite. Do not
+  install these tarballs or begin phase A while this hold remains.
+- **Earlier coupled candidates (superseded).** None was published at this checkpoint. University's full gates are the
   consumer check before the Owner approves publishing all three together.
   - **UIKit `3.0.0`**
     - Tarball: `/Users/yuanfei/PieAI/SwimmerUIKit/.scratch/s6/final/swimmer-ui-kit-3.0.0.tgz`
@@ -60,12 +67,13 @@ superseded_by: null
 
 ## 1 Outcome
 
-University renders on the three candidates. Two changes are intended:
+After task 17 and the new publication prerequisites, University renders on the
+decoupled published kits. Two visual changes are intended:
 - adults see grey and younger learners can choose pastel;
 - the forward CTA is tide liquid.
 
-Every other behaviour is unchanged. The full gates are green on the candidates, and then on the published
-versions after the Owner approves.
+Every other learner behavior stays the same. Verify injected UI/auth interfaces
+and all gates on the exact published versions. Local tarball paths never enter main.
 
 ## 2 What the Owner said
 
@@ -84,7 +92,8 @@ versions after the Owner approves.
 
 Two phases, because `main` must never point at a local tarball.
 
-**A · Candidate check** — local only, nothing committed.
+**A · Candidate check** — historical procedure; currently held. Refresh this
+procedure against the decoupled interfaces and actual release evidence before use.
 - Install the three tarballs; verify the SHA-256 values above first.
 - Apply the migration and run every gate.
 - Capture before/after screenshots at 1280 px and 390 px, light and dark, on these screens:
@@ -92,7 +101,7 @@ Two phases, because `main` must never point at a local tarball.
 - Hand Claude the diff, the gate output and the screenshots. Claude reviews, then the Owner approves
   publishing all three packages.
 
-**B · Adoption** — after publication.
+**B · Adoption** — after task 17 and the required decoupled publications.
 - Switch to the exact published versions and repeat the gates.
 - One commit, one push.
 

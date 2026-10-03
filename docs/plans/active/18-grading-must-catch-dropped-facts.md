@@ -113,8 +113,10 @@ teaching correction returns to task 12's review → fix after Owner feedback.
 - `pnpm verify` is green; the complete browser floor is at least 431 and timing
   retains 40 cases (use any higher task 13 delivered counts). No test deletion.
 - Before normal push, one-minute load is below 20 and no other Playwright suite
-  is running. Quote gate counts and keep the push receipt. If commands are blocked
-  or model quota is exhausted, retain the original error text here and stop.
+  is running. Quote gate counts and keep the push receipt. Apply the queue's
+  2026-10-03 failed-case isolation and bounded push retry before stopping.
+  If a model route is exhausted, preserve its error and use the authorized
+  available route; only an unfixable full gate or an Owner-only action stops work.
 
 Move this plan to completed in its single delivery commit only when these gates
 are met. Then continue to 14 according to the queue.

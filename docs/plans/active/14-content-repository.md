@@ -30,6 +30,12 @@ superseded_by: null
   no content once the courses leave) and `13-retire-old-courses.md` (preferred, so
   the moved tree is already sorted into shipped and retired). If `13-` was stepped
   over, move the tree as it is and say so.
+- **Owner revision, 2026-10-03.** Create the repository at
+  `/Users/yuanfei/PieAI/UniversityCourses`. Do not read, change or move
+  `/Users/yuanfei/PieAI/UniversityContent`; another Codex owns that preparation
+  repository and Claude will reconcile it later. If GitHub private-repository
+  creation fails for credentials, create and commit the local repository,
+  record the original error and continue. Do not stop or ask for login here.
 - **What is content.** Course content lives in two places today:
   - `apps/local/studies/`: about 1.7 GB on disk. Most of it is gitignored, but 69
     files are tracked. This half-tracked state is why
@@ -129,13 +135,15 @@ Also required:
   and the local-device-testing reference. A repository search for the old paths
   finds only history and lines that say they moved.
 - **Creating the repository.** It is private, under the same owner as University's
-  `origin`. The Owner's answer S1 authorizes creating it. If the credentials to
-  create it are missing, stop and ask. Do not put a token in a file.
+  `origin`. The Owner's answer S1 authorizes creating it. If credentials prevent GitHub creation, use the Owner-authorized local
+  repository fallback above and continue. Do not put a token in a file.
 
 ## 5 Delivery discipline
 
 - One task, one commit, one push in University. The push runs the complete gate.
-  The content repository gets its own first commit and push.
+  The content repository gets its own first commit and, when credentials permit,
+  its own private push. Record a credential-blocked remote as incomplete without
+  blocking University's local integration.
 - If the complete gate cannot go green: stop, keep the work committed locally,
   and write down what blocked it.
 - Never force-push or rewrite history in either repository.

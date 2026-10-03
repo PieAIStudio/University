@@ -37,27 +37,40 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-03
 
-**11 → 12 → 13 → 18 → 14 → 16 → 17.** Tasks 11 and 12 have been pushed; task 12 awaits Owner reading.
-Complete task 13, then run task 18 before 14. The writing pipeline is the beta bottleneck and the Owner
-needs its fourth lesson early. This replaces the prior after-17 instruction.
-Tasks 06, 09 and 15 remain Owner-held and are skipped until their stated authority
-or factual prerequisites are supplied; candidate-package availability does not
-release task 15.
+**13 → 18 → 14 → 17 → overnight report.** Tasks 11 and 12 have been pushed;
+12 remains active as **awaiting Owner reading** and is skipped. Tasks 06, 09 and
+15 remain Owner-held and are skipped. Do not renumber entries.
 
-When task 12 has passed its gates and produced the unpublished fourth lesson,
-commit/push its pipeline changes, leave it active as **awaiting Owner reading**,
-provide `pnpm primm:preview` with full-length real answers, and proceed to 13.
-Return to 12 through review → fix when feedback arrives. Task 13 must preserve
-that unpublished fourth lesson. Owner added
-[18: required facts must survive grading](../../plans/active/18-grading-must-catch-dropped-facts.md)
-on 2026-10-03 under the freeze exception for a feature that did not actually work:
-**after 13, before 14**, using the preserved real false-pass answer for a stable
-regression, repairing preview and delivery enforcement, and re-evaluating the
-fourth lesson's samples. Its typo waits for Owner feedback in task 12.
-Task 14 moves pipeline writes through the same
-content-root configuration. Task 16's A stage is local-only and goes to Claude;
-task 17 stops after R0 for Claude review and retains pipeline tests plus a native
-dry-run at every stage. Each task pack owns its detailed acceptance boundary.
+Owner revised this order again on 2026-10-03 while task 13's push gate was running.
+Let that gate finish before applying this revision. Task 18 remains the freeze
+exception for grading that did not actually work, after 13 and before 14; use
+its preserved real false-pass answer, repair preview and delivery enforcement,
+and re-evaluate the fourth lesson's saved samples. The fourth lesson stays
+unpublished and protected, and its typo waits for Owner feedback in task 12's
+review → fix workflow.
+
+Task 14 creates `/Users/yuanfei/PieAI/UniversityCourses`. Do not touch
+`/Users/yuanfei/PieAI/UniversityContent`, another Codex's preparation repository.
+If credentials prevent creating a private GitHub repository, create the local
+repository, record the original failure, and continue.
+
+Task 17 no longer depends on 16. After R0's measurement and target plan have
+passed their gates and been committed and pushed, create empty
+`.scratch/task17/r0-ready`. Check `.scratch/task17/claude-r0-review.md` every
+five minutes for at most 60 minutes. Apply any review that arrives; otherwise
+continue with the recorded plan. R1–R5 each retain one commit, one push, full
+gates, pipeline tests and a native dry-run. No stage waits indefinitely for Owner.
+
+Task 16 moves after 17 and depends on it. It remains held until UIKit 3's stable
+release and the decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1` are published.
+The App injects UIKit controls and the authentication client; the kits must not
+depend on each other. Earlier coupled candidate tarballs do not release this hold.
+
+Continue autonomously through 13, 18, 14 and 17. Record judgment and deviations
+in the owning task document. At completion or a required stop, write the detailed
+Claude review report at `.scratch/overnight-20261003/REPORT.md`, including commits,
+verbatim gate counts, refactor measurements and deletions, grading evidence,
+incomplete/skipped work and plain-language Owner decisions.
 
 ### How to run it
 
@@ -105,12 +118,21 @@ body, before anything else.
 
 ### When to stop
 
-- The complete gate will not go green — stop, do not start the next task, leave
-  the work committed locally and write down what blocked it.
-- The task document contradicts what the repository shows — stop and say so. A
-  task document can be out of date; the repository is not.
-- An explicitly independent task is blocked — step over it, take the next, and
-  record what was skipped.
+Owner narrowed the stop conditions on 2026-10-03:
+
+- A task's full gates cannot be made green. First run each failed case alone
+  twice. If both passes support a load-related failure, wait for one-minute
+  load below 20 and no other Playwright run, then retry the ordinary push once.
+  If the full gate still fails, stop, leave the work committed locally, record
+  the original failures and retry evidence, and do not start the next task.
+- An action needs Owner himself: login, payment or release approval. Task 14's
+  documented local-repository fallback for GitHub credentials is an exception.
+
+Other discrepancies, unavailable model routes and reversible implementation
+choices are decided within the authorized scope, with reasons recorded in the
+owning task. Preserve original error text. Do not treat an outdated task pack
+as a new permission gate; this Owner instruction supersedes earlier stop rules.
+Before every push, require one-minute load below 20 and no other Playwright run.
 
 ### Never
 
