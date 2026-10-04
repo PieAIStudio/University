@@ -35,19 +35,19 @@ the queue is changing the same code.
 
 ## Details
 
-### Current Owner order · 2026-10-03
+### Current Owner order · 2026-10-04
 
-**13 → 18 → 14 → 17 → overnight report.** Tasks 11 and 12 have been pushed;
-12 remains active as **awaiting Owner reading** and is skipped. Tasks 06, 09 and
-15 remain Owner-held and are skipped. Do not renumber entries.
+**17 (R2 → R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
+delivered. Task 17 R0 and R1 are complete and R2 is now in flight; each
+remaining stage is one commit, one push and a complete gate. Task 16 follows
+R11 and is skipped only if one of its three required kit versions is not
+published. Task 12 remains active as **awaiting Owner reading** and is skipped;
+06, 09 and 15 remain Owner-held and are skipped. Do not renumber entries.
 
-Owner revised this order again on 2026-10-03 while task 13's push gate was running.
-Let that gate finish before applying this revision. Task 18 remains the freeze
-exception for grading that did not actually work, after 13 and before 14; use
-its preserved real false-pass answer, repair preview and delivery enforcement,
-and re-evaluate the fourth lesson's saved samples. The fourth lesson stays
-unpublished and protected, and its typo waits for Owner feedback in task 12's
-review → fix workflow.
+Owner revised this order on 2026-10-04 after task 14's repair push. Task 17
+continues through R11 before task 16. The fourth lesson stays unpublished and
+protected, and its typo waits for Owner feedback in task 12's review → fix
+workflow.
 
 Task 14 creates `/Users/yuanfei/PieAI/UniversityCourses`. Do not touch
 `/Users/yuanfei/PieAI/UniversityContent`, another Codex's preparation repository.

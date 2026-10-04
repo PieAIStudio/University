@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { createGuestAdoption } from "../../account/guest-adoption";
+import { createGuestAdoption } from "../account/guest-adoption";
 
-import { authPort, identityPort } from "../../account/identity";
-import { paymentPort } from "../../account/payment";
-import { progressPort } from "../../progress/store";
+import { authPort, identityPort } from "../account/identity";
+import { paymentPort } from "../account/payment";
+import { progressPort } from "../progress/store";
 import {
   withProductAnalyticsAuth,
   withProductAnalyticsIdentity,
   withProductAnalyticsPayment,
-} from "../../analytics/productAnalytics";
+} from "./productAnalytics";
 
 /** Keep analytics decoration at the app boundary and stable across renders. */
 export function useAnalyticsPorts() {

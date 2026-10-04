@@ -296,7 +296,7 @@
       "state": "fixed",
       "foundBy": "codex-browser-regression",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/domain-release.spec.ts / e2e/world-play-integration.spec.ts / apps/university/src/app/study-switch.test.tsx",
+      "guardedBy": "e2e/domain-release.spec.ts / e2e/world-play-integration.spec.ts / apps/university/src/app/composition/study-switch.test.tsx",
       "evidence": ".devspace-visual/astra-r40/targeted-r2-failures/ and targeted-r3-failures/"
     },
     {

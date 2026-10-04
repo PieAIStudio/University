@@ -275,3 +275,98 @@ set under `.scratch/primm-engine/task12-20261003/owner-reading-1280-complete/`
 and the existing e2e screenshot album; R1 changes only paths, so no visual
 surface changed. R2 remains the next stage: split oversized modules and make
 `App.tsx` a composition before any deletion stage.
+
+## R2 execution record (2026-10-04)
+
+R2 folded in the R1 review and moved each technical-bucket file to the feature
+that owns it. `state/` is gone: progress files now live under `progress/`, map
+context and focus under `map/`, and the two root app tests sit beside the
+composition and Today section they exercise. The shelf moved to `catalog/`,
+analytics to `analytics/`, the prerequisite assessment to `assessment/`, and
+feedback context to `feedback/`. All import, README and test references were
+updated together; no lesson bytes changed.
+
+The map rendering assembly moved to `map/WorldSurface.tsx`, and lesson route
+state (cross-lesson return stack, reader navigation and presence session) moved
+to `lesson/LessonRoute.tsx`. `composition/App.tsx` now wires the route, shell,
+feature state and named map/lesson boundaries; it does not hide the old stage
+inside a hook. The measured App line count is 1,479 → 1,369. The app source
+file count is 79 → 72: nine cross-feature files now live under `src/progress`,
+`src/catalog`, `src/analytics`, `src/assessment`, `src/feedback` and
+`packages/ui`, while the two new named boundaries stay inside `src/app`; the
+app root now contains only its README.
+The candidate export inventory is unchanged at 3,432 declarations: R2 did not
+claim an export was dead without the reachability proof reserved for R5.
+Tracked docs remain 1,259; this stage changed only the ownership map and its
+execution records.
+
+Focused verification before the complete gate:
+
+- `pnpm --filter @pieai/university-app exec tsc -p tsconfig.app.json --noEmit` — passed.
+- app lint and UI lint — passed.
+- app focus tests — `5 passed`, `15 passed`.
+- moved Today section test — `1 passed`, `7 passed`.
+- `git diff --check` — passed.
+
+The complete, timing, docs, pipeline and native dry-run receipts are added
+below after the stage commit. The required 1280px/390px screenshots remain the
+unchanged owner-reading set: R2 changes module ownership and composition, not
+learner-facing pixels.
+
+R2's first complete browser run exposed six failures after 32.2 minutes:
+the delivery and authoring phone first-step checks, both prop-finish phone
+checks, R56 phone avatar-workshop geometry, and the authoring-1600 R43 visual
+navigation check. Each failure was isolated twice with one Playwright worker.
+The first five were deterministic; R43 passed both isolated runs. The
+deterministic failures shared one refactor mistake: `WorldSurface` returned
+`null` for non-map routes, but `App` still passed the resulting empty
+`.learn-stage` wrapper to `MainRouter`. That wrapper consumed phone layout
+height and changed IntersectionObserver visibility/readiness. The fix keeps
+the route ownership decision in `App` and only renders the stage wrapper for
+map routes; `WorldSurface` now owns rendering assembly only. After the fix,
+the two phone play checks, both prop-finish checks and R56 each passed in a
+focused run; R43's two pre-fix isolated runs also passed.
+
+Fast-gate receipt after that fix (`.scratch/overnight-20261003/task17-r2-verify-after-fix.log`):
+`packages/core 108 files / 1138 tests`, `packages/ui 108 / 720`,
+`apps/local 55 / 518`, `packages/world 164 / 1238`, `apps/university 79 /
+431`; canvas registry `5 mounts`; experience ledger `68 findings — 64 fixed,
+4 open`; doc-gov `177 docs`, `322 local links`, `0 warnings`; delivery and
+authoring builds both passed. The remote-performance detail measurements were
+`6 lessons 14.911ms`, `12 5.120ms`, `24 4.064ms`, `41 2.774ms`, `80
+2.994ms`. The build retained the existing chunk-size warning, which is
+accepted by the current gate and is recorded for R10 rather than changed in
+R2.
+
+R2's complete gate then passed on the committed fix:
+
+- `pnpm e2e`: `431 passed (29.1m)`; output is
+  `.scratch/overnight-20261003/task17-r2-e2e-after-fix.log`.
+- `pnpm e2e:timing`: `40 passed (6.2m)`; output is
+  `.scratch/overnight-20261003/task17-r2-timing-after-fix.log`.
+- `pnpm doc-gov check`: green; the fast-gate receipt above reports `177 docs`,
+  `322 local links`, and `0 warnings`.
+- `pnpm --filter @pieai/university-local test:primm-pipeline`: `Test Files 2
+  passed`, `Tests 18 passed`, duration `12.69s`; output is
+  `.scratch/overnight-20261003/task17-r2-pipeline.log`.
+
+The first native assembly attempt was recorded in
+`.scratch/overnight-20261003/task17-r2-native-dry-run.log`. It stopped before
+writing anything with the exact error `Lesson moved from r6 to r7; rebuild the
+packet`: the retained task-12 packet was an older r6 packet while the
+unpublished authoring root already held the reviewed r7 lesson. This was stale
+evidence, not a product or load failure. I did not rebuild or apply that packet
+to the real course. I copied the configured studies root into the ignored
+directory `.scratch/overnight-20261003/task17-r2-native-studies`, opened the
+course for edit there, and ran the native CLI dry-run against a proposal whose
+expected revisions match that copy. The isolated result was `operation
+course-revise`, `mode dry-run`, `disposition validated`, proposal
+`task17-r2-native-dry-run`, lesson revision `8`, card revisions `2/2`, exercise
+revision `2`, `completedComponents []`, and `retrySafe true`. The command used
+the compiled native CLI with the isolated project root
+`.scratch/overnight-20261003/task17-r2-native-project`; it changed neither the
+real studies root nor any lesson bytes. The original r7 receipt remains
+unchanged at `.scratch/primm-engine/task12-20261003/edit-one-part/native-proposal-check.json`.
+
+R2 stage commit: `9a54f9d8 refactor(task17): split app boundaries for r2`.
+The next stage is R3, after the R2 push and its complete gate.

@@ -28,9 +28,9 @@ probably wants a file and a name instead.
 
 | File                                                                                       | What it owns                                                           |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `learner/use-shelf.ts`                                                                     | The courses on offer, once, and each course's shape by address.        |
-| `state/course-progress.ts`, `state/course-completion-revision.ts`                          | How far each course got; when a map must re-read it.                   |
-| `state/study-context.ts`, `state/navigation-focus.ts`                                      | Which study the learner is looking at (tab-local, never account data). |
+| `../../catalog/use-shelf.ts`                                                               | The courses on offer, once, and each course's shape by address.        |
+| `../../progress/course-progress.ts`, `../../progress/course-completion-revision.ts`        | How far each course got; when a map must re-read it.                   |
+| `map/study-context.ts`, `map/navigation-focus.ts`                                          | Which study the learner is looking at (tab-local, never account data). |
 | `learner/today-data.ts`, `learner/today-section-data.ts`                                   | The 「今天」 panel: next lesson, due cards, vocabulary.                |
 | `learner/profile-stats.ts`, `learner/mistake-summary.ts`, `learner/use-knowledge-album.ts` | Projections for Me, the mistake list and the album.                    |
 
@@ -52,14 +52,14 @@ probably wants a file and a name instead.
 
 **V7 journey moments**
 
-| File                                                                                  | What it owns                                                           |
-| ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `journey/use-journey.tsx`                                                             | 涟's product moments on the map, including 「用了吗？」.               |
-| `journey/use-chest-opening.tsx`                                                       | A finished lesson's chest on its island, and the keepsake it may drop. |
-| `journey/use-weekly-boss.tsx`                                                         | This week's boss on the island you are looking at.                     |
-| `journey/use-welcome.ts`, `journey/welcome-policy.ts`, `journey/use-first-meeting.ts` | The first arrival: the two paths and the tour to the first stone.      |
-| `journey/OpeningSplash.tsx`, `journey/splash-policy.ts`                               | App-launch admission and its measured progress.                        |
-| `journey/use-local-day.ts`                                                            | One local calendar clock for screens that change at midnight.          |
+| File                                                                                  | What it owns                                                               |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `journey/use-journey.tsx`                                                             | 涟's product moments on the map, including 「用了吗？」.                   |
+| `journey/use-chest-opening.tsx`                                                       | A finished lesson's chest on its island, and the keepsake it may drop.     |
+| `journey/use-weekly-boss.tsx`                                                         | This week's boss on the island you are looking at.                         |
+| `journey/use-welcome.ts`, `journey/welcome-policy.ts`, `journey/use-first-meeting.ts` | The first arrival: the single direct path and the tour to the first stone. |
+| `journey/OpeningSplash.tsx`, `journey/splash-policy.ts`                               | App-launch admission and its measured progress.                            |
+| `journey/use-local-day.ts`                                                            | One local calendar clock for screens that change at midnight.              |
 
 **The learner and the account**
 
@@ -67,9 +67,15 @@ probably wants a file and a name instead.
 | ------------------------------------------------------------ | ------------------------------------------------------------- |
 | `learner/LearnerAvatarPanel.tsx`                             | The avatar panel on the rail, in the phone dialog and on Me.  |
 | `learner/ProfileAvatar.tsx`, `learner/avatar-preferences.ts` | The avatar preview; the recipe saved to the account.          |
-| `learner/analytics-ports.ts`, `learner/route-analytics.ts`   | Analytics at the app boundary; one event per arrival.         |
-| `learner/feedback-context.ts`                                | What a feedback note is about.                                |
 | `learner/DomainInterest.tsx`                                 | A consented interest record for a domain with no courses yet. |
+
+**Cross-feature app services**
+
+| File                                                                       | What it owns                                               |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `../../analytics/analytics-ports.ts`, `../../analytics/route-analytics.ts` | Analytics at the app boundary; one event per arrival.      |
+| `../../assessment/skip-test.ts`                                            | Course prerequisite assessment and its one progress write. |
+| `../../feedback/feedback-context.ts`                                       | What a feedback note is about on the current route.        |
 
 The learner's house lives in `../house/store.ts` (the app's side) with its rules
 in `@pieai/university-core` and its room in `@pieai/university-ui/house`.

@@ -2,7 +2,7 @@ import { unmetPrerequisites, type ProgressDocument } from "@pieai/university-cor
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { useCallback, useMemo } from "react";
 
-import { progressPort } from "../../progress/store";
+import { progressPort } from "../progress/store";
 
 /**
  * Everything the skip test and the prerequisite notice need from `App`.

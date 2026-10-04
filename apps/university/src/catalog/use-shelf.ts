@@ -5,8 +5,8 @@ import { courseNodesOf } from "@pieai/university-world/course.js";
 import type { ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 
-import { contentPort } from "../../ports/index";
-import { registerReviewShelf } from "../../progress/content-availability";
+import { contentPort } from "../ports/index";
+import { registerReviewShelf } from "../progress/content-availability";
 
 export function useShelf() {
   /*

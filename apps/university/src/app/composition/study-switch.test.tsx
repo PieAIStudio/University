@@ -1,12 +1,12 @@
-import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale";
+import { withInterfaceLocale } from "../../../../../packages/ui/test-support/interface-locale";
 // @vitest-environment jsdom
 
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { App } from "./composition/App";
-import { progressPort } from "../progress/store";
+import { App } from "./App";
+import { progressPort } from "../../progress/store";
 
 vi.mock("@pieai/university-world/WorldMapCanvas.js", () => ({
   WorldMapCanvas: ({ underlay, overlay }: { underlay?: ReactNode; overlay?: ReactNode }) => (
@@ -17,7 +17,7 @@ vi.mock("@pieai/university-world/WorldMapCanvas.js", () => ({
   ),
 }));
 
-vi.mock("../ports/index", () => {
+vi.mock("../../ports/index", () => {
   const lesson = (id: string, title: string) => ({
     id,
     title,

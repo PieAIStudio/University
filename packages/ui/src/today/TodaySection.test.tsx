@@ -1,4 +1,4 @@
-import { withInterfaceLocale } from "../../../../packages/ui/test-support/interface-locale.js";
+import { withInterfaceLocale } from "../../test-support/interface-locale.js";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 

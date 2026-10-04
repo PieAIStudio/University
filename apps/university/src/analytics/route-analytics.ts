@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { View } from "@pieai/university-core";
-import { trackEvent, type AnalyticsEvent } from "../../analytics/productAnalytics";
+import { trackEvent, type AnalyticsEvent } from "./productAnalytics";
 
 /** The route event for a view, keyed so the same place is reported once per arrival. */
 function routeEvent(view: View): { key: string; event: AnalyticsEvent } | null {

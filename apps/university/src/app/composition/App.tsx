@@ -28,15 +28,7 @@
  */
 import { arriveAt } from "../../house/store";
 import { useI18n } from "@pieai/university-ui/i18n.js";
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   activeIdForView,
   isBareView,
@@ -44,7 +36,6 @@ import {
   learningSegments,
   lessonsWithDueCards,
   progressSourceOf,
-  type LessonRef,
   type View,
   keepsakeForLesson,
 } from "@pieai/university-core";
@@ -72,7 +63,7 @@ import {
   mapQuickCommands,
   useMapShortcuts,
 } from "../map/MapQuickActions";
-import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
+import type { LessonPlacement } from "@pieai/university-world/Maps.js";
 import {
   learningSiteLocked,
   monsterAtStop,
@@ -93,12 +84,10 @@ import {
   snapshot,
   subscribe,
 } from "../../progress/store";
-import { LessonScreen, RouteFallback } from "../../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
 import { TodaySection } from "@pieai/university-ui/today/TodaySection.js";
-import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-world/controls.js";
+import { MapControlsHint } from "@pieai/university-world/controls.js";
 import { MapGuide } from "../../guide/MapGuide";
 import { mapGuideScope, type MapGuideMap } from "../../guide/map-guide";
 import { CourseIsland, type CourseIslandProps } from "../map/CourseIsland";
@@ -106,59 +95,55 @@ import { useChestOpening } from "../journey/use-chest-opening";
 import { useJourney } from "../journey/use-journey";
 import { useWeeklyBoss } from "../journey/use-weekly-boss";
 import { SHOWS_THE_MAP } from "../map/map-controls";
-import { useCourseProgress } from "../state/course-progress";
+import { useCourseProgress } from "../../progress/course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
 import { useProfileStats } from "../learner/profile-stats";
 import { useKnowledgeAlbum } from "../learner/use-knowledge-album";
 import { RankPromotion } from "../../progress/RankPromotion";
 import { rankPromotions } from "../../progress/store";
 import { useRoute } from "./use-route";
-import { useShelf } from "../learner/use-shelf";
+import { useShelf } from "../../catalog/use-shelf";
 import { useWorldMarkers, useWorldModel, type PathOverlay } from "../map/world-model";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
-import { PresenceLayer, PresenceSession } from "@pieai/university-ui/presence.js";
+import { PresenceSession } from "@pieai/university-ui/presence.js";
 import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { bindWorldStylePreference, WorldStyleControl } from "@pieai/university-ui/world-style.js";
-import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import { resolveIslandLookDebug } from "@pieai/university-world/island-look.js";
-import {
-  WorldMapCanvas,
-  type MapViewportCommands,
-} from "@pieai/university-world/WorldMapCanvas.js";
+import type { MapViewportCommands } from "@pieai/university-world/WorldMapCanvas.js";
 import { resetWebGLContextProbe } from "@pieai/university-world/webgl-capability.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../../learner/WorldSourceControls";
-import { useAnalyticsPorts } from "../learner/analytics-ports";
+import { useAnalyticsPorts } from "../../analytics/analytics-ports";
 import { useAvatarPreferences } from "../learner/avatar-preferences";
 import { useCosmetics } from "../../cosmetics/use-cosmetics";
 import { CosmeticAppearanceProvider } from "@pieai/university-ui";
 import { AvatarChip, cosmeticAvatarRecipe } from "@pieai/university-world/avatar.js";
-import { useSkipTest } from "../learner/skip-test";
+import { useSkipTest } from "../../assessment/skip-test";
 import { useCoursePathActions } from "../map/course-path-actions";
-import { useIslandLookStage, useIslandLookView } from "../map/island-look-view";
+import { useIslandLookView } from "../map/island-look-view";
+import { WorldSurface } from "../map/WorldSurface";
 import { useMistakeSummary } from "../learner/mistake-summary";
 import { useSceneCamera } from "../map/scene-camera";
 import { sceneKeyForView, useSceneInteraction } from "../map/scene-interaction";
-import { useStudyContext } from "../state/study-context";
-import { readNavigationFocus } from "../state/navigation-focus";
+import { useStudyContext } from "../map/study-context";
+import { readNavigationFocus } from "../map/navigation-focus";
 import { DomainInterest } from "../learner/DomainInterest";
 import { useTodaySectionData } from "../learner/today-section-data";
 import { OpeningSplash, useOpeningAdmission } from "../journey/OpeningSplash";
 import { splashProgress } from "../journey/splash-policy";
 import { useWelcome } from "../journey/use-welcome";
-import { useFeedbackContext } from "../learner/feedback-context";
+import { useFeedbackContext } from "../../feedback/feedback-context";
 import { useFirstMeeting } from "../journey/use-first-meeting";
 import { useCourseAvatarTarget } from "../map/use-course-avatar-target";
 import { usePlanetChoice } from "../map/use-planet-choice";
 import { useContinueOnReturn, useFrameLessonOnce } from "../map/map-arrival";
 import { usePresenceAnchors } from "../map/presence-anchors";
-import { useReviewDueAnalytics, useRouteAnalytics } from "../learner/route-analytics";
+import { useReviewDueAnalytics, useRouteAnalytics } from "../../analytics/route-analytics";
 import { isMapEscape } from "../map/map-keyboard";
 import { LearnerAvatarDialog, LearnerAvatarPanel } from "../learner/LearnerAvatarPanel";
-
-/** No labels: the chest's close-up keeps the island to itself. */
-const NO_MARKERS: readonly never[] = [];
+import { LessonRoute } from "../lesson/LessonRoute";
+import type { LessonRef } from "@pieai/university-core";
 
 export function App() {
   const interfaceTranslator = useI18n();
@@ -282,8 +267,6 @@ export function App() {
   // Leaving a settlement and coming back must not turn the same value into a
   // second prompt; a later completed lesson resets the key below.
   const [reviewReminderDismissedFor, setReviewReminderDismissedFor] = useState<string | null>(null);
-  /** Lessons a cross-lesson link led away from, innermost last. */
-  const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
   /** Counts avatar clicks so the account door also responds while already on `/me`. */
   const [accountFocusRequest, setAccountFocusRequest] = useState(0);
   const openAccount = useCallback(() => {
@@ -564,7 +547,6 @@ export function App() {
     window.addEventListener("keydown", cancel);
     return () => window.removeEventListener("keydown", cancel);
   }, [mapMode, view.kind, planet.clear, dismissPick]);
-  const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
   useRouteAnalytics(view);
   useReviewDueAnalytics(due.length, reviewVisible && Boolean(todayCard));
@@ -759,7 +741,6 @@ export function App() {
     the delivery shell catching up to it.
   */
   const inCourse = view.kind === "course" || view.kind === "lesson" || openingOnMap;
-  // V7 decision O1: a wisp comes back to each finished stone whose review cards are due.
   const reviewDue = useMemo(() => {
     if (!inCourse || !course || !("studyId" in view)) return null;
     const due = lessonsWithDueCards(
@@ -771,239 +752,195 @@ export function App() {
       .filter((lesson) => lesson.state === "done" && due.has(lesson.lessonId))
       .map((lesson) => lesson.lessonId);
   }, [inCourse, course, view, progress, lessons]);
-  const { lookSource, fixedCamera } = useIslandLookStage({
-    inCourse,
-    lessons,
-    lookDebug,
-    viewKind: view.kind,
-    world,
-    wide,
-  });
-  const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
-  const stageLookAt = fixedCamera?.lookAt ?? lookAt;
-  const stage =
-    // Courseware keeps the lab's renderer boundary after moving into the
-    // album: its games may own a canvas, so the map must release its own.
+
+  const entryOverlay = (
+    <>
+      {view.kind === "world" && picked && pickedCourse ? (
+        <MapEntryAction
+          title={picked.title}
+          onEnter={() =>
+            setView({
+              kind: "course",
+              studyId: picked.studyId,
+              courseId: picked.courseId,
+            })
+          }
+          actionRef={pickCardRef}
+        />
+      ) : null}
+      {view.kind === "course" && pathOverlay?.kind === "stop" ? (
+        <MapEntryAction
+          eyebrow={`${interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}`)} · ${interfaceTranslator.t(
+            "mapNodes.range",
+            {
+              first: pathOverlay.segment.firstIndex + 1,
+              last: pathOverlay.segment.lastIndex + 1,
+            },
+          )}`}
+          title={interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
+          actionRef={pickCardRef}
+          locked={lockedEntry(pathOverlay.locked)}
+          guard={guardOf(
+            monsterAtStop(lessons, {
+              siteId: learningNodeId(pathOverlay.segment, pathOverlay.nodeKind),
+            }),
+          )}
+          onEnter={() => setPathOverlay({ ...pathOverlay, kind: "learning-node" })}
+        />
+      ) : null}
+      {view.kind === "course" && pathOverlay?.kind === "node" && pathUnit && pathLesson ? (
+        <MapEntryAction
+          eyebrow={interfaceTranslator.t("map.stop.lesson", {
+            number: lessons.findIndex((item) => item.lessonId === pathLesson.id) + 1,
+          })}
+          title={pathLesson.title}
+          actionRef={pickCardRef}
+          locked={lockedEntry(
+            lessons.find((item) => item.lessonId === pathLesson.id)?.state === "locked",
+          )}
+          guard={guardOf(monsterAtStop(lessons, { lessonId: pathLesson.id }))}
+          onEnter={() => {
+            setPathOverlay(null);
+            setView({
+              kind: "lesson",
+              studyId: view.studyId,
+              courseId: view.courseId,
+              unitId: pathUnit.id,
+              lessonId: pathLesson.id,
+            });
+          }}
+        />
+      ) : null}
+    </>
+  );
+  const stageGuide = guideMap ? (
+    <MapGuide
+      map={guideMap}
+      ready={splashReady && !admission.pending && !mapCover}
+      invitation={firstMeeting.invitation}
+      firstStone={firstMeeting.firstStone}
+      journey={journey.opening}
+      onShortcuts={shortcuts.show}
+      onOpenDetails={() => setView({ kind: "settings" })}
+    />
+  ) : null;
+  const stageLoading = mapRecoveryReason ? (
+    <RecoveryState
+      reason={mapRecoveryReason}
+      onRetry={retryScene}
+      onContinue={todayLesson ? continueToTodayLesson : undefined}
+      overlay
+    />
+  ) : mapCover && !showOpeningSplash ? (
+    <OpeningSplash mode="transition" progress={loadProgress} ready={splashReady} />
+  ) : null;
+  const stageRoute =
     view.kind === "avatar-lab" ||
     view.kind === "play-lab" ||
     (view.kind === "library" && view.tab === "courseware") ||
-    studioMap ? null : (
-      <WorldMapCanvas
-        commandsRef={mapCommands}
-        sceneKey={inCourse ? sceneKeyForView(view) : undefined}
-        dataReady={!waitingForData}
-        key={sceneAttempt}
-        hidden={!showMap}
-        paused={!showMap}
-        // A course path is read at a shallower pitch than a world of islands.
-        polar={view.kind === "world" ? WORLD_POLAR : COURSE_POLAR}
-        // No world in a course view: the path below replaces it rather than
-        // sitting behind it.
-        world={view.kind === "world" ? world : null}
-        courseViewKey={view.kind === "course" ? `${view.studyId}/${view.courseId}` : null}
-        cameraFrom={stageCameraFrom}
-        lookAt={stageLookAt}
-        learnerAt={learnerAt}
-        avatarRecipe={avatarRecipe}
-        avatarSignedIn={avatarSignedIn}
-        selectedCourseKey={
-          view.kind === "world" && picked ? `${picked.studyId}/${picked.courseId}` : null
-        }
-        skyStudyId={focusedStudyId}
-        // The chest's close-up is a moment of its own: no map labels over it.
-        markers={openingOnMap ? NO_MARKERS : labelMarkers}
-        followId={
-          view.kind === "world" && picked
-            ? picked.courseId
-            : view.kind === "course" && pathOverlay?.kind === "node"
-              ? // The live lesson and destinations beyond the bounded kind-icon
-                // window use their real lesson label, not an invented icon ID.
-                markers.some((marker) => marker.id === `kind:${pathOverlay.lessonId}`)
-                ? `kind:${pathOverlay.lessonId}`
-                : pathOverlay.lessonId
-              : view.kind === "course" && pathOverlay?.kind === "stop"
-                ? learningNodeId(pathOverlay.segment, pathOverlay.nodeKind)
-                : null
-        }
-        followNode={pickCardRef}
-        onPick={setPicked}
-        onHover={(node) => setHovered(node ? node.title : null)}
-        onInteract={onMapInteract}
-        onSceneReady={view.kind === "planet" ? undefined : onSceneReady}
-        onSceneBusy={view.kind === "planet" ? undefined : onSceneBusy}
-        onSceneProgress={view.kind === "planet" ? undefined : onSceneProgress}
-        onContextLost={onContextLost}
-        onContextRestored={onContextRestored}
-        onRendererUnavailable={onRendererUnavailable}
-        onPointerMissed={dismissPick}
-        fixedCamera={fixedCamera}
-        postProcessing={import.meta.env.DEV && lookDebug?.shot ? lookDebug.post : true}
-        lookSource={lookSource}
-        stageChildren={
-          <>
-            {/*
-              A separate probe from LabelProbe on purpose: companions must not
-              compete with course names for the label budget, and a companion
-              that lost that competition would silently stop existing.
-            */}
-            <CompanionProbe anchors={presence.anchors} nodes={companionNodes.current} />
-            {inCourse && lessons.length > 0 ? (
-              <CourseScene
-                lessons={lessons}
-                avatarRecipe={avatarRecipe}
-                avatarSignedIn={avatarSignedIn}
-                avatarLessonId={firstMeeting.here?.lesson.lessonId ?? avatarTarget.lessonId}
-                avatarNodeId={avatarTarget.nodeId}
-                onPickNode={(site) => {
-                  if (view.kind !== "course" || !course) return;
-                  const segment = learningSegments(course).find(
-                    (item) => item.id === site.segment.id,
-                  );
-                  if (!segment) return;
-                  // The same as a lesson stone: a locked stop explains, an open one is hopped to.
-                  const locked = learningSiteLocked(site, lessons);
-                  if (!locked) avatarTarget.rememberNode(site.id);
-                  setPathOverlay({
-                    kind: "stop",
-                    segment,
-                    nodeKind: site.kind,
-                    unitId: segment.unitId,
-                    locked,
-                    returnFocusTo: labelNodes.current.get(site.id) ?? null,
-                  });
-                }}
-                skyStudyId={inCourse ? view.studyId : null}
-                onPick={(lesson) => {
-                  if (view.kind !== "course") return;
-                  // A locked stone opens its explanation; the avatar stays put.
-                  if (lesson.state !== "locked") avatarTarget.rememberLesson(lesson);
-                  setPathOverlay({
-                    kind: "node",
-                    unitId: lesson.unitId,
-                    lessonId: lesson.lessonId,
-                    returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                  });
-                }}
-                onHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
-                opening={openingOnMap || chest.weekly ? chest.opening : null}
-                introductoryLessonId={firstMeeting.here?.lesson.lessonId ?? null}
-                onIntroductionReady={firstMeeting.introductionReady}
-                reviewDue={reviewDue}
-                cosmeticOrnamentId={cosmeticData?.equipped.island}
-                weeklyBoss={weekly.scene}
-                weeklyWins={weekly.history.weeks}
-                onPickWeeklyBoss={weekly.open}
-              />
-            ) : null}
-          </>
-        }
-        overlay={
-          <>
-            {weekly.overlay}
-            {chest.weekly ? chest.overlay : null}
-            <PresenceLayer
-              port={presencePort}
-              surface={presence.surface}
-              viewKey={presence.viewKey}
-              attach={(userId, element) => {
-                if (element) companionNodes.current.set(userId, element);
-                else companionNodes.current.delete(userId);
-              }}
-            />
-            {view.kind === "world" && picked && pickedCourse ? (
-              <MapEntryAction
-                title={picked.title}
-                onEnter={() =>
-                  setView({
-                    kind: "course",
-                    studyId: picked.studyId,
-                    courseId: picked.courseId,
-                  })
-                }
-                actionRef={pickCardRef}
-              />
-            ) : null}
-            {view.kind === "course" && pathOverlay?.kind === "stop" ? (
-              <MapEntryAction
-                eyebrow={`${interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}`)} · ${interfaceTranslator.t(
-                  "mapNodes.range",
-                  {
-                    first: pathOverlay.segment.firstIndex + 1,
-                    last: pathOverlay.segment.lastIndex + 1,
-                  },
-                )}`}
-                title={interfaceTranslator.t(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
-                actionRef={pickCardRef}
-                locked={lockedEntry(pathOverlay.locked)}
-                guard={guardOf(
-                  monsterAtStop(lessons, {
-                    siteId: learningNodeId(pathOverlay.segment, pathOverlay.nodeKind),
-                  }),
-                )}
-                onEnter={() => setPathOverlay({ ...pathOverlay, kind: "learning-node" })}
-              />
-            ) : null}
-            {view.kind === "course" && pathOverlay?.kind === "node" && pathUnit && pathLesson ? (
-              <MapEntryAction
-                eyebrow={interfaceTranslator.t("map.stop.lesson", {
-                  number: lessons.findIndex((item) => item.lessonId === pathLesson.id) + 1,
-                })}
-                title={pathLesson.title}
-                actionRef={pickCardRef}
-                locked={lockedEntry(
-                  lessons.find((item) => item.lessonId === pathLesson.id)?.state === "locked",
-                )}
-                guard={guardOf(monsterAtStop(lessons, { lessonId: pathLesson.id }))}
-                onEnter={() => {
-                  setPathOverlay(null);
-                  setView({
-                    kind: "lesson",
-                    studyId: view.studyId,
-                    courseId: view.courseId,
-                    unitId: pathUnit.id,
-                    lessonId: pathLesson.id,
-                  });
-                }}
-              />
-            ) : null}
-          </>
-        }
-        /*
-          These are separate promises with separate retirement rules. Pan and
-          zoom can self-teach on the first gesture; the island-entry action
-          cannot, so it remains until an actual island pick teaches it — as
-          the first sentence of the map's guide (V5 #map-guide).
-        */
-        hoverHint={hovered}
-        controlsHint={<MapControlsHint />}
-        controlsHintVisible={!mapInteracted && !hovered}
-        guide={
-          guideMap ? (
-            <MapGuide
-              map={guideMap}
-              ready={splashReady && !admission.pending && !mapCover}
-              invitation={firstMeeting.invitation}
-              firstStone={firstMeeting.firstStone}
-              journey={journey.opening}
-              onShortcuts={shortcuts.show}
-              onOpenDetails={() => setView({ kind: "settings" })}
-            />
-          ) : null
-        }
-        loading={
-          mapRecoveryReason ? (
-            <RecoveryState
-              reason={mapRecoveryReason}
-              onRetry={retryScene}
-              onContinue={todayLesson ? continueToTodayLesson : undefined}
-              overlay
-            />
-          ) : mapCover && !showOpeningSplash ? (
-            <OpeningSplash mode="transition" progress={loadProgress} ready={splashReady} />
-          ) : null
-        }
-      />
-    );
+    (view.kind === "studio" && view.section === "map");
+  const stage = stageRoute ? null : (
+    <WorldSurface
+      inCourse={inCourse}
+      openingOnMap={openingOnMap}
+      view={view}
+      sceneView={sceneView}
+      lessons={lessons}
+      world={world}
+      wide={wide}
+      lookDebug={lookDebug}
+      sceneAttempt={sceneAttempt}
+      waitingForData={waitingForData}
+      showMap={showMap}
+      commandsRef={mapCommands}
+      sceneKey={inCourse ? sceneKeyForView(view) : undefined}
+      cameraFrom={cameraFrom}
+      lookAt={lookAt}
+      learnerAt={learnerAt}
+      avatarRecipe={avatarRecipe}
+      avatarSignedIn={avatarSignedIn}
+      selectedCourseKey={
+        view.kind === "world" && picked ? `${picked.studyId}/${picked.courseId}` : null
+      }
+      skyStudyId={focusedStudyId}
+      markers={labelMarkers}
+      followId={
+        view.kind === "world" && picked
+          ? picked.courseId
+          : view.kind === "course" && pathOverlay?.kind === "node"
+            ? markers.some((marker) => marker.id === `kind:${pathOverlay.lessonId}`)
+              ? `kind:${pathOverlay.lessonId}`
+              : pathOverlay.lessonId
+            : view.kind === "course" && pathOverlay?.kind === "stop"
+              ? learningNodeId(pathOverlay.segment, pathOverlay.nodeKind)
+              : null
+      }
+      followNode={pickCardRef}
+      onPick={setPicked}
+      onHover={(node) => setHovered(node ? node.title : null)}
+      onInteract={onMapInteract}
+      onSceneReady={onSceneReady}
+      onSceneBusy={onSceneBusy}
+      onSceneProgress={onSceneProgress}
+      onContextLost={onContextLost}
+      onContextRestored={onContextRestored}
+      onRendererUnavailable={onRendererUnavailable}
+      onPointerMissed={dismissPick}
+      onPickLesson={(lesson) => {
+        if (view.kind !== "course") return;
+        if (lesson.state !== "locked") avatarTarget.rememberLesson(lesson);
+        setPathOverlay({
+          kind: "node",
+          unitId: lesson.unitId,
+          lessonId: lesson.lessonId,
+          returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
+        });
+      }}
+      onPickNode={(site) => {
+        if (view.kind !== "course" || !course) return;
+        const segment = learningSegments(course).find((item) => item.id === site.segment.id);
+        if (!segment) return;
+        const locked = learningSiteLocked(site, lessons);
+        if (!locked) avatarTarget.rememberNode(site.id);
+        setPathOverlay({
+          kind: "stop",
+          segment,
+          nodeKind: site.kind,
+          unitId: segment.unitId,
+          locked,
+          returnFocusTo: labelNodes.current.get(site.id) ?? null,
+        });
+      }}
+      onCourseHover={(lesson) => setHovered(lesson ? lesson.lessonId : null)}
+      avatarLessonId={firstMeeting.here?.lesson.lessonId ?? avatarTarget.lessonId}
+      avatarNodeId={avatarTarget.nodeId}
+      opening={chest.opening}
+      introductoryLessonId={firstMeeting.here?.lesson.lessonId ?? null}
+      onIntroductionReady={firstMeeting.introductionReady}
+      reviewDue={reviewDue}
+      cosmeticOrnamentId={cosmeticData?.equipped.island ?? null}
+      weeklyBoss={weekly.scene}
+      weeklyWins={weekly.history.weeks}
+      onPickWeeklyBoss={weekly.open}
+      companionAnchors={presence.anchors}
+      companionNodes={companionNodes.current}
+      presencePort={presencePort}
+      presenceSurface={presence.surface}
+      presenceViewKey={presence.viewKey}
+      attachPresence={(userId, element) => {
+        if (element) companionNodes.current.set(userId, element);
+        else companionNodes.current.delete(userId);
+      }}
+      overlay={entryOverlay}
+      weeklyOverlay={weekly.overlay}
+      chestOverlay={chest.weekly ? chest.overlay : null}
+      guide={stageGuide}
+      loading={stageLoading}
+      hoverHint={hovered}
+      controlsHint={<MapControlsHint />}
+      controlsHintVisible={!mapInteracted && !hovered}
+    />
+  );
 
   /*
     The stage stays in the centre column at every width. v3 draws a small
@@ -1280,84 +1217,43 @@ export function App() {
       lessonId: view.lessonId,
     };
     return (
-      <>
-        <div className="app app--lesson">
-          <PresenceSession
-            port={presencePort}
-            location={presence.location}
-            viewKey={presence.viewKey}
-          />
-          <Suspense fallback={<RouteFallback />}>
-            <LessonScreen
-              locator={reading}
-              course={course}
-              studyTitle={studies.find((study) => study.id === view.studyId)?.title ?? view.studyId}
-              returnDepth={returnStack.length}
-              onFollowLink={(target) => {
-                /*
-                A detour is a detour. Jumping to the lesson about how browsers
-                parse HTML has to be able to come back, or the reader stops
-                clicking and the feature costs nothing but ink.
-              */
-                setReturnStack((current) => [...current, reading].slice(-LINK_RETURN_DEPTH));
-                setView({
-                  kind: "lesson",
-                  studyId: view.studyId,
-                  courseId: target.courseId,
-                  unitId: target.unitId,
-                  lessonId: target.lessonId,
-                });
-              }}
-              onReturn={() => {
-                const previous = returnStack.at(-1);
-                if (!previous) return;
-                setReturnStack((current) => current.slice(0, -1));
-                setView({ kind: "lesson", ...previous });
-              }}
-              onOpenLesson={(next) => {
-                // Prev/next is a decision to move on, not a detour, so the offer
-                // to go back stops pointing at something nobody is thinking about.
-                setReturnStack([]);
-                setView({ kind: "lesson", ...next });
-              }}
-              onBack={() => {
-                setReturnStack([]);
-                if (avatarTarget.lessonId === view.lessonId) {
-                  setPathOverlay({
-                    kind: "node",
-                    unitId: view.unitId,
-                    lessonId: view.lessonId,
-                    returnFocusTo: null,
-                  });
-                }
-                setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
-              }}
-              onWorthwhileProgress={onWorthwhileProgress}
-              readEntitlements={readEntitlements}
-              avatarRecipe={avatarRecipe}
-              onSettled={(doneBefore) => {
-                const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
-                setGrewFrom({ key, doneBefore });
-                setReviewReminderDismissedFor(null);
-                setView({
-                  kind: "settled",
-                  studyId: view.studyId,
-                  courseId: view.courseId,
-                  unitId: view.unitId,
-                  lessonId: view.lessonId,
-                });
-                chest.begin({
-                  studyId: view.studyId,
-                  courseId: view.courseId,
-                  unitId: view.unitId,
-                  lessonId: view.lessonId,
-                });
-              }}
-            />
-          </Suspense>
-        </div>
-        {feedbackSurface}
-      </>
+      <LessonRoute
+        locator={reading}
+        course={course}
+        studyTitle={studies.find((study) => study.id === view.studyId)?.title ?? view.studyId}
+        presencePort={presencePort}
+        presenceLocation={presence.location}
+        presenceViewKey={presence.viewKey}
+        onNavigate={(next) => setView({ kind: "lesson", ...next })}
+        onBack={() => {
+          if (avatarTarget.lessonId === view.lessonId) {
+            setPathOverlay({
+              kind: "node",
+              unitId: view.unitId,
+              lessonId: view.lessonId,
+              returnFocusTo: null,
+            });
+          }
+          setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
+        }}
+        onWorthwhileProgress={onWorthwhileProgress}
+        readEntitlements={readEntitlements}
+        avatarRecipe={avatarRecipe}
+        feedbackSurface={feedbackSurface}
+        onSettled={(settled, doneBefore) => {
+          const key = `${settled.studyId}/${settled.courseId}/${settled.lessonId}`;
+          setGrewFrom({ key, doneBefore });
+          setReviewReminderDismissedFor(null);
+          setView({
+            kind: "settled",
+            studyId: settled.studyId,
+            courseId: settled.courseId,
+            unitId: settled.unitId,
+            lessonId: settled.lessonId,
+          });
+          chest.begin(settled);
+        }}
+      />
     );
   }
 
