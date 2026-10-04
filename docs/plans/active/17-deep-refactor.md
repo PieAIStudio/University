@@ -495,3 +495,31 @@ the governed Markdown set is 184 files. No historical plan, screenshot or
 source evidence was deleted. Changes are limited to current routing, the one
 current content-root fact, and the welcome-state wording; runtime code and
 lesson bytes are unchanged.
+
+Independent R4 complete-gate receipts, run after the docs-only push hook (which
+correctly skipped browser files), are retained at
+`.scratch/overnight-20261003/task17-r4-e2e.log` and
+`.scratch/overnight-20261003/task17-r4-timing.log`: `pnpm e2e` finished
+**338 passed (18.3m)** and `pnpm e2e:timing` finished **40 passed (5.6m)**.
+
+## R5 execution record (2026-10-05)
+
+R5 used reachability evidence before removing anything. The candidate
+`scripts/make-icons.mjs` had no package, build, documentation or runtime
+consumer outside its own source. Its output targets the retired
+`apps/online/public` shell and the old `apps/local/public` shell; neither
+directory exists, while the current `apps/university/public` icon set is
+tracked and served directly from `apps/university/index.html`. The script was
+therefore deleted. The other apparently manual scripts were retained: the
+map-nodes preview is reached through the explicit `VITE_MAP_NODES_PERSONAL_URL`
+owner-preview port, the PRIMM and prop-finish helpers are linked from their
+active previews, and the check scripts are named in package gates or build
+entry points.
+
+No overlapping check was merged: `check-i18n.mjs` owns the physical-CSS
+direction scan while `check-interface-catalogs.mjs` owns catalog validation;
+`check-contrast.mjs`, `check-raw-colours.mjs` and `check-shared-styles.mjs`
+guard separate failure classes. `.gitignore` already covers the observed
+generated directories (`dist`, package `dist/`, local build output,
+`.primm-preview-build`, `.scratch`, logs and test artifacts), so no broad or
+unproven ignore rule was added.

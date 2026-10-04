@@ -37,15 +37,16 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-04
 
-**17 (R4 → R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
-delivered. Task 17 R0–R3 are complete through pushed commit `12982963`; each
+**17 (R5 → R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
+delivered. Task 17 R0–R4 are complete through pushed commit `73968ab9`; each
 remaining stage is one commit, one push and a complete gate. Task 16 follows
 R11 and is skipped only if one of its three required kit versions is not
 published. Task 12 remains active as **awaiting Owner reading** and is skipped;
 06, 09 and 15 remain Owner-held and are skipped. Do not renumber entries.
 
 Owner revised this order on 2026-10-04 after task 14's repair push. The R3
-gate repair and push completed on 2026-10-05; task 17 continues through R11
+gate repair and push completed on 2026-10-05, and R4 documentation convergence
+completed in `73968ab9`; task 17 continues through R11
 before task 16. The fourth lesson stays unpublished and
 protected, and its typo waits for Owner feedback in task 12's review → fix
 workflow.
