@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-02
-last_reviewed: 2026-10-03
+last_reviewed: 2026-10-04
 domain: execution
 tags:
   - uikit
@@ -26,39 +26,31 @@ superseded_by: null
 - Repository `/Users/yuanfei/PieAI/University`, branch `main`; queue rules in
   [the work queue](../../reference/execution/work-queue.md).
 - Depends on `17-deep-refactor.md`; do this after task 17, not before it.
-- **Held by Owner on 2026-10-03.** Wait for published stable UIKit `3.0.0`,
-  decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1`. The kits must no longer
-  depend on each other: University injects UIKit controls and the authentication
-  client into the kits. Refactor first, then adopt the new interfaces.
-- The earlier candidate list below is historical evidence only. Its coupled
-  NerveKit and AuthKit `0.8.0-rc.0` do not satisfy the new prerequisite. Do not
-  install these tarballs or begin phase A while this hold remains.
-- **Earlier coupled candidates (superseded).** None was published at this checkpoint. University's full gates are the
-  consumer check before the Owner approves publishing all three together.
-  - **UIKit `3.0.0`**
-    - Tarball: `/Users/yuanfei/PieAI/SwimmerUIKit/.scratch/s6/final/swimmer-ui-kit-3.0.0.tgz`
-    - SHA-256: `267c29288681e8d1b98955631afe00c6db24c852c817be73d28885e3970103b3`
-    - Source: `1173a45`
-    - Migration table: `SwimmerUIKit/docs/reference/migration-3.0.md`, with a University section that covers
-      `night → dark`, `pastel` for younger learners and `grey` for adults, the tide CTA, removed parameters,
-      AvatarLab types, and AuthKit's captcha dark check.
-  - **NerveKit `0.8.0`**
-    - Tarball: `swimmer-nerve-kit-0.8.0.tgz` beside
-      `SwimmerNerveKit/.worktrees/codex-uikit3-candidate/.devspace-reports/uikit-3-candidate/final/HANDOFF.md`
-    - SHA-256: `0f3a47d3ef61cc730678dc63430194583bac782638b7e62352ce263e2bbf2397`
-    - Notes: `docs/reference/api/uikit-3-candidate.md` inside the package.
-  - **AuthKit `0.8.0-rc.0` with UIKit-3 support**
-    - Prepared by the account-center lane on 2026-10-02; AuthKit source commit `c375955`.
-    - Tarball: `/Users/yuanfei/PieAI/SwimmerAuthKit/.devspace-reports/uikit3-compat-20261002/release/swimmer-auth-kit-0.8.0-rc.0.tgz`
-    - SHA-256: `186aa52a845d6735ce984e61552a7bdc0901def77e6692e9f361e61f4898a76b`
-    - UIKit dependency range: `>=2.6.1 <4`. The upstream lane tested UIKit `2.6.1`, `2.13.0` and the `3.0.0` candidate.
-      Evidence: `SwimmerAuthKit/docs/plans/active/uikit-3-compatibility-candidate.md` and the candidate's `release/receipt.json`.
-    - University currently pins `0.1.9`. Moving to `0.8.0-rc.0` crosses the `0.2`–`0.7` changes:
-      the unified sign-in card, `methods` configuration, and optional security and SSO interfaces.
-      Read AuthKit's README and changelog before migrating. Preserve today's email sign-in behaviour;
-      keep every new interface disabled. Enabling any of them belongs to task `15-`, not this task.
-- Why the order matters: NerveKit `0.7.0` and AuthKit (`0.1.9` and `0.7.0`) all cap UIKit below 3. Installing
-  UIKit 3.0 alone fails, which is the kit-compatibility problem the Owner worried about.
+- **State on 2026-10-04 (supersedes the hold of 2026-10-03).** The kits no longer depend on each other
+  (Owner rule, 2026-10-03). Each one publishes on its own, and University adopts exact versions when it is ready.
+  - **UIKit `3.0.0-rc.1`** is published on npm under the `next` tag; `latest` is still `2.14.0`. Pin
+    `3.0.0-rc.1` exactly. A stable `3.0.0` is a later one-line bump, not a reason to wait.
+    Migration table: `SwimmerUIKit/docs/reference/migration-3.0.md`. Its University items include
+    `night → dark`, `GameAssetIcon → GameIcon` (save any colour illustration still needed first),
+    `setClayAssetMode` removed, and the surface, font and display-component changes.
+  - **NerveKit `0.8.0`** (source `9853bcd`, candidate SHA-256 `5239f14a…5239`). It has no UIKit dependency.
+    The app passes UIKit controls through `NerveUIProvider` from `@pieai/swimmer-nerve-kit/ui`. Its settings
+    fields became native controls styled by `--nerve-ui-*` variables, so map those variables to UIKit tokens
+    in the app.
+  - **AuthKit `0.8.0-rc.1`** (source `93eb970`, candidate SHA-256 `a653d898…4bce`). It has no UIKit or
+    backend-client dependency. The app passes:
+    - controls through `AuthUIProvider`;
+    - `captchaTheme`;
+    - the authentication client it already builds, so University ends with one backend-client version.
+
+    University pins `0.1.9` today. Read AuthKit's migration notes for the `0.2`–`0.8` changes. Keep
+    today's email sign-in, and keep every new account interface disabled; enabling them is task `15-`.
+  - Publication of NerveKit `0.8.0` and AuthKit `0.8.0-rc.1` was approved by the Owner on 2026-10-04.
+    Confirm each version from its registry before installing.
+  - If any of the three is not yet published when this task starts, step over the task and record which one.
+    A local tarball path never enters `main`.
+- Superseded: the coupled candidates of 2026-10-02 (UIKit `3.0.0` tarball, NerveKit `0.8.0` against UIKit 3,
+  AuthKit `0.8.0-rc.0`). They are kept in git history only; do not install them.
 - The Owner's theme picks (2026-10-01):
   - pastel for younger learners, grey for adults;
   - tide liquid only on the one forward CTA per screen;
@@ -90,20 +82,19 @@ and all gates on the exact published versions. Local tarball paths never enter m
 
 ## 4 How it is judged
 
-Two phases, because `main` must never point at a local tarball.
-
-**A · Candidate check** — historical procedure; currently held. Refresh this
-procedure against the decoupled interfaces and actual release evidence before use.
-- Install the three tarballs; verify the SHA-256 values above first.
-- Apply the migration and run every gate.
-- Capture before/after screenshots at 1280 px and 390 px, light and dark, on these screens:
-  the map, a lesson step, the chest, Me, the house, sign-in.
-- Hand Claude the diff, the gate output and the screenshots. Claude reviews, then the Owner approves
-  publishing all three packages.
-
-**B · Adoption** — after task 17 and the required decoupled publications.
-- Switch to the exact published versions and repeat the gates.
-- One commit, one push.
+One adoption pass on the exact published versions; `main` never points at a local tarball.
+- Apply the migration table and the injection wiring, then run every gate below.
+- Capture before/after screenshots at 1280 px and 390 px, light and dark, grey and 淡彩, on these screens:
+  - the map;
+  - a lesson step;
+  - the chest;
+  - Me;
+  - the house;
+  - sign-in;
+  - 涟's panel and its settings.
+- Put the screenshots on one walkthrough page for the Owner.
+- One commit, one push. The Owner's look review comes after the push. Adjustments he asks for are a
+  follow-up, not a reason to hold the adoption.
 
 | Gate | Command | Floor |
 | --- | --- | --- |
@@ -117,11 +108,9 @@ commit.
 
 ## 5 Delivery discipline
 
-- Phase A changes nothing in git.
-- Phase B is one commit and one push; the push runs the complete gate.
+- One commit and one push; the push runs the complete gate.
 - Never force-push.
 
 ## 6 Report back
 
-- Phase A: the diff summary, gate output verbatim, screenshot paths, and anything the migration table got wrong.
-- Phase B: the published versions, gate output verbatim, and the commit.
+- The published versions adopted, the gate output verbatim, the commit, the walkthrough page path, and anything the migration table got wrong.

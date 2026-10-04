@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-03
-last_reviewed: 2026-10-03
+last_reviewed: 2026-10-04
 domain: execution
 tags:
   - refactor
@@ -70,6 +70,8 @@ After this task:
 
 ## 2 What the Owner said
 
+> 「重构我要彻底重构，我要让这个项目特彻底健康。」 (2026-10-04)
+
 > 「主线干净，远端跟主线一样，没有什么垃圾内容…之后，适合做深度重构，重构了，让干干净净的文文档也对齐该退役的退役」 (2026-10-02)
 
 > 「为了兼容的都可以废弃掉…只要它功能好…越来越健康，越来越简单高效AI能够阅读模块化」 (2026-10-02)
@@ -96,6 +98,12 @@ After this task:
 - Paths are contracts: update imports, scripts, docs and tests in the same commit.
 
 **R2 · Internal boundaries.**
+- First fold in Claude's R1 review (2026-10-04):
+  - `state/` is a technical bucket; move each file to its owning feature and delete the folder;
+  - `learner/` holds non-learner owners (`use-shelf`, analytics ports, `skip-test`, `feedback-context`);
+    split them by owner;
+  - move the two root tests beside their subjects;
+  - the README's welcome row still says two paths; since task 13 the welcome opens the single path.
 - Split oversized modules by responsibility; `App.tsx` ends as a composition.
 - Exports used only by their own file become private.
 - Remove shims, aliases, deprecated paths and fallbacks that exist only for an older shape.
@@ -118,7 +126,60 @@ After this task:
 - Consolidate `scripts/` checks that overlap.
 - Remove tracked files nothing references.
 - Check `.gitignore` against what is really generated.
-- End with only `main`, and remote equal to local.
+
+**Health stages R6–R11 (added 2026-10-04).** The Owner asked for a thorough refactor that leaves the
+project healthy, not only tidy. These stages follow R5 under the same per-stage gates and delivery rules.
+
+**R6 · Dependencies.**
+- Inventory every `package.json`: unused dependencies, runtime-versus-dev placement, version drift between
+  workspace packages, and the same library installed at two versions.
+- Run `pnpm audit --registry https://registry.npmjs.org` (the mirror has no audit endpoint). Fix advisories
+  within the freeze; record any accepted risk with its reason.
+- First-party kits stay pinned to exact versions. University adds no kit-to-kit coupling: kits receive UI
+  controls and clients from the app (Owner rule, 2026-10-03).
+
+**R7 · Types and lint as guards.**
+- Count, then reduce, `any`, double casts (`as unknown as`), `@ts-expect-error` / `@ts-ignore` and lint
+  suppressions. Each survivor carries a one-line reason beside it.
+- Type-check the test files. Today `tsconfig` excludes `*.test.ts`, so a compile-time guard written in a test
+  checks nothing. Bring them into the typecheck gate.
+
+**R8 · Test-suite health.**
+- List the flaky specs from receipts since 2026-10-01, among them the `AA.map-navigation` first reader entry,
+  `R56 landscape-delivery` and the `world-delivery` R43 navigation. Fix each cause with a deterministic
+  readiness signal. Weakened assertions, raised timeouts and silent `isVisible` skips are not fixes.
+- Remove coverage only where two specs assert the same learner property, and name each removal.
+- Record `pnpm e2e` duration before and after. The stage closes only when the complete gate passes twice in a
+  row on one commit under normal load.
+
+**R9 · System health check (the founder board's p-health item).**
+- For each learner system, answer three questions with evidence:
+  - Does it really work end to end?
+  - Is there exactly one implementation?
+  - Which test guards it?
+- Systems to check: lesson steps and the grading tiers; review and spaced repetition; reminders; the six
+  island games; the house, chests and keepsakes; wardrobe and card packs; cloud account sync with its offline
+  outbox; settings.
+- A system that does not really work is fixed under the freeze exception, with a regression test.
+- Anything larger than a fix becomes a new numbered task pack for the Owner, never a silent change.
+- Output: one table in `docs/reference/execution/`, one row per system, linked from current-work.
+
+**R10 · Build and runtime budgets.**
+- Explain or remove every build warning.
+- Record the delivery bundle size and its largest chunks. Split only where a route loads code it does not use.
+- The timing suite and the Web3D budgets stay the same or improve; record before and after.
+
+**R11 · Close.**
+- End with only `main`, remote equal to local, a clean tree, and a `.gitignore` true to what is generated.
+- Write the final health report in §7 as a before/after table across all stages:
+  - the largest files and their line counts;
+  - export count;
+  - dependency count and duplicates;
+  - suppression counts;
+  - docs count;
+  - e2e duration and the flaky list;
+  - bundle size.
+- List the remaining debts, each with the task pack or owner that holds it.
 
 ## 4 How it is judged (every stage)
 
@@ -128,6 +189,7 @@ After this task:
 | complete | `pnpm e2e` | must pass; the count may fall only by tests whose subject R3 removed, each named in the commit body |
 | timing | `pnpm e2e:timing` | must pass; count may not fall |
 | docs | `pnpm doc-gov check` | must pass |
+| audit (R6 on) | `pnpm audit --registry https://registry.npmjs.org` | no unrecorded high or critical advisory |
 | writing pipeline | the pipeline's own tests and one native dry-run using the task-12 entry | both must pass at the end of every stage, including R0 |
 
 - Behaviour is unchanged. Visual stages (R1–R3) carry before/after screenshots of the map, a lesson step, the
