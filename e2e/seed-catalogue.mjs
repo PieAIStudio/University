@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import { importCourseRecovery } from "../apps/local/.university-local-build/server/recovery/course-recovery.js";
@@ -12,8 +21,10 @@ import {
   E2E_STUDIES_ROOT,
   E2E_RECOVERY_ROOT,
   E2E_SOURCE_ROOT,
+  E2E_COURSE_ROOT,
 } from "./catalogue-paths.mjs";
 
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const marker = join(E2E_RUN_ROOT, ".test-catalogue-root");
 if (existsSync(E2E_RUN_ROOT)) {
   if (
@@ -25,6 +36,15 @@ if (existsSync(E2E_RUN_ROOT)) {
   rmSync(E2E_RUN_ROOT, { recursive: true });
 }
 mkdirSync(E2E_PROJECT_ROOT, { recursive: true });
+// Authoring and delivery must see the same vocabulary when this disposable
+// course root is selected. The fixture is allowed to use the tracked bundle as
+// its frozen vocabulary input; neither mode may silently fall back to a
+// different root while the lesson body comes from this run.
+mkdirSync(join(E2E_COURSE_ROOT, "vocabulary"), { recursive: true });
+copyFileSync(
+  join(ROOT, "apps/university/src/content/lexicon.json"),
+  join(E2E_COURSE_ROOT, "vocabulary/en.json"),
+);
 writeFileSync(marker, "University E2E disposable catalogue\n");
 writeFileSync(
   join(E2E_PROJECT_ROOT, "university-local.config.json"),
