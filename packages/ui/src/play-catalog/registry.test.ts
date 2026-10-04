@@ -7,20 +7,17 @@ import { sampleShelf } from "./test-shelf.js";
 describe("the play lab's one inventory", () => {
   it("uses the loaded catalogue rather than the release's retired sample count", () => {
     const entries = createCatalog(sampleShelf(6));
-    expect(entries).toHaveLength(25);
-    expect(entries.filter((entry) => entry.group === "paths")).toHaveLength(6);
-    expect(entries.find((entry) => entry.id === "path:follow-a-claim")?.href).toContain(
-      "check-what-matters/follow-a-claim",
-    );
+    expect(entries).toHaveLength(12);
+    expect(entries.filter((entry) => entry.group === "paths")).toHaveLength(3);
   });
   it("offers no unavailable lesson links while content is absent", () => {
     const entries = createCatalog([]);
     expect(entries.filter((entry) => entry.group === "paths")).toEqual([]);
-    expect(entries).toHaveLength(19);
+    expect(entries).toHaveLength(9);
   });
   it("offers the lesson actions, the sample lessons and the island games, each named in both locales", () => {
     const entries = createCatalog(sampleShelf());
-    expect(entries.filter((entry) => entry.group === "native")).toHaveLength(13);
+    expect(entries.filter((entry) => entry.group === "native")).toHaveLength(3);
     expect(entries.filter((entry) => entry.group === "paths").map((entry) => entry.id)).toEqual([
       "path:ask-about-a-picture",
       "path:sound-words-and-meaning",

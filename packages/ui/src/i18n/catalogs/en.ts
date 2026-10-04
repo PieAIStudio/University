@@ -2,13 +2,13 @@ import { messages as menuDoors } from "./menu-doors.en.js";
 import { messages as mapNavigation } from "./map-navigation.en.js";
 import { messages as mapNodes } from "./map-nodes.en.js";
 import { messages as primm } from "./primm.en.js";
+import { messages as lessonReader } from "./lesson-reader.en.js";
 import { messages as propFinish } from "./prop-finish.en.js";
 import { messages as playGallery } from "./play-gallery.en.js";
 import { messages as arcade3d } from "./arcade-3d.en.js";
 import { messages as gameKit } from "./game-kit.en.js";
 import { messages as accountClosure } from "./account-closure.en.js";
 import { messages as gradingCopy } from "./grading-copy.en.js";
-import { messages as interactionPath } from "./interaction-path.en.js";
 import { messages as worldNavigation } from "./world-navigation.en.js";
 import { messages as readingSettings } from "./reading-settings.en.js";
 import { messages as productWelcome } from "./product-welcome.en.js";
@@ -23,18 +23,10 @@ import { messages as productNavigation } from "./product-navigation.en.js";
 import { messages as productBilling } from "./product-billing.en.js";
 import { messages as productSupport } from "./product-support.en.js";
 import { messages as productSave } from "./product-save.en.js";
-import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.en.js";
-import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.en.js";
 import { messages as playDifficulty } from "./learning-play-difficulty.en.js";
-import { messages as qualityUsability } from "./learning-play-quality-usability.en.js";
-import { messages as workflowUsability } from "./learning-play-workflow-usability.en.js";
 import { messages as playUsability } from "./learning-play-usability.en.js";
+import { messages as playSort } from "./learning-play-sort.en.js";
 import { messages as aiPlay } from "./learning-play-ai.en.js";
-import { messages as aiWorkflow } from "./learning-play-ai-workflow.en.js";
-import { messages as aiQuality } from "./learning-play-ai-quality.en.js";
-import { messages as aiAgentPlay } from "./learning-play-ai-agent-play.en.js";
-import { messages as learningPlayProgram } from "./learning-play-program.en.js";
-import { messages as learningPlayExtra } from "./learning-play-extra.en.js";
 import { messages as learningPlayMessages } from "./learning-play.en.js";
 import type { MessageCatalog } from "../types.js";
 
@@ -49,6 +41,7 @@ export const messages = {
   ...mapNavigation,
   ...mapNodes,
   ...primm,
+  ...lessonReader,
   ...purpose3d,
   ...arcade3d,
   ...gameKit,
@@ -56,7 +49,6 @@ export const messages = {
   ...propFinish,
   ...accountClosure,
   ...worldNavigation,
-  ...interactionPath,
   ...readingSettings,
   ...gradingCopy,
   ...accountFailures,
@@ -74,18 +66,10 @@ export const messages = {
   ...productSupport,
   ...productSave,
   ...aiPlay,
-  ...aiWorkflow,
-  ...aiQuality,
-  ...aiAgentPlay,
   ...playUsability,
+  ...playSort,
   ...playDifficulty,
-  ...qualityDifficulty,
-  ...workflowDifficulty,
-  ...qualityUsability,
-  ...workflowUsability,
   ...learningPlayMessages,
-  ...learningPlayProgram,
-  ...learningPlayExtra,
   "ui.world.domain.selected": "Selected",
   "ui.world.navigation.planets": "Learning planets",
   "ui.world.navigation.archipelago": "Course archipelago",

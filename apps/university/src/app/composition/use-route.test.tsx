@@ -103,9 +103,9 @@ describe("the shared browser route", () => {
   it.each(["/library/courseware", "/play-lab/catalog"])(
     "leaves courseware selection at its own address, retaining language: %s",
     async (path) => {
-      history.replaceState(null, "", `${path}?entry=native%3Aai-brief&group=all&lang=en`);
+      history.replaceState(null, "", `${path}?entry=native%3Asort&group=all&lang=en`);
       await act(async () => root.render(withInterfaceLocale(<RouteProbe />)));
-      expect(new URLSearchParams(location.search).get("entry")).toBe("native:ai-brief");
+      expect(new URLSearchParams(location.search).get("entry")).toBe("native:sort");
       await act(async () => container.querySelector("button")!.click());
       expect(location.pathname).toBe("/");
       expect(location.search).toBe("?lang=en");

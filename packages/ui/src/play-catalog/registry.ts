@@ -1,5 +1,5 @@
 import { toPath, type ActivityKind } from "@pieai/university-core";
-import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
+import { FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
 import type { PlainMessageKey } from "../i18n/types.js";
 import { samplePathsOf } from "./sample-paths.js";
 import type { ShelfStudy } from "../content/port.js";
@@ -8,7 +8,7 @@ export { THREE_GAMES, type ThreeGame } from "./three-games.js";
 
 export const CATALOG_GROUPS = ["native", "paths", "three"] as const;
 export type CatalogGroup = (typeof CATALOG_GROUPS)[number];
-export type NativeKind = Exclude<ActivityKind, "interaction-path" | "primm">;
+export type NativeKind = Exclude<ActivityKind, "primm">;
 export interface CatalogEntry {
   readonly id: string;
   readonly group: CatalogGroup;
@@ -32,7 +32,7 @@ const itemKey = (id: string, field: "name" | "action" | "controls") =>
  * docs/reference/interaction-components/album.html.
  */
 export function createCatalog(studies: readonly ShelfStudy[]): readonly CatalogEntry[] {
-  const native: CatalogEntry[] = [...FOUNDATION_MODES, ...AI_MODES].map((kind) => ({
+  const native: CatalogEntry[] = FOUNDATION_MODES.map((kind) => ({
     id: `native:${kind}`,
     group: "native",
     nativeKind: kind,

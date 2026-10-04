@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
@@ -15,12 +15,39 @@ import { parseUniversityLocalCli } from "../cli/parse.js";
 import { readLatestExercise, readLatestLesson } from "../content/repository.js";
 import { createUniversityLocalHttpServer } from "../http-server.js";
 
-const activity = JSON.parse(
-  readFileSync(
-    new URL("../../../../packages/core/fixtures/interaction-path-v2.json", import.meta.url),
-    "utf8",
-  ),
-);
+const activity = {
+  id: "keyboard-sort",
+  kind: "sort",
+  role: "apply",
+  difficulty: "practice",
+  title: "键盘操作",
+  brief: "分清移动焦点和触发按钮。",
+  goal: "区分两种键盘动作。",
+  takeaway: "先聚焦，再触发。",
+  hint: "Tab 移动焦点，Enter 触发。",
+  source: { label: "W3C 按钮模式", url: "https://www.w3.org/WAI/ARIA/apg/patterns/button/" },
+  question: "哪个键做什么？",
+  buckets: [
+    { id: "focus", label: "移动焦点", note: "还没触发按钮。" },
+    { id: "activate", label: "触发按钮", note: "按钮已有焦点。" },
+  ],
+  items: [
+    {
+      id: "tab",
+      label: "Tab",
+      detail: "移到下一个控件。",
+      bucketId: "focus",
+      why: "Tab 移动焦点。",
+    },
+    {
+      id: "enter",
+      label: "Enter",
+      detail: "按钮已有焦点。",
+      bucketId: "activate",
+      why: "Enter 触发已聚焦的按钮。",
+    },
+  ],
+};
 const evidence = [
   {
     kind: "fact",

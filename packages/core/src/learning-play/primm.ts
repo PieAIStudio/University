@@ -1,43 +1,24 @@
 import type { z } from "zod";
 import type { PrimmPayloadSchema } from "../domain/schemas.js";
-import { isSortComplete, isValidSortActivity, placeSortItem, type SortState } from "./sort.js";
 import type { ActivityBase } from "./types.js";
+import { isValidSortActivity } from "./sort.js";
 
 export const PRIMM_PHASES = ["predict", "run", "investigate", "modify", "make"] as const;
 export type PrimmPhase = (typeof PRIMM_PHASES)[number];
 export type PrimmPayload = z.infer<typeof PrimmPayloadSchema>;
-/** Version 3: a sequence of one-action steps inside the five fixed phases. */
-export type PrimmStepsPayload = Extract<PrimmPayload, { experienceVersion: 3 }>;
-/** Versions 1–2: one screen per phase with fixed fields. */
-export type PrimmClassicPayload = Exclude<PrimmPayload, { experienceVersion: 3 }>;
+/** Version 3: one action per screen inside the five fixed phases. */
+export type PrimmStepsPayload = PrimmPayload;
 export type PrimmActivity = ActivityBase & PrimmPayload & { readonly kind: "primm" };
-export type PrimmStepsActivity = ActivityBase & PrimmStepsPayload & { readonly kind: "primm" };
-export type PrimmClassicActivity = ActivityBase & PrimmClassicPayload & { readonly kind: "primm" };
+export type PrimmStepsActivity = PrimmActivity;
 export type PrimmStep = PrimmStepsPayload["steps"][number];
 export type PrimmStepOf<K extends PrimmStep["kind"]> = Extract<PrimmStep, { kind: K }>;
 export type PrimmSource = PrimmPayload["sources"][number];
 export type PrimmMaterial = PrimmPayload["materials"][number];
 export type PrimmOperation = PrimmPayload["starter"]["operation"];
-export type PrimmGame = PrimmClassicPayload["investigate"]["game"];
-
-export function isPrimmSteps<T extends PrimmPayload>(
-  payload: T,
-): payload is Extract<T, { experienceVersion: 3 }> {
-  return payload.experienceVersion === 3;
-}
-export type PrimmInspectImageGame = Extract<PrimmGame, { kind: "inspect-image" }>;
-export type PrimmSortGame = Extract<PrimmGame, { kind: "sort" }>;
-export type PrimmLayoutGame = Extract<PrimmGame, { kind: "layout" }>;
-export type PrimmEditGame = Extract<PrimmGame, { kind: "edit" }>;
-export type PrimmCollectGame = Extract<PrimmGame, { kind: "collect" }>;
-export type PrimmCheckResultGame = Extract<PrimmGame, { kind: "check-result" }>;
-export const PRIMM_CHECK_JUDGMENTS = ["kept", "changed", "missing"] as const;
-export type PrimmCheckJudgment = (typeof PRIMM_CHECK_JUDGMENTS)[number];
 
 const repeated = (ids: readonly string[]) => new Set(ids).size !== ids.length;
-const sorting = (game: PrimmSortGame) => ({ buckets: game.buckets, items: game.cards });
 
-/** Structural/reference validity only; these checks cannot establish learning. */
+/** Structural/reference validity for the current step lesson contract. */
 export function primmIssues(payload: PrimmPayload): string[] {
   const issues: string[] = [];
   const unique = (name: string, values: readonly { id: string }[]) => {
@@ -69,65 +50,7 @@ export function primmIssues(payload: PrimmPayload): string[] {
     if ("url" in source.reference && !/^https?:\/\//i.test(source.reference.url))
       issues.push(`PRIMM source needs an HTTP(S) URL: ${source.id}`);
   }
-  if (isPrimmSteps(payload)) return [...issues, ...primmStepIssues(payload)];
-  unique("prediction", payload.predict.options);
-  if (payload.experienceVersion === 2) {
-    if (!payload.run.attachmentLabel || !payload.modify.workbench || !payload.make.artifactLabel)
-      issues.push(
-        "Everyday PRIMM requires attachment, request-building and independent-artifact operations",
-      );
-    if (payload.modify.workbench) unique("request piece", payload.modify.workbench.pieces);
-  }
-  const game = payload.investigate.game;
-  switch (game.kind) {
-    case "inspect-image":
-      unique("region", game.regions);
-      for (const region of game.regions) {
-        if (
-          ![region.x, region.y, region.width, region.height].every(Number.isFinite) ||
-          region.x < 0 ||
-          region.y < 0 ||
-          region.width <= 0 ||
-          region.height <= 0 ||
-          region.x + region.width > 1 ||
-          region.y + region.height > 1
-        )
-          issues.push(`Invalid normalized PRIMM region: ${region.id}`);
-      }
-      break;
-    case "sort":
-      if (!isValidSortActivity(sorting(game)))
-        issues.push("Invalid PRIMM sort buckets/card mappings");
-      break;
-    case "layout":
-      unique("layout item", game.items);
-      unique("layout format", game.formats);
-      for (const answer of game.answers ?? [])
-        if (
-          answer.length !== game.items.length ||
-          new Set(answer).size !== answer.length ||
-          !answer.every((id) => game.items.some((item) => item.id === id))
-        )
-          issues.push("A PRIMM layout answer must order every item exactly once");
-      break;
-    case "edit":
-      unique("sentence", game.sentences);
-      if (!game.sentences.some((sentence) => sentence.id === game.targetId))
-        issues.push(`Unknown PRIMM edit target: ${game.targetId}`);
-      break;
-    case "check-result":
-      unique("check item", game.items);
-      break;
-    case "collect":
-      unique("collector card", game.cards);
-      if (!game.cards.some((card) => card.relevant) || !game.cards.some((card) => !card.relevant))
-        issues.push("PRIMM collector needs both relevant records and distractors");
-      for (const card of game.cards) {
-        if (!payload.sources.some((source) => source.id === card.sourceId))
-          issues.push(`Unknown PRIMM collector source: ${card.sourceId}`);
-      }
-  }
-  return issues;
+  return [...issues, ...primmStepIssues(payload)];
 }
 
 const invalidRegion = (region: { x: number; y: number; width: number; height: number }) =>
@@ -256,10 +179,7 @@ function primmStepIssues(payload: PrimmStepsPayload): string[] {
 /** Every text the Run phase may execute: the starter, and a step lesson's
  * authored requests. Anything else is learner text and belongs to Modify or Make. */
 export function primmRunPrompts(payload: PrimmPayload): string[] {
-  return [
-    payload.starter.prompt,
-    ...(isPrimmSteps(payload) ? (payload.requests ?? []).map((request) => request.prompt) : []),
-  ];
+  return [payload.starter.prompt, ...(payload.requests ?? []).map((request) => request.prompt)];
 }
 
 /** The exact prepared text of a request the lesson allows to run. */
@@ -317,113 +237,4 @@ export function primmBuildVerdict(
     (answer) => answer.length === pieceIds.length && answer.every((id) => pieceIds.includes(id)),
   );
   return { ok: false, reason: sameSet ? "order" : "missing" };
-}
-
-/** Every prediction is allowed to continue; it is not an independently graded answer. */
-export function canContinuePrimmPrediction(
-  predict: PrimmClassicPayload["predict"],
-  optionId: string,
-): boolean {
-  return predict.options.some((option) => option.id === optionId);
-}
-
-export function placePrimmSortCard(
-  game: PrimmSortGame,
-  state: SortState,
-  cardId: string,
-  bucketId: string,
-) {
-  return placeSortItem(sorting(game), state, cardId, bucketId);
-}
-
-export type PrimmGameState =
-  | { readonly kind: "inspect-image"; readonly selectedRegionIds: readonly string[] }
-  | { readonly kind: "sort"; readonly placed: Readonly<Record<string, string>> }
-  | { readonly kind: "layout"; readonly itemIds: readonly string[]; readonly formatId: string }
-  | { readonly kind: "edit"; readonly targetId: string; readonly replacement: string }
-  | { readonly kind: "collect"; readonly decisions: Readonly<Record<string, boolean>> }
-  | { readonly kind: "check-result"; readonly judgments: Readonly<Record<string, string>> };
-
-type LayoutGame = Extract<PrimmGame, { readonly kind: "layout" }>;
-type EditGame = Extract<PrimmGame, { readonly kind: "edit" }>;
-
-/** With accepted orders only one of them completes the layout; without, any full order does. */
-export function layoutOrderAccepted(game: LayoutGame, itemIds: readonly string[]): boolean {
-  if (!game.answers?.length) return true;
-  return game.answers.some(
-    (answer) => answer.length === itemIds.length && answer.every((id, i) => itemIds[i] === id),
-  );
-}
-
-/**
- * The first item standing where the nearest accepted order does not put it.
- * Feedback names one item without revealing the whole order.
- */
-export function layoutMisplacedItem(game: LayoutGame, itemIds: readonly string[]): string | null {
-  if (!game.answers?.length || layoutOrderAccepted(game, itemIds)) return null;
-  let nearest = game.answers[0]!;
-  let matched = -1;
-  for (const answer of game.answers) {
-    const score = answer.filter((id, i) => itemIds[i] === id).length;
-    if (score > matched) {
-      nearest = answer;
-      matched = score;
-    }
-  }
-  const index = itemIds.findIndex((id, i) => nearest[i] !== id);
-  return index === -1 ? null : itemIds[index]!;
-}
-
-/** With required ideas, the rewrite must name at least one of them. */
-export function editMentionsRequired(game: EditGame, text: string): boolean {
-  if (!game.mustMention?.length) return true;
-  const lower = text.toLowerCase();
-  return game.mustMention.some((term) => lower.includes(term.toLowerCase()));
-}
-
-/** Checks the current manipulation, never a grade, click count or past successful state. */
-export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boolean {
-  if (game.kind === "inspect-image" && state.kind === game.kind)
-    return (
-      state.selectedRegionIds.length > 0 &&
-      !repeated(state.selectedRegionIds) &&
-      state.selectedRegionIds.every((id) => game.regions.some((region) => region.id === id))
-    );
-  if (game.kind === "sort" && state.kind === game.kind)
-    return (
-      Object.keys(state.placed).length === game.cards.length &&
-      isSortComplete(sorting(game), { placed: state.placed, misses: 0 })
-    );
-  if (game.kind === "layout" && state.kind === game.kind)
-    return (
-      state.itemIds.length === game.items.length &&
-      !repeated(state.itemIds) &&
-      state.itemIds.every((id) => game.items.some((item) => item.id === id)) &&
-      game.formats.some((format) => format.id === state.formatId) &&
-      layoutOrderAccepted(game, state.itemIds)
-    );
-  if (game.kind === "edit" && state.kind === game.kind) {
-    const target = game.sentences.find((sentence) => sentence.id === game.targetId);
-    return (
-      !!target &&
-      state.targetId === target.id &&
-      !!state.replacement.trim() &&
-      state.replacement.trim() !== target.text.trim() &&
-      editMentionsRequired(game, state.replacement)
-    );
-  }
-  // Every item judged. There is no answer key: the live result differs per run.
-  if (game.kind === "check-result" && state.kind === game.kind)
-    return game.items.every((item) =>
-      (PRIMM_CHECK_JUDGMENTS as readonly string[]).includes(state.judgments[item.id] ?? ""),
-    );
-  if (game.kind === "collect" && state.kind === game.kind)
-    return (
-      Object.keys(state.decisions).length === game.cards.length &&
-      game.cards.every(
-        (card) =>
-          Object.hasOwn(state.decisions, card.id) && state.decisions[card.id] === card.relevant,
-      )
-    );
-  return false;
 }

@@ -13,7 +13,6 @@ import {
 
 import { PrimmLessonReader } from "./PrimmLessonReader.js";
 import type { PrimmLessonProps, RunPrimm } from "../learning-play/PrimmLesson.js";
-import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import type { EntitlementReader } from "../capability/ai-entitlements.js";
@@ -151,22 +150,6 @@ function LegacyLessonReader({
   answerDraftScope = "local-guest",
 }: LessonReaderProps) {
   const interfaceTranslator = useI18n();
-  const { locale } = useI18n();
-  const interactionPath = view.lesson.activities?.find(
-    (activity) => activity.kind === "interaction-path",
-  );
-  const pathScope = JSON.stringify([
-    answerDraftScope,
-    locator.studyId,
-    locator.courseId,
-    locator.unitId,
-    locator.lessonId,
-    view.lesson.contentRevision,
-    locale,
-    interactionPath?.id,
-  ]);
-  const [pathProgress, setPathProgress] = useState({ scope: "", completed: 0 });
-  const completedRounds = pathProgress.scope === pathScope ? pathProgress.completed : 0;
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
   const exercisesPassed = completion.exercisesPassed;
@@ -531,7 +514,6 @@ function LegacyLessonReader({
 
   const prose = (
     <MarkdownContent
-      suppressedActivityId={interactionPath?.id}
       {...(view.lesson.language
         ? {
             language: {
@@ -597,26 +579,14 @@ function LegacyLessonReader({
   );
 
   return (
-    <article className={`lesson-reader${interactionPath ? " lesson-reader--interaction" : ""}`}>
+    <article className="lesson-reader">
       {onBackToCourse ? (
         <LessonToolbar
           onClose={onBackToCourse}
           sections={sections}
           progressDestinationId={completionDestination}
-          progressOverride={
-            interactionPath
-              ? {
-                  current: completedRounds,
-                  total: interactionPath.steps.length,
-                  label: interfaceTranslator.t("path.progress", {
-                    current: completedRounds,
-                    total: interactionPath.steps.length,
-                  }),
-                }
-              : undefined
-          }
         >
-          {!interactionPath ? readingTools : null}
+          {readingTools}
           {toolbarExtras}
         </LessonToolbar>
       ) : null}
@@ -708,36 +678,12 @@ function LegacyLessonReader({
               </button>
             </p>
           ) : null}
-          {interactionPath ? (
-            <LearningActivity
-              key={pathScope}
-              activity={interactionPath}
-              assets={view.lesson.assets}
-              onPathProgress={(count) => setPathProgress({ scope: pathScope, completed: count })}
-              occurrenceId={pathScope}
-              reviewContent={
-                <>
-                  <div className="interaction-path__reading-tools">{readingTools}</div>
-                  <div className="markdown-body lesson-prose" ref={bodyRef}>
-                    {prose}
-                  </div>
-                </>
-              }
-              onNext={() => {
-                exercisesRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
-                exercisesRef.current
-                  ?.querySelector<HTMLElement>("textarea, input, button")
-                  ?.focus({ preventScroll: true });
-              }}
-            />
-          ) : (
-            <div className="markdown-body lesson-prose" ref={bodyRef}>
-              {prose}
-            </div>
-          )}
+          <div className="markdown-body lesson-prose" ref={bodyRef}>
+            {prose}
+          </div>
           {!readConfirmed && !exercisesPassed ? (
             <LessonReadConfirm
-              interaction={Boolean(interactionPath)}
+              interaction={false}
               remaining={false}
               confirming={confirming}
               error={confirmationError}
@@ -752,17 +698,13 @@ function LegacyLessonReader({
               </p>
             </section>
           ) : null}
-          {interactionPath ? (
-            <div ref={exercisesRef}>{exerciseBlocks}</div>
-          ) : (
-            <>
-              <div ref={exercisesRef} />
-              {exerciseBlocks}
-            </>
-          )}
+          <>
+            <div ref={exercisesRef} />
+            {exerciseBlocks}
+          </>
           {!readConfirmed && exercisesPassed ? (
             <LessonReadConfirm
-              interaction={Boolean(interactionPath)}
+              interaction={false}
               remaining
               confirming={confirming}
               error={confirmationError}
@@ -932,7 +874,7 @@ function LessonReadConfirm({
       <div>
         <h3 id="lesson-completion-title">
           {interaction
-            ? interfaceTranslator.t("path.confirmTitle")
+            ? interfaceTranslator.t("lesson.confirmTitle")
             : remaining
               ? interfaceTranslator.t("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
               : interfaceTranslator.t(
@@ -941,7 +883,7 @@ function LessonReadConfirm({
         </h3>
         <p>
           {interaction
-            ? interfaceTranslator.t("path.confirmNote")
+            ? interfaceTranslator.t("lesson.confirmNote")
             : remaining
               ? interfaceTranslator.t(
                   "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上",
@@ -960,7 +902,7 @@ function LessonReadConfirm({
         {confirming
           ? interfaceTranslator.t("ui.lesson.lessonReader.copy.正在记录")
           : interaction
-            ? interfaceTranslator.t("path.confirm")
+            ? interfaceTranslator.t("lesson.confirm")
             : interfaceTranslator.t("ui.lesson.lessonReader.copy.我读完了")}
       </LiquidCtaButton>
       {error ? (

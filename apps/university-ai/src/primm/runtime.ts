@@ -4,7 +4,7 @@ import { createGeneratorRegistry } from "@pieai/swimmer-ai-provider-kit/generato
 import { createStructuredOutputClient } from "@pieai/swimmer-ai-provider-kit/structured-output";
 import type { ChatCompletionTransport, ChatMessage } from "@pieai/swimmer-ai-provider-kit/chat";
 import type { ExerciseAttemptResult, PrimmExecutionResult } from "@pieai/university-core";
-import { isPrimmSteps, primmRunPrompts, requiredFactCoverage } from "@pieai/university-core";
+import { primmRunPrompts, requiredFactCoverage } from "@pieai/university-core";
 import { PREVIEW_MODEL } from "./local-transport.js";
 import { PreviewFailure } from "./errors.js";
 import {
@@ -140,14 +140,7 @@ export function createPrimmRuntime(options: PrimmRuntimeOptions) {
     transcriberModel?: string;
     transcription?: string;
   }> {
-    const spec =
-      input.phase === "make"
-        ? lesson.activity.make
-        : input.phase === "modify" &&
-            !isPrimmSteps(lesson.activity) &&
-            lesson.activity.modify.operation
-          ? { ...lesson.activity.starter, operation: lesson.activity.modify.operation }
-          : lesson.activity.starter;
+    const spec = input.phase === "make" ? lesson.activity.make : lesson.activity.starter;
     const materials = spec.materialIds.map((id) => {
       const material = lesson.activity.materials.find((item) => item.id === id);
       if (!material) throw new PreviewFailure("rejected");

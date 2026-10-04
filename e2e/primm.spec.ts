@@ -7,10 +7,8 @@ import {
   type PrimmActivity,
   type PrimmStepsActivity,
 } from "../packages/core/dist/index.js";
-import type { PlainMessageKey } from "../packages/ui/src/i18n/types.js";
 import { messages as zh } from "../packages/ui/src/i18n/catalogs/primm.zh-CN.js";
 import { messages as en } from "../packages/ui/src/i18n/catalogs/primm.en.js";
-import { interfaceI18n } from "../packages/ui/src/i18n/core.js";
 import { SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { humanClick, scrollIntoView } from "./harness/click.js";
@@ -26,17 +24,7 @@ const samples = SHIPPED_COURSES.flatMap((course) =>
     }),
   ),
 );
-// Version 3 lessons are one action per screen; earlier ones keep a screen per phase.
-const classic = samples.flatMap((sample) =>
-  sample.activity.experienceVersion === 3
-    ? []
-    : [
-        {
-          ...sample,
-          activity: sample.activity as Exclude<PrimmActivity, { experienceVersion: 3 }>,
-        },
-      ],
-);
+// Current PRIMM lessons show one action per screen.
 const stepLessons = samples.flatMap((sample) =>
   sample.activity.experienceVersion === 3
     ? [{ ...sample, activity: sample.activity as PrimmStepsActivity }]
@@ -44,53 +32,25 @@ const stepLessons = samples.flatMap((sample) =>
 );
 
 test("PRIMM revisions use real materials and after-action teaching", () => {
-  // The first unit is the Owner-reviewed pilot; later units hold lessons the
-  // production line generated from outline entries nobody hand-tuned.
-  const pilot = samples.filter((s) =>
-    lessonPathOf(s.course, s.lesson).includes("/first-useful-step/"),
-  );
-  expect(pilot).toHaveLength(5);
-  expect(samples.length).toBeGreaterThan(pilot.length);
   expect(stepLessons.length).toBeGreaterThan(0);
-  for (const { lesson, activity } of classic) {
-    // The teacher reconciles prediction and result only after an actual run.
-    expect(activity.run.debrief, lesson.id).toBeTruthy();
-    expect(activity.modify.debrief, lesson.id).toBeTruthy();
+  for (const { lesson, activity } of stepLessons) {
     expect(activity.method).toBe("PRIMM");
-    expect(activity.experienceVersion).toBe(2);
-    expect(activity.run.attachmentLabel).toBeTruthy();
-    expect(activity.modify.workbench?.pieces.length).toBeGreaterThanOrEqual(2);
-    expect(activity.make.artifactLabel).toBeTruthy();
+    expect(activity.experienceVersion).toBe(3);
+    expect(activity.steps.length).toBeGreaterThanOrEqual(8);
     expect(activity.intro.situation).toBeTruthy();
     expect(activity.intro.need).toBeTruthy();
-    for (const locale of ["zh-CN", "en"]) {
-      const game = localizeActivity(activity, locale).investigate.game;
-      if (game.kind !== "sort") continue;
-      for (const first of game.cards)
-        for (const second of game.cards) {
-          if (first.id !== second.id && first.text.trim() === second.text.trim())
-            expect(
-              first.bucketId,
-              "Identical visible cards cannot require different categories",
-            ).toBe(second.bucketId);
-        }
-    }
     expect(lesson.packageLesson.exercises as { id: string; kind: string }[]).toMatchObject([
       { id: activity.make.exerciseId, kind: "explain" },
     ]);
   }
 });
 
-// The line converged on two investigations (sort, check-result) and none traced
-// which words of a request produced which part of the result; the step lesson's
-// match does. Counted across both versions, as a learner meets them in one course.
-test("PRIMM investigations are not all one or two operations", () => {
-  const kinds = new Set([
-    ...classic.map((s) => s.activity.investigate.game.kind),
-    ...stepLessons.flatMap((s) =>
+test("PRIMM investigations keep more than one authored action", () => {
+  const kinds = new Set(
+    stepLessons.flatMap((s) =>
       s.activity.steps.flatMap((step) => (step.phase === "investigate" ? [step.kind] : [])),
     ),
-  ]);
+  );
   expect(kinds.size).toBeGreaterThanOrEqual(3);
 });
 
@@ -180,352 +140,6 @@ test("the late-photo guard detects removal of the reserved image frame", async (
   expect(shift.withinStep).toBeGreaterThan(1);
 });
 
-for (const [mode, origin] of [
-  ["delivery", ONLINE_ORIGIN],
-  ["authoring", LOCAL_ORIGIN],
-] as const)
-  for (const locale of ["zh-CN", "en"] as const)
-    for (const { course, lesson, activity: raw } of classic) {
-      test(`PRIMM ${mode} ${locale} ${lesson.id}: linear phases, actual input seam, game, repair and one ending`, async ({
-        page,
-      }, info) => {
-        const a = localizeActivity(raw, locale);
-        const translator = interfaceI18n.translator(locale);
-        type LabelKey =
-          | "primm.moveDown"
-          | "primm.collect"
-          | "primm.reject"
-          | "primm.addPiece"
-          | "primm.moveUp"
-          | "primm.removePiece";
-        type PlainKey = keyof typeof zh & PlainMessageKey;
-        const text = (key: PlainKey | LabelKey, label = "") => {
-          if (
-            key === "primm.moveDown" ||
-            key === "primm.collect" ||
-            key === "primm.reject" ||
-            key === "primm.addPiece" ||
-            key === "primm.moveUp" ||
-            key === "primm.removePiece"
-          )
-            return translator.t(key, { label });
-          return translator.t(key);
-        };
-        await page.setViewportSize({ width: 390, height: 844 });
-        await page.emulateMedia({
-          reducedMotion: "reduce",
-          colorScheme: locale === "en" ? "light" : "dark",
-        });
-        const errors: string[] = [];
-        page.on("pageerror", (e) => errors.push(e.message));
-        const runs: { phase: string; prompt: string; commandId: string }[] = [];
-        let grades = 0;
-        // These are explicit contract-test responses, not evidence of live AI use.
-        // Real model/source/audio runs are captured separately in primm-five/live-*.
-        await page.route("http://127.0.0.1:23151/**", async (route) => {
-          const request = route.request(),
-            headers = {
-              "Access-Control-Allow-Origin": origin,
-              "Access-Control-Allow-Headers": "content-type,x-university-primm",
-              "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-            };
-          if (request.method() === "OPTIONS") {
-            await route.fulfill({ status: 204, headers });
-            return;
-          }
-          const body = request.postDataJSON();
-          if (request.url().endsWith("/run")) {
-            runs.push(body);
-            await route.fulfill({
-              status: 200,
-              headers,
-              json: {
-                kind: "live",
-                text: `Contract test output for ${body.phase}: ${body.prompt}`,
-                prompt: body.prompt,
-                requestId: crypto.randomUUID(),
-                model: "explicit-browser-test-fixture",
-                createdAt: new Date().toISOString(),
-                sourceIds: a.sources.map((s) => s.id),
-              },
-            });
-            return;
-          }
-          if (request.url().endsWith("/grade")) {
-            grades++;
-            const work = JSON.parse(body.answer);
-            expect(work.request.phase).toBe("make");
-            expect(work.request.prompt).toBe("My independent request");
-            const passed = work.finalWork === "Revised independent work";
-            await route.fulfill({
-              status: 200,
-              headers,
-              json: {
-                correct: false,
-                attemptCount: grades,
-                score: passed ? 1 : 0,
-                maxScore: 1,
-                awaitingHostGrade: false,
-                hostGrade: {
-                  outcome: passed ? "pass" : "fail",
-                  passed,
-                  evaluation: "Explicit test feedback",
-                  extensions: [],
-                  host: "browser-contract-test",
-                  learnerAnswer: body.answer,
-                  occurredAt: new Date().toISOString(),
-                },
-              },
-            });
-            return;
-          }
-          await route.fulfill({
-            status: 404,
-            headers,
-            json: { kind: "error", code: "unavailable" },
-          });
-        });
-        await page.goto(`${origin}${lessonPathOf(course, lesson)}?lang=${locale}`);
-        const area = page.locator(".primm");
-        const click = async (key: PlainKey) =>
-          humanClick(page, area.getByRole("button", { name: text(key), exact: true }), key);
-        const stage = async (name: string) => {
-          await expect(area).toHaveAttribute("data-primm-stage", name);
-          await expect(
-            page.locator(
-              ".exercise-panel,.lesson-skip-to-questions,.interaction-path__receipt,.interaction-path__review,.lesson-completion,.lesson-next-step",
-            ),
-          ).toHaveCount(0);
-          await expect(page.locator(".learning-save-state")).toHaveCount(0);
-          // A tall text-bearing diagram must stay inside its reserved frame,
-          // not paint through the request editor or its attribution below.
-          const containment = await area.locator(".primm__image-frame").evaluateAll((frames) =>
-            frames.map((frame) => {
-              const box = frame.getBoundingClientRect();
-              const image = frame.querySelector("img")!.getBoundingClientRect();
-              const caption = frame
-                .parentElement!.querySelector("figcaption")
-                ?.getBoundingClientRect();
-              return (
-                image.bottom <= box.bottom + 1 &&
-                image.top >= box.top - 1 &&
-                (!caption || caption.top >= box.bottom - 1)
-              );
-            }),
-          );
-          expect(containment.every(Boolean)).toBe(true);
-        };
-        await stage("predict");
-        if (a.starter.operation === "transcribe") {
-          const audio = area.locator("audio");
-          await expect(audio).toBeVisible();
-          await expect
-            .poll(() =>
-              audio.evaluate(
-                (node) =>
-                  Number.isFinite(node.duration) && node.duration > 0 && node.readyState >= 2,
-              ),
-            )
-            .toBe(true);
-        }
-        await expect(area).toContainText(a.intro.situation);
-        await expect(area).toContainText(a.starter.prompt);
-        await humanClick(
-          page,
-          area.getByRole("button", { name: a.predict.options.at(-1)!.label, exact: true }),
-          "any prediction may proceed",
-        );
-        await click("primm.next");
-        await stage("run");
-        expect(runs).toHaveLength(0);
-        await expect(
-          area.getByRole("button", { name: text("primm.sendPrepared"), exact: true }),
-        ).toBeDisabled();
-        await humanClick(
-          page,
-          area.getByRole("button", { name: a.run.attachmentLabel!, exact: true }),
-          "attach the exact prepared input",
-        );
-        await expect(area.locator('[data-primm-operation="attach-and-send"]')).toBeVisible();
-        await click("primm.sendPrepared");
-        await expect(
-          area.getByRole("button", { name: text("primm.retry"), exact: true }),
-        ).toBeEnabled();
-        expect(runs[0]?.prompt).toBe(a.starter.prompt);
-        await expect(area.locator(".primm__debrief")).toHaveText(a.run.debrief!);
-        await click("primm.next");
-        await stage("investigate");
-        // The explanation names what the learner found, so it waits for the operation.
-        await expect(area).not.toContainText(a.investigate.explanation);
-        const g = a.investigate.game,
-          game = area.locator("[data-primm-game]");
-        await expect(game).toHaveAttribute("data-primm-game", g.kind);
-        if (g.kind === "inspect-image") {
-          await expect(game.locator(".primm-inspect__hotspot").first()).toBeEnabled();
-          // A large whole-image target must not steal the real pointer from
-          // either object. Keyboard-only activation would miss this regression.
-          for (let index = 0; index < 2; index++) {
-            const target = game.locator(".primm-inspect__hotspot").nth(index);
-            await humanClick(page, target, "inspect the actual photo object");
-            await expect(target).toHaveAttribute("aria-pressed", "true");
-          }
-          await game.locator(".primm-inspect__hotspot").first().focus();
-          await page.keyboard.press("Enter");
-          await expect(game.locator(".primm-inspect__zoom")).toBeVisible();
-          const ratio = await game.locator(".primm-inspect__zoom img").evaluate((node) => {
-            const image = node as HTMLImageElement,
-              box = image.getBoundingClientRect();
-            return {
-              rendered: box.width / box.height,
-              original: image.naturalWidth / image.naturalHeight,
-            };
-          });
-          expect(ratio.rendered).toBeCloseTo(ratio.original, 2);
-          await game.locator("textarea").fill("A detail worth asking about");
-        } else if (g.kind === "sort") {
-          for (const [index, card] of g.cards.entries()) {
-            const pick = game.getByRole("button", { name: card.text, exact: true }),
-              bucket = game.getByRole("button", {
-                name: g.buckets.find((b) => b.id === card.bucketId)!.label,
-                exact: true,
-              });
-            // The last card is placed with the keyboard alone.
-            if (index === g.cards.length - 1) {
-              await pick.focus();
-              await page.keyboard.press("Enter");
-              await bucket.focus();
-              await page.keyboard.press("Space");
-            } else {
-              await humanClick(page, pick, "select card");
-              await humanClick(page, bucket, "place card");
-            }
-          }
-        } else if (g.kind === "layout") {
-          await humanClick(
-            page,
-            game.getByRole("button", {
-              name: text("primm.moveDown", g.items[0]!.label),
-              exact: true,
-            }),
-            "reorder source fact",
-          );
-          await humanClick(
-            page,
-            game.getByRole("button", { name: g.formats.at(-1)!.label, exact: true }),
-            "change layout",
-          );
-          await expect(
-            game.getByRole("region", { name: text("primm.preview"), exact: true }).locator("li"),
-          ).toHaveCount(g.items.length);
-        } else if (g.kind === "edit") {
-          await humanClick(
-            page,
-            game.getByRole("button", {
-              name: g.sentences.find((s) => s.id === g.targetId)!.text,
-              exact: true,
-            }),
-            "select actual draft sentence",
-          );
-          await game.locator("textarea").fill("Revised sentence");
-          await expect(game.locator(".primm__comparison")).toContainText("Revised sentence");
-          await expect(game.locator(".primm__changed-sentence")).toHaveCount(2);
-        } else if (g.kind === "check-result") {
-          for (const [index, item] of g.items.entries()) {
-            const choice = text(index === 0 ? "primm.check.missing" : "primm.check.kept"),
-              judge = game.getByRole("button", {
-                name: `${item.label}${locale === "en" ? ": " : "："}${choice}`,
-                exact: true,
-              });
-            // The last item is judged with the keyboard alone.
-            if (index === g.items.length - 1) {
-              await judge.focus();
-              await page.keyboard.press("Enter");
-            } else await humanClick(page, judge, "judge the actual result against the material");
-            await expect(
-              game.locator(`[data-check-item="${item.id}"] [role="status"]`),
-            ).toContainText(item.expected);
-          }
-        } else {
-          for (const card of g.cards)
-            await humanClick(
-              page,
-              game.getByRole("button", {
-                name: text(card.relevant ? "primm.collect" : "primm.reject", card.label),
-                exact: true,
-              }),
-              "collect only matching record",
-            );
-          await expect(
-            game.getByRole("region", { name: text("primm.notes"), exact: true }).locator("li"),
-          ).toHaveCount(g.cards.filter((c) => c.relevant).length);
-        }
-        await expect(area.locator(".primm__debrief")).toContainText(a.investigate.explanation);
-        await page.screenshot({ path: info.outputPath("investigation.png") });
-        await click("primm.next");
-        await stage("modify");
-        await expect(area.locator('[data-primm-operation="build-request"]')).toBeVisible();
-        await expect(area.locator("textarea")).toHaveValue(a.starter.prompt);
-        const piece = a.modify.workbench!.pieces[0]!;
-        await humanClick(
-          page,
-          area.getByRole("button", { name: text("primm.addPiece", piece.label), exact: true }),
-          "add a requirement to the actual request",
-        );
-        await humanClick(
-          page,
-          area.getByRole("button", { name: text("primm.moveUp", piece.label), exact: true }),
-          "reorder a requirement",
-        );
-        await humanClick(
-          page,
-          area.getByRole("button", { name: text("primm.removePiece", piece.label), exact: true }),
-          "remove a requirement rather than choosing a whole answer",
-        );
-        await area.locator("textarea").fill("My changed request");
-        // Real browser reload must recover this work without entering Make early.
-        await page.reload();
-        await stage("modify");
-        await expect(area.locator("textarea")).toHaveValue("My changed request");
-        await click("primm.runChanged");
-        await expect(
-          area.getByRole("button", { name: text("primm.retry"), exact: true }),
-        ).toBeEnabled();
-        expect(runs.at(-1)?.prompt).toBe("My changed request");
-        await expect(area.locator(".primm__debrief")).toHaveText(a.modify.debrief!);
-        await click("primm.next");
-        await stage("make");
-        await expect(area.locator("textarea")).toHaveValue("");
-        await area.locator("textarea").fill("My independent request");
-        await click("primm.makeDraft");
-        await expect(area.locator("[data-final-work]")).toBeVisible();
-        await expect(area.locator('[data-primm-operation="make-artifact"]')).toBeVisible();
-        await click("primm.evaluate");
-        await expect(area).toContainText(text("primm.fail"));
-        await expect(
-          area.getByRole("button", { name: text("primm.finish"), exact: true }),
-        ).toHaveCount(0);
-        await area.locator("[data-final-work]").fill("Revised independent work");
-        await click("primm.evaluate");
-        await expect(area).toContainText(text("primm.pass"));
-        await click("primm.finish");
-        await stage("finish");
-        const progress = page.getByRole("progressbar");
-        await expect(progress).toHaveAttribute(
-          "aria-valuenow",
-          (await progress.getAttribute("aria-valuemax"))!,
-        );
-        await expect(area).toContainText("Revised independent work");
-        const axe = await new AxeBuilder({ page }).include(".primm").analyze();
-        expect(axe.violations).toEqual([]);
-        await click("primm.complete");
-        await expect(page).toHaveURL(new RegExp(`/${course.studyId}/${course.id}(?:\\?|$)`));
-        expect(grades).toBe(2);
-        expect(runs.map((r) => r.phase)).toEqual(["run", "modify", "make"]);
-        expect(errors).toEqual([]);
-      });
-    }
-
-/** Version 3: every step is one screen and one action, driven from the payload. */
 for (const [mode, origin] of [
   ["delivery", ONLINE_ORIGIN],
   ["authoring", LOCAL_ORIGIN],

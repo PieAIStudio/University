@@ -368,5 +368,72 @@ the compiled native CLI with the isolated project root
 real studies root nor any lesson bytes. The original r7 receipt remains
 unchanged at `.scratch/primm-engine/task12-20261003/edit-one-part/native-proposal-check.json`.
 
-R2 stage commit: `9a54f9d8 refactor(task17): split app boundaries for r2`.
+R2 stage commit: `8b9e57e0 refactor(task17): split app boundaries for r2`.
 The next stage is R3, after the R2 push and its complete gate.
+
+
+## R3 execution record (2026-10-05)
+
+R3 removes the retired PRIMM V1/V2 and interaction-path engines and the ten
+independent retired activity kinds, their exclusive renderers, demo fixtures,
+CSS, translation catalogs and tests. The runtime contract now accepts V3
+PRIMM and the three retained native activities (`connect`, `sort`, `tune`).
+The six island games remain. No live lesson or task-12 writing receipt changed.
+The current component registry, native producer, reader dispatch, execution
+service, play catalogue and frozen test catalogue were reconciled together.
+
+The execution spec §10 checklist was applied:
+
+1. The frozen catalogue retains all 89 lesson IDs, source evidence, media and
+   bilingual reader audits. Retired payloads and only their `::play` markers
+   are removed. V3 and native activities stay as executable fixtures.
+2. The real course retirement happened in task 13 and now lives in the
+   configured UniversityCourses root. R3 deletes component code, not more
+   courses; no compatibility path was introduced.
+3. Runtime kinds, writer tables, catalogue, review and island projection
+   consumers were inspected. A source search of apps/packages/e2e/scripts
+   found no retired-kind branch after the change.
+4. Learner progress and cards were not deleted. Task 13's missing-course empty
+   state remains guarded by its browser regression; content identities stay
+   stable in the frozen catalogue.
+5. The pre-delete backup is retained at
+   `/Users/yuanfei/PieAI/.backups/University/task17-r3-20261004/retired-code-and-fixtures.tar.gz`.
+   A complete supplemental original-byte backup at
+   `/Users/yuanfei/PieAI/.backups/University/task17-r3-20261004/retired-r3-complete-at-r2.tar.gz`
+   covers all 109 removed files, the frozen package originals and the album.
+   The screenshot album and its assets remain tracked and unchanged.
+
+The exact deleted-file and test inventories are in
+`.scratch/task17/r3-delete-inventory.json` and `r3-{core,ui,e2e}-test-delta.json`.
+The workflow test formerly named `interaction-path.test.ts` was retained and
+renamed `primm-native-pipeline.test.ts`: its two native create/revise/recovery
+checks now use a V3 fixture. `native-choice.test.ts` retains exercise migration,
+HTTP grading, old-revision rejection, recovery and idempotence. Source/asset/
+Make and display-only localization properties were moved to a V3 fixture;
+existing V3 step tests remain. Native first-control, help/difficulty, playlist,
+all-tier phone/desktop and bilingual/source/overflow assertions are retained.
+All departed test titles, replacement titles and counts are listed in the
+stage commit body, not hidden by the lower browser count.
+
+A necessary projection change is explicit: island choice and moles rounds now
+consume V3 `choose` actions only when an author supplied a correct `answerId`
+and each option's explanation. Ungraded predictions, live `find` outputs and
+image `point` regions never manufacture an answer. The existing 20-column
+option-width guard remains. This adapts the retained games after their old
+source payloads retire; it does not edit or infer lesson content.
+
+Measured before the complete browser gate: app files remain 72 and App remains
+1,374 lines (fresh `wc -l`; the R2 handoff reported 1,369). Removing retired PRIMM parsing reduces core schemas and removing
+the classic renderer reduces PrimmLesson; exact source line measurements and
+export-count formula are retained in `.scratch/task17/r3-measurements.json`.
+The previous R0 export figure (3,432) lacks a retained command, so its old value
+is preserved as provenance; the new explicit tracked-source formula is applied
+to both the R2 commit and this checkout rather than claiming incomparable
+numbers are a reduction. Tracked docs are 1,260 at the R2 commit and this stage,
+correcting the handoff count with `git ls-tree -r --name-only`.
+
+Gate receipts and the 1280px/390px before/after screen paths are recorded below
+once verified. The full browser inventory is 431 → 338: 94 retired cases,
+25 aggregate-case/fixture renames and one new native-sort regression are
+identified by title in the retained delta and commit body. These counts will
+be corrected against the final inventory before committing.

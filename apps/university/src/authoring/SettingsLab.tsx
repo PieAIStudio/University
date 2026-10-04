@@ -7,8 +7,6 @@ export function SettingsLab() {
   const links = [
     ["/avatar-lab", t.t("doors.lab.avatar")],
     ["/play-lab", t.t("doors.lab.basic")],
-    ["/play-lab/ai", t.t("doors.lab.ai")],
-    ["/play-lab/primm", t.t("doors.lab.primm")],
     ["/play-lab/toy-3d", t.t("doors.lab.arcade")],
     ["/play-lab/prop-finish", t.t("doors.lab.appearance")],
     ["/studio/map", t.t("doors.lab.map")],

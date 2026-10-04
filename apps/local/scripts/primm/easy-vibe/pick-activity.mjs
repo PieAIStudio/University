@@ -61,28 +61,15 @@ const siblings = unit.lessonIds
   .join("\n");
 
 /*
-  Every payload file, not just types.ts.
-
-  types.ts spells out connect / tune / hunt / dispatch / program in full and
-  imports the five AI ones by name only — so the model was choosing between five
-  complete specifications and five labels. That is a thumb on the scale, and it
-  is the most likely reason the first twenty decisions never reached for an AI
-  kind. Sort lives in its own file too.
+  Every retained payload shape, not only the shared base types. The old
+  prototype engines were deleted with their tests and are no longer choices for
+  course authors. PRIMM v3 is the single authored step host; connect, sort and
+  tune remain the native activities.
 */
-const PAYLOAD_FILES = [
-  "types.ts",
-  "sort.ts",
-  "ai-brief.ts",
-  "ai-context.ts",
-  "ai-agent.ts",
-  "ai-eval.ts",
-  "ai-repair.ts",
-];
+const PAYLOAD_FILES = ["types.ts", "sort.ts", "primm.ts"];
 /*
-  Declarations only. `ai-repair.ts` is six hundred lines and most of it is the
-  engine, which the author of a payload does not need and which quadrupled the
-  prompt — the fix for one bias should not be paid for with four times the
-  tokens. Keeps `export interface` / `export type` blocks up to their closing
+  Declarations only. The author needs the payload contract, not the runtime
+  implementation. Keep exported interface/type blocks up to their closing
   brace at column zero, plus the exported const enums the fields refer to.
 */
 function declarationsOf(source) {
@@ -108,7 +95,7 @@ function declarationsOf(source) {
 
 const typesSource = PAYLOAD_FILES.map(
   (name) =>
-    `// ── ${name} ──\n${declarationsOf(text(`${MAIN}/packages/core/src/learning-play/${name}`))}`,
+    `// ── ${name} ──\n${declarationsOf(text(`${WT}/packages/core/src/learning-play/${name}`))}`,
 ).join("\n");
 
 const prompt = `你要为一节**已经写好、形状已经合格**的课，判断它该不该配一个互动课件。
@@ -120,13 +107,13 @@ const prompt = `你要为一节**已经写好、形状已经合格**的课，判
 
 ${text(`${SKILL}/references/activities.md`)}
 
-====== 十一种玩法的载荷字段（TypeScript 类型，照它填字段）======
+====== 四种保留活动的载荷字段（TypeScript 类型，照它填字段）======
 
 ${typesSource}
 
 注意：\`ActivityBase\` 的字段（id、title、brief、goal、takeaway、hint、source）
 每一种玩法都要有。除此之外还要加两个我们自己的字段：
-- \`kind\`：十种之一
+- \`kind\`：connect / sort / tune / primm 之一
 - \`role\`：observe / demonstrate / apply
 - \`difficulty\`：intro / practice / challenge
 

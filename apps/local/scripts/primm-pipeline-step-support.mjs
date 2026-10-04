@@ -7,7 +7,7 @@ import {
 
 /** The Writer uses the product's existing V3 union, never a parallel step enum. */
 export function stepAuthoringShape(PrimmPayloadSchema, z) {
-  const native = PrimmPayloadSchema.options.find((option) => "steps" in option.shape);
+  const native = PrimmPayloadSchema;
   if (!native) throw Error("Native PRIMM step schema is unavailable; build core first");
   return native
     .omit({ method: true, experienceVersion: true, sources: true })

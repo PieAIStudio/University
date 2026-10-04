@@ -849,13 +849,10 @@
 
 /*
   Every selector below carries `.learning-activity`, and that one extra class is
-  load-bearing rather than decorative. `sort.css`, `contrast.css` and `weigh.css`
-  are imported after `learning-play.css`, so a bare `.play-sort__item` here loses
-  to the same bare selector there — which is exactly what happened on the first
-  pass: the sort board came out with its pieces DARKER than the tray they sit in,
-  the depth ladder upside down, while connect looked right because its rule lives
-  in this same file. The shell is an ancestor in both the lab and a lesson, so the
-  prefix is available everywhere this layer applies.
+  load-bearing rather than decorative. `sort.css` owns its detailed layout,
+  are imported after `learning-play.css`, so the shell keeps only shared rules
+  and each retained board owns its specific layout. The shell is an ancestor in
+  both the lab and a lesson, so the prefix is available everywhere this layer applies.
 */
 
 /*
@@ -869,17 +866,14 @@
   it is on top of something: panel #3a2a1e, tray #2c1f16, piece lighter again.
 */
 .learning-activity .play-connect__board,
-.learning-activity .play-sort__bucket,
-.learning-activity .play-weigh__current {
+.learning-activity .play-sort__bucket {
   background: var(--game-ui-panel-deep);
   box-shadow: var(--game-ui-shadow-inset);
 }
 
 /* Pieces: raised, seated, and pointable. */
 .learning-activity .play-connect__node,
-.learning-activity .play-sort__item,
-.learning-activity .play-contrast__case,
-.learning-activity .play-weigh__situation {
+.learning-activity .play-sort__item {
   border: 1px solid var(--game-ui-border-strong);
   background: var(--game-ui-surface-raised);
   box-shadow: var(--game-ui-shadow-seat);
@@ -938,9 +932,7 @@
     transform: none;
   }
 }
-.play-sort__placed,
-.play-weigh__settled,
-.play-contrast__outcomes {
+.play-sort__placed {
   animation: play-seat 240ms var(--game-ui-ease-pop) both;
 }
 

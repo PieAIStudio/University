@@ -3,7 +3,6 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 import { afterEach, describe, expect, it } from "vitest";
-import { primmFixture } from "../../../packages/core/dist/learning-play/fixtures/primm.js";
 import { primmStepsFixture } from "../../../packages/core/dist/learning-play/fixtures/primm-steps.js";
 
 import {
@@ -324,9 +323,9 @@ describe("delivery artifact gate", () => {
   });
 
   it("refuses the private studies shelf as a release input", () => {
-    expect(() => validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/content/studies"))).toThrow(
-      /configured content studies/,
-    );
+    expect(() =>
+      validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/content/studies")),
+    ).toThrow(/configured content studies/);
   });
 });
 
@@ -358,9 +357,9 @@ describe("public DTO gate inside an activity", () => {
   });
 
   it("allows only validated PRIMM teaching explanations, never Make answer keys", () => {
-    const lesson = structuredClone(primmFixture);
-    expect(lesson.investigate.more[0].question).toBeTruthy();
-    expect(lesson.investigate.more[0].answer).toBeTruthy();
+    const lesson = structuredClone(primmStepsFixture);
+    const sort = lesson.steps.find((step) => step.kind === "sort");
+    expect(sort?.kind).toBe("sort");
     expect(publicDtoViolations(wrap(lesson), "pkg")).toEqual([]);
     const independent = wrap(lesson);
     independent.course.units[0].lessons[0].exercises = [
@@ -372,13 +371,13 @@ describe("public DTO gate inside an activity", () => {
         a.make.answer = "secret";
       },
       (a) => {
-        a.investigate.more[0].rubric = "secret";
+        a.steps.find((step) => step.kind === "find").rubric = "secret";
       },
       (a) => {
-        a.investigate.more[0].answer = { answer: "secret" };
+        a.steps.find((step) => step.kind === "find").answer = { answer: "secret" };
       },
       (a) => {
-        a.investigate.more[0].answer = "file-manager:/Users/me/private";
+        a.steps.find((step) => step.kind === "find").answer = "file-manager:/Users/me/private";
       },
       (a) => {
         a.kind = "connect";

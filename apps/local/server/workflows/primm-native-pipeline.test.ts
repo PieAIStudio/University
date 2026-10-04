@@ -5,24 +5,42 @@ import { describe, expect, it } from "vitest";
 import { executeUniversityLocalCli } from "../cli/execute.js";
 import { parseUniversityLocalCli } from "../cli/parse.js";
 import { readLatestLesson } from "../content/repository.js";
+import { activityDisplayStrings } from "@pieai/university-core";
+import { primmStepsFixture } from "../../../../packages/core/src/learning-play/fixtures/primm-steps.js";
 import { checkLessonSpine } from "../../scripts/lesson-spine.mjs";
 
-const activity = JSON.parse(
-  readFileSync(
-    new URL("../../../../packages/core/fixtures/interaction-path.json", import.meta.url),
-    "utf8",
-  ),
-);
-const evidence = [
-  {
-    kind: "fact",
-    sourceUrl: activity.source.url,
-    sourceTitle: activity.source.label,
-    sourceAuthority: "w3c",
+// A text-only V3 fixture exercises native create/revise/recovery, not a retired engine.
+const activity = {
+  ...structuredClone(primmStepsFixture),
+  materials: primmStepsFixture.materials.map(({ assetId: _asset, ...material }) => material),
+  starter: { ...primmStepsFixture.starter, operation: "text" as const, assetIds: [] },
+  make: { ...primmStepsFixture.make, operation: "text" as const, assetIds: [] },
+  steps: primmStepsFixture.steps.filter((step) => step.kind !== "point"),
+};
+activity.locales = {
+  en: {
+    strings: Object.fromEntries(
+      activityDisplayStrings(activity).map((text) => [
+        text,
+        primmStepsFixture.locales!.en!.strings![text],
+      ]),
+    ),
   },
-];
-const content =
-  "# 如何用键盘提交？\n\n::play{#keyboard-path}\n\n你可以先将焦点移到提交按钮，再用 Enter 或空格触发。按钮需要有可访问名称，帮助你知道将执行什么动作。详情请阅读 [W3C 按钮模式](https://www.w3.org/WAI/ARIA/apg/patterns/button/)。";
+};
+const evidence = activity.sources.map((source) => ({
+  kind: "fact",
+  sourceUrl: "url" in source.reference ? source.reference.url : undefined,
+  sourceTitle: source.reference.label,
+  sourceAuthority: "first-party",
+  provenance: {
+    type: "official-document",
+    publisher: source.reference.label,
+    accessedOn: "2026-10-05",
+    supports: source.summary,
+    limitations: source.limitation,
+  },
+}));
+const content = `# 如何问清照片里的细节？\n\n::play{#${activity.id}}\n\n先问到想知道的那一处，再核对回答。`;
 const lesson = {
   id: "keyboard-lesson",
   title: "如何用键盘提交？",
@@ -33,17 +51,17 @@ const lesson = {
   cards: [],
   exercises: [
     {
-      id: "independent",
-      kind: "short-answer",
+      id: activity.make.exerciseId,
+      kind: "explain",
       title: "独立练习",
       prompt: "焦点在取消按钮上，不用鼠标能按哪个键取消？",
-      expectedAnswer: "Enter",
+      rubric: ["问题指向具体细节，并核对回答。"],
       evidence,
     },
   ],
 };
 
-describe("interaction path native pipeline", () => {
+describe("PRIMM V3 native pipeline", () => {
   it("uses stronger checks only with the explicit activity kind", () => {
     expect(checkLessonSpine(content, "现象").length).toBeGreaterThan(0);
     expect(checkLessonSpine(content, "现象", { interactionLesson: lesson })).toEqual([]);
@@ -179,7 +197,7 @@ describe("interaction path native pipeline", () => {
     );
     expect(recovered.manifest.activities[0]).toEqual(activity);
     expect(recovered.content).toContain("重复检查");
-    expect(recovered.manifest.exerciseIds).toEqual(["independent"]);
+    expect(recovered.manifest.exerciseIds).toEqual([activity.make.exerciseId]);
     expect(recovered.manifest.contentRevision).toBe(2);
     const index = JSON.parse(readFileSync(join(exported, "index.json"), "utf8"));
     const bytes = readFileSync(join(exported, index.courses[0].file), "utf8");

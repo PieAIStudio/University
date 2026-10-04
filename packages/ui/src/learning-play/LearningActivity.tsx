@@ -11,19 +11,8 @@ import { useI18n } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import { ConnectGame } from "./ConnectGame.js";
 import { SortGame } from "./SortGame.js";
-import { ContrastGame } from "./ContrastGame.js";
-import { WeighGame } from "./WeighGame.js";
 import { TuneGame } from "./TuneGame.js";
-import { HuntGame } from "./HuntGame.js";
-import { DispatchGame } from "./DispatchGame.js";
-import { ProgramGame } from "./ProgramGame.js";
-import { BriefGame } from "./BriefGame.js";
-import { ContextGame } from "./ContextGame.js";
-import { AgentGame } from "./AgentGame.js";
-import { EvalGame } from "./EvalGame.js";
-import { RepairGame } from "./RepairGame.js";
 import { PrimmLesson, type PrimmLessonProps } from "./PrimmLesson.js";
-import { InteractionPath } from "./InteractionPath.js";
 import { PlayIcon } from "./PlayIcon.js";
 import type { ActivityControls } from "./controls.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
@@ -82,31 +71,10 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
       return <ConnectGame activity={activity} {...controls} />;
     case "sort":
       return <SortGame activity={activity} {...controls} />;
-    case "contrast":
-      return <ContrastGame activity={activity} {...controls} />;
-    case "weigh":
-      return <WeighGame activity={activity} {...controls} />;
+    case "primm":
+      return null;
     case "tune":
       return <TuneGame activity={activity} {...controls} />;
-    case "hunt":
-      return <HuntGame activity={activity} {...controls} />;
-    case "dispatch":
-      return <DispatchGame activity={activity} {...controls} />;
-    case "program":
-      return <ProgramGame activity={activity} {...controls} />;
-    case "ai-brief":
-      return <BriefGame activity={activity} {...controls} />;
-    case "ai-context":
-      return <ContextGame activity={activity} {...controls} />;
-    case "ai-agent":
-      return <AgentGame activity={activity} {...controls} />;
-    case "ai-eval":
-      return <EvalGame activity={activity} {...controls} />;
-    case "ai-repair":
-      return <RepairGame activity={activity} {...controls} />;
-    case "primm":
-    case "interaction-path":
-      return null; // The path owns one shell for all its rounds, routed below.
     default: {
       // A kind that reaches here has no board. `never` is what makes that a
       // compile error instead of an empty div in front of a reader.
@@ -120,12 +88,6 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
 export function LearningActivity(props: LearningActivityProps) {
   return props.activity.kind === "primm" ? (
     <PrimmLesson {...props} activity={props.activity} />
-  ) : props.activity.kind === "interaction-path" ? (
-    <InteractionPath
-      key={`${props.occurrenceId ?? "standalone"}:${props.activity.id}`}
-      {...props}
-      activity={props.activity}
-    />
   ) : (
     <LegacyLearningActivity {...props} />
   );
@@ -182,7 +144,6 @@ function ActivityRound({
   const [hintOpen, setHintOpen] = useState(false);
   const [guided, setGuided] = useState(initialGuidance === "guided");
   const guidanceUsed = useRef(initialGuidance === "guided");
-  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [feedback, setFeedback] = useState<{
     passed: boolean;
     message: string;
@@ -190,7 +151,7 @@ function ActivityRound({
   const [outcome, setOutcome] = useState<ActivityResult | null>(null);
   const feedbackElement = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if ((activity.kind === "ai-brief" || activity.kind === "ai-context") && feedback)
+    if (feedback)
       feedbackElement.current?.scrollIntoView?.({
         block: "nearest",
         behavior: "instant",
@@ -316,9 +277,6 @@ function ActivityRound({
           </GameButton>
         ) : null}
       </div>
-      {activity.kind.startsWith("ai-") ? (
-        <p className="learning-activity__sandbox">{interfaceTranslator.t("play.ai.sandbox")}</p>
-      ) : null}
       {outcome?.status !== "skipped" ? (
         <div className="learning-activity__game">{renderGame(activity, controls)}</div>
       ) : null}
@@ -385,37 +343,13 @@ function ActivityRound({
               </div>
             </>
           ) : null}
-          {outcome.status === "completed" && typeof outcome.submission.handoff === "string" ? (
-            <details className="learning-activity__handoff">
-              <summary>{interfaceTranslator.t("play.ai.handoff")}</summary>
-              <p>{interfaceTranslator.t("play.ai.handoffNote")}</p>
-              <GameButton
-                type="button"
-                variant="secondary"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(outcome.submission.handoff as string);
-                    setCopyState("copied");
-                  } catch {
-                    setCopyState("failed");
-                  }
-                }}
-              >
-                {interfaceTranslator.t(copyState === "copied" ? "play.ai.copied" : "play.ai.copy")}
-              </GameButton>
-              {copyState === "failed" ? (
-                <p role="status">{interfaceTranslator.t("play.ai.copyFailed")}</p>
-              ) : null}
-              <pre>{outcome.submission.handoff}</pre>
-            </details>
-          ) : null}
           <div className="play-action-row">
             {/*
-              The one liquid control every activity kind shares.
+              The one liquid control every retained activity shares.
 
               Each board may also give its own completing action the liquid
               surface — connect's 「放出测试信号」 does — but this is the moment
-              that exists on all thirteen of them, and it is the one worth
+              that exists on every retained activity, and it is the one worth
               spending the brand's loudest surface on: the learner has just
               finished, and this is the way forward. Putting it here rather
               than in each game is also what keeps 「one liquid control per

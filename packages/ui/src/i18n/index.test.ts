@@ -27,8 +27,12 @@ describe("native University ICU catalogs", () => {
   it("formats ICU arguments directly and accepts existing Chinese keys", () => {
     const zh = interfaceI18n.translator("zh-CN"),
       en = interfaceI18n.translator("en");
-    expect(zh.t("path.progress", { current: 2, total: 5 })).toBe("互动 2 / 5");
-    expect(en.t("path.progress", { current: 2, total: 5 })).toBe("Practice 2 / 5");
+    expect(zh.t("play.usability.connect.next", { count: 2 })).toBe(
+      "已经连了 2 条。继续接，或发一次信号看看。",
+    );
+    expect(en.t("play.usability.connect.next", { count: 2 })).toBe(
+      "2 connections so far. Add another or send a signal to try them.",
+    );
     expect(zh.t("ui.navigation.slots.copy.更多")).toBe("更多");
     expect(en.number(1234)).toBe("1,234");
   });
@@ -37,20 +41,23 @@ describe("native University ICU catalogs", () => {
       ["zh-CN", "en"].map(async (locale) => {
         const translator = interfaceI18n.translator(locale);
         await Promise.resolve();
-        return translator.t("path.progress", { current: 1, total: 2 });
+        return translator.t("play.usability.connect.next", { count: 1 });
       }),
     );
-    expect(results).toEqual(["互动 1 / 2", "Practice 1 / 2"]);
+    expect(results).toEqual([
+      "已经连了 1 条。继续接，或发一次信号看看。",
+      "1 connections so far. Add another or send a signal to try them.",
+    ]);
   });
   it("renders with the real catalog-bound React Provider", () => {
     function Label() {
-      return createElement("span", null, useI18n().t("path.progress", { current: 1, total: 2 }));
+      return createElement("span", null, useI18n().t("play.usability.connect.next", { count: 1 }));
     }
     expect(
       renderToStaticMarkup(
         createElement(InterfaceProvider, { locale: "en", children: createElement(Label) }),
       ),
-    ).toContain("Practice 1 / 2");
+    ).toContain("1 connections so far");
   });
   it("retains route and other query fields when changing language", () => {
     expect(localeNavigationUrl("https://example.test/course?view=lesson#/settings", "en")).toBe(
@@ -65,6 +72,6 @@ function typeContract() {
   // @ts-expect-error A product key must exist in the source catalog.
   translator.t("unknown.product.key");
   // @ts-expect-error ICU placeholders are mandatory and inferred from the catalog.
-  translator.t("path.progress", { current: 1 });
+  translator.t("play.usability.connect.next", {});
 }
 void typeContract;

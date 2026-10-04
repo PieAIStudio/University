@@ -81,25 +81,22 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
 
         await humanClick(
           page,
-          page.locator('[data-entry-id="native:ai-brief"]'),
-          "switch to the AI collection",
+          page.locator('[data-entry-id="native:sort"]'),
+          "switch to the sort activity",
         );
-        await expect(page.locator(".learning-activity")).toHaveAttribute(
-          "data-activity",
-          "ai-brief",
-        );
+        await expect(page.locator(".learning-activity")).toHaveAttribute("data-activity", "sort");
         await expect(
           page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         await expect(page.locator(".learning-activity")).toHaveAttribute("data-guided", "true");
         await humanClick(
           page,
-          page.getByRole("button", { name: "同样提交一次", exact: true }),
-          "actually try both prototype products",
+          page.locator(".play-sort__item").first(),
+          "try the retained sort activity",
         );
-        await expect(page.getByRole("button", { name: "去问问组织者", exact: true })).toBeVisible();
+        await expect(page.locator(".play-sort__guide")).toBeVisible();
         await expect(page.locator(".stagewrap")).toHaveCount(0);
-        await page.screenshot({ path: join(folder, "ai-after-action.png") });
+        await page.screenshot({ path: join(folder, "sort-after-action.png") });
 
         await humanClick(
           page,

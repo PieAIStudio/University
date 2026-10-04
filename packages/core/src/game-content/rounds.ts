@@ -8,9 +8,8 @@ import { isValidSortActivity } from "../learning-play/sort.js";
  * nothing: no invented distractor, no shortened item, no new answer key. What
  * cannot be projected is skipped, never paraphrased.
  *
- * Three authored shapes carry a sort today: a lesson-level `sort` activity,
- * a PRIMM investigate game of kind `sort` (experience v1/v2) and a PRIMM step
- * of kind `sort` (experience v3). Their field names differ; the round does not.
+ * Two authored shapes carry a sort: a lesson-level `sort` activity and a V3
+ * PRIMM `sort` step. Their field names differ; the round does not.
  */
 export interface GameBin {
   readonly id: string;
@@ -188,18 +187,6 @@ export function gameRoundsFromLesson(lesson: GameLesson): readonly GameRound[] {
       }
       continue;
     }
-    const investigate = isObject(activity.investigate) ? activity.investigate : null;
-    const game = investigate && isObject(investigate.game) ? investigate.game : null;
-    if (game?.kind === "sort")
-      rounds.push(
-        round(
-          lesson,
-          `${base}/investigate`,
-          text(investigate!.title),
-          bins(game.buckets),
-          items(game.cards, "text"),
-        ),
-      );
   }
   return rounds.filter((value): value is GameRound => value !== null);
 }

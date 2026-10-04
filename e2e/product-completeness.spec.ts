@@ -70,14 +70,7 @@ for (const viewport of [
       const draft = choiceId ?? RECOVERY_ANSWER;
       await enterExerciseAnswer(page, exercise, draft);
       const progress = page.locator(".lesson-toolbar__progress");
-      if (await page.locator('[data-activity="interaction-path"]').count()) {
-        // Typing an independent answer is not completing a guided round.
-        // V5 names this progress by rounds, not by collapsed prose sections.
-        await expect(progress).toContainText(/^互动\s+0\s*\/\s*[1-9]\d*$/u);
-        await expect(progress.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
-      } else {
-        await expect(progress).toContainText(/阅读\s*\d+\/\d+\s*段/u);
-      }
+      await expect(progress).toContainText(/阅读\s*\d+\/\d+\s*段/u);
       await page.reload({ waitUntil: "domcontentloaded" });
       await expectExerciseAnswer(exercise, draft);
       await humanClick(

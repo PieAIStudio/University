@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameHudActions, GameInput, GamePanel, GameTabs } from "@pieai/swimmer-ui-kit";
 import { selectActivityLevel, type ActivityDifficulty } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
-import { AI_MODES, getLabExamples } from "../learning-play/LearningPlayLab.js";
+import { getLabExamples } from "../learning-play/LearningPlayLab.js";
 import { getExampleFamily } from "../learning-play/difficulty-examples.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
 import type { ShelfStudy } from "../content/port.js";
@@ -21,10 +21,7 @@ function NativePlay({ kind }: { readonly kind: NativeKind }) {
   const [variant, setVariant] = useState(0);
   const [difficulty, setDifficulty] = useState<ActivityDifficulty>("intro");
   const examples = useMemo(
-    () =>
-      getLabExamples(AI_MODES.some((mode) => mode === kind) ? "ai" : "foundations").filter(
-        (example) => example.kind === kind,
-      ),
+    () => getLabExamples().filter((example) => example.kind === kind),
     [kind, locale],
   );
   const family = useMemo(() => getExampleFamily(examples[variant]!), [examples, variant]);

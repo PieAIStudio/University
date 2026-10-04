@@ -21,9 +21,9 @@ for (const [mode, origin] of [
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${origin}/play-lab/catalog?lang=zh-CN`);
-    await expect(page.locator("[data-entry-id]")).toHaveCount(25);
-    await expect(page.locator(".play-catalog__count")).toHaveText("找到 25 项");
-    await expect(page.locator('[data-entry-id="path:follow-a-claim"]')).toHaveCount(1);
+    await expect(page.locator("[data-entry-id]")).toHaveCount(12);
+    await expect(page.locator(".play-catalog__count")).toHaveText("找到 12 项");
+    await expect(page.locator('[data-entry-id="path:ask-about-a-picture"]')).toHaveCount(1);
     await expect(page.locator('[data-activity="connect"]')).toBeVisible();
     const three = page.locator("[data-entry-id^='three:']");
     await expect(three).toHaveCount(ISLAND_GAMES.length);
@@ -33,7 +33,7 @@ for (const [mode, origin] of [
     await page.getByRole("searchbox").fill("no-such-operation");
     await expect(page.locator("[data-entry-id]")).toHaveCount(0);
     await expect(page.locator("#play-catalog-results")).toContainText("没有找到");
-    await page.getByRole("searchbox").fill("follow-a-claim");
+    await page.getByRole("searchbox").fill("ask-about-a-picture");
     await expect(page.locator("[data-entry-id]")).toHaveCount(1);
     expect(errors).toEqual([]);
   });

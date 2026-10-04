@@ -13,6 +13,7 @@ import { join, resolve } from "node:path";
 
 import {
   isUrlEvidence,
+  activityDisplayStrings,
   localizeActivity,
   localizeLearnerContent,
   type LessonRef,
@@ -154,58 +155,6 @@ function writeMeta(root: string, meta: StoredMeta): void {
   });
 }
 
-function createLocaleMap(
-  zh: ReturnType<typeof expandLocale>,
-  en: ReturnType<typeof expandLocale>,
-): Record<string, string> {
-  const strings: Record<string, string> = {};
-  const add = (from: string | undefined, to: string | undefined) => {
-    if (from && to) strings[from] = to;
-  };
-  for (const key of [
-    "title",
-    "connection",
-    "situation",
-    "need",
-    "prompt",
-    "predictQuestion",
-    "runTitle",
-    "runNote",
-    "investigateTitle",
-    "investigateBrief",
-    "investigateExplanation",
-    "modifyTitle",
-    "modifyBrief",
-    "modifyGoal",
-    "makeTitle",
-    "makeScenario",
-    "makeGoal",
-    "makePlaceholder",
-    "finishTitle",
-    "finishNote",
-  ] as const)
-    add(zh[key], en[key]);
-  for (const [value, index] of (zh.predictOptions ?? []).map(
-    (value, index) => [value, index] as const,
-  ))
-    add(value, en.predictOptions?.[index]);
-  for (const [value, index] of zh.checklist.map((value, index) => [value, index] as const))
-    add(value, en.checklist[index]);
-  for (const [card, index] of (zh.investigateCards ?? []).map(
-    (value, index) => [value, index] as const,
-  )) {
-    add(card.text, en.investigateCards?.[index]?.text);
-    add(card.why, en.investigateCards?.[index]?.why);
-  }
-  for (const [piece, index] of (zh.modifyPieces ?? []).map(
-    (value, index) => [value, index] as const,
-  )) {
-    add(piece.label, en.modifyPieces?.[index]?.label);
-    add(piece.text, en.modifyPieces?.[index]?.text);
-  }
-  return strings;
-}
-
 function expandLocale(seed: PersonalDraft["zh"], english: boolean) {
   return {
     ...seed,
@@ -282,145 +231,189 @@ type ExpandedDraft = Omit<PersonalDraft, "zh" | "en"> & {
 
 function buildActivity(draft: ExpandedDraft, source: PersonalCorpusEntry) {
   const sourceReference = sourceFor(source);
-  const cardIds = draft.zh.investigateCards.map(
-    (_card: unknown, index: number) => `investigate-${index + 1}`,
-  );
-  const buckets = [
-    { id: "grounded", label: "材料里确实有" },
-    { id: "check", label: "还需要确认" },
-  ];
-  const activity = {
-    id: "personal-primm",
-    kind: "primm" as const,
-    role: "apply" as const,
-    difficulty: "intro" as const,
-    title: draft.zh.title,
-    brief: draft.zh.need,
-    goal: draft.zh.makeGoal,
-    takeaway: draft.zh.finishNote,
-    hint: draft.zh.investigateExplanation,
-    source: sourceReference,
-    method: "PRIMM" as const,
-    experienceVersion: 2 as const,
-    intro: {
-      connection: draft.zh.connection,
-      situation: draft.zh.situation,
-      need: draft.zh.need,
-      sourceIds: ["source-1"],
-    },
-    sources: [
-      {
-        id: "source-1",
-        reference: sourceReference,
-        note: `复用已安装课程中的已核实来源：${source.title}`,
-        summary: source.excerpt.slice(0, 1_000),
-        limitation: "这条来源支持材料中的明确事实，不自动支持个人案例或模型输出的每个细节。",
-      },
-    ],
-    materials: [
-      {
-        id: "source-material",
-        sourceId: "source-1",
-        label: "已核实的来源摘要",
-        text: source.excerpt.slice(0, 2_000),
-        kind: "source-summary" as const,
-      },
-      {
-        id: "practice-material",
-        label: "这次的练习材料（教学示例）",
-        text: draft.zh.practiceText,
-        kind: "practice" as const,
-      },
-      {
-        id: "make-material",
-        label: "换个情况，你来处理（教学示例）",
-        text: draft.zh.makeText,
-        kind: "practice" as const,
-      },
-    ],
-    starter: {
-      prompt: draft.zh.prompt,
-      operation: "text" as const,
-      materialIds: ["practice-material"],
-      assetIds: [],
-    },
-    predict: {
-      question: draft.zh.predictQuestion,
-      options: draft.zh.predictOptions.map((label: string, index: number) => ({
-        id: `option-${index + 1}`,
-        label,
+  const buildLocale = (locale: ReturnType<typeof expandLocale>) => {
+    const cardIds = locale.investigateCards.map((_card, index) => `investigate-${index + 1}`);
+    const buckets = [
+      { id: "grounded", label: locale === draft.zh ? "材料里确实有" : "Present in the material" },
+      { id: "check", label: locale === draft.zh ? "还需要确认" : "Needs confirmation" },
+    ];
+    const pieces = [
+      { id: "original-request", text: locale.prompt },
+      ...locale.modifyPieces.map((piece, index) => ({
+        id: `piece-${index + 1}`,
+        text: piece.text,
       })),
-    },
-    run: {
-      title: draft.zh.runTitle,
-      note: draft.zh.runNote,
-      attachmentLabel: "把练习材料放进对话",
-    },
-    investigate: {
-      title: draft.zh.investigateTitle,
-      brief: draft.zh.investigateBrief,
-      explanation: draft.zh.investigateExplanation,
-      game: {
-        kind: "sort" as const,
-        buckets,
-        cards: draft.zh.investigateCards.map(
-          (card: { text: string; bucket: "grounded" | "check"; why: string }, index: number) => ({
+    ];
+    const activity = {
+      id: "personal-primm",
+      kind: "primm" as const,
+      role: "apply" as const,
+      difficulty: "intro" as const,
+      title: locale.title,
+      brief: locale.need,
+      goal: locale.makeGoal,
+      takeaway: locale.finishNote,
+      hint: locale.investigateExplanation,
+      source: sourceReference,
+      method: "PRIMM" as const,
+      experienceVersion: 3 as const,
+      intro: {
+        connection: locale.connection,
+        situation: locale.situation,
+        need: locale.need,
+        sourceIds: ["source-1"],
+      },
+      sources: [
+        {
+          id: "source-1",
+          reference: sourceReference,
+          note:
+            locale === draft.zh
+              ? `复用已安装课程中的已核实来源：${source.title}`
+              : `Verified reference from the installed lesson: ${source.title}`,
+          summary: source.excerpt.slice(0, 1_000),
+          limitation:
+            locale === draft.zh
+              ? "这条来源支持材料中的明确事实，不自动支持个人案例或模型输出的每个细节。"
+              : "This reference supports the described method, not every detail of the practice story or AI output.",
+        },
+      ],
+      materials: [
+        {
+          id: "source-material",
+          sourceId: "source-1",
+          label: locale === draft.zh ? "已核实的来源摘要" : "Verified source summary",
+          text: source.excerpt.slice(0, 2_000),
+          kind: "source-summary" as const,
+        },
+        {
+          id: "practice-material",
+          label:
+            locale === draft.zh
+              ? "这次的练习材料（教学示例）"
+              : "Practice material (teaching example)",
+          text: locale.practiceText,
+          kind: "practice" as const,
+        },
+        {
+          id: "make-material",
+          label:
+            locale === draft.zh
+              ? "换个情况，你来处理（教学示例）"
+              : "Try another situation (teaching example)",
+          text: locale.makeText,
+          kind: "practice" as const,
+        },
+      ],
+      starter: {
+        prompt: locale.prompt,
+        operation: "text" as const,
+        materialIds: ["practice-material"],
+        assetIds: [],
+      },
+      steps: [
+        {
+          kind: "choose" as const,
+          id: "predict-request",
+          phase: "predict" as const,
+          title: locale.predictQuestion,
+          options: locale.predictOptions.map((label, index) => ({
+            id: `option-${index + 1}`,
+            label,
+          })),
+          after: locale.runNote,
+        },
+        {
+          kind: "send" as const,
+          id: "run-request",
+          phase: "run" as const,
+          title: locale.runTitle,
+          request: "starter" as const,
+          attachmentLabel:
+            locale === draft.zh
+              ? "把练习材料放进对话"
+              : "Add the practice material to the conversation",
+          after: locale.runNote,
+        },
+        {
+          kind: "sort" as const,
+          id: "sort-evidence",
+          phase: "investigate" as const,
+          title: locale.investigateBrief,
+          buckets,
+          cards: locale.investigateCards.map((card, index) => ({
             id: cardIds[index]!,
             text: card.text,
             bucketId: card.bucket,
             why: card.why,
-          }),
-        ),
+          })),
+          after: locale.modifyBrief,
+        },
+        {
+          kind: "build" as const,
+          id: "build-request",
+          phase: "modify" as const,
+          title: locale.modifyTitle,
+          context: locale.modifyBrief,
+          pieces,
+          answers: [pieces.map((piece) => piece.id)],
+          hint: locale.modifyGoal,
+          after: locale.modifyGoal,
+        },
+        {
+          kind: "send" as const,
+          id: "run-built-request",
+          phase: "modify" as const,
+          title: locale.modifyTitle,
+          request: "built" as const,
+          attachmentLabel:
+            locale === draft.zh
+              ? "把练习材料放进对话"
+              : "Add the practice material to the conversation",
+          after: locale.modifyGoal,
+        },
+        {
+          kind: "make" as const,
+          id: "open-make",
+          phase: "make" as const,
+          title: locale.makeTitle,
+        },
+      ],
+      make: {
+        title: locale.makeTitle,
+        scenario: locale.makeScenario,
+        goal: locale.makeGoal,
+        operation: "text" as const,
+        materialIds: ["make-material"],
+        assetIds: [],
+        promptPlaceholder: locale.makePlaceholder,
+        checklist: locale.checklist,
+        exerciseId: PRIVATE_EXERCISE_ID,
+        artifactLabel: locale === draft.zh ? "这次做出来的结果" : "Your result",
       },
-    },
-    modify: {
-      title: draft.zh.modifyTitle,
-      brief: draft.zh.modifyBrief,
-      goal: draft.zh.modifyGoal,
-      workbench: {
-        instruction: draft.zh.modifyBrief,
-        carryObservation: true,
-        pieces: draft.zh.modifyPieces.map(
-          (piece: { label: string; text: string }, index: number) => ({
-            id: `piece-${index + 1}`,
-            label: piece.label,
-            text: piece.text,
-          }),
-        ),
-      },
-    },
-    make: {
-      title: draft.zh.makeTitle,
-      scenario: draft.zh.makeScenario,
-      goal: draft.zh.makeGoal,
-      operation: "text" as const,
-      materialIds: ["make-material"],
-      assetIds: [],
-      promptPlaceholder: draft.zh.makePlaceholder,
-      checklist: draft.zh.checklist,
-      exerciseId: PRIVATE_EXERCISE_ID,
-      artifactLabel: "这次做出来的结果",
-    },
-    finish: { title: draft.zh.finishTitle, note: draft.zh.finishNote },
+      finish: { title: locale.finishTitle, note: locale.finishNote },
+    };
+    return activity;
   };
-  const strings = createLocaleMap(draft.zh, draft.en);
-  strings[draft.zh.practiceText] = draft.en.practiceText;
-  strings[draft.zh.makeText] = draft.en.makeText;
-  Object.assign(strings, {
-    材料里确实有: "Present in the material",
-    还需要确认: "Needs confirmation",
-    把练习材料放进对话: "Add the practice material to the conversation",
-    [sourceReference.label]: sourceReference.label,
-    [source.excerpt.slice(0, 1_000)]: source.excerpt.slice(0, 1_000),
-    [source.excerpt.slice(0, 2_000)]: source.excerpt.slice(0, 2_000),
-    已核实的来源摘要: "Verified source summary",
-    "这次的练习材料（教学示例）": "Practice material (teaching example)",
-    "换个情况，你来处理（教学示例）": "Try another situation (teaching example)",
-    这次做出来的结果: "Your result",
-    [`复用已安装课程中的已核实来源：${source.title}`]: `Verified reference from the installed lesson: ${source.title}`,
-    "这条来源支持材料中的明确事实，不自动支持个人案例或模型输出的每个细节。":
-      "This reference supports the described method, not every detail of the practice story or AI output.",
-  });
+  const activity = buildLocale(draft.zh);
+  const english = buildLocale(draft.en);
+  const permitted = new Set(activityDisplayStrings(activity));
+  const strings: Record<string, string> = {};
+  const pair = (zh: unknown, en: unknown): void => {
+    if (typeof zh === "string" && typeof en === "string") {
+      if (permitted.has(zh)) strings[zh] = en;
+      return;
+    }
+    if (Array.isArray(zh) && Array.isArray(en)) {
+      zh.forEach((value, index) => pair(value, en[index]));
+      return;
+    }
+    if (zh && typeof zh === "object" && en && typeof en === "object") {
+      for (const key of Object.keys(zh as Record<string, unknown>))
+        pair((zh as Record<string, unknown>)[key], (en as Record<string, unknown>)[key]);
+    }
+  };
+  pair(activity, english);
   return {
     ...activity,
     locales: {

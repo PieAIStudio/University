@@ -13,68 +13,29 @@ import { useI18n } from "../i18n/index.js";
 import { SoundToggle } from "../sound/index.js";
 import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
-import { extraExamples } from "./extra-examples.js";
-import { getProgramExamples } from "./program-examples.js";
 import { getSortExamples } from "./sort-examples.js";
-import { getContrastExamples } from "./contrast-examples.js";
-import { getWeighExamples } from "./weigh-examples.js";
 import { PlayIcon } from "./PlayIcon.js";
-import { getAIBriefExamples } from "./ai-brief-examples.js";
-import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
-import { getAIQualityExamples } from "./ai-quality-examples.js";
 
-type LabKind = Exclude<ActivityKind, "interaction-path" | "primm">;
+type LabKind = Extract<ActivityKind, "connect" | "sort" | "tune">;
 
-/*
-  The lab's two shelves, exported so a test can hold them against the wire
-  enum. `sort` had an engine, a renderer, three lessons using it and a gate
-  checking it, and was still absent from this list — so the page that exists to
-  let somebody try every game could only offer ten of the eleven, and nothing
-  said so. A list of names is exactly the shape that goes stale quietly.
-*/
+/** The lab registry is checked against the native kinds in the wire enum. */
 export const FOUNDATION_MODES = [
   "connect",
   "sort",
-  "contrast",
-  "weigh",
   "tune",
-  "hunt",
-  "dispatch",
-  "program",
 ] as const satisfies readonly ActivityKind[];
 
-export const AI_MODES = [
-  "ai-brief",
-  "ai-context",
-  "ai-agent",
-  "ai-eval",
-  "ai-repair",
-] as const satisfies readonly ActivityKind[];
-
-/** One fixture registry for the original lab and the unified catalogue. */
-export function getLabExamples(collection: "foundations" | "ai") {
-  return collection === "ai"
-    ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
-    : [
-        ...getBaseExamples(),
-        ...getSortExamples(),
-        ...getContrastExamples(),
-        ...getWeighExamples(),
-        ...extraExamples(),
-        ...getProgramExamples(),
-      ];
+/** One fixture registry for the three retained native lab activities. */
+export function getLabExamples() {
+  return [...getBaseExamples(), ...getSortExamples()];
 }
 
 /** Demo fixtures live here; the activity renderer has no dependency on this page. */
-export function LearningPlayLab({
-  collection = "foundations",
-}: {
-  readonly collection?: "foundations" | "ai";
-}) {
+export function LearningPlayLab() {
   const interfaceTranslator = useI18n();
-  const modes: readonly LabKind[] = collection === "ai" ? AI_MODES : FOUNDATION_MODES;
+  const modes: readonly LabKind[] = FOUNDATION_MODES;
   const { locale } = useI18n();
-  const examples = useMemo(() => getLabExamples(collection), [locale, collection]);
+  const examples = useMemo(() => getLabExamples(), [locale]);
   const [mode, setMode] = useState<LabKind>(modes[0]!);
   const [variant, setVariant] = useState(0);
   const [difficulty, setDifficulty] = useState<ActivityDifficulty>("intro");
@@ -142,9 +103,7 @@ export function LearningPlayLab({
   };
   return (
     <div className="learning-play-lab">
-      <h1 className="play-visually-hidden">
-        {interfaceTranslator.t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
-      </h1>
+      <h1 className="play-visually-hidden">{interfaceTranslator.t("play.lab.title")}</h1>
       <div className="learning-play-lab__top">
         <a href="/library/courseware">{interfaceTranslator.t("play.lab.back")}</a>
         <SoundToggle />
@@ -154,13 +113,9 @@ export function LearningPlayLab({
         aria-label={interfaceTranslator.t("play.ai.collection")}
       >
         <a href="/play-lab/catalog">{interfaceTranslator.t("gallery.title")}</a>
-        <a href="/play-lab/ai" aria-current={collection === "ai" ? "page" : undefined}>
-          {interfaceTranslator.t("play.ai.collection.ai")}
-        </a>
-        <a href="/play-lab" aria-current={collection === "foundations" ? "page" : undefined}>
+        <a href="/play-lab" aria-current="page">
           {interfaceTranslator.t("play.ai.collection.foundations")}
         </a>
-        <a href="/play-lab/primm">{interfaceTranslator.t("play.ai.collection.primm")}</a>
       </nav>
 
       <nav
@@ -253,7 +208,7 @@ export function LearningPlayLab({
       <header className="learning-play-lab__intro">
         <div>
           <p className="learning-play-lab__closing-title">
-            {interfaceTranslator.t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
+            {interfaceTranslator.t("play.lab.title")}
           </p>
         </div>
         <div className="learning-play-lab__session">
@@ -291,56 +246,20 @@ export function LearningPlayLab({
         </div>
       </header>
       <p className="play-muted">{interfaceTranslator.t("play.difficulty.change")}</p>
-      <p className="learning-play-lab__intro-detail">
-        {interfaceTranslator.t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}
-      </p>
+      <p className="learning-play-lab__intro-detail">{interfaceTranslator.t("play.lab.intro")}</p>
       <p className="learning-play-lab__note">{interfaceTranslator.t("play.lab.note")}</p>
       <details className="play-model-note learning-play-lab__research">
         <summary>{interfaceTranslator.t("play.lab.research")}</summary>
-        <p>
-          {interfaceTranslator.t(
-            collection === "ai" ? "play.ai.researchCopy" : "play.lab.researchCopy",
-          )}
-        </p>
+        <p>{interfaceTranslator.t("play.lab.researchCopy")}</p>
         <div>
-          {collection === "ai" ? (
-            <>
-              <a
-                href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Anthropic · Context engineering
-              </a>
-              <a
-                href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Anthropic · Agent evaluations
-              </a>
-              <a
-                href="https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Microsoft · Human–AI interaction
-              </a>
-            </>
-          ) : (
-            <>
-              <a
-                href="https://ies.ed.gov/ncee/wwc/PracticeGuide/1"
-                target="_blank"
-                rel="noreferrer"
-              >
-                IES · Learning & instruction
-              </a>
-              <a href="https://arxiv.org/abs/1306.6544" target="_blank" rel="noreferrer">
-                PhET · Implicit scaffolding
-              </a>
-            </>
-          )}
+          <>
+            <a href="https://ies.ed.gov/ncee/wwc/PracticeGuide/1" target="_blank" rel="noreferrer">
+              IES · Learning & instruction
+            </a>
+            <a href="https://arxiv.org/abs/1306.6544" target="_blank" rel="noreferrer">
+              PhET · Implicit scaffolding
+            </a>
+          </>
         </div>
       </details>
     </div>

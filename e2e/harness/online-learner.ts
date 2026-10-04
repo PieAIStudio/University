@@ -103,14 +103,6 @@ export async function startFirstLessonFromLanding(page: Page): Promise<void> {
 export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   await namedStep(page, "课文出现", async () => {
     await assertVisibleText(page, FIRST_LESSON_TITLE);
-    // This settlement test reads the actual explanation before confirming it.
-    // The separate interaction suite proves guided rounds; opening their
-    // alternative review route is not simulated interaction completion.
-    const review = page.locator(".interaction-path__review");
-    if ((await review.count()) > 0) {
-      await humanClick(page, review.locator("summary").first(), "打开本节完整讲解");
-      await expect(review).toHaveAttribute("open", "");
-    }
     await assertImagesStayInViewport(page);
   });
 

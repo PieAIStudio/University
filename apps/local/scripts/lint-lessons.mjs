@@ -623,9 +623,7 @@ function lintLesson({ manifestPath, content, manifest, previous }) {
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
   const fail = (item, message, debtRule = null) => problems.push({ item, message, debtRule });
   const prose = stripCode(content);
-  const v2 = manifest.activities?.some(
-    (activity) => activity.kind === "interaction-path" && activity.pedagogyVersion === 2,
-  );
+  const v2 = false; // V3 PRIMM is the only shipped interaction format.
   // Existing persisted prose may retain the earlier invitation. New proposals
   // must use the current line. Both entry points otherwise share one spine.
   for (const { item, message } of checkLessonSpine(content, manifest.variant, {
@@ -825,7 +823,7 @@ for (const lesson of lessons("studies")) {
   // Lessons without a variant predate the shapes; linting them would be noise.
   if (
     !lesson.manifest.variant &&
-    !lesson.manifest.activities?.some((activity) => activity.kind === "interaction-path")
+    !lesson.manifest.activities?.some((activity) => activity.kind === "primm")
   )
     continue;
   checked += 1;

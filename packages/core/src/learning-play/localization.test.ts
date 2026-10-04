@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { contrastCaseAgrees } from "./contrast.js";
-import { activityTranslationIssues, localizeActivity } from "./localization.js";
-import type { LearningActivitySpec } from "./types.js";
+import { primmStepsFixture } from "./fixtures/primm-steps.js";
+import {
+  activityDisplayStrings,
+  activityTranslationIssues,
+  localizeActivity,
+} from "./localization.js";
 
 const activity = {
   id: "same-identity",
@@ -55,49 +58,33 @@ describe("activity translation preserves the actual task", () => {
     expect(activityTranslationIssues(candidate)).toContainEqual(expect.stringContaining("fact"));
     expect(() => localizeActivity(candidate, "en")).toThrow();
   });
-  it("rejects translations that collapse different contrast outcomes", () => {
-    const contrast = {
-      ...activity,
-      kind: "contrast",
-      approaches: [
-        { id: "left", label: "甲", note: "甲方法" },
-        { id: "right", label: "乙", note: "乙方法" },
-      ],
-      cases: [
-        {
-          id: "different",
-          label: "换条件",
-          detail: "比较结果",
-          outcomes: { left: "未说明", right: "已证实" },
-          why: "结论不同",
-        },
-      ],
-      locales: { en: { strings: { 未说明: "Same", 已证实: "Same" } } },
-    } as unknown as LearningActivitySpec;
-    expect(activityTranslationIssues(contrast)).toContainEqual(expect.stringContaining("outcome"));
-    expect(() => localizeActivity(contrast, "en")).toThrow();
+});
+
+const v3Activity = structuredClone(primmStepsFixture);
+
+describe("activity translation preserves the actual V3 task", () => {
+  it("translates nested step labels without changing ids or actions", () => {
+    const translated = localizeActivity(v3Activity, "en-US");
+    expect(translated.id).toBe(v3Activity.id);
+    expect(translated.steps[0]?.title).toMatch(/^You want to know/);
+    expect(translated.steps[0]?.kind).toBe("choose");
+    expect(translated.steps[0]?.options[0]?.id).toBe("vague");
+    expect(translated.requests[0]?.id).toBe(v3Activity.requests[0]?.id);
   });
-  it("preserves genuine contrast equality and differences", () => {
-    const contrast = {
-      ...activity,
-      kind: "contrast",
-      approaches: [
-        { id: "left", label: "甲", note: "甲方法" },
-        { id: "right", label: "乙", note: "乙方法" },
-      ],
-      cases: [
-        {
-          id: "different",
-          label: "换条件",
-          detail: "比较结果",
-          outcomes: { left: "未说明", right: "已证实" },
-          why: "结论不同",
-        },
-      ],
-      locales: { en: { strings: { 未说明: "Not stated", 已证实: "Confirmed" } } },
-    } as const;
-    const translated = localizeActivity(contrast, "en");
-    expect(contrastCaseAgrees(translated, translated.cases[0])).toBe(false);
-    expect(translated.cases[0].outcomes.right).toBe("Confirmed");
+  it("leaves the authored Chinese activity intact", () => {
+    expect(localizeActivity(v3Activity, "zh-CN")).toBe(v3Activity);
+  });
+  it("reports a translation key that is not display text", () => {
+    const candidate = { ...v3Activity, locales: { en: { strings: { inventedId: "wrong" } } } };
+    expect(activityTranslationIssues(candidate)).toContainEqual(
+      expect.stringContaining("inventedId"),
+    );
+    expect(() => localizeActivity(candidate, "en")).toThrow();
+  });
+  it("keeps every display string in the authored translation inventory", () => {
+    const strings = activityDisplayStrings(v3Activity);
+    expect(strings).toContain(v3Activity.steps[0]!.title);
+    expect(strings).toContain(v3Activity.steps.find((step) => step.kind === "find")!.title);
+    expect(activityTranslationIssues(v3Activity)).toEqual([]);
   });
 });

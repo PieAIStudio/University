@@ -5,7 +5,6 @@ import {
   activityDisplayStrings,
   activityTranslationIssues,
 } from "../learning-play/localization.js";
-import { interactionPathIssues } from "../learning-play/interaction-path.js";
 import { primmIssues } from "../learning-play/primm.js";
 import { primmLessonIssues } from "../learning-play/primm-lesson.js";
 import { createPrimmPayloadSchema } from "./primm-schema.js";
@@ -761,23 +760,7 @@ export const LessonAssetSchema = z
  * every attempt to store the new kind was rejected as a typo. Three lessons sat
  * decided-but-unlanded for a day because of it.
  */
-export const LessonActivityKindSchema = z.enum([
-  "connect",
-  "sort",
-  "contrast",
-  "weigh",
-  "tune",
-  "hunt",
-  "dispatch",
-  "program",
-  "ai-brief",
-  "ai-context",
-  "ai-agent",
-  "ai-eval",
-  "ai-repair",
-  "interaction-path",
-  "primm",
-]);
+export const LessonActivityKindSchema = z.enum(["connect", "sort", "tune", "primm"]);
 
 /**
  * The enum above and `ActivityKind` in `learning-play/types.ts` are one list in
@@ -835,134 +818,6 @@ export const ActivitySourceSchema = z.union([
 ]);
 
 export const PrimmPayloadSchema = createPrimmPayloadSchema(ActivitySourceSchema, StableId);
-
-const PathCopy = z.string().trim().min(1).max(1_000);
-const PathChoice = z.object({ id: StableId, label: PathCopy, explanation: PathCopy }).strict();
-const PathStepBase = z.object({
-  id: StableId,
-  sourceId: StableId,
-  materialIds: z.array(StableId).optional(),
-  phase: z.enum(["predict", "practice", "transfer"]).optional(),
-  brief: PathCopy.optional(),
-  question: PathCopy,
-  hint: PathCopy,
-  explanation: PathCopy,
-});
-/** No recursive activity member: a step is always one bounded action. */
-export const InteractionPathPayloadSchema = z.object({
-  pedagogyVersion: z.literal(2).optional(),
-  context: z
-    .object({
-      title: PathCopy,
-      introduction: PathCopy,
-      task: PathCopy,
-      sourceIds: z.array(StableId),
-    })
-    .strict()
-    .optional(),
-  materials: z
-    .array(
-      z
-        .object({
-          id: StableId,
-          sourceId: StableId,
-          label: PathCopy,
-          text: z.string().trim().min(1).max(20_000),
-          kind: z.enum(["source-summary", "teaching-draft"]),
-        })
-        .strict(),
-    )
-    .min(1)
-    .optional(),
-  assetId: StableId.optional(),
-  sources: z
-    .array(
-      z
-        .object({
-          id: StableId,
-          reference: ActivitySourceSchema,
-          note: PathCopy,
-          summary: PathCopy.optional(),
-          limitation: PathCopy.optional(),
-          date: PathCopy.optional(),
-        })
-        .strict(),
-    )
-    .min(1)
-    .max(8),
-  steps: z
-    .array(
-      z.discriminatedUnion("kind", [
-        PathStepBase.extend({
-          kind: z.literal("decision"),
-          options: z.array(PathChoice).min(2).max(5),
-          correctOptionId: StableId,
-        }).strict(),
-        PathStepBase.extend({
-          kind: z.literal("evidence"),
-          task: z.enum(["support", "unsupported"]),
-          material: z
-            .object({
-              label: PathCopy,
-              note: PathCopy,
-              reference: z.object({ label: PathCopy, text: PathCopy }).strict().optional(),
-              sentences: z.array(PathChoice).min(2).max(6),
-            })
-            .strict(),
-          correctSentenceId: StableId,
-        }).strict(),
-        PathStepBase.extend({
-          kind: z.literal("experiment"),
-          simulationNote: PathCopy,
-          controls: z
-            .array(z.object({ id: StableId, label: PathCopy }).strict())
-            .min(1)
-            .max(4),
-          initialControlIds: z.array(StableId).max(4),
-          cases: z
-            .array(
-              z
-                .object({
-                  id: StableId,
-                  selectedControlIds: z.array(StableId).max(4),
-                  title: PathCopy,
-                  text: z.string().trim().min(1).max(20_000),
-                  feedback: PathCopy,
-                  accepted: z.boolean(),
-                })
-                .strict(),
-            )
-            .min(2)
-            .max(16),
-        }).strict(),
-        PathStepBase.extend({
-          kind: z.literal("assemble"),
-          pieces: z
-            .array(z.object({ id: StableId, label: PathCopy }).strict())
-            .min(2)
-            .max(10),
-          initialPieceIds: z.array(StableId).max(10),
-          constraints: z
-            .array(
-              z
-                .object({
-                  id: StableId,
-                  kind: z.enum(["include", "exclude", "one-of", "before"]),
-                  pieceIds: z.array(StableId).min(1).max(10),
-                  label: PathCopy,
-                  explanation: PathCopy,
-                })
-                .strict(),
-            )
-            .min(1)
-            .max(12),
-        }).strict(),
-      ]),
-    )
-    .min(3)
-    .max(8),
-  finish: z.object({ title: PathCopy, note: PathCopy }).strict(),
-});
 
 /**
  * One embedded activity: the shared contract every kind honours, plus whatever
@@ -1024,7 +879,7 @@ export const LessonActivitySchema = z
         "hint",
         "source",
         "locales",
-        ...PrimmPayloadSchema.options.flatMap((option) => Object.keys(option.shape)),
+        ...Object.keys(PrimmPayloadSchema.shape),
       ]);
       if (Object.keys(activity).some((key) => !keys.has(key))) {
         context.addIssue({ code: "custom", message: "Unexpected PRIMM field" });
@@ -1051,51 +906,6 @@ export const LessonActivitySchema = z
           });
       }
     }
-    if (activity.kind === "interaction-path") {
-      const keys = new Set([
-        "id",
-        "kind",
-        "role",
-        "difficulty",
-        "family",
-        "title",
-        "brief",
-        "goal",
-        "takeaway",
-        "hint",
-        "source",
-        "locales",
-        ...Object.keys(InteractionPathPayloadSchema.shape),
-      ]);
-      if (Object.keys(activity).some((key) => !keys.has(key))) {
-        context.addIssue({ code: "custom", message: "Unexpected interaction-path field" });
-        return;
-      }
-      const parsed = InteractionPathPayloadSchema.safeParse(activity);
-      if (!parsed.success) {
-        for (const issue of parsed.error.issues) context.addIssue({ ...issue, code: "custom" });
-        return;
-      } else {
-        for (const message of interactionPathIssues(parsed.data)) {
-          context.addIssue({ code: "custom", message });
-        }
-      }
-      if (activity.family || activity.role !== "demonstrate") {
-        context.addIssue({
-          code: "custom",
-          message: "interaction-path is a guided demonstration without difficulty families",
-        });
-      }
-      const english = activity.locales?.en?.strings;
-      for (const value of activityDisplayStrings(activity)) {
-        if (!english?.[value])
-          context.addIssue({
-            code: "custom",
-            path: ["locales", "en"],
-            message: `Missing English path display text: ${value}`,
-          });
-      }
-    }
     for (const message of activityTranslationIssues(activity)) {
       context.addIssue({ code: "custom", message, path: ["locales"] });
     }
@@ -1115,7 +925,7 @@ export function interactionLessonIssues(lesson: {
       activity !== null &&
       typeof activity === "object" &&
       "kind" in activity &&
-      (activity.kind === "interaction-path" || activity.kind === "primm"),
+      activity.kind === "primm",
   );
   if (!paths.length) return [];
   const issues: string[] = [];
@@ -1129,49 +939,7 @@ export function interactionLessonIssues(lesson: {
       issues.push(...parsed.error.issues.map((issue) => issue.message));
       continue;
     }
-    const activity = parsed.data;
-    if (activity.kind === "primm") {
-      issues.push(...primmLessonIssues(PrimmPayloadSchema.parse(value), activity, lesson));
-      continue;
-    }
-    const payload = InteractionPathPayloadSchema.parse(value);
-    if (
-      payload.assetId &&
-      !lesson.assets?.some(
-        (asset) => asset.id === payload.assetId && asset.mime?.startsWith("image/"),
-      )
-    ) {
-      issues.push(`Path image is absent from lesson assets: ${payload.assetId}`);
-    }
-    for (const source of [activity.source, ...payload.sources.map((item) => item.reference)]) {
-      const matched = (lesson.evidence ?? []).some((evidence) => {
-        if (!evidence || typeof evidence !== "object") return false;
-        if ("url" in source) return "sourceUrl" in evidence && evidence.sourceUrl === source.url;
-        return (
-          "sourcePath" in evidence &&
-          evidence.sourcePath === source.path &&
-          "sourceCommit" in evidence &&
-          Boolean(source.commit) &&
-          evidence.sourceCommit === source.commit &&
-          (source.line === undefined ||
-            ("lineStart" in evidence &&
-              typeof evidence.lineStart === "number" &&
-              evidence.lineStart <= source.line)) &&
-          (source.lineEnd === undefined ||
-            ("lineEnd" in evidence &&
-              typeof evidence.lineEnd === "number" &&
-              evidence.lineEnd >= source.lineEnd))
-        );
-      });
-      if (!matched) issues.push(`Path source is absent from lesson evidence: ${source.label}`);
-    }
-    if (lesson.content !== undefined) {
-      const markers = [...lesson.content.matchAll(/^\s*::play\{#([a-z0-9-]+)\}\s*$/gm)];
-      if (markers.length !== 1 || markers[0]?.[1] !== activity.id)
-        issues.push("Interaction prose must reference its path exactly once using ::play{#id}");
-      if (lesson.content.replace(/::play\{[^}]*\}/g, "").trim().length < 40)
-        issues.push("Interaction prose needs a useful on-demand review explanation");
-    }
+    issues.push(...primmLessonIssues(PrimmPayloadSchema.parse(value), parsed.data, lesson));
   }
   return issues;
 }

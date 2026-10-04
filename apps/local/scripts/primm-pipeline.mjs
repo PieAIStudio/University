@@ -887,10 +887,6 @@ function lintDraft(draft, packet) {
       if (len > 38) add("F9", path, `句子太长（${len}字）：${s.slice(0, 40)}…`);
     }
   }
-  if (!a.steps) {
-    if (!a.run.debrief?.trim()) add("F4", "activity.run.debrief", "缺少运行后的老师的话");
-    if (!a.modify.debrief?.trim()) add("F4", "activity.modify.debrief", "缺少修改后的老师的话");
-  }
   const same =
     a.make.materialIds.length === a.starter.materialIds.length &&
     a.make.materialIds.every((id) => a.starter.materialIds.includes(id));
@@ -908,42 +904,6 @@ function lintDraft(draft, packet) {
     if (!libraryIds.has(source.id)) add("shape", "sources", `来源不在依据库：${source.id}`);
   if (draft.plan.caseSourceId && !draft.sources.some((s) => s.id === draft.plan.caseSourceId))
     add("shape", "plan.caseSourceId", "选中的案例没有列入 sources");
-  const game = a.investigate?.game ?? { kind: "steps" };
-  if (game.kind === "sort")
-    for (const card of game.cards) {
-      const bucket = game.buckets.find((b) => b.id === card.bucketId);
-      if (bucket && card.text.includes(bucket.label))
-        add("F5", `investigate.game.cards.${card.id}`, "卡片文字印着类名");
-    }
-  if (game.kind === "inspect-image") {
-    const verified =
-      packet.assets.find((asset) => asset.id === game.assetId)?.verifiedFacts?.regions ?? [];
-    const close = (a, b) => Math.abs(a - b) < 0.005;
-    for (const region of game.regions)
-      if (
-        !verified.some(
-          (v) =>
-            close(v.x, region.x) &&
-            close(v.y, region.y) &&
-            close(v.width, region.width) &&
-            close(v.height, region.height),
-        )
-      )
-        add(
-          "shape",
-          `investigate.game.regions.${region.id}`,
-          "图片区域必须使用 verifiedFacts 里核实过的坐标",
-        );
-  }
-  if (game.kind === "edit") {
-    const starterText = a.materials
-      .filter((m) => a.starter.materialIds.includes(m.id))
-      .map((m) => m.text)
-      .join("\n");
-    for (const sentence of game.sentences)
-      if (!starterText.includes(sentence.text.replace(/^[①②③④⑤⑥⑦⑧⑨]\s*/, "").slice(0, 8)))
-        add("F15", `investigate.game.sentences.${sentence.id}`, "要改的句子不在这次运行的材料里");
-  }
   return issues;
 }
 
@@ -980,18 +940,17 @@ function draftActivity(draft, packet, existing) {
     title: draft.title,
     brief: a.intro.need,
     goal: a.make.goal,
-    hint: a.investigate?.explanation ?? a.finish.note,
+    hint: a.finish.note,
     takeaway: a.finish.note,
     source: primary.reference,
     method: "PRIMM",
-    experienceVersion: a.steps ? 3 : 2,
+    experienceVersion: 3,
     intro: a.intro,
     sources: [...used, ...stripLocales(kept)],
     materials: a.materials,
     starter: a.starter,
-    ...(a.steps
-      ? { steps: a.steps, ...(a.requests ? { requests: a.requests } : {}) }
-      : { predict: a.predict, run: a.run, investigate: a.investigate, modify: a.modify }),
+    steps: a.steps,
+    ...(a.requests ? { requests: a.requests } : {}),
     make: { ...a.make, exerciseId: packet.exerciseIds[0] },
     finish: a.finish,
   };
@@ -1068,24 +1027,13 @@ async function sampleRuns(activity, packet) {
     }
   };
   try {
-    if (activity.steps) {
-      const requests = {};
-      const planned = stepSampleRequests(activity);
-      for (const request of planned)
-        requests[request.id] = await once(request.phase, request.prompt);
-      return {
-        run: requests[planned[0].id],
-        modify: await once("modify", stepModifyPrompt(activity)),
-        requests,
-      };
-    }
-    const modifyPrompt = [
-      activity.starter.prompt,
-      ...activity.modify.workbench.pieces.map((p) => p.text),
-    ].join("\n");
+    const requests = {};
+    const planned = stepSampleRequests(activity);
+    for (const request of planned) requests[request.id] = await once(request.phase, request.prompt);
     return {
-      run: await once("run", activity.starter.prompt),
-      modify: await once("modify", modifyPrompt),
+      run: requests[planned[0].id],
+      modify: await once("modify", stepModifyPrompt(activity)),
+      requests,
     };
   } finally {
     runtime.close?.();
@@ -1093,110 +1041,7 @@ async function sampleRuns(activity, packet) {
 }
 
 function renderLearnerScript(activity, draft, samples, makeSample) {
-  if (activity.steps) return renderStepLesson(activity, draft, samples, makeSample);
-  const a = activity;
-  const materialText = (ids) =>
-    a.materials
-      .filter((m) => ids.includes(m.id))
-      .map(
-        (m) =>
-          `  - 材料「${m.label}」${m.assetId ? `（附件：${m.assetId}）` : ""}\n\n${m.text
-            .split("\n")
-            .map((l) => `    > ${l}`)
-            .join("\n")}`,
-      )
-      .join("\n");
-  const source = (id) => a.sources.find((s) => s.id === id);
-  const g = a.investigate.game;
-  const known = ["sort", "collect", "edit", "layout", "inspect-image", "check-result"].includes(
-    g?.kind,
-  );
-  const game = !known
-    ? `〔检查者注：这一屏的互动数据格式不对（见机器检查），原样列出：${JSON.stringify(g).slice(0, 1500)}〕`
-    : g.kind === "check-result"
-      ? `〔检查者注：这一屏是“对照检查”互动，学习者看不到这句注释。〕屏幕上的说明：${g.instruction}\n  学习者对照上面的真实结果，逐项选“结果里有，没变 / 结果里有，但变了 / 结果里没有”；选完一项才显示“原材料里：”：\n${g.items.map((i) => `  - 「${i.label}」 ${i.expected}（${i.why}）`).join("\n")}`
-      : g.kind === "sort"
-        ? `〔检查者注：这一屏是“分类”互动，学习者看不到这句注释。〕类别按钮：${g.buckets.map((b) => `「${b.label}」`).join("、")}。卡片：\n${g.cards.map((c) => `  - 「${c.text}」→ 正确类别：${g.buckets.find((b) => b.id === c.bucketId)?.label}；放对后显示：${c.why}`).join("\n")}`
-        : g.kind === "collect"
-          ? `〔检查者注：这一屏是“挑资料”互动，学习者看不到这句注释。〕屏幕上的说明：${g.instruction}\n${g.cards.map((c) => `  - 卡片「${c.label}」：${c.text}（${c.relevant ? "有关" : "无关"}；反馈：${c.why}）`).join("\n")}`
-          : g.kind === "edit"
-            ? `〔检查者注：这一屏是“只改一句”互动，学习者看不到这句注释。〕屏幕上的说明：${g.instruction}。提示：${g.replacementHint}\n${g.sentences.map((s) => `  - ${s.text}${s.id === g.targetId ? "  ← 需要改的这句" : ""}`).join("\n")}`
-            : g.kind === "layout"
-              ? `〔检查者注：这一屏是“排版”互动，学习者看不到这句注释。〕屏幕上的说明：${g.instruction}。信息块：${g.items.map((i) => `「${i.label}：${i.text}」`).join("、")}；排法：${g.formats.map((f) => f.label).join("/")}`
-              : `〔检查者注：这一屏是“看图局部”互动（图片 ${g.assetId}），学习者看不到这句注释。〕屏幕上的说明：${g.instruction}\n${g.regions.map((r) => `  - 区域「${r.label}」：${r.note}`).join("\n")}\n  学习者看完区域后写下一句想追问的话。`;
-  // A failed sample run is a pipeline event, not lesson content: say so to the reviewer.
-  const result = (s) =>
-    s?.error
-      ? `〔检查者注：这一次样例运行没有拿到结果（${s.error}），这是检查流程的问题，不是课文内容；请只评价课文，不要评价这次失败。〕`
-      : (s?.text ?? "（未运行）");
-  return `### 第 1 屏 · 标题：${a.title}
-
-- 真实案例：${a.intro.connection}（链接：${(a.intro.sourceIds ?? []).map((id) => source(id)?.reference.label).join("、") || "无"}）
-- 开场：${a.intro.situation} ${a.intro.need}
-${materialText(a.starter.materialIds)}
-- 这次发给 AI 的请求：「${a.starter.prompt}」
-- 预想问题：${a.predict.question}
-${a.predict.options.map((o) => `  - 选项：${o.label}`).join("\n")}
-
-### 第 2 屏 · 标题：${a.run.title}
-
-- 老师：${a.run.note}
-- 学习者把材料放进对话（按钮：${a.run.attachmentLabel}），发送。
-- 学习者看到的 AI 结果（这是本机 AI 这次真实生成的一次；每次可能不同）：
-
-${result(samples.run)
-  .split("\n")
-  .map((l) => `    > ${l}`)
-  .join("\n")}
-
-- 结果出来后，老师：${a.run.debrief}
-
-### 第 3 屏 · 标题：${a.investigate.title}
-
-- 老师：${a.investigate.brief}
-- ${game}
-- 操作完成后，老师：${a.investigate.explanation}
-${(a.investigate.more ?? []).map((m) => `- 可展开的追问「${m.question}」：${m.answer}`).join("\n")}
-
-### 第 4 屏 · 标题：${a.modify.title}
-
-- 老师：${a.modify.brief}
-- 目标：${a.modify.goal}
-- 请求工作台说明：${a.modify.workbench.instruction}
-${a.modify.workbench.pieces.map((p) => `  - 可加入的短句「${p.label}」：${p.text}`).join("\n")}
-- 〔检查者注：学习者看不到这一条。下面假设学习者把所有短句都加上，AI 收到：「${samples.modify?.prompt ?? ""}」〕
-- 学习者看到的修改后结果（本机 AI 这次真实生成的一次）：
-
-${result(samples.modify)
-  .split("\n")
-  .map((l) => `    > ${l}`)
-  .join("\n")}
-
-- 结果出来后，老师：${a.modify.debrief}
-
-### 第 5 屏 · 标题：${a.make.title}
-
-- 老师：${a.make.scenario}
-- 目标：${a.make.goal}
-${materialText(a.make.materialIds)}
-- 输入框提示：${a.make.promptPlaceholder}
-- 好结果应该做到：\n${a.make.checklist.map((c) => `  - ${c}`).join("\n")}
-- 成品名称：${a.make.artifactLabel}
-- 〔检查者注：学习者看不到这一条。下面假设一个初学者自己写了请求「${makeSample?.prompt ?? draft.samples.makePrompt}」，这是本机 AI 对它的真实结果：〕
-
-${result(makeSample)
-  .split("\n")
-  .map((l) => `    > ${l}`)
-  .join("\n")}
-
-### 第 6 屏 · 标题：${a.finish.title}
-
-- 老师：${a.finish.note}
-
-### 复习卡片
-
-${draft.cards.map((c) => `- 正面：${c.front}\n  背面：${c.back}`).join("\n")}
-`;
+  return renderStepLesson(activity, draft, samples, makeSample);
 }
 
 async function makeSampleRun(activity, packet, prompt) {

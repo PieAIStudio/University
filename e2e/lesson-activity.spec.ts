@@ -109,13 +109,9 @@ test("每一节声明了互动组件的课，读者都真的看得到它", async
     });
     const board = page.locator(".learning-activity");
     try {
-      if (target.kind === "primm" || target.kind === "interaction-path") {
-        // These two draw their own readers instead of the shared activity board,
-        // so "the reader can see it" is the same question asked of a different
-        // element. A missing renderer branch still shows up here.
-        const reader = page
-          .locator(target.kind === "primm" ? ".primm, .primm-steps" : ".interaction-path")
-          .first();
+      if (target.kind === "primm") {
+        // PRIMM draws its own step reader instead of the shared activity board.
+        const reader = page.locator(".primm, .primm-steps").first();
         await expect(reader).toBeVisible({ timeout: 20_000 });
         expect((await reader.textContent())?.trim().length ?? 0).toBeGreaterThan(0);
       } else {
@@ -155,14 +151,11 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
 
   const seen = new Set<string>();
   /*
-    Board activities only. This measures pieces against their board's own box,
-    and neither a PRIMM nor an interaction-path lesson has one: each runs its own
-    reader, and both are walked at phone width by primm.spec.ts and
-    interaction-path.spec.ts. Including them would fail on a missing element
-    rather than on a piece that escaped, which is not what this guards.
+    Board activities only. PRIMM owns a step reader rather than a shared board;
+    its phone flow is covered by primm.spec.ts.
   */
   const sample = lessonsWithActivities()
-    .filter((t) => t.kind !== "primm" && t.kind !== "interaction-path")
+    .filter((t) => t.kind !== "primm")
     .filter((t) => !seen.has(t.kind) && seen.add(t.kind));
   expect(sample.length, "货架上一个带组件的课节都没有").toBeGreaterThan(0);
 
@@ -183,9 +176,8 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
       that re-renders after mount can swap its node in any of those gaps.
       `boundingBox` then returns null for an element that is on the screen, and
       the failure reads 「板子没有尺寸」 about a board measured at 261×545 in a
-      real browser a moment later. `ai-repair` did exactly that. Reading the
-      board and every piece synchronously in the page removes the gap rather
-      than papering over it with a retry.
+      real browser a moment later. Reading the board and every piece synchronously in the page removes the gap
+      rather than papering over it with a retry.
 
       Wires are excluded: an SVG overlay legitimately spans the board and is
       not a thing the reader reaches for.
@@ -202,7 +194,7 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
       }
       const pieces = [
         ...board.querySelectorAll(
-          "button, .play-connect__node, .play-contrast__case, .play-sort__item, .play-weigh__situation",
+          "button, .play-connect__node, .play-sort__item, .play-tune__slider",
         ),
       ];
       const shown = pieces.filter((piece) => {

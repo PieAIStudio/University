@@ -2,13 +2,13 @@ import { messages as menuDoors } from "./menu-doors.zh-CN.js";
 import { messages as mapNavigation } from "./map-navigation.zh-CN.js";
 import { messages as mapNodes } from "./map-nodes.zh-CN.js";
 import { messages as primm } from "./primm.zh-CN.js";
+import { messages as lessonReader } from "./lesson-reader.zh-CN.js";
 import { messages as propFinish } from "./prop-finish.zh-CN.js";
 import { messages as playGallery } from "./play-gallery.zh-CN.js";
 import { messages as arcade3d } from "./arcade-3d.zh-CN.js";
 import { messages as gameKit } from "./game-kit.zh-CN.js";
 import { messages as accountClosure } from "./account-closure.zh-CN.js";
 import { messages as gradingCopy } from "./grading-copy.zh-CN.js";
-import { messages as interactionPath } from "./interaction-path.zh-CN.js";
 import { messages as worldNavigation } from "./world-navigation.zh-CN.js";
 import { messages as readingSettings } from "./reading-settings.zh-CN.js";
 import { messages as productWelcome } from "./product-welcome.zh-CN.js";
@@ -22,18 +22,10 @@ import { messages as productNavigation } from "./product-navigation.zh-CN.js";
 import { messages as productBilling } from "./product-billing.zh-CN.js";
 import { messages as productSupport } from "./product-support.zh-CN.js";
 import { messages as productSave } from "./product-save.zh-CN.js";
-import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
-import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
 import { messages as playDifficulty } from "./learning-play-difficulty.zh-CN.js";
-import { messages as qualityUsability } from "./learning-play-quality-usability.zh-CN.js";
-import { messages as workflowUsability } from "./learning-play-workflow-usability.zh-CN.js";
 import { messages as playUsability } from "./learning-play-usability.zh-CN.js";
+import { messages as playSort } from "./learning-play-sort.zh-CN.js";
 import { messages as aiPlay } from "./learning-play-ai.zh-CN.js";
-import { messages as aiWorkflow } from "./learning-play-ai-workflow.zh-CN.js";
-import { messages as aiQuality } from "./learning-play-ai-quality.zh-CN.js";
-import { messages as aiAgentPlay } from "./learning-play-ai-agent-play.zh-CN.js";
-import { messages as learningPlayProgram } from "./learning-play-program.zh-CN.js";
-import { messages as learningPlayExtra } from "./learning-play-extra.zh-CN.js";
 import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
 /**
  * Chinese source messages for the University learner surface.
@@ -47,6 +39,7 @@ export const messages = {
   ...mapNavigation,
   ...mapNodes,
   ...primm,
+  ...lessonReader,
   ...purpose3d,
   ...arcade3d,
   ...gameKit,
@@ -54,7 +47,6 @@ export const messages = {
   ...propFinish,
   ...accountClosure,
   ...worldNavigation,
-  ...interactionPath,
   ...readingSettings,
   ...gradingCopy,
   ...accountFailures,
@@ -109,18 +101,10 @@ export const messages = {
   "app.mapstudio.mapStudioScreen.copy.组合与降级": "组合与降级",
   "app.mapstudio.mapStudioScreen.copy.占地-高差-坡度": "整组占地 / 地面高差 / 坡度",
   ...aiPlay,
-  ...aiWorkflow,
-  ...aiQuality,
-  ...aiAgentPlay,
   ...playUsability,
+  ...playSort,
   ...playDifficulty,
-  ...qualityDifficulty,
-  ...workflowDifficulty,
-  ...qualityUsability,
-  ...workflowUsability,
   ...learningPlayMessages,
-  ...learningPlayProgram,
-  ...learningPlayExtra,
   "app.app.app.copy.书架上还没有课": "书架上还没有课",
   "app.app.app.copy.今天": "今天",
   "app.app.app.copy.从这里开始": "从这里开始",

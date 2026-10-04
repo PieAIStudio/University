@@ -1,7 +1,7 @@
 export const messages = {
   "play.lab.title": "A little learning. A little play.",
   "play.lab.intro":
-    "Connect an idea, break a rule, or send a little courier on its way. Pick a way to explore.",
+    "Connect an idea, sort some material, or adjust a parameter. Pick a way to explore.",
   "play.lab.entry": "Open the learning playground",
   "play.lab.back": "Back to interactive lessons",
   "play.lab.mix": "Play all {total}",
@@ -24,14 +24,8 @@ export const messages = {
   "play.mode.sort": "Sorting bench",
   "play.mode.connect": "Causal connections",
   "play.mode.tune": "Tuning lab",
-  "play.mode.hunt": "Counterexample hunt",
-  "play.mode.dispatch": "Request dispatch",
-  "play.mode.program": "Instruction canvas",
   "play.verb.connect": "Connect",
   "play.verb.tune": "Experiment",
-  "play.verb.hunt": "Falsify",
-  "play.verb.dispatch": "Dispatch",
-  "play.verb.program": "Program",
   "play.host.goal": "Your challenge",
   "play.host.hint": "Give me a clue",
   "play.host.hideHint": "Hide the clue",

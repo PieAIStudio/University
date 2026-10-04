@@ -1,23 +1,13 @@
 import type {
+  ActivityDifficulty,
   ActivityFamily,
   ConnectActivity,
-  DispatchActivity,
-  HuntActivity,
   NumericExpression,
-  ProgramActivity,
   TuneActivity,
-  BriefActivity,
-  ActivityDifficulty,
 } from "@pieai/university-core";
 import { interfaceTranslator } from "../i18n/index.js";
 
-type Foundation =
-  | ConnectActivity
-  | DispatchActivity
-  | HuntActivity
-  | ProgramActivity
-  | TuneActivity
-  | BriefActivity;
+type Foundation = ConnectActivity | TuneActivity;
 const tag = <T extends Foundation>(task: T, difficulty: ActivityDifficulty): T => ({
   ...task,
   id: `${task.id}:${difficulty}:v1`,
@@ -36,7 +26,7 @@ const constantControl = (
         : expression
       : { ...expression, args: expression.args.map((part) => constantControl(part, id, value)) };
 
-/** Curated task differences. Engines do not inspect difficulty or apply numeric multipliers. */
+/** Curated task differences for the retained connect and tune boards. */
 export function getFoundationFamily(activity: Foundation): ActivityFamily {
   const goal = (level: ActivityDifficulty) =>
     interfaceTranslator.t(`play.difficulty.${activity.kind}.${level}`);
@@ -154,133 +144,6 @@ export function getFoundationFamily(activity: Foundation): ActivityFamily {
           intro: tag(intro, "intro"),
           practice: tag(activity, "practice"),
           challenge: tag(challenge, "challenge"),
-        },
-      };
-    }
-    case "hunt": {
-      const boundary = activity.model === "clamp" ? 0 : activity.boundary;
-      return {
-        id: activity.id,
-        kind: activity.kind,
-        levels: {
-          intro: tag(
-            {
-              ...activity,
-              goal: goal("intro"),
-              input: {
-                ...activity.input,
-                min: boundary - 2,
-                max: boundary + 2,
-                initial: boundary + 1,
-              },
-            },
-            "intro",
-          ),
-          practice: tag(activity, "practice"),
-          challenge: tag(
-            { ...activity, goal: goal("challenge"), verifyBoundarySides: true },
-            "challenge",
-          ),
-        },
-      };
-    }
-    case "dispatch": {
-      const first = activity.cards[0]!;
-      const fresh = activity.cards.find((card) => !card.cacheKey)!;
-      const regularLane = activity.lanes
-        .filter((lane) => first.allowedLaneIds.includes(lane.id))
-        .sort((a, b) => a.cost - b.cost)[0]!;
-      const freshCost = Math.min(
-        ...activity.lanes
-          .filter((lane) => fresh.allowedLaneIds.includes(lane.id))
-          .map((lane) => lane.cost),
-      );
-      const revised = {
-        ...first,
-        id: `${first.id}-revision`,
-        label: interfaceTranslator.t("play.difficulty.dispatch.revised", { name: first.label }),
-        detail: interfaceTranslator.t("play.difficulty.dispatch.newVersion"),
-        cacheKey: `${first.cacheKey}-revised`,
-      };
-      return {
-        id: activity.id,
-        kind: activity.kind,
-        levels: {
-          intro: tag(
-            {
-              ...activity,
-              goal: goal("intro"),
-              cards: [first, fresh, { ...first, id: `${first.id}-again` }],
-              budget: regularLane.cost + freshCost,
-            },
-            "intro",
-          ),
-          practice: tag(activity, "practice"),
-          challenge: tag(
-            {
-              ...activity,
-              goal: goal("challenge"),
-              cards: [
-                ...activity.cards,
-                revised,
-                { ...fresh, id: `${fresh.id}-again` },
-                { ...revised, id: `${revised.id}-again` },
-                { ...first, id: `${first.id}-original-return` },
-              ],
-              budget: activity.budget + regularLane.cost + freshCost,
-            },
-            "challenge",
-          ),
-        },
-      };
-    }
-    case "program": {
-      const north = activity.start.direction === "north";
-      const firstGoal = north ? { x: 0, y: 2 } : { x: 2, y: 4 };
-      return {
-        id: activity.id,
-        kind: activity.kind,
-        levels: {
-          intro: tag(
-            {
-              ...activity,
-              goal: goal("intro"),
-              goalCell: firstGoal,
-              checkpoints: [],
-              maxCommands: 3,
-            },
-            "intro",
-          ),
-          practice: tag(activity, "practice"),
-          challenge: tag(
-            {
-              ...activity,
-              goal: goal("challenge"),
-              checkpoints: [...activity.checkpoints, north ? { x: 4, y: 4 } : { x: 2, y: 0 }],
-              maxCommands: north ? 7 : 9,
-            },
-            "challenge",
-          ),
-        },
-      };
-    }
-    case "ai-brief": {
-      const intro: BriefActivity = {
-        ...activity,
-        goal: goal("intro"),
-        followUp: undefined,
-        initialChoices: {
-          confirmation: activity.target.confirmation,
-          roster: activity.target.roster,
-        },
-      };
-      return {
-        id: activity.id,
-        kind: activity.kind,
-        levels: {
-          intro: tag(intro, "intro"),
-          practice: tag({ ...activity, goal: goal("practice"), followUp: undefined }, "practice"),
-          challenge: tag({ ...activity, goal: goal("challenge") }, "challenge"),
         },
       };
     }

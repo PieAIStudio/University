@@ -1,4 +1,3 @@
-import { contrastCaseAgrees, type ContrastActivity } from "./contrast.js";
 import type { ActivityBase } from "./types.js";
 
 /** These are presentation fields, never identifiers, thresholds or rule inputs. */
@@ -44,40 +43,6 @@ const PRIMM_DISPLAY_PATHS = new Set([
   "starter.prompt",
   "materials.label",
   "materials.text",
-  "predict.question",
-  "predict.options.label",
-  "run.title",
-  "run.note",
-  "run.attachmentLabel",
-  "run.debrief",
-  "investigate.title",
-  "investigate.brief",
-  "investigate.explanation",
-  "investigate.more.question",
-  "investigate.more.answer",
-  "investigate.game.instruction",
-  "investigate.game.regions.label",
-  "investigate.game.regions.note",
-  "investigate.game.buckets.label",
-  "investigate.game.cards.label",
-  "investigate.game.cards.text",
-  "investigate.game.cards.why",
-  "investigate.game.items.label",
-  "investigate.game.items.text",
-  "investigate.game.items.expected",
-  "investigate.game.items.why",
-  "investigate.game.formats.label",
-  "investigate.game.sentences.text",
-  "investigate.game.replacementHint",
-  "investigate.game.mustMention",
-  "modify.title",
-  "modify.brief",
-  "modify.goal",
-  "modify.suggestion",
-  "modify.debrief",
-  "modify.workbench.instruction",
-  "modify.workbench.pieces.label",
-  "modify.workbench.pieces.text",
   "make.title",
   "make.scenario",
   "make.goal",
@@ -129,38 +94,23 @@ function rewritePrimmDisplay(
   );
 }
 
-function rewriteDisplay(
-  value: unknown,
-  rewrite: (text: string) => string,
-  parent = "",
-  isPath = isRecord(value) && value.kind === "interaction-path",
-): unknown {
+function rewriteDisplay(value: unknown, rewrite: (text: string) => string, parent = ""): unknown {
   if (isRecord(value) && value.kind === "primm") return rewritePrimmDisplay(value, rewrite);
-  if (Array.isArray(value))
-    return value.map((item) => rewriteDisplay(item, rewrite, parent, isPath));
+  if (Array.isArray(value)) return value.map((item) => rewriteDisplay(item, rewrite, parent));
   if (!isRecord(value)) return value;
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
       // Locale dictionaries are metadata. Never rewrite a dictionary, an ID,
       // an executable program, a source URL, or a learner's submitted data.
       if (key === "locales") return [key, item];
-      const pathCopy =
-        isPath &&
-        ((parent === "context" && (key === "introduction" || key === "task")) ||
-          (parent === "sources" && ["summary", "limitation", "date"].includes(key)) ||
-          (parent === "steps" && key === "simulationNote") ||
-          (parent === "materials" && key === "text") ||
-          (parent === "cases" && (key === "text" || key === "feedback")));
       if (
         typeof item === "string" &&
-        (pathCopy ||
-          DISPLAY_FIELDS.has(key) ||
+        (DISPLAY_FIELDS.has(key) ||
           DISPLAY_MAPS.has(parent) ||
           (key === "text" && parent === "reference"))
-      ) {
+      )
         return [key, rewrite(item)];
-      }
-      return [key, rewriteDisplay(item, rewrite, key, isPath)];
+      return [key, rewriteDisplay(item, rewrite, key)];
     }),
   );
 }
@@ -207,21 +157,6 @@ export function activityTranslationIssues(activity: unknown): string[] {
       for (const key of Object.keys(candidate.strings)) {
         if (!permitted.has(key))
           issues.push(`${locale}: translation key is not display text: ${key}`);
-      }
-    }
-    if (
-      activity.kind === "contrast" &&
-      Array.isArray(activity.cases) &&
-      Array.isArray(activity.approaches)
-    ) {
-      const original = activity as unknown as ContrastActivity;
-      const translated = translatedPayload(original, locale);
-      for (let index = 0; index < original.cases.length; index += 1) {
-        const before = original.cases[index]!;
-        const after = translated.cases[index]!;
-        if (contrastCaseAgrees(original, before) !== contrastCaseAgrees(translated, after)) {
-          issues.push(`${locale}: translation changes contrast outcome equality: ${before.id}`);
-        }
       }
     }
   }

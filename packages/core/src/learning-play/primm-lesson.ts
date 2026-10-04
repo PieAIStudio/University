@@ -1,5 +1,5 @@
 import type { ActivityBase } from "./types.js";
-import { isPrimmSteps, type PrimmPayload } from "./primm.js";
+import type { PrimmPayload } from "./primm.js";
 
 export interface PrimmLessonContract {
   readonly activities?: readonly unknown[];
@@ -69,11 +69,7 @@ export function primmLessonIssues(
   }
   const assets = lesson.assets ?? [];
   // Images the learner inspects or points at, beyond the run inputs.
-  const inspected = isPrimmSteps(payload)
-    ? payload.steps.flatMap((step) => (step.kind === "point" ? [step.assetId] : []))
-    : payload.investigate.game.kind === "inspect-image"
-      ? [payload.investigate.game.assetId]
-      : [];
+  const inspected = payload.steps.flatMap((step) => (step.kind === "point" ? [step.assetId] : []));
   if (new Set(assets.map((asset) => asset.id)).size !== assets.length)
     issues.push("Duplicate PRIMM lesson asset ID");
   const assetIds = new Set([
@@ -113,9 +109,7 @@ export function primmLessonIssues(
   for (const id of inspected) {
     if (!assets.some((asset) => asset.id === id && asset.mime?.startsWith("image/")))
       issues.push(`PRIMM inspection requires an image asset: ${id}`);
-    const inputs = isPrimmSteps(payload)
-      ? [...payload.starter.assetIds, ...payload.make.assetIds]
-      : payload.starter.assetIds;
+    const inputs = [...payload.starter.assetIds, ...payload.make.assetIds];
     if (!inputs.includes(id))
       issues.push(`PRIMM inspection image is absent from starter inputs: ${id}`);
   }

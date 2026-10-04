@@ -272,9 +272,7 @@ function check(proposal, options = {}) {
 
       const cards = lesson.cards ?? [];
       const exercises = lesson.exercises ?? [];
-      const v2 = lesson.activities?.some(
-        (activity) => activity.kind === "interaction-path" && activity.pedagogyVersion === 2,
-      );
+      const v2 = false; // V3 PRIMM is the only shipped interaction format.
       if (exercises.length !== 1 || (!v2 && exercises[0]?.kind !== "short-answer")) {
         problems.push(
           `${where}: ${v2 ? "V2 必须保留恰好一道独立练习" : "新课必须有恰好 1 道 short-answer 独立练习"}；演示不能代替练习`,

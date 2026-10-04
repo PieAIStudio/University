@@ -72,18 +72,19 @@ const primmSteps: GameLesson = {
   ],
 };
 
-/** The PRIMM investigate shape (sound-words-and-meaning). */
-const primmInvestigate: GameLesson = {
+/** A second V3 sort tests projection limits and bilingual copy. */
+const primmSound: GameLesson = {
   id: "sound",
   title: "听写和意思",
   activities: [
     {
       id: "listen",
       kind: "primm",
-      experienceVersion: 2,
-      investigate: {
-        title: "先看文字有没有漏掉要紧的事",
-        game: {
+      experienceVersion: 3,
+      steps: [
+        {
+          id: "check-message",
+          title: "先看文字有没有漏掉要紧的事",
           kind: "sort",
           buckets: [
             { id: "all", label: "三个位置都有" },
@@ -99,7 +100,7 @@ const primmInvestigate: GameLesson = {
             { id: "no-item", text: "时间：周六下午三点；地点：图书馆。", bucketId: "missing", why },
           ],
         },
-      },
+      ],
     },
   ],
 };
@@ -135,9 +136,9 @@ describe("game rounds from lessons", () => {
     expect(rounds[0]!.items.map((item) => item.text)).toContain("咖啡甜不甜？");
   });
 
-  it("uses the investigate title as the question of a PRIMM v2 sort", () => {
-    const [round] = gameRoundsFromLesson(primmInvestigate);
-    expect(round!.id).toBe("sound/listen/investigate");
+  it("preserves a V3 sort title as the round question", () => {
+    const [round] = gameRoundsFromLesson(primmSound);
+    expect(round!.id).toBe("sound/listen/check-message");
     expect(round!.question).toBe("先看文字有没有漏掉要紧的事");
     expect(round!.bins).toEqual([
       { id: "all", label: "三个位置都有" },
@@ -163,11 +164,10 @@ describe("game rounds from lessons", () => {
     fourBins.activities[0]!.buckets.push({ id: "extra", label: "其他" });
     expect(gameRoundsFromLesson(fourBins as unknown as GameLesson)).toEqual([]);
 
-    const longBin = structuredClone(primmInvestigate) as {
-      activities: { investigate: { game: { buckets: { label: string }[] } } }[];
+    const longBin = structuredClone(primmSound) as {
+      activities: { steps: { buckets: { label: string }[] }[] }[];
     };
-    longBin.activities[0]!.investigate.game.buckets[0]!.label =
-      "这个分类的名字实在是长得放不进一个按钮";
+    longBin.activities[0]!.steps[0]!.buckets[0]!.label = "这个分类的名字实在是长得放不进一个按钮";
     expect(gameRoundsFromLesson(longBin as unknown as GameLesson)).toEqual([]);
 
     const checkResult: GameLesson = {
@@ -177,8 +177,8 @@ describe("game rounds from lessons", () => {
         {
           id: "a",
           kind: "primm",
-          experienceVersion: 2,
-          investigate: { title: "对照", game: { kind: "check-result", items: [] } },
+          experienceVersion: 3,
+          steps: [{ id: "send", title: "发送", kind: "send" }],
         },
       ],
     };
@@ -192,12 +192,12 @@ describe("game rounds from lessons", () => {
     expect(displayWidth("答不出")).toBe(6);
     expect(displayWidth("Can't answer")).toBe(12);
     expect(displayWidth("9 月 27 日")).toBe(10);
-    const english = structuredClone(primmInvestigate) as {
+    const english = structuredClone(primmSound) as {
       activities: {
-        investigate: { game: { buckets: { label: string }[]; cards: { text: string }[] } };
+        steps: { buckets: { label: string }[]; cards: { text: string }[] }[];
       }[];
     };
-    const game = english.activities[0]!.investigate.game;
+    const game = english.activities[0]!.steps[0]!;
     game.buckets[0]!.label = "All three are there";
     game.buckets[1]!.label = "One item is missing";
     game.cards[0]!.text = "Time: Saturday 3 p.m.; place: the library; bring: a notebook.";
@@ -206,7 +206,7 @@ describe("game rounds from lessons", () => {
   });
 
   it("orders a segment's own lessons first, then earlier ones from the nearest", () => {
-    const rounds = gameRoundsForSegment([primmSteps, primmInvestigate, lessonSort], ["checkpoint"]);
+    const rounds = gameRoundsForSegment([primmSteps, primmSound, lessonSort], ["checkpoint"]);
     expect(rounds.map((round) => round.lessonId)).toEqual(["checkpoint", "sound", "picture"]);
   });
 });

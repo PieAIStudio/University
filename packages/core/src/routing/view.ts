@@ -111,7 +111,7 @@ export type View =
   | { readonly kind: "avatar-lab" }
   | {
       readonly kind: "play-lab";
-      readonly collection?: "ai" | "catalog" | "toy-3d" | "wax-island" | "prop-finish" | "primm";
+      readonly collection?: "catalog" | "toy-3d" | "wax-island" | "prop-finish";
     }
   | { readonly kind: "league" }
   /*
@@ -278,16 +278,12 @@ export function fromPath(pathname: string): View {
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
   if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "prop-finish")
     return { kind: "play-lab", collection: "prop-finish" };
-  if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "primm")
-    return { kind: "play-lab", collection: "primm" };
   if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "wax-island")
     return { kind: "play-lab", collection: "wax-island" };
   if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "toy-3d")
     return { kind: "play-lab", collection: "toy-3d" };
   if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "catalog")
     return { kind: "play-lab", collection: "catalog" };
-  if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "ai")
-    return { kind: "play-lab", collection: "ai" };
   if (parts.length === 1 && parts[0] === "play-lab") return { kind: "play-lab" };
   if (parts.length === 1 && parts[0] === "avatar-lab") return { kind: "avatar-lab" };
   if (parts.length === 1 && parts[0] === "league") return { kind: "league" };

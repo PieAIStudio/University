@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { expect, test, type Locator, type Page } from "./harness/learner-test.js";
+import { expect, test, type Page } from "./harness/learner-test.js";
 
 import { ONLINE_ORIGIN } from "./ports.js";
 
@@ -39,19 +39,6 @@ async function openLab(page: Page, mode: string, tier: "入门" | "进阶" | "�
   await expect(activity(page)).toBeVisible();
 }
 
-/** Every one of these must be on the screen, and inside the page's own width. */
-async function allVisibleAndInside(page: Page, rows: Locator, what: string, expected: number) {
-  await expect(rows, `${what}: 屏幕上的数量对不上载荷`).toHaveCount(expected);
-  for (let index = 0; index < expected; index += 1) {
-    const row = rows.nth(index);
-    await expect(row, `${what} 第 ${index + 1} 个没显示出来`).toBeVisible();
-    const box = await row.boundingBox();
-    expect(box, `${what} 第 ${index + 1} 个没有尺寸`).not.toBeNull();
-    expect(box!.width, `${what} 第 ${index + 1} 个宽度为 0`).toBeGreaterThan(0);
-    expect(box!.height, `${what} 第 ${index + 1} 个高度为 0`).toBeGreaterThan(0);
-  }
-}
-
 /** The page itself must never scroll sideways; wide content scrolls in its own box. */
 async function noSidewaysScroll(page: Page) {
   const overflow = await page.evaluate(() => {
@@ -66,174 +53,21 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: resolve(EVIDENCE, `${name}.png`), fullPage: true });
 }
 
-test.describe("对照台：两栏都要在，而且要并排", () => {
-  for (const [tier, cases] of [
-    ["入门", 2],
-    ["进阶", 4],
-    ["挑战", 5],
-  ] as const) {
-    test(`${tier} 档的 ${cases} 个情况全部可见，两种做法都印出来了`, async ({ page }) => {
-      await openLab(page, "对照台", tier);
-
-      await allVisibleAndInside(
-        page,
-        activity(page).locator(".play-contrast__approach"),
-        "做法",
-        2,
-      );
-      await allVisibleAndInside(
-        page,
-        activity(page).locator(".play-contrast__case"),
-        "情况",
-        cases,
-      );
-      await noSidewaysScroll(page);
-
-      // Reveal one, and require both columns — the blank-column defect is the
-      // whole reason `outcomes` coverage is an engine rule.
-      await activity(page).locator(".play-contrast__choice").first().click();
-      await allVisibleAndInside(
-        page,
-        activity(page).locator(".play-contrast__outcome"),
-        "揭示后的两栏结果",
-        2,
-      );
-
-      /*
-        Side by side, not stacked. A comparison read as two paragraphs one after
-        the other is not the thing this game teaches, so the two columns share a
-        row at every width — asserted on real geometry rather than on the CSS
-        that is supposed to produce it.
-      */
-      // Both columns in one frame: the row seats with a 240 ms transform, and two
-      // separate reads under load landed on different frames of it.
-      const [left, right] = await activity(page)
-        .locator(".play-contrast__outcome")
-        .evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().y));
-      expect(left!, "两栏结果被折成上下排了").toBeCloseTo(right!, 0);
-    });
-  }
-
-  test("手机上两栏仍然并排，情况一个不少", async ({ page }) => {
-    await page.setViewportSize(PHONE);
-    await openLab(page, "对照台", "挑战");
-
-    await allVisibleAndInside(page, activity(page).locator(".play-contrast__case"), "情况", 5);
-    await activity(page).locator(".play-contrast__choice").first().click();
-    await allVisibleAndInside(
-      page,
-      activity(page).locator(".play-contrast__outcome"),
-      "手机上的两栏结果",
-      2,
-    );
-    await noSidewaysScroll(page);
-    await shot(page, "contrast-phone-challenge");
-  });
-});
-
-test.describe("取舍台：选项常驻，情况一个一个来", () => {
-  for (const [tier, options, situations] of [
-    ["入门", 2, 2],
-    ["进阶", 2, 4],
-    ["挑战", 3, 6],
-  ] as const) {
-    test(`${tier} 档印出 ${options} 个选项，并数得清共 ${situations} 种情况`, async ({ page }) => {
-      await openLab(page, "取舍台", tier);
-
-      await allVisibleAndInside(
-        page,
-        activity(page).locator(".play-weigh__choice"),
-        "可点的选项按钮",
-        options,
-      );
-
-      /*
-        The counter is the only place the reader can see how much is left, and
-        it is exactly the thing that lied in the defect this file is named for:
-        a board saying 「已接 2 条」 while needing three.
-      */
-      await expect(activity(page).locator(".play-weigh__progress")).toContainText(
-        `共 ${situations} 种`,
-      );
-      await noSidewaysScroll(page);
-    });
-  }
-
-  test("挑战档走到底：每一步都说得出另外两个选择各自的代价", async ({ page }) => {
-    await openLab(page, "取舍台", "挑战");
-    const board = activity(page);
-
-    for (let step = 0; step < 6; step += 1) {
-      await expect(board.locator(".play-weigh__progress")).toContainText(`第 ${step + 1} 种`);
-      const buttons = board.locator(".play-weigh__choice");
-      // Try each option until one is accepted; a miss must not consume a turn.
-      for (let pick = 0; pick < 3; pick += 1) {
-        await buttons.nth(pick).click();
-        if ((await board.locator(".play-weigh__settled-row").count()) > step) break;
-      }
-      /*
-        Three options mean two losing choices, so a settled row owes the reader
-        two priced lines. One line was the original shape of this field and it
-        could not say which choice it was pricing.
-      */
-      await expect(
-        board.locator(".play-weigh__settled-row").nth(step).locator(".play-weigh__cost"),
-      ).toHaveCount(2);
-    }
-
-    await expect(board.locator(".play-weigh__flip")).toBeVisible();
-    // Every option won something — that is the board's own claim, printed back.
-    await allVisibleAndInside(page, board.locator(".play-weigh__done li"), "结尾的翻面清单", 3);
-    await expect(board.locator('[data-result="completed"]')).toBeVisible();
-    await noSidewaysScroll(page);
-    await shot(page, "weigh-challenge-complete");
-  });
-
-  test("手机上三个选项都够得着", async ({ page }) => {
-    await page.setViewportSize(PHONE);
-    await openLab(page, "取舍台", "挑战");
-
-    await allVisibleAndInside(
-      page,
-      activity(page).locator(".play-weigh__choice"),
-      "手机上的选项按钮",
-      3,
-    );
-    // A control smaller than this is one a thumb misses.
-    for (const button of await activity(page).locator(".play-weigh__choice").all()) {
-      const box = await button.boundingBox();
-      expect(box!.height, "选项按钮在手机上矮于 44px").toBeGreaterThanOrEqual(44);
-    }
-    await noSidewaysScroll(page);
-    await shot(page, "weigh-phone-challenge");
-  });
-});
-
-/*
-  The shelf itself. This page exists to say 「every game is here, pick one」, so
-  a game that is on the shelf but off the screen is the page failing at its only
-  job — and it fails silently, because the other seven render.
-
-  It happened as soon as the shelf reached eight: the row was a horizontal
-  scroller sized for five, and the last two sat past the right edge with no
-  scrollbar and nothing to suggest they existed. Counting buttons would not have
-  caught it; they were all in the DOM.
-*/
 test.describe("试玩页的玩法入口，一个都不能藏", () => {
   for (const [name, size] of [
     ["桌面", { width: 1280, height: 720 }],
     ["窄桌面", { width: 900, height: 720 }],
     ["手机", PHONE],
   ] as const) {
-    test(`${name}：八种玩法全部在屏幕里，不靠横向滚动`, async ({ page }) => {
+    test(`${name}：三种保留玩法全部在屏幕里，不靠横向滚动`, async ({ page }) => {
       await page.setViewportSize(size);
       await page.goto(`${ONLINE_ORIGIN}/play-lab`, { waitUntil: "domcontentloaded" });
       const shelf = page.getByRole("navigation", { name: "挑一种互动课件" });
       const buttons = shelf.getByRole("button");
-      await expect(buttons).toHaveCount(8);
+      await expect(buttons).toHaveCount(3);
 
       const shelfBox = (await shelf.boundingBox())!;
-      for (let index = 0; index < 8; index += 1) {
+      for (let index = 0; index < 3; index += 1) {
         const button = buttons.nth(index);
         await expect(button, `第 ${index + 1} 个玩法入口没显示`).toBeVisible();
         const box = (await button.boundingBox())!;
@@ -243,7 +77,6 @@ test.describe("试玩页的玩法入口，一个都不能藏", () => {
         ).toBeLessThanOrEqual(shelfBox.x + shelfBox.width + 1);
       }
 
-      // And the row itself must not be hiding anything behind a scroll.
       const hidden = await shelf.evaluate((node) => node.scrollWidth - node.clientWidth);
       expect(hidden, "玩法入口那一行还在横向滚动，说明有入口被藏起来了").toBeLessThanOrEqual(1);
       await noSidewaysScroll(page);
@@ -253,31 +86,12 @@ test.describe("试玩页的玩法入口，一个都不能藏", () => {
 });
 
 /*
-  The same question asked of the whole shelf, without needing each payload's
-  numbers: every control a board puts on the screen must be visible, have a
-  real size, be the thing under its own centre point, and — on a phone — be big
-  enough for a thumb.
-
-  The centre-point check is the one worth explaining, because it is easy to get
-  backwards. `document.elementFromPoint` at a button's middle normally returns
-  that button's own `<span>`, which is a descendant and perfectly correct. A
-  sweep that forgets to allow for that reports every labelled button in the
-  product as covered — 44 findings, none real, which is exactly what a first
-  pass at this produced. What it must compare is whether the hit is inside the
-  control's own subtree; only when it is not is something genuinely sitting on
-  top. Elements outside the viewport are skipped rather than guessed at, since
-  `elementFromPoint` means nothing for a point that is not on the screen.
+  The same question asked of the retained shelf, without needing each
+  payload's numbers: every control a board puts on the screen must be visible,
+  have a real size, be the thing under its own centre point, and — on a phone —
+  be big enough for a thumb.
 */
-const FOUNDATION = [
-  "接线台",
-  "归类台",
-  "对照台",
-  "取舍台",
-  "调参实验室",
-  "反例猎手",
-  "请求调度台",
-  "指令画布",
-] as const;
+const FOUNDATION = ["接线台", "归类台", "调参实验室"] as const;
 
 interface Reachability {
   readonly zeroSized: readonly string[];
@@ -344,7 +158,7 @@ for (const [where, phone] of [
   ["桌面", false],
   ["手机", true],
 ] as const) {
-  test.describe(`${where}：八种玩法的每个控件都够得着`, () => {
+  test.describe(`${where}：保留玩法的每个控件都够得着`, () => {
     for (const mode of FOUNDATION) {
       for (const tier of ["入门", "进阶", "挑战"] as const) {
         test(`${mode} · ${tier}`, async ({ page }) => {
@@ -357,9 +171,9 @@ for (const [where, phone] of [
           expect(found.overflowing, `${mode}/${tier}：这些控件伸到了活动区右边外面`).toEqual([]);
           /*
             DESIGN.md asks for 44px on a phone and nothing was holding it: the
-            shell's own controls measured 36 to 40 across all eight games, and
-            dispatch had two at 22. One rule in the shell fixed all of them at
-            once, so this can be an assertion rather than a printed number.
+            shell controls are all measured here rather than trusting one
+            representative activity, so a regression in any retained mode is
+            visible in the same report.
           */
           if (phone) {
             expect(found.tooSmall, `${mode}/${tier}：手机上这些控件矮于 44px`).toEqual([]);

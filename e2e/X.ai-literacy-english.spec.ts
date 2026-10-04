@@ -46,9 +46,11 @@ for (const [mode, origin] of [
             const title = lesson.locales?.en?.title;
             expect(title, `${lesson.id}: English content is required`).toBeTruthy();
             await expect(reader).toContainText(title!);
-            await expect(
-              reader.locator(".learning-activity, .interaction-path, .primm, .primm-steps").first(),
-            ).toBeVisible();
+            if (shipped.packageLesson.activities?.length) {
+              await expect(
+                reader.locator(".learning-activity, .primm, .primm-steps").first(),
+              ).toBeVisible();
+            }
             // A PRIMM lesson runs its own step reader and has no shared exercise
             // panel; its flow is primm.spec.ts's job. What this audit owes every
             // lesson, whichever reader draws it, is that the English a learner

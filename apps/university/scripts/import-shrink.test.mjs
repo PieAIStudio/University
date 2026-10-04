@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { assertNoUnexplainedShrink } from "./import-shrink.mjs";
-import { primmFixture } from "../../../packages/core/dist/learning-play/fixtures/primm.js";
+import { primmStepsFixture } from "../../../packages/core/dist/learning-play/fixtures/primm-steps.js";
 
 const evidence = [{ sourceUrl: "https://www.nasa.gov/example", kind: "fact" }];
 function packageOf() {
@@ -58,11 +58,14 @@ describe("the importer preserves evidence while accepting shorter real revisions
         { id: "a", text: "A" },
         { id: "b", text: "B" },
       ];
-      const activity = structuredClone(primmFixture);
+      const activity = structuredClone(primmStepsFixture);
       activity.make.exerciseId = "exercise";
       next.activities = [activity];
       next.content = `# A useful task\n\n::play{#${activity.id}}`;
-      next.evidence = [...evidence, { sourceUrl: activity.source.url, kind: "fact" }];
+      next.evidence = [
+        ...evidence,
+        ...activity.sources.map(({ reference }) => ({ sourceUrl: reference.url, kind: "fact" })),
+      ];
       next.exercises = [
         {
           id: "exercise",
@@ -72,6 +75,8 @@ describe("the importer preserves evidence while accepting shorter real revisions
         },
       ];
       next.assets.push({ metadata: { id: "audio" }, dataBase64: "new-audio" });
+      for (const id of ["everyday-coffee", "everyday-cat"])
+        next.assets.push({ metadata: { id, mime: "image/png" }, dataBase64: `new-${id}` });
       change(old, next);
     });
   }

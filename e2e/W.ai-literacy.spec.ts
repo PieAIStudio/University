@@ -167,12 +167,9 @@ for (const locale of ["en", "zh-CN"] as const) {
             page.getByRole("region", { name: "Next lesson", exact: true }),
           ).not.toContainText(/[\u4e00-\u9fff]/);
         }
-        await expect(
-          reader.locator(".learning-activity, .interaction-path, .primm, .primm-steps").first(),
-        ).toBeVisible();
-        const review = reader.locator(".interaction-path__review > summary");
-        if (await review.count())
-          await humanClick(page, review, "open the interaction lesson's full source explanation");
+        if (lesson.activities?.length) {
+          await expect(reader.locator(".learning-activity").first()).toBeVisible();
+        }
         const disclosure = reader.locator(".lesson-sources__details summary").first();
         await humanClick(page, disclosure, "source support and limitations");
         await expect(reader.locator(".lesson-sources__provenance").first()).toBeVisible();
@@ -184,7 +181,9 @@ for (const locale of ["en", "zh-CN"] as const) {
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
         ).toBe(true);
-        const images = reader.locator(".lesson-media--figure img, .interaction-path__image img");
+        const images = reader.locator(
+          ".lesson-media--figure img, .primm-steps__point img, figure img",
+        );
         if (lesson.assets.length > 0) expect(await images.count()).toBeGreaterThan(0);
         for (const image of await images.all()) {
           await scrollIntoView(image);
@@ -239,65 +238,50 @@ for (const locale of ["en", "zh-CN"] as const) {
 test("W3 real source media stays readable in night mode and the contrast guard rejects a regression", async ({
   page,
 }, info) => {
-  // The retained source photo and its credit live in the interaction-path
-  // lesson, which is what the media locator and the NASA caption below are
-  // written against. Find it by its activity: it used to be this course's first
-  // lesson, and a PRIMM lesson with its own material has since taken that slot.
   const target = literacy.courses
     .flatMap((course) =>
-      course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ course, unit, lesson }))),
+      course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ course, lesson }))),
     )
-    .find(({ lesson }) =>
-      (lesson.packageLesson.activities as { kind: string }[] | undefined)?.some(
-        (activity) => activity.kind === "interaction-path",
-      ),
+    .find(
+      ({ lesson }) =>
+        !lesson.packageLesson.activities?.some((activity) => activity.kind === "primm") &&
+        lesson.packageLesson.assets.length > 0 &&
+        lesson.packageLesson.content.includes(":::figure") &&
+        lesson.packageLesson.content.includes("NASA"),
     );
-  expect(target, "the retained interaction-path lesson is gone").toBeTruthy();
+  expect(target, "没有带真实图片素材的普通课").toBeTruthy();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto(`${ONLINE}${lessonPathOf(target!.course, target!.lesson)}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
-  // Theme arrives before the async lesson. Do not test for an optional review
-  // control until the reader has actually mounted, or its collapsed image is
-  // mistaken for missing media.
   await expect(page.locator(".lesson-reader")).toBeVisible();
-  const review = page.locator(".interaction-path__review > summary");
-  if (await review.count())
-    await humanClick(page, review, "open the retained source image and caption");
-  // V2 puts the original photo and its credit in the task, not in hidden prose.
-  const media = page.locator(".interaction-path__image:has(figcaption), .lesson-media").first();
+  const media = page.locator(".lesson-media").first();
   await expect(media).toBeVisible();
-  await scrollIntoView(media);
+  const image = media.locator("img").first();
+  await scrollIntoView(image);
   await expect
     .poll(() =>
-      media
-        .locator("img")
-        .evaluate(
-          (image) =>
-            (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0,
-        ),
+      image.evaluate(
+        (node) =>
+          (node as HTMLImageElement).complete && (node as HTMLImageElement).naturalWidth > 0,
+      ),
     )
     .toBe(true);
   const caption = media.locator("figcaption");
+  await expect(caption).toBeVisible();
   await scrollIntoView(caption);
-  const originalColors = await media.evaluate((element) => ({
-    background: getComputedStyle(element.querySelector("figcaption")!).backgroundColor,
-    color: getComputedStyle(element.querySelector("figcaption")!).color,
-  }));
   await expect(media).toContainText("NASA");
+  const originalColors = await caption.evaluate((element) => ({
+    background: getComputedStyle(element).backgroundColor,
+    color: getComputedStyle(element).color,
+  }));
   const scan = () =>
-    new AxeBuilder({ page })
-      .include(".interaction-path__image:has(figcaption), .lesson-media")
-      .withTags(["wcag2a", "wcag2aa"])
-      .analyze();
+    new AxeBuilder({ page }).include(".lesson-media").withTags(["wcag2a", "wcag2aa"]).analyze();
   expect((await scan()).violations).toEqual([]);
-  // Reproduce the measured unreadable caption pair in this isolated test page.
-  // This is an assertion attack, not a screenshot claimed to be an old release.
   const fault = await page.addStyleTag({
     content:
-      ".lesson-media, .lesson-media figcaption, .interaction-path__image figcaption { background: #746d64 !important; } .lesson-media figcaption, .lesson-media__caption, .interaction-path__image figcaption { color: #786250 !important; }",
+      ".lesson-media figcaption { background: #746d64 !important; color: #786250 !important; }",
   });
-  await scrollIntoView(caption);
   await expect(caption).toHaveCSS("color", "rgb(120, 98, 80)");
   await expect(caption).toHaveCSS("background-color", "rgb(116, 109, 100)");
   const attacked = await scan();

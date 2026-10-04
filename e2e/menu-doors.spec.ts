@@ -114,13 +114,13 @@ for (const [mode, origin] of [
         await expect(page).toHaveURL(new RegExp(`/library/${tab}(?:\\?|$)`));
         await expect(page.locator(ready)).toBeVisible();
       }
-      await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(25);
+      await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(12);
       await expect(
         page.locator('.play-catalog a[href^="/play-lab"], .play-catalog__rationale'),
       ).toHaveCount(0);
       await expect(page.locator(".play-catalog")).not.toContainText("native:connect");
-      await page.locator('[data-entry-id="native:ai-brief"]').click();
-      await expect(page.locator(".learning-activity")).toHaveAttribute("data-activity", "ai-brief");
+      await page.locator('[data-entry-id="native:sort"]').click();
+      await expect(page.locator(".learning-activity")).toHaveAttribute("data-activity", "sort");
       await capture(page, `${mode}-${width}-courseware`);
 
       await (await primary(page, width)).locator('a[href="/me"]').click();
@@ -152,15 +152,13 @@ for (const [mode, origin] of [
       await expect(goal).toHaveAttribute("data-daily-goal", "2");
       if (mode === "authoring") {
         await page.locator("[data-settings-lab] > summary").click();
-        await expect(page.locator("[data-settings-lab] a")).toHaveCount(8);
+        await expect(page.locator("[data-settings-lab] a")).toHaveCount(6);
         await expect(page.locator('[data-settings-lab] a[href="/studio/map"]')).toBeVisible();
         if (width >= 768) {
           // These are existing author tools, reached through their new home.
           for (const [path, ready] of [
             ["/avatar-lab", ".avatar-lab"],
             ["/play-lab", ".learning-play-lab"],
-            ["/play-lab/ai", ".learning-play-lab"],
-            ["/play-lab/primm", ".learning-play-lab"],
             ["/play-lab/toy-3d", ".arcade3d__standalone"],
             ["/play-lab/prop-finish", '[data-testid="prop-finish"]'],
             ["/studio/map", "[data-map-studio]"],
@@ -174,7 +172,7 @@ for (const [mode, origin] of [
             await expect(page.locator(ready)).toBeVisible();
             if (path === "/play-lab") {
               await page.locator('a[href="/play-lab/catalog"]').click();
-              await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(25);
+              await expect(page.locator(".play-catalog [data-entry-id]")).toHaveCount(12);
               await page.goBack();
             }
             await page.goBack();

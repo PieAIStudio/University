@@ -6,17 +6,19 @@ Playwright projects both restore it through `e2e/prepare-catalogue.mjs`.
 
 ## What is frozen and why
 
-Five courses retain 89 lessons and all original assertions. Existing IDs keep
+Five courses retain 89 lessons and the bilingual, source, route and native-workflow assertions.
+Task 17 R3 removed retired action payloads and their exclusive browser cases on
+2026-10-05; lesson IDs, text outside those markers, assets and source evidence remain. Existing IDs keep
 route, terrain-seed and historical case identities stable; course descriptions
 carry `UNIVERSITY_E2E_FROZEN_CATALOGUE` as an explicit non-release marker.
 
-| Course                       | Required coverage                                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `understanding-ai`           | Longest course, PRIMM, interaction-path, bilingual reader and all 36-lesson X audit cases.                         |
-| `ai-for-real-life`           | Alternate course in the same study, bilingual connect, classic/media and all 30-lesson X audit cases.              |
-| `run-a-real-project-with-ai` | Settlement/default entry (1/8), second study, baked repository evidence, complete-lesson, ai-context and dispatch. |
-| `make-the-cutout-app-yours`  | Prerequisite chain, ai-agent, ai-eval and ai-repair.                                                               |
-| `search-your-own-photos`     | Exactly-five-lesson unit used by skip tests/weekly boss, its prerequisites, tune interaction.                      |
+| Course                       | Required coverage                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `understanding-ai`           | Longest course, V3 PRIMM, native sort/connect, bilingual reader and all 36-lesson X audit cases.      |
+| `ai-for-real-life`           | Alternate course in the same study, bilingual connect, classic/media and all 30-lesson X audit cases. |
+| `run-a-real-project-with-ai` | Settlement/default entry (1/8), second study, baked repository evidence and complete-lesson.          |
+| `make-the-cutout-app-yours`  | Prerequisite chain and repository-source reader.                                                      |
+| `search-your-own-photos`     | Exactly-five-lesson unit used by skip tests/weekly boss, its prerequisites, tune interaction.         |
 
 Dropping either AI course loses asserted bilingual/course coverage. The five-question
 course requires both predecessor courses. The sixth former course adds none of
@@ -24,8 +26,8 @@ these roles or activity kinds and is not copied. No screenshots, learner stores,
 accumulated recovery history, or uncited source project files are retained.
 
 `manifest.json` records the originating University commit, each original and frozen
-package hash, and compressed artifact size/hash. The initial three gzip inputs
-occupy 2,881,582 bytes; decompressed recovery JSON is generated only in scratch.
+package hash, and compressed artifact size/hash. The original capture occupied 2,881,582 bytes; current artifact sizes are in
+`manifest.json`; decompressed recovery JSON is generated only in scratch.
 Assets remain in the two bilingual courses exercised lesson-by-lesson by X,
 including source/media rendering checks. The minimal source archive contains six
 cited source files plus their LICENSE (23,613 JSON bytes; 8,492 compressed bytes),

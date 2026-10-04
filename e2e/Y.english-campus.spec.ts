@@ -32,8 +32,7 @@ const hasReadingTools = (lesson: typeof firstLesson) =>
 const toolLesson = firstUnit.lessons.find(hasReadingTools);
 const ordinaryToolLesson = firstUnit.lessons.find(
   (lesson) =>
-    hasReadingTools(lesson) &&
-    !activitiesOf(lesson).some((activity) => activity.kind === "interaction-path"),
+    hasReadingTools(lesson) && !activitiesOf(lesson).some((activity) => activity.kind === "primm"),
 );
 
 async function expectEnglish(scope: Locator) {
@@ -48,13 +47,9 @@ async function expectEnglish(scope: Locator) {
 async function expectToolbarTargets(page: Page) {
   const toolbar = page.locator(".lesson-toolbar__tools");
   await expect(toolbar).toBeVisible();
-  // In interaction lessons V5 moves reading controls into the full explanation;
-  // the sound control remains in the toolbar. Check all the real controls,
-  // not a relaxed target count or a duplicated interaction-only toolbar.
+  // The shared reader toolbar owns the reading controls for all ordinary lessons.
   const geometry = await page
-    .locator(
-      ".lesson-toolbar__tools button, .lesson-toolbar__tools label.game-ui-toggle, .interaction-path__reading-tools button, .interaction-path__reading-tools label.game-ui-toggle",
-    )
+    .locator(".lesson-toolbar__tools button, .lesson-toolbar__tools label.game-ui-toggle")
     .evaluateAll((nodes) =>
       nodes
         .map((node) => {
@@ -144,19 +139,7 @@ for (const [mode, origin] of [
         const selected = lesson!;
         await page.goto(`${origin}${lessonPathOf(course, selected)}?lang=en`);
         await expect(page.locator(".lesson-reader")).toContainText(englishTitleOf(selected)!);
-        const review = page.locator(".interaction-path__review");
-        const interaction = (await review.count()) > 0;
-        if (interaction) {
-          await humanClick(
-            page,
-            review.locator(":scope > summary"),
-            "open the retained full explanation",
-          );
-          await expect(review).toHaveAttribute("open", "");
-        }
-        const tools = page.locator(
-          interaction ? ".interaction-path__reading-tools" : ".lesson-toolbar__tools",
-        );
+        const tools = page.locator(".lesson-toolbar__tools");
         for (const width of [1440, 390, 320]) {
           await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
           await page.evaluate(() => document.fonts.ready);

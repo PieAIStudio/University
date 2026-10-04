@@ -44,11 +44,7 @@ export function checkLessonSpine(
   variant,
   { allowLegacyGuessLine = false, interactionLesson } = {},
 ) {
-  if (
-    interactionLesson?.activities?.some(
-      (activity) => activity.kind === "interaction-path" || activity.kind === "primm",
-    )
-  ) {
+  if (interactionLesson?.activities?.some((activity) => activity.kind === "primm")) {
     const issues = interactionLessonIssues({ ...interactionLesson, content });
     if (!Object.hasOwn(LESSON_VARIANTS, variant ?? ""))
       issues.push("Interaction lesson still needs one of the five content-led variants");

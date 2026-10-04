@@ -14,19 +14,8 @@ export function PlayIcon({
     // Two trays and a thing on its way into one of them.
     sort: "M3 14h7v6H3zM14 14h7v6h-7zM10 6h4v4h-4zM12 10v3m0 0-2-2m2 2 2-2",
     // Two columns fed the same thing: one line splits, the other lands together.
-    contrast: "M4 4h7v16H4zM13 4h7v16h-7zM6 9h3M15 9h3M6 15h3M15 15h3M11 12h2",
     // A balance whose two pans are not level, and a pivot that can move.
-    weigh: "M12 4v16M5 20h14M4 8h16M6 8l-3 5a3 3 0 0 0 6 0zM18 8l-3 5a3 3 0 0 0 6 0z",
     tune: "M5 3v6m0 4v8M12 3v11m0 4v3M19 3v3m0 4v11M2 9h6v4H2zM9 14h6v4H9zM16 6h6v4h-6z",
-    hunt: "M15 15l6 6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0M7 10h6M10 7v6",
-    dispatch: "M3 12h6m0 0 4-7h8M9 12h12M9 12l4 7h8M18 2l3 3-3 3M18 9l3 3-3 3M18 16l3 3-3 3",
-    program: "M5 5h9a4 4 0 0 1 0 8H6a4 4 0 0 0 0 8h13M16 18l3 3-3 3M2 2h6v6H2z",
-    "ai-brief": "M4 3h16v18H4zM8 7h8M8 11h5M8 15h3M14 15l2 2 4-5",
-    "ai-context": "M3 7h7l2 2h9v12H3zM6 3h11v6M6 13h12M6 17h8",
-    "ai-agent": "M8 5h8v4H8zM5 12h14v8H5zM12 9v3M8 16h1M15 16h1M2 14v4M22 14v4",
-    "ai-eval": "M4 3h16v18H4zM8 7h1M12 7h5M8 12h1M12 12h5M8 17l2 2 4-5",
-    "ai-repair": "M4 9a8 8 0 1 1-1 7M4 3v6h6M12 7v5l4 2",
-    "interaction-path": "M4 5h4v4H4zM16 15h4v4h-4zM8 7h8v6M16 11l2 2 2-2",
     primm: "M4 5h4v4H4zM16 15h4v4h-4zM8 7h8v6M16 11l2 2 2-2",
     check: "M5 12l4 4L19 6",
     arrow: "M4 12h16m-6-6 6 6-6 6",

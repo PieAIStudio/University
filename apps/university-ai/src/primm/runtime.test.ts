@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
-import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
 import { primmStepsFixture } from "../../../../packages/core/src/learning-play/fixtures/primm-steps.js";
 import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
 import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
@@ -24,13 +23,21 @@ const input = (phase: "run" | "modify" | "make" = "run") => ({
   lessonRef: ref,
   contentRevision: 7,
   phase,
-  prompt: primmFixture.starter.prompt,
+  prompt: primmStepsFixture.starter.prompt,
   commandId: randomUUID(),
   locale: "zh-CN" as const,
 });
 function setup(
   options: { quota?: number; timeoutMs?: number; transport?: ChatCompletionTransport } = {},
 ) {
+  const payloadOf = (request: Parameters<ChatCompletionTransport["complete"]>[0]) => {
+    const content = request.messages.at(-1)!.content;
+    const text =
+      typeof content === "string"
+        ? content
+        : (content.find((part) => part.type === "text")?.text ?? "{}");
+    return JSON.parse(text);
+  };
   const complete = vi.fn(async (request: Parameters<ChatCompletionTransport["complete"]>[0]) => ({
     content: request.responseFormat
       ? JSON.stringify({
@@ -39,7 +46,7 @@ function setup(
           extensions: [],
           evidence: {
             from: "finalWork",
-            quote: JSON.parse(request.messages.at(-1)!.content as string).finalWork.slice(0, 40),
+            quote: payloadOf(request).finalWork.slice(0, 40),
           },
           facts: [
             {
@@ -47,10 +54,7 @@ function setup(
               requirement: "当前作品",
               evidence: {
                 from: "finalWork",
-                quote: JSON.parse(request.messages.at(-1)!.content as string).finalWork.slice(
-                  0,
-                  40,
-                ),
+                quote: payloadOf(request).finalWork.slice(0, 40),
               },
             },
           ],
@@ -59,11 +63,15 @@ function setup(
     raw: {},
   }));
   const lesson: CanonicalPrimm = {
-    activity: structuredClone(primmFixture),
+    activity: structuredClone(primmStepsFixture),
     contentRevision: 7,
     exerciseRevision: 2,
-    exercise: { id: primmFixture.make.exerciseId, prompt: "独立完成", rubric: ["完成当前用途"] },
-    assets: [],
+    exercise: {
+      id: primmStepsFixture.make.exerciseId,
+      prompt: "独立完成",
+      rubric: ["完成当前用途"],
+    },
+    assets: [{ id: "everyday-coffee", mime: "image/png", bytes: Buffer.from("test") }],
     fingerprint: "current",
   };
   const runtime = createPrimmRuntime({
@@ -279,7 +287,7 @@ describe("bounded PRIMM runtime", () => {
     await runtime.grade({
       locator: ref,
       contentRevision: 2,
-      exerciseId: primmFixture.make.exerciseId,
+      exerciseId: primmStepsFixture.make.exerciseId,
       commandId: randomUUID(),
       answer: JSON.stringify({
         kind: "primm-make",
@@ -393,7 +401,7 @@ describe("bounded PRIMM runtime", () => {
     const grade = {
       locator: ref,
       contentRevision: 2,
-      exerciseId: primmFixture.make.exerciseId,
+      exerciseId: primmStepsFixture.make.exerciseId,
       commandId: randomUUID(),
       answer: JSON.stringify({
         kind: "primm-make",
@@ -404,11 +412,15 @@ describe("bounded PRIMM runtime", () => {
     };
     const decision = await runtime.grade(grade);
     expect(decision.hostGrade?.outcome).toBe("pass");
-    expect(complete.mock.calls.at(-1)![0].messages.at(-1)!.content).toContain(
+    expect(JSON.stringify(complete.mock.calls.at(-1)![0].messages.at(-1)!.content)).toContain(
       "The learner repaired",
     );
-    expect(complete.mock.calls.at(-1)![0].messages.at(-1)!.content).not.toContain("actualResult");
-    expect(complete.mock.calls.at(-1)![0].messages.at(-1)!.content).not.toContain(result.text);
+    expect(JSON.stringify(complete.mock.calls.at(-1)![0].messages.at(-1)!.content)).not.toContain(
+      "actualResult",
+    );
+    expect(JSON.stringify(complete.mock.calls.at(-1)![0].messages.at(-1)!.content)).not.toContain(
+      result.text,
+    );
     await expect(
       runtime.grade({ ...grade, commandId: randomUUID(), contentRevision: 7 }),
     ).rejects.toThrow();
@@ -452,7 +464,7 @@ describe("bounded PRIMM runtime", () => {
       runtime.grade({
         locator: ref,
         contentRevision: 2,
-        exerciseId: primmFixture.make.exerciseId,
+        exerciseId: primmStepsFixture.make.exerciseId,
         commandId: randomUUID(),
         answer: JSON.stringify({
           kind: "primm-make",
@@ -487,7 +499,7 @@ describe("bounded PRIMM runtime", () => {
       runtime.grade({
         locator: ref,
         contentRevision: 2,
-        exerciseId: primmFixture.make.exerciseId,
+        exerciseId: primmStepsFixture.make.exerciseId,
         commandId: randomUUID(),
         answer: JSON.stringify({
           kind: "primm-make",
