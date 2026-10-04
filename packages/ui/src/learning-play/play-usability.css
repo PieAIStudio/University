@@ -190,6 +190,40 @@
 .learning-activity {
   gap: 6px;
 }
+
+/*
+  The retained games share this shell. Keep the phone hit-area contract here
+  so removing a retired game cannot accidentally remove the rule that protects
+  connect, sort and tune. The slider has its own native hit-area styling.
+*/
+@media (max-width: 600px) {
+  .learning-activity button,
+  .learning-activity summary,
+  .learning-activity [role="button"] {
+    min-height: 44px;
+  }
+}
+
+/* Guided tune puts the first real action before the decorative readout. */
+.learning-activity[data-guided="true"] .play-tune__bench {
+  display: flex;
+  flex-direction: column;
+}
+.learning-activity[data-guided="true"] .play-tune__controls {
+  order: -1;
+}
+
+@container (max-width: 600px) {
+  .play-guide {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .play-guide > button {
+    justify-self: start;
+  }
+}
+
 .learning-play-lab > .learning-play-lab__intro {
   margin-block-start: 28px;
 }

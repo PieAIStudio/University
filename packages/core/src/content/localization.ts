@@ -51,6 +51,23 @@ function localize(value: unknown, locale: string): unknown {
   const result = { ...value };
   const variants = isRecord(value.locales) ? value.locales : {};
   const candidate = variants[locale] ?? variants[locale.split("-")[0]!];
+  /*
+    A source explanation is claim-specific content. When an English variant
+    is missing or only contains a locator, falling back to the Chinese claim
+    would put untranslated learner copy in an English reader. Keep the source
+    link and identity, but omit the explanation until it has a real translation.
+  */
+  if (
+    "supports" in value &&
+    "limitations" in value &&
+    "accessedOn" in value &&
+    locale.split("-")[0] === "en" &&
+    (!isRecord(candidate) ||
+      typeof candidate.supports !== "string" ||
+      typeof candidate.limitations !== "string")
+  ) {
+    return undefined;
+  }
   if (isRecord(candidate)) {
     for (const [key, translated] of Object.entries(candidate)) {
       if (COPY.has(key) && translated !== undefined) result[key] = translated;

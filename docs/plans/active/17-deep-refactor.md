@@ -412,8 +412,10 @@ HTTP grading, old-revision rejection, recovery and idempotence. Source/asset/
 Make and display-only localization properties were moved to a V3 fixture;
 existing V3 step tests remain. Native first-control, help/difficulty, playlist,
 all-tier phone/desktop and bilingual/source/overflow assertions are retained.
-All departed test titles, replacement titles and counts are listed in the
-stage commit body, not hidden by the lower browser count.
+ The original stage commit points to the machine-readable delta inventories
+ rather than embedding every test title; the complete removed-title lists and
+ counts are in `.scratch/task17/r3-{core,ui,e2e}-test-delta.json` and are copied
+ into the overnight report.
 
 A necessary projection change is explicit: island choice and moles rounds now
 consume V3 `choose` actions only when an author supplied a correct `answerId`
@@ -422,18 +424,49 @@ image `point` regions never manufacture an answer. The existing 20-column
 option-width guard remains. This adapts the retained games after their old
 source payloads retire; it does not edit or infer lesson content.
 
-Measured before the complete browser gate: app files remain 72 and App remains
-1,374 lines (fresh `wc -l`; the R2 handoff reported 1,369). Removing retired PRIMM parsing reduces core schemas and removing
-the classic renderer reduces PrimmLesson; exact source line measurements and
-export-count formula are retained in `.scratch/task17/r3-measurements.json`.
+Measured after the deletion and the retained-game gate repairs: app files remain
+72 and App remains 1,374 lines (fresh `wc -l`; the R2 handoff reported 1,369).
+Removing retired PRIMM parsing reduces core schemas and removing the classic
+renderer reduces PrimmLesson; exact source line measurements and export-count
+formula are retained in `.scratch/task17/r3-measurements.json`. The follow-up
+repair restored retained-game phone hit-area and guided-tune layout rules and
+added the English provenance omission guard; it did not restore a retired
+engine or change lesson bytes.
 The previous R0 export figure (3,432) lacks a retained command, so its old value
 is preserved as provenance; the new explicit tracked-source formula is applied
 to both the R2 commit and this checkout rather than claiming incomparable
 numbers are a reduction. Tracked docs are 1,260 at the R2 commit and this stage,
 correcting the handoff count with `git ls-tree -r --name-only`.
 
-Gate receipts and the 1280px/390px before/after screen paths are recorded below
-once verified. The full browser inventory is 431 → 338: 94 retired cases,
-25 aggregate-case/fixture renames and one new native-sort regression are
-identified by title in the retained delta and commit body. These counts will
-be corrected against the final inventory before committing.
+The first complete post-R3 push attempt was rejected by 22 deterministic
+failures, reproduced in both isolation runs
+`.scratch/overnight-20261003/task17-r3-push.log` and
+`.scratch/overnight-20261003/task17-r3-isolation-2.log`. They were retained-game
+mobile hit areas/tune layout, W1's legal empty retired-activity payload, W2's
+first lesson without a stable answer, and English provenance falling back to
+untranslated Chinese. A follow-up repair was made instead of weakening
+assertions: the fixed set passed 22/22 in `.scratch/overnight-20261003/task17-r3-fix-focused-2.log`.
+
+Final R3 receipts are:
+
+- `pnpm verify`: green; core 95 files/864 tests, UI 100/633, local 55/518,
+  world remote/performance 5/45 and world 164/1238, app 79/431, backend
+  5/28, AI 6/50, canvas 5 mounts, ledger 68 findings (64 fixed, 4 open),
+  doc-gov 177 docs/322 links/0 warnings, and delivery/authoring builds green.
+  Full output: `.scratch/overnight-20261003/task17-r3-verify-final.log`.
+- `pnpm --filter @pieai/university-local test:primm-pipeline`: 2 files passed,
+  18 tests passed, 14.00s; `.scratch/overnight-20261003/task17-r3-pipeline-final.log`.
+- Native course revise dry-run: `validated`, lesson 8, cards 2/2, exercise 2,
+  `completedComponents []`, `retrySafe true`; receipt
+  `.scratch/overnight-20261003/task17-r3-native-dry-run-final.log`.
+- `pnpm e2e`: **338 passed (20.6m)**;
+  `.scratch/overnight-20261003/task17-r3-e2e-final-manual.log`.
+- `pnpm e2e:timing`: **40 passed (5.7m)**;
+  `.scratch/overnight-20261003/task17-r3-timing-final-manual.log`.
+
+The browser inventory is 431 → 338 listed cases: 94 retired cases, 25
+aggregate-case/fixture replacements or renames, and one new native-sort
+regression; no timing case was removed. Core is 1,138 → 864 tests and UI is
+720 → 633. The exact per-title lists are the retained delta JSON files above.
+The original R3 deletion commit remains separate; the gate repairs will be a
+follow-up commit so the pushed deletion history is not rewritten.

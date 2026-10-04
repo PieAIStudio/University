@@ -11,6 +11,7 @@ import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import {
   assembleLessonIndex,
   backlinksOf,
+  localizeLearnerContent,
   parseLessonLinks,
   resolveEvidenceAnchors,
   resolveLessonLinks,
@@ -130,7 +131,12 @@ export function assembleLessonView(input: {
               sourceUrl: item.sourceUrl,
               sourceTitle: item.sourceTitle,
               sourceAuthority: item.sourceAuthority,
-              ...(item.provenance ? { provenance: item.provenance } : {}),
+              ...(item.provenance
+                ? (() => {
+                    const provenance = localizeLearnerContent(item.provenance, locale);
+                    return provenance ? { provenance } : {};
+                  })()
+                : {}),
               note: item.note ?? null,
             },
       ),

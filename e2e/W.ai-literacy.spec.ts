@@ -35,6 +35,13 @@ interface Course {
   id: string;
   units: Array<{ id: string; lessons: Lesson[] }>;
 }
+
+function hasStableAnswer(lesson: Lesson): boolean {
+  const exercise = lesson.exercises[0];
+  if (!exercise) return false;
+  if (exercise.kind === "choice") return Boolean(exercise.correctOptionId);
+  return Boolean(exercise.expectedAnswer && exercise.locales?.en?.expectedAnswer);
+}
 const literacy = catalogueStudyOf("ai-literacy");
 const RECOVERY = join(E2E_RECOVERY_ROOT, literacy.id);
 const index = JSON.parse(readFileSync(join(RECOVERY, "index.json"), "utf8")) as {
@@ -71,7 +78,18 @@ test("W1 both beginner paths preserve every real-source lesson and both answer k
         const published = publicUnit.lessons.find((item) => item.id === lesson.id)!;
         expect(published.contentRevision).toBe(lesson.contentRevision);
         expect(published.locales?.en?.content).toBeTruthy();
-        expect(published.activities.length).toBeGreaterThan(0);
+        // R3 retires lessons whose only activities were the removed engines.
+        // Their lesson prose/evidence/exercises remain published, while the
+        // activity list is legitimately empty. Retained activities still have
+        // to be one of the V3/native readers.
+        const activities = published.activities ?? [];
+        expect(
+          activities.every((activity) =>
+            ["connect", "sort", "tune", "primm"].includes(
+              (activity as { kind?: string }).kind ?? "",
+            ),
+          ),
+        ).toBe(true);
         expect(published.evidence.length).toBeGreaterThan(0);
         for (const evidence of published.evidence) {
           expect(evidence.sourceUrl).toMatch(/^https:\/\//);
@@ -138,7 +156,7 @@ for (const locale of ["en", "zh-CN"] as const) {
             )
             .map((entry) => ({ unit: item, lesson: entry })),
         );
-        const first = classic[0];
+        const first = classic.find(({ lesson }) => hasStableAnswer(lesson));
         expect(first, `${source.id}: every lesson uses a non-classic reader`).toBeTruthy();
         const unit = first!.unit;
         const lesson = first!.lesson;

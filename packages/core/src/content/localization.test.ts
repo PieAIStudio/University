@@ -73,4 +73,26 @@ describe("one identity, multiple content languages", () => {
     };
     expect(localizeLearnerContent(input, "en").latestSubmission.answer).toBe("我的回答");
   });
+  it("does not leak an untranslated source explanation into English", () => {
+    const input = {
+      evidence: [
+        {
+          sourceUrl: "https://example.test/source",
+          provenance: {
+            type: "public-record",
+            publisher: "Example",
+            accessedOn: "2026-09-15",
+            supports: "中文说明",
+            limitations: "中文局限",
+            locales: { en: { locator: "Opening section" } },
+          },
+        },
+      ],
+    };
+    expect(localizeLearnerContent(input, "en").evidence[0]!.provenance).toBeUndefined();
+    expect(localizeLearnerContent(input, "zh-CN").evidence[0]!.provenance).toMatchObject({
+      supports: "中文说明",
+      limitations: "中文局限",
+    });
+  });
 });
