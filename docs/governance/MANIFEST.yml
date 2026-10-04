@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-04T06:33:31.178Z
+generated_at: 2026-10-04T19:20:52.661Z
 generator_version: doc-gov@0.14.2
 docs_count: 177
 docs:
@@ -137,6 +137,20 @@ docs:
     canonical: false
     last_reviewed: 2026-09-07
     pinned: false
+  - id: REF-FEEDBACK-HANDOFF-PLANET-LESSON-SHELL-20260918
+    path: docs/archive/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/00-AI-HANDOFF.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-18
+    pinned: false
+  - id: REF-FEEDBACK-PLANET-LESSON-SHELL-20260918
+    path: docs/archive/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/feedback.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-18
+    pinned: false
   - id: REF-GRID-ASSET-LIBRARY-2026-09-03
     path: docs/archive/execution/grid-asset-library-2026-09-03.md
     type: archive
@@ -247,7 +261,7 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-10-04
+    last_reviewed: 2026-10-05
     pinned: false
   - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
     path: docs/plans/completed/00-ai-literacy-commercial-release.md
@@ -541,7 +555,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-10-04
+    last_reviewed: 2026-10-05
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -549,20 +563,6 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-27
-    pinned: false
-  - id: REF-FEEDBACK-HANDOFF-PLANET-LESSON-SHELL-20260918
-    path: docs/reference/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/00-AI-HANDOFF.md
-    type: reference
-    status: active
-    canonical: false
-    last_reviewed: 2026-09-18
-    pinned: false
-  - id: REF-FEEDBACK-PLANET-LESSON-SHELL-20260918
-    path: docs/reference/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/feedback.md
-    type: reference
-    status: active
-    canonical: false
-    last_reviewed: 2026-09-18
     pinned: false
   - id: REF-I18N-STRATEGY
     path: docs/reference/execution/i18n-strategy.md
@@ -646,7 +646,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-13
+    last_reviewed: 2026-10-05
     pinned: false
   - id: REF-REVIEW-REMINDERS-BACKEND-GAP
     path: docs/reference/execution/review-reminders-backend-gap.md

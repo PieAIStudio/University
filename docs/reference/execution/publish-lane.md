@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-26
-last_reviewed: 2026-09-13
+last_reviewed: 2026-10-05
 domain: execution
 tags:
   - delivery
@@ -33,7 +33,20 @@ related:
 本报告不实现课程生成、后端课程发布 API、支付或权益。ADR-0002 的实际
 发布目标仍需产品决定，见文末。
 
-## 当前发布边界（2026-09-13）
+## Current configured inputs (2026-10-05)
+
+The course repository is selected by `UNIVERSITY_COURSE_ROOT`; the normal
+checkout used for the delivered mainline is
+`/Users/yuanfei/PieAI/UniversityCourses`, whose latest content commit is
+`90d7c348`. It owns `studies/`, `course-proposals/` and `vocabulary/`.
+`/Users/yuanfei/PieAI/UniversityContent` is another preparation checkout and
+is outside this project. The generated browser directory is selected separately
+by `UNIVERSITY_CONTENT_ROOT` (normally `apps/university/content` or the
+delivery build's isolated output). No historical count below is a current
+catalogue claim; current content counts come from the configured root and the
+build receipt for the exact commit.
+
+## Historical publish boundary (2026-09-13)
 
 发布输入仍只有 `apps/local/course-proposals/recovery/`；`locked/` 中保全的包不进入
 交付，原因和解锁边界见 `UniversityCourses/course-proposals/locked/README.md`。

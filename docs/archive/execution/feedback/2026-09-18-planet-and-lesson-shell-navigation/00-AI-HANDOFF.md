@@ -1,8 +1,8 @@
 ---
 id: REF-FEEDBACK-HANDOFF-PLANET-LESSON-SHELL-20260918
 title: AI Handoff：学习星球与课程地图浏览器反馈
-type: reference
-status: active
+type: archive
+status: archived
 canonical: false
 owner: ai-assisted
 created: 2026-09-18

@@ -1,8 +1,8 @@
 ---
 id: REF-FEEDBACK-PLANET-LESSON-SHELL-20260918
 title: 浏览器反馈：学习星球与课程地图的导航、侧栏和头像状态
-type: reference
-status: active
+type: archive
+status: archived
 canonical: false
 owner: ai-assisted
 created: 2026-09-18

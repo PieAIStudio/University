@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-10-03
-last_reviewed: 2026-10-04
+last_reviewed: 2026-10-05
 domain: execution
 tags:
   - refactor
@@ -470,3 +470,28 @@ regression; no timing case was removed. Core is 1,138 → 864 tests and UI is
 720 → 633. The exact per-title lists are the retained delta JSON files above.
 The original R3 deletion commit remains separate; the gate repairs will be a
 follow-up commit so the pushed deletion history is not rewritten.
+
+## R4 execution record (2026-10-05)
+
+R4 reconciled the current documentation entry points with the shipped runtime
+after R3 and task 14. The active index now points to R4 as the next stage and
+records R3's pushed repair commit. The work queue no longer says R2 is in
+flight. The current publish lane has one explicit configuration note:
+`UNIVERSITY_COURSE_ROOT` selects the dedicated `UniversityCourses` repository,
+while `UNIVERSITY_CONTENT_ROOT` selects generated browser content; the other
+`UniversityContent` checkout is explicitly outside this project. Its older
+inventory and Vercel receipts remain dated historical evidence.
+
+The V7 journey's welcome copy now states the implemented rule: with one path,
+the learner goes straight to it; route cards return when a second path exists.
+The two-path wireframes remain as the future expansion, rather than competing
+with the current runtime. The dated 2026-09-18 browser-feedback packet moved
+from `docs/reference/execution/feedback/` to
+`docs/archive/execution/feedback/`; its original comments and handoff remain
+byte-preserved as archived evidence and no active index points to it.
+
+The R4 documentation inventory is 1,260 tracked `docs/` files at this commit;
+the governed Markdown set is 184 files. No historical plan, screenshot or
+source evidence was deleted. Changes are limited to current routing, the one
+current content-root fact, and the welcome-state wording; runtime code and
+lesson bytes are unchanged.
