@@ -49,6 +49,14 @@ function lexiconPath(): string {
  */
 export function loadLexicon(path = lexiconPath()): ReadonlyMap<string, LexiconEntry> {
   if (cached) return cached;
+  // Course repositories may intentionally omit vocabulary. The importer
+  // treats that as an empty foreign-language layer; the authoring API must
+  // keep the same contract instead of turning an otherwise readable lesson
+  // into a generic ENOENT error.
+  if (!existsSync(path)) {
+    cached = new Map();
+    return cached;
+  }
   const file = LexiconFileSchema.parse(JSON.parse(readFileSync(path, "utf8")) as unknown);
   const map = new Map<string, LexiconEntry>();
   for (const entry of file.entries) {
