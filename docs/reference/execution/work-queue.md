@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: "human"
 created: 2026-09-13
-last_reviewed: 2026-10-03
+last_reviewed: 2026-10-04
 domain: "execution"
 tags:
   - work-queue
@@ -66,14 +66,13 @@ release and the decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1` are publishe
 The App injects UIKit controls and the authentication client; the kits must not
 depend on each other. Earlier coupled candidate tarballs do not release this hold.
 
-Task 14's implementation is recorded in
-`completed/14-content-repository-integration.md` and committed locally, but its
-pre-push browser gate stopped on a repeatable `AA.map-navigation` failure. Do not
-start task 17 until that gate is repaired and a complete push succeeds. Record judgment and deviations
-in the owning task document. At completion or a required stop, write the detailed
-Claude review report at `.scratch/overnight-20261003/REPORT.md`, including commits,
-verbatim gate counts, refactor measurements and deletions, grading evidence,
-incomplete/skipped work and plain-language Owner decisions.
+Task 14's initial pre-push browser stop and its repair are recorded in
+`completed/14-content-repository-integration.md`. The repair must finish with a
+complete push before task 17 starts. Record judgment and deviations in the
+owning task document. At completion or a required stop, write the detailed
+Claude review report at `.scratch/overnight-20261003/REPORT.md`, including
+commits, verbatim gate counts, refactor measurements and deletions, grading
+evidence, incomplete/skipped work and plain-language Owner decisions.
 
 ### How to run it
 

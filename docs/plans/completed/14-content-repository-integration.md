@@ -79,3 +79,39 @@ failure both times (`.scratch/overnight-20261003/task14-e2e-isolated-1.log` and
 not eligible for the queue's low-load retry exception; task 17 was not started.
 
 The historical plan remains a record of the initial repository handoff.
+
+## Repair continuation · 2026-10-04
+
+The stop above was resolved before starting task 17. The original failure was
+not load-related: the E2E course root deliberately had no vocabulary file, but
+the authoring server tried to read `vocabulary/en.json` and translated the
+missing file into the generic course-material error. Commit `4c8a48c4` makes an
+absent vocabulary an empty lexicon, which is the importer contract for a course
+without foreign-language words, and adds a focused regression test.
+
+The complete run then exposed two separate fixture/manifest mismatches. The
+disposable E2E course root did not contain the same vocabulary as delivery, so
+authoring omitted the `外语模式` control; and the generated published manifest
+carried the current date while the tracked fixture expected `2026-10-03`.
+The seed now copies the tracked lexicon into the disposable root, and the
+course import was rebuilt with `UNIVERSITY_IMPORT_DATE=2026-10-03`. The seed
+change is `17b651a3`; it changes no lesson prose or product behavior.
+
+Evidence before the final push:
+
+- `pnpm e2e --grep 'AA authoring/zh-CN'`: `1 passed` twice
+  (`task14-aa-fixed-1.log`, `task14-aa-fixed-2.log`).
+- `pnpm e2e --grep 'G2 两个校园'`: `1 passed` twice
+  (`task14-g2-fixed-1.log`, `task14-g2-fixed-2.log`).
+- `pnpm e2e --grep 'published catalogue'`: `1 passed` twice
+  (`task14-published-fixed-1.log`, `task14-published-fixed-2.log`).
+- The first full post-root-fix run was `429 passed, 2 failed`; both failures
+  were the two fixture mismatches above. The final full run was `431 passed`
+  in `24.6m` (`task14-e2e-final.log`).
+- `pnpm verify` passed, including `55` local test files and `518` tests, plus
+  `108` core test files / `1138` tests and the repository gates
+  (`task14-verify-final.log`).
+
+The task is ready for the single push that includes `ee93bab1`, `fdd3e061`,
+`3557cfc4`, `4c8a48c4` and `17b651a3`. The pre-push timing leg remains to be
+run by the push gate; task 17 starts only after that push succeeds.
