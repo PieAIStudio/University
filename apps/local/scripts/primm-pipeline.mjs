@@ -42,9 +42,11 @@ import {
   stepTeachingIssues,
 } from "./primm-pipeline-step-support.mjs";
 import { prepareUnpublished, prepareUnpublishedPreview } from "./primm-pipeline-authoring.mjs";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const moduleRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(moduleRoot, "../..");
+const configuredContent = contentPaths({ projectRoot: repoRoot });
 const skillRoot = join(moduleRoot, ".agents/skills/write-lesson");
 const STUDY = "ai-literacy";
 const COURSE = "understanding-ai";
@@ -111,9 +113,15 @@ function authoringProjectRoot() {
 function studiesRoot() {
   // The same native resolver owns optional personal config, environment priority
   // and the root safety boundary for packet reads and CLI writes.
+  // A PRIMM run with an explicit project root is an isolated authoring shelf;
+  // do not let a caller's content checkout redirect that temporary project.
+  const env = { ...process.env };
+  if (env.PRIMM_PROJECT_ROOT && !env.UNIVERSITY_LOCAL_STUDIES_ROOT) {
+    delete env.UNIVERSITY_COURSE_ROOT;
+  }
   const config = loadUniversityLocalConfig({
     projectRoot: authoringProjectRoot(),
-    env: process.env,
+    env,
   });
   return realpathSync(config.studiesRoot);
 }
@@ -2096,16 +2104,20 @@ async function stageAssembleSteps(dir, packet, inputFile, apply, replace) {
 
 /** Once per batch, after every lesson's `assemble --apply`: reactivate, then export recovery. */
 async function stageFinish(dir) {
-  if (authoringProjectRoot() !== moduleRoot)
+  const project = authoringProjectRoot();
+  const formalRoot = existsSync(configuredContent.root)
+    ? realpathSync(configuredContent.root)
+    : configuredContent.root;
+  if (project !== moduleRoot && project !== formalRoot)
     throw Error(
-      "An unpublished authoring project cannot export into the formal recovery shelf; prepare its isolated preview instead",
+      "An unpublished authoring project cannot export into the configured content root; prepare its isolated preview instead",
     );
   const { executeUniversityLocalCli, parseUniversityLocalCli } = await import(
     pathToFileURL(join(moduleRoot, ".university-local-build/server/cli.js")).href
   );
   const run = (argv) =>
     executeUniversityLocalCli({
-      projectRoot: authoringProjectRoot(),
+      projectRoot: project,
       cwd: repoRoot,
       env: process.env,
       command: parseUniversityLocalCli(argv),
@@ -2124,7 +2136,7 @@ async function stageFinish(dir) {
         "--study",
         STUDY,
         "--out",
-        join(moduleRoot, "course-proposals/recovery", STUDY),
+        join(configuredContent.recovery, STUDY),
       ]),
     },
   ];
@@ -2254,9 +2266,7 @@ async function main() {
       throw Error("Choose an explicit PRIMM_PROJECT_ROOT for the unpublished native shelf");
     const receipt = await prepareUnpublished({
       projectRoot: authoringProjectRoot(),
-      recoveryRoot: resolve(
-        options.recovery ?? join(moduleRoot, "course-proposals/recovery", STUDY),
-      ),
+      recoveryRoot: resolve(options.recovery ?? join(configuredContent.recovery, STUDY)),
       studyId: STUDY,
       courseId: COURSE,
     });

@@ -28,6 +28,7 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Governed docs live at the repository root, not inside this app. Left as
@@ -43,8 +44,7 @@ const outRoot = resolve(
 );
 
 const upstream = resolve(
-  projectRoot,
-  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../local/course-proposals/recovery",
+  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? contentPaths({ projectRoot: resolve(projectRoot, "../..") }).recovery,
 );
 
 if (!existsSync(upstream)) {

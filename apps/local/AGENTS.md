@@ -112,8 +112,9 @@ upstream repository first.
   the permitted AI-source, content-source and source-access port boundaries;
   this module does not define a different set. Never import browser app code
   into the server or server code into the app; share domain code through core.
-- Canonical recovery packages under `course-proposals/recovery/` are read by
-  University's existing content-import pipeline. Preserve that pull boundary:
+- Canonical recovery packages under the configured course root's
+  `course-proposals/recovery/` are read by University's existing content-import
+  pipeline. Preserve that pull boundary:
   this module creates lesson revisions but does not independently upload or
   publish them. Publication remains a separate gated act in the root product
   contract; do not add a second content producer or duplicate sync client.

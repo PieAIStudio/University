@@ -10,7 +10,8 @@ export const E2E_RUN_ROOT = fileURLToPath(
 );
 export const E2E_PROJECT_ROOT = join(E2E_RUN_ROOT, "project");
 export const E2E_STUDIES_ROOT = join(E2E_PROJECT_ROOT, "studies");
-export const E2E_RECOVERY_ROOT = join(E2E_RUN_ROOT, "recovery");
+export const E2E_COURSE_ROOT = join(E2E_RUN_ROOT, "course-root");
+export const E2E_RECOVERY_ROOT = join(E2E_COURSE_ROOT, "course-proposals/recovery");
 export const E2E_SOURCE_ROOT = join(E2E_RUN_ROOT, "source");
 export const E2E_CONTENT_ROOT = join(E2E_RUN_ROOT, "content");
 export const E2E_IMPORTED_MANIFEST = join(E2E_RUN_ROOT, "imported.json");

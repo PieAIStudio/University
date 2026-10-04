@@ -23,7 +23,7 @@ tags:
 所有历史技术和提案同时施加到现行代码的规格。当前用户表面归 V5，技术/预算归
 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)，数据流归
 [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，可执行门槛以对应测试为准。
-旧学科 URL 的测量发生在 [2026-09-12 锁课](../../../apps/local/course-proposals/locked/README.md)
+旧学科 URL 的测量发生在 `UniversityCourses/course-proposals/locked/README.md`
 之前；不是当前可访问承诺。复验使用统一 E2E 目录选择器，不解锁包、不改历史证据。
 
 ## 名字先对齐（三层，各有确切的代码对应）

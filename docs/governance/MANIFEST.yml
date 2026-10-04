@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-03T19:22:26.799Z
+generated_at: 2026-10-04T03:29:12.664Z
 generator_version: doc-gov@0.14.2
-docs_count: 176
+docs_count: 177
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -326,11 +326,18 @@ docs:
     canonical: true
     last_reviewed: 2026-10-03
     pinned: false
-  - id: PLAN-14-CONTENT-REPOSITORY
-    path: docs/plans/completed/14-content-repository.md
+  - id: PLAN-14-CONTENT-REPOSITORY-INTEGRATION
+    path: docs/plans/completed/14-content-repository-integration.md
     type: plan
     status: completed
     canonical: true
+    last_reviewed: 2026-10-04
+    pinned: false
+  - id: PLAN-14-CONTENT-REPOSITORY
+    path: docs/plans/completed/14-content-repository.md
+    type: plan
+    status: superseded
+    canonical: false
     last_reviewed: 2026-10-03
     pinned: false
   - id: PLAN-18-GRADING-MUST-CATCH-DROPPED-FACTS

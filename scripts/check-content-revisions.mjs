@@ -14,9 +14,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { crossUnitLessonIdentityErrors } from "./lesson-identity.mjs";
+import { contentPaths } from "./content-root.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
-const RECOVERY_ROOT = join(ROOT, "apps", "local", "course-proposals", "recovery");
+const RECOVERY_ROOT = contentPaths({ projectRoot: ROOT }).recovery;
 const DELIVERY_ROOT = join(ROOT, "apps", "university", "content");
 
 function readJson(path, label) {
@@ -268,6 +269,13 @@ function runSelfTests() {
 if (process.argv.includes("--self-test")) {
   runSelfTests();
 } else {
+  if (!existsSync(RECOVERY_ROOT) && !process.env.UNIVERSITY_COURSE_ROOT) {
+    console.log(
+      "check-content-revisions: no UNIVERSITY_COURSE_ROOT on this machine; " +
+        "revision check is deferred to the content checkout.",
+    );
+    process.exit(0);
+  }
   try {
     const result = checkProductionContentRevisions();
     if (result.errors.length > 0) {

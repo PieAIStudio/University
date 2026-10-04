@@ -118,22 +118,22 @@ test("a server key cannot masquerade as a browser publishable key", () => {
 
 test("relocates a nested real isolation input intact and preserves its original access path", () => {
   const root = temporary(),
-    nested = join(root, "apps/local/studies/studies");
+    nested = join(root, "apps/local/content/studies/studies");
   put(join(nested, ".university-local-root"), marker);
   put(join(nested, "fixture/study.json"), "isolated-input");
-  const moved = relocateNestedStudies(root);
+  const moved = relocateNestedStudies(root, {});
   assert.equal(moved, realpathSync(join(root, ".scratch/worktree-studies")));
   assert.equal(lstatSync(nested).isSymbolicLink(), true);
   assert.equal(readFileSync(join(nested, "fixture/study.json"), "utf8"), "isolated-input");
-  assert.equal(relocateNestedStudies(root), moved);
+  assert.equal(relocateNestedStudies(root, {}), moved);
 });
 
 test("conflicting isolation destinations preserve both originals", () => {
   const root = temporary(),
-    nested = join(root, "apps/local/studies/studies");
+    nested = join(root, "apps/local/content/studies/studies");
   put(join(nested, ".university-local-root"), marker);
   put(join(root, ".scratch/worktree-studies/keep"), "another input");
-  assert.throws(() => relocateNestedStudies(root), /relocation target exists/);
+  assert.throws(() => relocateNestedStudies(root, {}), /relocation target exists/);
   assert.equal(lstatSync(nested).isDirectory(), true);
 });
 
@@ -197,11 +197,11 @@ test("ordinary authoring and E2E read one local source choice, preserving owner 
   put(join(source, ".university-local-root"), marker);
   put(join(source, "study/study.json"), "{}");
   const tree = join(root, "tree");
-  mkdirSync(join(tree, "apps/local/studies"), { recursive: true });
-  symlinkSync(join(source, "study"), join(tree, "apps/local/studies/study"));
+  mkdirSync(join(tree, "apps/local/content/studies"), { recursive: true });
+  symlinkSync(join(source, "study"), join(tree, "apps/local/content/studies/study"));
   // This is the real shelf's Dirent boundary: a linked child is not a directory.
   assert.equal(
-    readdirSync(join(tree, "apps/local/studies"), { withFileTypes: true }).filter((entry) =>
+    readdirSync(join(tree, "apps/local/content/studies"), { withFileTypes: true }).filter((entry) =>
       entry.isDirectory(),
     ).length,
     0,
@@ -227,7 +227,7 @@ test("ordinary authoring and E2E read one local source choice, preserving owner 
 test("changing an owner's source requires the explicit selection and retains other fields", () => {
   const root = temporary(),
     tree = join(root, "tree");
-  mkdirSync(join(tree, "apps/local/studies"), { recursive: true });
+  mkdirSync(join(tree, "apps/local/content/studies"), { recursive: true });
   for (const name of ["first", "second"]) put(join(root, name, ".university-local-root"), marker);
   configureLocalStudies(tree, join(root, "first"));
   assert.throws(() => configureLocalStudies(tree, join(root, "second")), /Preserve existing/);
@@ -237,7 +237,7 @@ test("changing an owner's source requires the explicit selection and retains oth
 
 test("an explicitly selected unsafe nested root is rejected before claiming readiness", () => {
   const root = temporary(),
-    source = join(root, "apps/local/studies/nested");
+    source = join(root, "apps/local/content/studies/nested");
   put(join(source, ".university-local-root"), marker);
   assert.throws(() => configureLocalStudies(root, source), /dedicated studies root/);
   assert.equal(existsSync(join(root, "apps/local/university-local.config.local.json")), false);

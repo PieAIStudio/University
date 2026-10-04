@@ -20,6 +20,7 @@ import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { checkShelfData } from "./check-shelf.mjs";
 import { crossUnitLessonIdentityErrors } from "../../../scripts/lesson-identity.mjs";
 import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 export const RELEASE_SCHEMA_VERSION = 1;
 export const RELEASE_ARTIFACT_KIND = "university-delivery";
@@ -203,7 +204,12 @@ export function listFiles(root) {
 
 export function isStudiesPath(path, { projectRoot = PROJECT_ROOT } = {}) {
   const candidate = resolve(path);
-  const studiesRoot = resolve(projectRoot, "apps/local/studies");
+  const studiesRoot = contentPaths({ projectRoot }).studies;
+  // Keep rejecting the former in-repo shelf even after task 14 removes it;
+  // callers that still hand that path to the release boundary must fail
+  // closed rather than treating it as arbitrary recovery input.
+  const legacyStudiesRoot = resolve(projectRoot, "apps/local/content/studies");
+  if (isInside(candidate, legacyStudiesRoot)) return true;
   if (isInside(candidate, studiesRoot)) return true;
   try {
     return isInside(realpathSync.native(candidate), realpathSync.native(studiesRoot));
@@ -223,7 +229,7 @@ function fileRecords(root) {
 export function inputFingerprint(root, { projectRoot = PROJECT_ROOT } = {}) {
   const resolvedRoot = resolve(root);
   if (isStudiesPath(resolvedRoot, { projectRoot })) {
-    fail(`apps/local/studies is not a release input: ${resolvedRoot}`);
+    fail(`configured content studies is not a release input: ${resolvedRoot}`);
   }
   const files = fileRecords(resolvedRoot);
   return {
@@ -246,10 +252,10 @@ function readJson(path, label) {
 /** Validate the tracked recovery transport before the importer deletes old output. */
 export function validateRecoveryInput(root, { projectRoot = PROJECT_ROOT } = {}) {
   const resolvedRoot = resolve(root);
-  directory(resolvedRoot, "recovery root");
   if (isStudiesPath(resolvedRoot, { projectRoot })) {
-    fail(`apps/local/studies cannot be used as recovery input: ${resolvedRoot}`);
+    fail(`configured content studies cannot be used as recovery input: ${resolvedRoot}`);
   }
+  directory(resolvedRoot, "recovery root");
 
   const referenced = new Set();
   const studies = [];
@@ -712,7 +718,7 @@ export function validateDeliveryArtifact(
   const resolvedRoot = resolve(root);
   directory(resolvedRoot, "delivery artifact");
   if (isStudiesPath(resolvedRoot, { projectRoot })) {
-    fail(`delivery artifact cannot be apps/local/studies: ${resolvedRoot}`);
+    fail(`delivery artifact cannot be configured content studies: ${resolvedRoot}`);
   }
   const records = artifactRecords(resolvedRoot);
   const names = records.map((record) => record.path);
@@ -720,8 +726,8 @@ export function validateDeliveryArtifact(
   if (!names.includes("SHA256SUMS")) fail("SHA256SUMS is missing");
   for (const name of names) {
     if (
-      name === "apps/local/studies" ||
-      name.startsWith("apps/local/studies/") ||
+      name === "configured content studies" ||
+      name.startsWith("configured content studies/") ||
       name.split("/").includes("..") ||
       name.split("/").includes(".git") ||
       name.split("/").includes("node_modules")

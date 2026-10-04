@@ -12,7 +12,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SCRIPT = join(import.meta.dirname, "check-proposal-shape.mjs");
-const REAL_PROPOSAL = join(import.meta.dirname, "../course-proposals/turing-zero-tier.json");
+const REAL_PROPOSAL = join(import.meta.dirname, "fixtures/turing-zero-tier.json");
 const FIXTURE_DIR = mkdtempSync(join(tmpdir(), "proposal-shape-teaching-"));
 const CHECK_IDS = ["exact-answer", "title-answer", "analogy-order", "term-drift"] as const;
 

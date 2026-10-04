@@ -27,6 +27,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
 const APP_ROOT = join(ROOT, "apps", "local");
@@ -55,7 +56,11 @@ function parseArguments(argv) {
 }
 
 function readConfiguredStudiesRoot() {
-  const override = process.env["UNIVERSITY_LOCAL_STUDIES_ROOT"];
+  const override =
+    process.env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ??
+    (process.env["UNIVERSITY_COURSE_ROOT"]
+      ? contentPaths({ projectRoot: ROOT }).studies
+      : undefined);
   let candidate = override;
   if (!candidate) {
     for (const name of ["university-local.config.local.json", "university-local.config.json"]) {

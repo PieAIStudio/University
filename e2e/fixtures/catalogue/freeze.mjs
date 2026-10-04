@@ -7,9 +7,11 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 import { createSourceSnapshot } from "./source-snapshot.mjs";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
 const OUTPUT = import.meta.dirname;
+const CONTENT = contentPaths({ projectRoot: ROOT });
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const selection = {
@@ -23,7 +25,7 @@ const selection = {
 if (!process.argv.includes("--capture-current"))
   throw new Error("Freeze is explicit: node e2e/fixtures/catalogue/freeze.mjs --capture-current");
 const studies = Object.entries(selection).map(([id, courseIds]) => {
-  const root = join(ROOT, "apps/local/course-proposals/recovery", id);
+  const root = join(CONTENT.recovery, id);
   const index = readJson(join(root, "index.json"));
   const courses = courseIds.map((courseId) => {
     const entry = index.courses.find((item) => item.courseId === courseId);
@@ -52,7 +54,7 @@ const originalCommits = [...new Set(references.values())];
 if (originalCommits.length !== 1)
   throw new Error("This fixture expects one repository source revision");
 references.set("LICENSE", originalCommits[0]);
-const gitDir = join(ROOT, "apps/local/studies/browser-ai/source/repository.git");
+const gitDir = join(CONTENT.studies, "browser-ai/source/repository.git");
 const files = Object.fromEntries(
   [...references]
     .sort(([a], [b]) => a.localeCompare(b))

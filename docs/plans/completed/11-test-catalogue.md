@@ -31,7 +31,7 @@ superseded_by: null
   while the browser suite takes its fixtures from the shipped catalogue.
 - **The specification already exists.** Read the section "Why nothing was locked
   on 2026-09-22" in
-  [`apps/local/course-proposals/locked/README.md`](../../../apps/local/course-proposals/locked/README.md).
+  `UniversityCourses/course-proposals/locked/README.md`.
   It records the attempt, the measurement and the rollback:
   - `e2e/harness/catalogue.ts` resolves its roles out of the shipped catalogue
     **at module load** and throws when a role finds no course, so every spec that

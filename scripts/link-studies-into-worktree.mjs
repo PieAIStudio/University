@@ -16,6 +16,7 @@ import { createServer } from "node:net";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs, parseEnv } from "node:util";
+import { contentPaths } from "./content-root.mjs";
 
 export const E2E_PORT_NAMES = [
   "E2E_ONLINE_PORT",
@@ -117,7 +118,7 @@ export function configureLocalStudies(worktreeCandidate, studiesRoot, allowChang
   const worktree = realpathSync(worktreeCandidate);
   const project = realpathSync(join(worktree, "apps/local"));
   const source = requireStudiesRoot(studiesRoot);
-  const defaultRoot = realpathSync(join(project, "studies"));
+  const defaultRoot = realpathSync(contentPaths({ projectRoot: worktree }).studies);
   if (inside(source, project) || (inside(project, source) && source !== defaultRoot)) {
     throw new Error(
       "Select a dedicated studies root outside apps/local, or its default studies directory",
@@ -199,9 +200,9 @@ function requireStudiesRoot(path) {
 }
 
 /** Preserve an isolated input intact, with its old path still resolving to it. */
-export function relocateNestedStudies(worktreeCandidate) {
+export function relocateNestedStudies(worktreeCandidate, env = process.env) {
   const worktree = realpathSync(worktreeCandidate);
-  const nested = join(worktree, "apps/local/studies/studies");
+  const nested = join(contentPaths({ projectRoot: worktree, env }).studies, "studies");
   if (!stat(nested)) return null;
   const root = requireStudiesRoot(nested);
   if (!inside(join(worktree, "apps/local"), root)) return root;
@@ -268,10 +269,11 @@ export async function prepareWorktree(worktreeCandidate, options = {}) {
   try {
     const selected =
       options.studiesRoot !== undefined ? resolve(options.studiesRoot) : settings.studiesRoot;
-    const nested = join(worktree, "apps/local/studies/studies");
+    const nested = join(contentPaths({ projectRoot: worktree }).studies, "studies");
+    const mainContent = contentPaths({ projectRoot: main });
     const studiesRoot =
       selected === undefined || resolve(selected) === nested
-        ? (relocateNestedStudies(worktree) ?? requireStudiesRoot(join(main, "apps/local/studies")))
+        ? (relocateNestedStudies(worktree) ?? requireStudiesRoot(mainContent.studies))
         : requireStudiesRoot(selected);
     configureLocalStudies(worktree, studiesRoot, options.studiesRoot !== undefined);
 
@@ -285,10 +287,9 @@ export async function prepareWorktree(worktreeCandidate, options = {}) {
         throw new Error("Existing PGS bridge points elsewhere: " + bridge);
       }
     }
-    const linked = linkMissing(
-      join(main, "apps/local/studies"),
-      join(worktree, "apps/local/studies"),
-    );
+    const worktreeContent = contentPaths({ projectRoot: worktree });
+    mkdirSync(worktreeContent.studies, { recursive: true });
+    const linked = linkMissing(mainContent.studies, worktreeContent.studies);
     const projected = projectPublicEnv(
       join(main, "apps/university/.env.local"),
       join(worktree, "apps/university/.env.local"),
@@ -314,9 +315,8 @@ export async function prepareWorktree(worktreeCandidate, options = {}) {
     const manifestPath = join(worktree, "apps/university/src/content/imported.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
     run(worktree, ["content"], {
+      UNIVERSITY_COURSE_ROOT: mainContent.root,
       UNIVERSITY_STUDIES_ROOT: studiesRoot,
-      UNIVERSITY_UPSTREAM_RECOVERY: join(worktree, "apps/local/course-proposals/recovery"),
-      UNIVERSITY_UPSTREAM_LEXICON: join(worktree, "apps/local/data/vocabulary/en.json"),
       UNIVERSITY_CONTENT_ROOT: content,
       UNIVERSITY_IMPORTED_MANIFEST_PATH: manifestPath,
       UNIVERSITY_IMPORT_DATE: manifest.importedAt,

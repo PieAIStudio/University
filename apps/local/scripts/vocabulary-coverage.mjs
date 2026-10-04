@@ -17,14 +17,16 @@
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
-const root = process.cwd();
+const paths = contentPaths({ projectRoot: process.cwd() });
+const root = paths.root;
 const args = process.argv.slice(2);
 const studyId = args.find((value) => !value.startsWith("--")) ?? "ai-literacy";
 const limitFlag = args.indexOf("--limit");
 const limit = limitFlag === -1 ? 40 : Number(args[limitFlag + 1] ?? 40);
 
-const lexicon = JSON.parse(readFileSync(join(root, "data/vocabulary/en.json"), "utf8"));
+const lexicon = JSON.parse(readFileSync(paths.lexicon, "utf8"));
 const known = new Set(lexicon.entries.map((entry) => entry.headword.toLowerCase()));
 
 /**

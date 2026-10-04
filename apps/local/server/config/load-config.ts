@@ -81,8 +81,13 @@ function assertSafeStudiesRootLocation(projectRoot: string, studiesRoot: string)
   if (studiesRoot === projectRoot || isPathInside(studiesRoot, projectRoot)) {
     throw new Error("studiesRoot must not be the project root or contain the project checkout");
   }
-  const defaultRoot = canonicalizePotentialPath(join(projectRoot, "studies"));
-  if (isPathInside(projectRoot, studiesRoot) && studiesRoot !== defaultRoot) {
+  const defaultRoots = new Set([
+    canonicalizePotentialPath(join(projectRoot, "content/studies")),
+    // Test and user-supplied project roots may still use their own local
+    // `studies` directory; the University checkout's default is content/studies.
+    canonicalizePotentialPath(join(projectRoot, "studies")),
+  ]);
+  if (isPathInside(projectRoot, studiesRoot) && !defaultRoots.has(studiesRoot)) {
     throw new Error("A project-local studiesRoot must be the default studies directory");
   }
 }
@@ -136,14 +141,26 @@ export function loadUniversityLocalConfig(
   options: LoadConfigOptions,
 ): ResolvedUniversityLocalConfig {
   const env = options.env ?? process.env;
+  // A normal checkout may export UNIVERSITY_COURSE_ROOT for the content-aware
+  // verification lane. Vitest suites still create their own isolated studies
+  // shelves; let those suites keep their fixture roots unless they explicitly
+  // pass an environment object containing the course root.
+  const useAmbientCourseRoot = options.env ? true : process.env.VITEST !== "true";
   const projectRoot = realpathSync.native(options.projectRoot);
   const base = readConfig(resolve(projectRoot, BASE_CONFIG));
   const local = readConfig(resolve(projectRoot, LOCAL_CONFIG));
   const authoringFocus = local.focus ?? base.focus;
+  const configuredContentRoot =
+    useAmbientCourseRoot && env["UNIVERSITY_COURSE_ROOT"]
+      ? resolve(projectRoot, env["UNIVERSITY_COURSE_ROOT"] as string)
+      : undefined;
   const merged = UniversityLocalConfigSchema.parse({
     schemaVersion: local.schemaVersion ?? base.schemaVersion ?? 1,
     studiesRoot:
-      env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ?? local.studiesRoot ?? base.studiesRoot ?? "./studies",
+      env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ??
+      (configuredContentRoot
+        ? join(configuredContentRoot, "studies")
+        : (local.studiesRoot ?? base.studiesRoot ?? "./studies")),
     // The authoring focus is a personal preference, so the local file wins
     // outright rather than merging field by field: a local focus naming only a
     // study should clear a course pinned in the base file, not silently inherit it.

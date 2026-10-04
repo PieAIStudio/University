@@ -2,8 +2,8 @@
 id: PLAN-14-CONTENT-REPOSITORY
 title: "14 · Course content moves to its own repository"
 type: plan
-status: completed
-canonical: true
+status: superseded
+canonical: false
 owner: ai-assisted
 created: 2026-10-02
 last_reviewed: 2026-10-03
@@ -17,7 +17,7 @@ related:
   - PLAN-11-TEST-CATALOGUE
   - PLAN-13-RETIRE-OLD-COURSES
 supersedes: []
-superseded_by: null
+superseded_by: PLAN-14-CONTENT-REPOSITORY-INTEGRATION
 ---
 
 # Task 14 · Course content moves to its own repository
@@ -164,9 +164,5 @@ task 13 retired packages), and `vocabulary/`. `UniversityContent` was not read o
 modified. No GitHub remote was configured: the local repository is the authorized
 credential fallback and still needs Owner-side private remote setup.
 
-The application repository still retains its checked-in compatibility content
-paths and has not yet switched every reader/writer to the external root. This is
-intentional partial delivery recorded for review: moving those paths safely needs
-a follow-up integration change because fresh clones must remain verifiable without
-the private checkout, and the current release scripts contain separate recovery
-and vocabulary flags. No course bytes or task 12 receipts were edited.
+The initial handoff was partial. The completed integration is recorded in
+[14-content-repository-integration](14-content-repository-integration.md).

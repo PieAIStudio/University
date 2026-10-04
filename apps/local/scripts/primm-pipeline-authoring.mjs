@@ -27,8 +27,12 @@ const save = (file, data) =>
 
 export function authoringContext(projectRoot, env = process.env) {
   const root = realpathSync(resolve(projectRoot));
-  const config = loadUniversityLocalConfig({ projectRoot: root, env });
-  return { projectRoot: root, studiesRoot: config.studiesRoot, env };
+  const effectiveEnv =
+    env.UNIVERSITY_COURSE_ROOT || env.UNIVERSITY_LOCAL_STUDIES_ROOT
+      ? env
+      : { ...env, UNIVERSITY_LOCAL_STUDIES_ROOT: join(root, "studies") };
+  const config = loadUniversityLocalConfig({ projectRoot: root, env: effectiveEnv });
+  return { projectRoot: root, studiesRoot: config.studiesRoot, env: effectiveEnv };
 }
 
 export async function nativeAuthoring(context, argv) {
@@ -145,6 +149,7 @@ export async function prepareUnpublishedPreview({ projectRoot, env = process.env
       env: {
         ...env,
         UNIVERSITY_UPSTREAM_RECOVERY: join(previewRoot, "recovery"),
+        UNIVERSITY_UPSTREAM_LEXICON: lexiconPath,
         UNIVERSITY_STUDIES_ROOT: context.studiesRoot,
         UNIVERSITY_CONTENT_ROOT: contentRoot,
         UNIVERSITY_IMPORTED_MANIFEST_PATH: manifestPath,

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { z } from "zod";
@@ -17,6 +17,12 @@ const LexiconFileSchema = z
 let cached: ReadonlyMap<string, LexiconEntry> | undefined;
 
 function lexiconPath(): string {
+  const configuredRoot = process.env["UNIVERSITY_COURSE_ROOT"];
+  if (configuredRoot) {
+    return join(resolve(process.cwd(), configuredRoot), "vocabulary/en.json");
+  }
+  const generated = resolve(process.cwd(), "../university/src/content/lexicon.json");
+  if (existsSync(generated)) return generated;
   // The lexicon is repository content, not learner data: it is reviewed, it is
   // diffed, and a wrong gloss is a bug the same way a wrong lesson is.
   //
@@ -26,14 +32,13 @@ function lexiconPath(): string {
   // fixed `../../..` was right for exactly one of the two.
   let directory = dirname(fileURLToPath(import.meta.url));
   for (let hops = 0; hops < 10; hops += 1) {
-    if (existsSync(join(directory, "package.json"))) {
-      return join(directory, "data/vocabulary/en.json");
-    }
+    const generated = join(directory, "apps/university/src/content/lexicon.json");
+    if (existsSync(generated)) return generated;
     const parent = dirname(directory);
     if (parent === directory) break;
     directory = parent;
   }
-  throw new Error("Cannot locate the project root that holds data/vocabulary/en.json");
+  throw new Error("Cannot locate UNIVERSITY_COURSE_ROOT/vocabulary/en.json");
 }
 
 /**

@@ -32,9 +32,10 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } 
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
-const exportRoot = join(projectRoot, "course-proposals", "recovery");
+const exportRoot = contentPaths({ projectRoot: resolve(projectRoot, "../..") }).recovery;
 const buildRoot = join(projectRoot, ".university-local-build", "server");
 
 const onlyStudy = (() => {
@@ -86,7 +87,7 @@ if (!existsSync(studiesRoot)) {
   process.exit(0);
 }
 
-// The repository keeps a README and .gitignore at apps/local/studies so a
+// The repository keeps a README and .gitignore at configured course root/studies so a
 // fresh worktree has the directory, but it does not have the owner's private
 // study checkouts. Treat that skeleton like a missing root; otherwise every
 // committed recovery export looks stale merely because there is no source to

@@ -66,7 +66,10 @@ release and the decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1` are publishe
 The App injects UIKit controls and the authentication client; the kits must not
 depend on each other. Earlier coupled candidate tarballs do not release this hold.
 
-Continue autonomously through 13, 18, 14 and 17. Record judgment and deviations
+Task 14's implementation is recorded in
+`completed/14-content-repository-integration.md` and committed locally, but its
+pre-push browser gate stopped on a repeatable `AA.map-navigation` failure. Do not
+start task 17 until that gate is repaired and a complete push succeeds. Record judgment and deviations
 in the owning task document. At completion or a required stop, write the detailed
 Claude review report at `.scratch/overnight-20261003/REPORT.md`, including commits,
 verbatim gate counts, refactor measurements and deletions, grading evidence,

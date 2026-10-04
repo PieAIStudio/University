@@ -8,6 +8,7 @@ import { createServer as createProbe } from "node:net";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createOwnerAuthoring } from "./map-nodes-authoring.mjs";
+import { contentPaths } from "./content-root.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 if (!process.argv.includes("--owner-preview")) {
@@ -22,7 +23,7 @@ const arg = (name, fallback) => {
 };
 const port = Number(arg("--port", "23161"));
 const origin = arg("--origin", "http://127.0.0.1:23160");
-const corpusRoot = resolve(arg("--corpus-root", join(root, "apps/local/studies")));
+const corpusRoot = resolve(arg("--corpus-root", contentPaths({ projectRoot: root }).studies));
 const scratchRoot = resolve(
   arg("--studies-root", join(root, ".scratch/map-nodes-personal-studies")),
 );

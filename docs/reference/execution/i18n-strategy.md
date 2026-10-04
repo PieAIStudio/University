@@ -59,7 +59,7 @@ Owner 决定所有子项目直接采用 `@pieai/swimmer-i18n-kit`。旧 `{{name}
 | **AI 批改与辅导** | 运行时按人生成 | **告诉模型用学习者的语言回答** | ≈ 0 |
 
 原表的本机样例为 `turing-pact` 的 3,705 个 Markdown 文件；保留为历史说明，
-本轮未重数私人源目录。该包已于 2026-09-12 [锁定](../../../apps/local/course-proposals/locked/README.md)，
+本轮未重数私人源目录。该包已于 2026-09-12 `UniversityCourses/course-proposals/locked/README.md`，
 这个旧源文件数不是当前交付规模，也不能直接作为当前翻译成本的分母。
 
 第三条是免费的：那本来就是一次模型调用，加一句"用学习者的语言作答"不额外花钱。

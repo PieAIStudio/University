@@ -31,7 +31,7 @@ the state they left, and the work they uncovered and did not do.
 
 Publication correction (2026-09-13): the old activity/prose debt counts below
 describe authoring inputs at this handoff, not remaining shipped lessons.
-The affected packages were [locked on 2026-09-12](../../../apps/local/course-proposals/locked/README.md).
+The affected packages were `UniversityCourses/course-proposals/locked/README.md`.
 Retain those measurements and the unresolved activity-result sink; do not treat
 the old counts or package versions as current release facts.
 

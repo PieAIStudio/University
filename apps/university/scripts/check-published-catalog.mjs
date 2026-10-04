@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "../../..");
 const catalogPath = resolve(import.meta.dirname, "../published-catalog.json");
-const recoveryRoot = resolve(projectRoot, "apps/local/course-proposals/recovery");
+const recoveryRoot = contentPaths({ projectRoot }).recovery;
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -85,6 +86,13 @@ function acceptRemovals(record, exported) {
 
 if (resolve(process.argv[1] ?? "") === resolve(import.meta.filename)) {
   try {
+    if (!existsSync(recoveryRoot) && !process.env.UNIVERSITY_COURSE_ROOT) {
+      console.log(
+        "check-published-catalog: no UNIVERSITY_COURSE_ROOT on this machine; " +
+          "catalogue removal check is deferred to the content checkout.",
+      );
+      process.exit(0);
+    }
     const record = readJson(catalogPath);
     const rootFlag = process.argv.indexOf("--recovery-root");
     const exported = readExportedCatalog(

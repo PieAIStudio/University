@@ -7,7 +7,7 @@ import { reservePorts } from "../scripts/link-studies-into-worktree.mjs";
 import { ONLINE_PORT, LOCAL_WEB_PORT, LOCAL_API_PORT, GRADING_PORT } from "./ports.ts";
 import {
   E2E_STUDIES_ROOT,
-  E2E_RECOVERY_ROOT,
+  E2E_COURSE_ROOT,
   E2E_CONTENT_ROOT,
   E2E_IMPORTED_MANIFEST,
 } from "./catalogue-paths.mjs";
@@ -30,7 +30,7 @@ must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], join(ROOT, "ap
 must("node", ["e2e/seed-catalogue.mjs"]);
 console.log("e2e: baking the test-owned catalogue, not the delivery shelf");
 must("node", ["apps/university/scripts/import-courses.mjs"], ROOT, {
-  UNIVERSITY_UPSTREAM_RECOVERY: E2E_RECOVERY_ROOT,
+  UNIVERSITY_COURSE_ROOT: E2E_COURSE_ROOT,
   UNIVERSITY_STUDIES_ROOT: E2E_STUDIES_ROOT,
   UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
   UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,

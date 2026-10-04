@@ -25,7 +25,7 @@ related:
 拥有单元素技术锁，[ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)
 拥有同一连续管线。[Island Look Contract](./island-look-contract.md) 保留观感测量与反例。
 下文六棱柱、平板星球、旧相机和预算均按其原始时点阅读，不是新任务清单。
-旧学科 URL 的测量发生在 [2026-09-12 锁课](../../../apps/local/course-proposals/locked/README.md)
+旧学科 URL 的测量发生在 `UniversityCourses/course-proposals/locked/README.md`
 之前；保留它们不表示课程仍在交付，也不授权重新解锁。
 
 作者：主控（架构 / 美术总监）。初始日期 2026-08-30。

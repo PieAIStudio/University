@@ -20,8 +20,9 @@
 */
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { contentPaths } from "./content-root.mjs";
 
-const studiesRoot = process.argv[2] ?? "apps/local/studies";
+const studiesRoot = process.argv[2] ?? contentPaths({ projectRoot: process.cwd() }).studies;
 
 const initialized = existsSync(studiesRoot)
   ? readdirSync(studiesRoot)

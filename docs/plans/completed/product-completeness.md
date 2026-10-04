@@ -32,7 +32,7 @@ related:
 退款及经营信息、实体设备和提醒送达。它们需要对应服务、账号、设备与 owner 授权；
 浏览器模拟和本地单测不能替代。分别读现有后端、支付、提醒 runbook，不执行旧合并流程。
 旧四学科测试副本与恢复失败保留作历史证据；现行发布范围见
-[锁课记录](../../../apps/local/course-proposals/locked/README.md)，不能据此重开旧课程。
+`UniversityCourses/course-proposals/locked/README.md`，不能据此重开旧课程。
 
 ## 维护审查发现的边界例外（2026-09-13，待独立复现/修正）
 

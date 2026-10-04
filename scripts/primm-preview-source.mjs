@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { contentPaths } from "./content-root.mjs";
 
 /** Trusted host configuration only. No HTTP or lesson text selects a file path. */
 export function resolvePrimmPreviewSource(repoRoot, selectedRoot) {
@@ -9,7 +10,7 @@ export function resolvePrimmPreviewSource(repoRoot, selectedRoot) {
     return {
       unpublished: false,
       contentRoot: join(repo, "apps/university/content"),
-      recoveryRoot: join(repo, "apps/local/course-proposals/recovery/ai-literacy"),
+      recoveryRoot: join(contentPaths({ projectRoot: repo }).recovery, "ai-literacy"),
       appEnvironment: {},
     };
   const root = realpathSync(resolve(selectedRoot));

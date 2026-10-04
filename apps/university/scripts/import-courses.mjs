@@ -65,8 +65,11 @@ import {
 import { validateRecoveryInput } from "./delivery-artifact.mjs";
 import { publicDisplayLocales, requireContentRevision, toPublicPackage } from "./public-course.mjs";
 import { assertNoUnexplainedShrink } from "./import-shrink.mjs";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
+const repositoryRoot = resolve(projectRoot, "../..");
+const configuredContent = contentPaths({ projectRoot: repositoryRoot });
 const configuredContentRoot = resolve(
   projectRoot,
   process.env["UNIVERSITY_CONTENT_ROOT"] ?? "content",
@@ -87,8 +90,7 @@ const contentRoot =
 // "the export was stale and nothing reported it" stops being possible by
 // construction rather than by a checker noticing afterwards.
 const upstream = resolve(
-  projectRoot,
-  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? "../local/course-proposals/recovery",
+  process.env["UNIVERSITY_UPSTREAM_RECOVERY"] ?? configuredContent.recovery,
 );
 
 if (!existsSync(upstream)) {
@@ -133,7 +135,11 @@ if (requireBakedEvidence && evidenceMode !== "auto") {
 const studiesRoot =
   evidenceMode === "none"
     ? null
-    : resolve(projectRoot, process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies");
+    : resolve(
+        process.env["UNIVERSITY_STUDIES_ROOT"] ??
+          process.env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ??
+          configuredContent.studies,
+      );
 if (requireBakedEvidence && !hasAnyStudyRepository(studiesRoot)) {
   throw new Error(
     `import-courses: baked evidence requested but no readable study repository was found at ${studiesRoot}; refusing locator-only output`,
@@ -476,7 +482,7 @@ mkdirSync(join(projectRoot, "src", "content"), { recursive: true });
  * course's `servedBytes` shrinks by the evidence that could not be read, while
  * `sha256` and `packageBytes` stay put, so nothing downstream notices and
  * `pnpm verify` stays green. That has now happened three times, each time in a
- * git worktree, because `apps/local/studies/*` is gitignored and a worktree
+ * git worktree, because `configured course root/studies/*` is gitignored and a worktree
  * therefore starts without it.
  *
  * So the rule is about the write, not about the checkout: a run may produce a
@@ -531,8 +537,7 @@ writeFileSync(trackedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 // added upstream reaches this shell on the next `pnpm content`, in the same
 // commit as the lessons that use it.
 const lexiconSource = resolve(
-  projectRoot,
-  process.env["UNIVERSITY_UPSTREAM_LEXICON"] ?? "../local/data/vocabulary/en.json",
+  process.env["UNIVERSITY_UPSTREAM_LEXICON"] ?? configuredContent.lexicon,
 );
 let lexiconSenses = 0;
 if (existsSync(lexiconSource)) {

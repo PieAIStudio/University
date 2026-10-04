@@ -166,7 +166,7 @@ function main() {
   const recoveryPath = workspacePath(args["recovery-root"], "recovery input");
   const lexiconPath = workspacePath(args.lexicon, "lexicon input");
   if (isStudiesPath(recoveryPath.absolute) || isStudiesPath(lexiconPath.absolute)) {
-    throw new Error("apps/local/studies is not a delivery input");
+    throw new Error("configured content studies is not a delivery input");
   }
   const recovery = validateRecoveryInput(recoveryPath.absolute);
   const lexicon = validateLexiconInput(lexiconPath.absolute);
@@ -178,7 +178,7 @@ function main() {
   );
 
   const artifactRoot = resolve(PROJECT_ROOT, args["artifact-root"] ?? ".artifacts/delivery");
-  if (isStudiesPath(artifactRoot)) throw new Error("artifact root cannot be apps/local/studies");
+  if (isStudiesPath(artifactRoot)) throw new Error("artifact root cannot be configured content studies");
   if (existsSync(artifactRoot) && lstatSync(artifactRoot).isSymbolicLink()) {
     throw new Error(`artifact root must not be a symlink: ${artifactRoot}`);
   }

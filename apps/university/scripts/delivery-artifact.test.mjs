@@ -126,7 +126,7 @@ function writeArtifactFixture() {
     importDate: "2026-08-26",
     inputs: {
       recovery: {
-        path: "apps/local/course-proposals/recovery",
+        path: "course-root/course-proposals/recovery",
         sha256: `sha256:${"b".repeat(64)}`,
         files: 2,
         bytes: 10,
@@ -134,7 +134,7 @@ function writeArtifactFixture() {
         courses: 1,
       },
       lexicon: {
-        path: "apps/local/data/vocabulary/en.json",
+        path: "course-root/vocabulary/en.json",
         sha256: `sha256:${"c".repeat(64)}`,
         bytes: 10,
         senses: 1,
@@ -161,7 +161,7 @@ function reseal(root, { evidenceMode = "none" } = {}) {
     importDate: "2026-08-26",
     inputs: {
       recovery: {
-        path: "apps/local/course-proposals/recovery",
+        path: "course-root/course-proposals/recovery",
         sha256: `sha256:${"b".repeat(64)}`,
         files: 2,
         bytes: 10,
@@ -169,7 +169,7 @@ function reseal(root, { evidenceMode = "none" } = {}) {
         courses: 1,
       },
       lexicon: {
-        path: "apps/local/data/vocabulary/en.json",
+        path: "course-root/vocabulary/en.json",
         sha256: `sha256:${"c".repeat(64)}`,
         bytes: 10,
         senses: 1,
@@ -324,8 +324,8 @@ describe("delivery artifact gate", () => {
   });
 
   it("refuses the private studies shelf as a release input", () => {
-    expect(() => validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/studies"))).toThrow(
-      /apps\/local\/studies/,
+    expect(() => validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/content/studies"))).toThrow(
+      /configured content studies/,
     );
   });
 });

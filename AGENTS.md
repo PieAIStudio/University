@@ -158,7 +158,8 @@ What follows from them:
   vocabulary, favourites, practice history and settings — one implementation
   each. The cloud document is canonical; the browser document is only an
   offline cache/outbox. The disk stays the source of truth only for what exists
-  on disk: `apps/local/studies/` and the prose being written (ADR-0001).
+  on disk: the configured `UNIVERSITY_COURSE_ROOT` content repository and the
+  prose being written (ADR-0001).
 - **Readable text is DOM, never geometry.** A Chinese IME, a screen reader,
   text selection and a phone keyboard all die inside a canvas, so text in
   WebGL is the legibility rule broken for a human. The canvas owns the world

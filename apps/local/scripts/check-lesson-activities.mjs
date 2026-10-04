@@ -15,8 +15,12 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { contentPaths } from "../../../scripts/content-root.mjs";
 
-const studiesRoot = process.argv[2] ?? join(process.cwd(), "apps/local/studies");
+const studiesRoot =
+  process.argv[2] ??
+  process.env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ??
+  contentPaths({ projectRoot: process.cwd() }).studies;
 const read = (path) => JSON.parse(readFileSync(path, "utf8"));
 /*
   `statSync`, not `withFileTypes`. A Dirent reports a symlink as a symlink and
@@ -861,7 +865,7 @@ for (const studyId of dirs(studiesRoot)) {
 /*
   The same two directions, one boundary later.
 
-  Everything above reads `apps/local/studies`, which is the authoring side — and
+  Everything above reads `configured course root/studies`, which is the authoring side — and
   that is where this check was green while nine `::play` markers shipped to
   delivery pointing at activities the publish DTO had dropped. The reader says
   so out loud when a marker resolves to nothing, so what a customer got was a
@@ -968,6 +972,15 @@ function checkRolePosition(activity, content, where) {
   that was not looking at anything. Every real run has hundreds of lessons, so
   a floor of one costs nothing and turns the silent case into a loud one.
 */
+const hasConfiguredContent = Boolean(
+  process.argv[2] ||
+  process.env["UNIVERSITY_COURSE_ROOT"] ||
+  process.env["UNIVERSITY_LOCAL_STUDIES_ROOT"],
+);
+if (lessons === 0 && !hasConfiguredContent && !existsSync(studiesRoot)) {
+  console.log("  没有配置课程仓库，跳过课文互动核对（先配置 UNIVERSITY_COURSE_ROOT）");
+  process.exit(0);
+}
 if (lessons === 0) {
   console.log("  这一趟一节课都没扫到——多半是从错误的目录跑的，请从仓库根目录跑");
   process.exit(1);
