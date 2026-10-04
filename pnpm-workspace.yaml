@@ -38,6 +38,7 @@ minimumReleaseAgeExclude:
 # 19 support. Use the compatible 1.7.0 shim already consumed by Drei, only on
 # that edge; preserve Zustand's API and all other dependency resolutions.
 overrides:
+  undici: '7.29.1'
   'zustand@4.3.2>use-sync-external-store': '1.7.0'
   # AuthKit's optional SSR peer is not used by this browser product. Keep the
   # auto-resolved peer at the version verified with our pinned Supabase client;

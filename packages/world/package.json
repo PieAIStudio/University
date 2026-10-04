@@ -57,7 +57,7 @@
     "react-dom": "19.2.8",
     "three": "0.185.1",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "peerDependencies": {
     "@react-three/drei": "10.7.8",

@@ -523,3 +523,75 @@ guard separate failure classes. `.gitignore` already covers the observed
 generated directories (`dist`, package `dist/`, local build output,
 `.primm-preview-build`, `.scratch`, logs and test artifacts), so no broad or
 unproven ignore rule was added.
+
+## R6 execution record (2026-10-05)
+
+R6 inventoried all eight tracked workspace `package.json` files and recorded the
+literal-import/configuration review in
+`.scratch/overnight-20261003/task17-r6-dependency-inventory.json`. The direct
+declaration count is 122 → 117: five declarations with no consumer were removed
+after checking the whole package tree. The delivery app no longer declares the
+render kit, `three-stdlib`, `ts-fsrs` or `zod`; those are owned by the world or
+core/local package that imports them. `apps/local` no longer repeats the root
+`lefthook` declaration; the root `prepare` script installs the hook once.
+The app still declares Drei and Fiber where they are needed as the world
+package's peer providers, and the world package keeps its dev-plus-peer copies
+for its own tests and typecheck.
+
+All seven workspace Vitest declarations moved from `4.1.10` to the patched
+`4.1.11`. `apps/local`'s two governance tools now match the root at `0.14.2`.
+The transitive `undici` advisory was fixed with the workspace-level override
+`undici: 7.29.1`; putting this under a `pnpm` key in root `package.json` was
+rejected by pnpm 11 and was removed, so the supported `pnpm-workspace.yaml`
+location is the only source of truth. The lockfile and installed links were
+regenerated with pnpm 11.22.0.
+
+The audit before the fix reported 12 advisories: Vitest 4.1.10 (patched by
+4.1.11) and undici 7.29.0 (two high plus moderate/low findings). The after
+receipt says `No known vulnerabilities found`. `pnpm list --depth 100 -r`
+reports 18 libraries with multiple remaining versions after excluding two
+workspace-link spellings that resolve to the same package. These are transitive
+or peer-selected. Published kit contracts hold the backend-client difference
+(0.6.0 direct versus AuthKit 0.1.9's 0.7.2) and the zod difference (4.4.3 direct
+versus NerveKit 0.7.0's 3.25.76), so no unsafe override was added. The complete
+list and the reason for each retained direct declaration are in the inventory
+JSON. The direct-declaration count includes dependencies, devDependencies and
+peerDependencies; the 18-library count is the recursively installed graph.
+
+R6 adds no coupling between shared kits. Existing kit-internal dependencies
+remain governed by their published versions until task 16 adopts the Owner's
+decoupled releases; the University package imports stay with their existing
+owners. First-party kit versions in tracked manifests remain exact. The complete
+fast, browser, timing, pipeline and native
+dry-run receipts are added below after the stage gates. R7 is next and will
+measure and reduce type/lint suppressions, including test-file typechecking.
+
+R6 gate receipts:
+
+- `pnpm verify`: green; core `95 files / 864 tests`, UI `100 / 633`, local
+  `55 / 518`, world remote/performance `5 / 45` plus world `164 / 1238`, app
+  `79 / 431`, backend `5 / 28`, AI `6 / 50`; canvas `5` mounts, experience
+  ledger `68 findings — 64 fixed, 4 open`, doc-gov `177 docs / 320 links / 0
+  warnings`, delivery and authoring builds green. Receipt:
+  `.scratch/overnight-20261003/task17-r6-verify.log`.
+- `pnpm --filter @pieai/university-local test:primm-pipeline`: `2 files
+  passed`, `18 tests passed`, `13.33s`; receipt
+  `.scratch/overnight-20261003/task17-r6-pipeline.log`.
+- Native course revise dry-run: `validated`, lesson `8`, cards `2/2`, exercise
+  `2`, `completedComponents []`, `retrySafe true`; receipt
+  `.scratch/overnight-20261003/task17-r6-native-dry-run.log`.
+- The first complete browser run had `335 passed` and three deterministic
+  failures under four-worker load (weekly-boss synthetic history, X authoring
+  `understanding-ai/check-what-matters`, and Y authoring English reading tools).
+  Each failed case passed twice in one-worker isolation; receipts are
+  `.scratch/overnight-20261003/task17-r6-isolation-{weekly-boss,english-source,english-tools}-{1,2}.log`.
+  With load back below 20 and no other Playwright, the same commit passed the
+  complete suite: `338 passed (17.5m)`, receipt
+  `.scratch/overnight-20261003/task17-r6-e2e-retry.log`. No assertion or timeout
+  was changed.
+- `pnpm e2e:timing`: `40 passed (5.5m)`, receipt
+  `.scratch/overnight-20261003/task17-r6-timing.log`.
+- `pnpm audit --registry https://registry.npmjs.org`: `No known vulnerabilities
+  found`; after receipt `.scratch/overnight-20261003/task17-r6-audit-after-2.log`.
+
+R6 is ready to commit and push. R7 is the next stage.
