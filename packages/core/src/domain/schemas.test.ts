@@ -66,7 +66,8 @@ describe("study domain schemas", () => {
   });
 
   it("binds UA evidence to an immutable graph hash", () => {
-    expect(EvidenceReferenceSchema.parse(evidence).analysisId).toBe("ua-aaaaaaaaaaaa-294-zh");
+    const parsed = EvidenceReferenceSchema.parse(evidence);
+    expect("analysisId" in parsed ? parsed.analysisId : undefined).toBe("ua-aaaaaaaaaaaa-294-zh");
     expect(() => EvidenceReferenceSchema.parse({ ...evidence, graphHash: undefined })).toThrow(
       /supplied together/,
     );

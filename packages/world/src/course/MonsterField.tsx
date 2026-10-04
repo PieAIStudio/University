@@ -255,6 +255,8 @@ export function MonsterField({
   // A new set of instances starts where every monster already looks.
   useLayoutEffect(() => {
     placeStill();
+    // The placement callback reads the current instance refs; its identity is
+    // deliberately not a trigger for re-running the initial layout.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [still, bosses, models]);
 

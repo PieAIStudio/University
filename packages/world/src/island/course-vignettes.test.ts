@@ -28,6 +28,7 @@ describe("course vignettes (R59-08)", () => {
       expect(kinds.size).toBeGreaterThanOrEqual(3);
       for (const v of vignettes)
         for (const p of v.props) expect(VIGNETTE_MODELS[p.model]).toBeDefined();
+      // The fixture audit intentionally emits one compact line per lesson.
       // eslint-disable-next-line no-console
       console.info(
         `[vignettes ${lessonCount}]`,

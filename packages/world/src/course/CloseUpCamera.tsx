@@ -158,6 +158,8 @@ export function CloseUpCamera({
     state.fromLook.copy(override.look);
     state.t = 0;
     chooseHeading();
+    // The close-up heading is chosen from the current override at transition
+    // start, so only the target coordinates restart it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [other.x, other.z]);
 

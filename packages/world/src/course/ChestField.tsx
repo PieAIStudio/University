@@ -140,6 +140,8 @@ export function ChestField({
   const reducedMotion = usePrefersReducedMotion();
   useLayoutEffect(() => {
     if (reducedMotion && ready) place(ready, 0, 1);
+    // Reduced-motion changes re-place the current chest; the helper reads the
+    // live refs rather than becoming a dependency itself.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reducedMotion, ready]);
   useFrame(({ clock }) => {

@@ -11,6 +11,11 @@ const LEGACY_COURSE_ID = "legacy-course";
 const LEGACY_UNIT_ID = "legacy-unit";
 const LEGACY_LESSON_ID = "legacy-lesson";
 
+/** node:sqlite returns migration rows without a useful structural type. */
+function rowsAs<T>(rows: readonly unknown[]): T {
+  return rows as T;
+}
+
 type LearningSchemaSchedulerSeed = {
   readonly schedulerVersion: string;
   readonly parametersJson: string;
@@ -271,16 +276,17 @@ function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed):
       );
     }
 
-    const schedulerRows = db
-      .prepare(`
-          SELECT scheduler_version, scheduler_config_hash FROM card_state
-          UNION
-          SELECT scheduler_version, scheduler_config_hash FROM review_event
-        `)
-      .all() as unknown as Array<{
-      scheduler_version: string;
-      scheduler_config_hash: string;
-    }>;
+    const schedulerRows = rowsAs<
+      Array<{ scheduler_version: string; scheduler_config_hash: string }>
+    >(
+      db
+        .prepare(`
+            SELECT scheduler_version, scheduler_config_hash FROM card_state
+            UNION
+            SELECT scheduler_version, scheduler_config_hash FROM review_event
+          `)
+        .all(),
+    );
     const incompatible = schedulerRows.find(
       (row) =>
         row.scheduler_version !== seed.schedulerVersion ||
@@ -292,13 +298,15 @@ function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed):
       );
     }
 
-    const legacyCardIds = db
-      .prepare(`
-          SELECT card_id AS id FROM card_state
-          UNION
-          SELECT card_id AS id FROM review_event
-        `)
-      .all() as unknown as Array<{ id: string }>;
+    const legacyCardIds = rowsAs<Array<{ id: string }>>(
+      db
+        .prepare(`
+            SELECT card_id AS id FROM card_state
+            UNION
+            SELECT card_id AS id FROM review_event
+          `)
+        .all(),
+    );
     for (const { id } of legacyCardIds) {
       cardContentKey({
         courseId: LEGACY_COURSE_ID,
@@ -307,9 +315,9 @@ function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed):
         cardId: id,
       });
     }
-    const legacyLessonIds = db
-      .prepare("SELECT lesson_id AS id, status, progress FROM lesson_progress")
-      .all() as unknown as Array<{ id: string; status: string; progress: number }>;
+    const legacyLessonIds = rowsAs<Array<{ id: string; status: string; progress: number }>>(
+      db.prepare("SELECT lesson_id AS id, status, progress FROM lesson_progress").all(),
+    );
     for (const { id, status, progress } of legacyLessonIds) {
       lessonContentKey({
         courseId: LEGACY_COURSE_ID,
@@ -318,9 +326,9 @@ function migrateVersionOne(db: DatabaseSync, seed: LearningSchemaSchedulerSeed):
       });
       validateLessonProgress(status, progress);
     }
-    const legacyExerciseIds = db
-      .prepare("SELECT exercise_id AS id FROM exercise_attempt")
-      .all() as unknown as Array<{ id: string }>;
+    const legacyExerciseIds = rowsAs<Array<{ id: string }>>(
+      db.prepare("SELECT exercise_id AS id FROM exercise_attempt").all(),
+    );
     for (const { id } of legacyExerciseIds) {
       exerciseContentKey({
         courseId: LEGACY_COURSE_ID,
@@ -458,16 +466,16 @@ function migrateVersionFour(db: DatabaseSync): void {
     // still a real historical completion. Backfill it once so old learners do
     // not lose their standing, while all new browser completions use a
     // command-idempotent event from the API.
-    const completed = db
-      .prepare(`
-        SELECT lesson_id, content_revision, updated_at
-        FROM lesson_progress WHERE status = 'completed'
-      `)
-      .all() as unknown as Array<{
-      lesson_id: string;
-      content_revision: number;
-      updated_at: number;
-    }>;
+    const completed = rowsAs<
+      Array<{ lesson_id: string; content_revision: number; updated_at: number }>
+    >(
+      db
+        .prepare(`
+          SELECT lesson_id, content_revision, updated_at
+          FROM lesson_progress WHERE status = 'completed'
+        `)
+        .all(),
+    );
     const insert = db.prepare(`
       INSERT INTO lesson_completion_event (
         event_id, command_id, lesson_id, content_revision, occurred_at, session_id

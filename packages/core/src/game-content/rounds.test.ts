@@ -148,27 +148,29 @@ describe("game rounds from lessons", () => {
 
   it("drops items too long to read in motion, and the round if a bin empties", () => {
     const long = "字".repeat(GAME_ITEM_MAX_WIDTH / 2 + 1);
-    const withLong = structuredClone(primmSteps) as {
+    const withLong = structuredClone(primmSteps) as GameLesson & {
       activities: { steps: { cards?: { text: string }[] }[] }[];
     };
     withLong.activities[0]!.steps[1]!.cards![2]!.text = long;
-    const [kept] = gameRoundsFromLesson(withLong as unknown as GameLesson);
+    const [kept] = gameRoundsFromLesson(withLong);
     expect(kept!.items.map((item) => item.id)).toEqual(["colour", "sweet"]);
 
     withLong.activities[0]!.steps[1]!.cards![1]!.text = long;
-    expect(gameRoundsFromLesson(withLong as unknown as GameLesson)).toEqual([]);
+    expect(gameRoundsFromLesson(withLong)).toEqual([]);
   });
 
   it("skips what it cannot project instead of rewriting it", () => {
-    const fourBins = structuredClone(lessonSort) as { activities: { buckets: unknown[] }[] };
+    const fourBins = structuredClone(lessonSort) as GameLesson & {
+      activities: { buckets: unknown[] }[];
+    };
     fourBins.activities[0]!.buckets.push({ id: "extra", label: "其他" });
-    expect(gameRoundsFromLesson(fourBins as unknown as GameLesson)).toEqual([]);
+    expect(gameRoundsFromLesson(fourBins)).toEqual([]);
 
-    const longBin = structuredClone(primmSound) as {
+    const longBin = structuredClone(primmSound) as GameLesson & {
       activities: { steps: { buckets: { label: string }[] }[] }[];
     };
     longBin.activities[0]!.steps[0]!.buckets[0]!.label = "这个分类的名字实在是长得放不进一个按钮";
-    expect(gameRoundsFromLesson(longBin as unknown as GameLesson)).toEqual([]);
+    expect(gameRoundsFromLesson(longBin)).toEqual([]);
 
     const checkResult: GameLesson = {
       id: "result",
@@ -192,7 +194,7 @@ describe("game rounds from lessons", () => {
     expect(displayWidth("答不出")).toBe(6);
     expect(displayWidth("Can't answer")).toBe(12);
     expect(displayWidth("9 月 27 日")).toBe(10);
-    const english = structuredClone(primmSound) as {
+    const english = structuredClone(primmSound) as GameLesson & {
       activities: {
         steps: { buckets: { label: string }[]; cards: { text: string }[] }[];
       }[];
@@ -202,7 +204,7 @@ describe("game rounds from lessons", () => {
     game.buckets[1]!.label = "One item is missing";
     game.cards[0]!.text = "Time: Saturday 3 p.m.; place: the library; bring: a notebook.";
     game.cards[1]!.text = "Time: Saturday 3 p.m.; place: the library.";
-    expect(gameRoundsFromLesson(english as unknown as GameLesson)[0]!.items).toHaveLength(2);
+    expect(gameRoundsFromLesson(english)[0]!.items).toHaveLength(2);
   });
 
   it("orders a segment's own lessons first, then earlier ones from the nearest", () => {

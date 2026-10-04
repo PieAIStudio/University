@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type {
-  ChatCompletionRequest,
-  ChatCompletionTransport,
-} from "@pieai/swimmer-ai-provider-kit/chat";
+import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
 const { createClientMock } = vi.hoisted(() => ({ createClientMock: vi.fn() }));
 vi.mock("@supabase/supabase-js", () => ({ createClient: createClientMock }));
 
@@ -288,7 +285,7 @@ function offerRequestFor(token?: string): Request {
 
 function fixture() {
   const events: string[] = [];
-  const complete = vi.fn(async (_request: ChatCompletionRequest) => {
+  const complete = vi.fn<ChatCompletionTransport["complete"]>(async (_request) => {
     events.push("model");
     return {
       content: JSON.stringify({
@@ -303,15 +300,15 @@ function fixture() {
   const transport: ChatCompletionTransport = { provider: "fake", complete };
   const model = createStructuredGrader(transport);
 
-  const reserve = vi.fn(async (_input) => {
+  const reserve = vi.fn<GradingWallet["reserve"]>(async (_input) => {
     events.push("reserve");
     return reservation;
   });
-  const commit = vi.fn(async (_input) => {
+  const commit = vi.fn<GradingWallet["commit"]>(async (_input) => {
     events.push("commit");
     return settlement;
   });
-  const refundCall = vi.fn(async (_input) => {
+  const refundCall = vi.fn<GradingWallet["refund"]>(async (_input) => {
     events.push("refund");
     return refund;
   });
@@ -399,6 +396,7 @@ function freeQuotaFixture(events: string[], initialRemaining = "400") {
       remainingPowerUnits: state.remainingPowerUnits,
       resetsAt,
       reservationId: FREE_RESERVATION_ID,
+      idempotent: false,
       status: "committed",
     };
   });
@@ -411,6 +409,7 @@ function freeQuotaFixture(events: string[], initialRemaining = "400") {
       remainingPowerUnits: state.remainingPowerUnits,
       resetsAt,
       reservationId: FREE_RESERVATION_ID,
+      idempotent: false,
       status: "refunded",
     };
   });
@@ -504,6 +503,7 @@ describe("University metered grading service", () => {
           extensions: [],
         }),
         raw: { provider: "fake" },
+        usage: undefined,
       };
     });
 
@@ -605,7 +605,7 @@ describe("University metered grading service", () => {
         ...reservation,
         idempotent: true,
         reservationId: RESERVATION_ID,
-        status: "committed",
+        status: "reserved",
       };
     });
 

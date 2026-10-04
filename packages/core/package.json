@@ -30,6 +30,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:tests": "tsc -p tsconfig.tests.json --pretty false",
     "lint": "oxlint --deny-warnings src",
     "format": "oxfmt --write package.json tsconfig.json src --ignore-path .oxfmtignore",
     "format:check": "oxfmt --check package.json tsconfig.json src --ignore-path .oxfmtignore",

@@ -404,6 +404,8 @@ export function Flight({
       target: new THREE.Vector3(...look),
       elapsed: 0,
     };
+    // The transition reads mutable camera state; only a new route key or
+    // camera instance should start it again.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, camera]);
 

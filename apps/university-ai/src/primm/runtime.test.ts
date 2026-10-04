@@ -518,6 +518,7 @@ describe("every authored condition matters", () => {
     outcome,
     evaluation: outcome === "fail" ? "还缺具体几点见面。" : "已核对这一项。",
     extensions: [],
+    facts: [],
     evidence: { from: "finalWork" as const, quote: "周日下午" },
   });
   it("does not pass a whole task when one required part failed", () => {

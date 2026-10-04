@@ -595,3 +595,58 @@ R6 gate receipts:
   found`; after receipt `.scratch/overnight-20261003/task17-r6-audit-after-2.log`.
 
 R6 is ready to commit and push. R7 is the next stage.
+
+## R7 execution record (2026-10-05)
+
+R7 first made the hidden test typechecks explicit. The four packages that had
+excluded tests now have no-emit `tsconfig.tests.json` projects: core, UI,
+University AI and UniversityLocal. Their scripts run through the root
+`typecheck` command. The other three package/app projects already include their
+tests in their normal `tsconfig` (`apps/university`, `packages/backend` and
+`packages/world`). All 499 tracked source test files are therefore covered by
+TypeScript rather than only by Vitest's transpilation. The typecheck receipt is
+`.scratch/overnight-20261003/task17-r7-typecheck-tests.log`.
+
+The suppression inventory compares the clean R6 commit with the R7 worktree in
+`.scratch/overnight-20261003/task17-r7-suppression-inventory.json`. The counted
+tokens are `any` type annotations/casts, double casts (`as unknown as`),
+TypeScript suppression comments and lint suppression comments; prose mentions
+are not counted. The counts are:
+
+| Guard | R6 baseline | R7 | Change | Treatment of survivors |
+| --- | ---: | ---: | ---: | --- |
+| `any` type annotations/casts | 212 | 209 | -3 | Browser/WebGL probe globals and the remaining published-boundary/test fixtures are isolated and described in the inventory. The PRIMM generator registry now has two concrete function contracts. |
+| `as unknown as` | 187 | 163 | -24 | SQLite row decoding is one documented `rowsAs<T>` boundary per module; test fixtures, browser probes and kit adapters retain only the casts needed to cross those external shapes. |
+| `@ts-expect-error` / `@ts-ignore` | 2 | 2 | 0 | Both are i18n contract tests; each comment states the invalid key or placeholder invariant it intentionally proves. |
+| lint suppressions | 13 | 13 | 0 | Hook suppressions keep mount/transition effects tied to stable refs or event semantics; the two console suppressions print diagnostic fixture receipts. Every line has an adjacent reason. |
+
+The test typecheck pass also caught and corrected stale fixtures: the billing
+plan field names, the complete V3 activity shapes, the progress locator
+literal narrowing, the current grading quota/usage contracts, and the current
+PRIMM decision facts. These are test-only contract repairs and do not alter
+lesson data or learner behavior. The SQLite change centralizes the untyped
+`node:sqlite` row boundary; each selected row still goes through its existing
+named converter or validation immediately after the boundary.
+
+R7 gate receipts:
+
+- `pnpm verify`: green; core `95 files / 864 tests`, UI `100 / 633`, local
+  `55 / 518`, world remote/performance `5 / 45` plus world `164 / 1238`, app
+  `79 / 431`, backend `5 / 28`, AI `6 / 50`; canvas `5` mounts, experience
+  ledger `68 findings — 64 fixed, 4 open`, doc-gov `177 docs / 320 links / 0
+  warnings`, delivery and authoring builds green. The new `typecheck:tests`
+  scripts passed for all four previously excluded test trees; the complete
+  receipt is `.scratch/overnight-20261003/task17-r7-verify.log`.
+- `pnpm --filter @pieai/university-local test:primm-pipeline`: `2 files
+  passed`, `18 tests passed`, `13.53s`; receipt
+  `.scratch/overnight-20261003/task17-r7-pipeline.log`.
+- Native course revise dry-run: `validated`, lesson `8`, cards `2/2`, exercise
+  `2`, `completedComponents []`, `retrySafe true`; receipt
+  `.scratch/overnight-20261003/task17-r7-native-dry-run.log`.
+- `pnpm e2e`: `338 passed (17.7m)` with no failed cases; receipt
+  `.scratch/overnight-20261003/task17-r7-e2e.log`.
+- `pnpm e2e:timing`: `40 passed (5.6m)`; receipt
+  `.scratch/overnight-20261003/task17-r7-timing.log`.
+
+R7 is ready to commit and push. R8 is next: repair the named browser flakies
+with deterministic readiness and require two complete green runs on one commit.

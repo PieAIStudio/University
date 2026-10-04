@@ -10,7 +10,7 @@ function attempt(
   exerciseId: string,
   score: number,
   occurredAt: string,
-  lessonId = LESSON.lessonId,
+  lessonId: string = LESSON.lessonId,
 ): ExerciseAttemptRecord {
   return {
     commandId: `${exerciseId}:${occurredAt}`,

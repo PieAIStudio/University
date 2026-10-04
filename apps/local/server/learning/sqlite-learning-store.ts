@@ -87,6 +87,15 @@ import {
 import { LESSON_STATUS_ORDER, validateLessonProgress } from "./lesson-progress.js";
 
 export { LEARNING_SCHEMA_VERSION };
+
+/**
+ * node:sqlite exposes rows as untyped records. Keep that one unavoidable
+ * boundary cast here; every caller immediately runs the row through its
+ * named converter or validates the selected columns.
+ */
+function rowsAs<T>(rows: readonly unknown[]): T {
+  return rows as T;
+}
 /**
  * The parameters are not this store's to choose any more.
  *
@@ -272,52 +281,68 @@ export class SqliteLearningStore implements LearningStore {
   }
 
   #validateScopedContentKeys(): void {
-    const cardRows = this.#database
-      .prepare(`
-        SELECT card_id AS content_key FROM card_state
-        UNION
-        SELECT card_id AS content_key FROM review_event
-      `)
-      .all() as unknown as Array<{ content_key: string }>;
+    const cardRows = rowsAs<Array<{ content_key: string }>>(
+      this.#database
+        .prepare(`
+          SELECT card_id AS content_key FROM card_state
+          UNION
+          SELECT card_id AS content_key FROM review_event
+        `)
+        .all(),
+    );
     for (const row of cardRows) reviewContentKey(row.content_key);
 
-    const lessonRows = this.#database
-      .prepare("SELECT lesson_id AS content_key, status, progress FROM lesson_progress")
-      .all() as unknown as Array<{ content_key: string; status: string; progress: number }>;
+    const lessonRows = rowsAs<
+      Array<{
+        content_key: string;
+        status: string;
+        progress: number;
+      }>
+    >(
+      this.#database
+        .prepare("SELECT lesson_id AS content_key, status, progress FROM lesson_progress")
+        .all(),
+    );
     for (const row of lessonRows) {
       parseLessonContentKey(row.content_key);
       validateLessonProgress(row.status, row.progress);
     }
 
-    const lessonEventRows = this.#database
-      .prepare(
-        "SELECT lesson_id AS content_key, content_revision, status, progress FROM lesson_progress_event",
-      )
-      .all() as unknown as Array<{
-      content_key: string;
-      content_revision: number;
-      status: string;
-      progress: number;
-    }>;
+    const lessonEventRows = rowsAs<
+      Array<{
+        content_key: string;
+        content_revision: number;
+        status: string;
+        progress: number;
+      }>
+    >(
+      this.#database
+        .prepare(
+          "SELECT lesson_id AS content_key, content_revision, status, progress FROM lesson_progress_event",
+        )
+        .all(),
+    );
     for (const row of lessonEventRows) {
       parseLessonContentKey(row.content_key);
       validateRevision(row.content_revision);
       validateLessonProgress(row.status, row.progress);
     }
 
-    const exerciseRows = this.#database
-      .prepare("SELECT exercise_id AS content_key FROM exercise_attempt")
-      .all() as unknown as Array<{ content_key: string }>;
+    const exerciseRows = rowsAs<Array<{ content_key: string }>>(
+      this.#database.prepare("SELECT exercise_id AS content_key FROM exercise_attempt").all(),
+    );
     for (const row of exerciseRows) parseExerciseContentKey(row.content_key);
 
-    const retrievalRows = this.#database
-      .prepare("SELECT * FROM retrieval_attempt")
-      .all() as unknown as RetrievalAttemptRow[];
+    const retrievalRows = rowsAs<RetrievalAttemptRow[]>(
+      this.#database.prepare("SELECT * FROM retrieval_attempt").all(),
+    );
     for (const row of retrievalRows) rowToRetrievalAttempt(row);
 
-    const sessionRows = this.#database
-      .prepare("SELECT session_id, started_at, ended_at, host, objective FROM learning_session")
-      .all() as unknown as LearningSessionRow[];
+    const sessionRows = rowsAs<LearningSessionRow[]>(
+      this.#database
+        .prepare("SELECT session_id, started_at, ended_at, host, objective FROM learning_session")
+        .all(),
+    );
     for (const row of sessionRows) rowToLearningSession(row);
   }
 
@@ -480,9 +505,11 @@ export class SqliteLearningStore implements LearningStore {
 
   listCards(limit = 10_000): readonly StoredCardState[] {
     const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
-    const rows = this.#database
-      .prepare("SELECT * FROM card_state ORDER BY updated_at DESC, card_id LIMIT ?")
-      .all(capped) as unknown as CardStateRow[];
+    const rows = rowsAs<CardStateRow[]>(
+      this.#database
+        .prepare("SELECT * FROM card_state ORDER BY updated_at DESC, card_id LIMIT ?")
+        .all(capped),
+    );
     return rows.map(rowToState);
   }
 
@@ -491,9 +518,11 @@ export class SqliteLearningStore implements LearningStore {
     if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
       throw new Error("Due-card limit must be an integer between 1 and 1000");
     }
-    const rows = this.#database
-      .prepare("SELECT * FROM card_state WHERE due_at <= ? ORDER BY due_at, card_id LIMIT ?")
-      .all(asOfMs, limit) as unknown as CardStateRow[];
+    const rows = rowsAs<CardStateRow[]>(
+      this.#database
+        .prepare("SELECT * FROM card_state WHERE due_at <= ? ORDER BY due_at, card_id LIMIT ?")
+        .all(asOfMs, limit),
+    );
     return rows.map(rowToState);
   }
 
@@ -604,15 +633,17 @@ export class SqliteLearningStore implements LearningStore {
 
   rebuildCardStateFromReviewEvents(): CardProjectionReplayResult {
     return this.#transaction(() => {
-      const events = this.#database
-        .prepare(`
-          SELECT event_id, card_id, content_revision, rating, reviewed_at,
-                 previous_due_at, resulting_due_at, scheduler_version,
-                 scheduler_config_hash, payload_json
-          FROM review_event
-          ORDER BY card_id, reviewed_at, rowid
-        `)
-        .all() as unknown as ReviewEventRow[];
+      const events = rowsAs<ReviewEventRow[]>(
+        this.#database
+          .prepare(`
+            SELECT event_id, card_id, content_revision, rating, reviewed_at,
+                   previous_due_at, resulting_due_at, scheduler_version,
+                   scheduler_config_hash, payload_json
+            FROM review_event
+            ORDER BY card_id, reviewed_at, rowid
+          `)
+          .all(),
+      );
       const untouchedCardCount = (
         this.#database
           .prepare(`
@@ -764,12 +795,14 @@ export class SqliteLearningStore implements LearningStore {
 
   listLessonProgress(limit = 10_000): readonly StoredLessonProgress[] {
     const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
-    const rows = this.#database
-      .prepare(
-        `SELECT lesson_id, content_revision, status, progress, updated_at
-         FROM lesson_progress ORDER BY updated_at DESC, lesson_id LIMIT ?`,
-      )
-      .all(capped) as unknown as Array<LessonProgressRow & { readonly lesson_id: string }>;
+    const rows = rowsAs<Array<LessonProgressRow & { readonly lesson_id: string }>>(
+      this.#database
+        .prepare(
+          `SELECT lesson_id, content_revision, status, progress, updated_at
+           FROM lesson_progress ORDER BY updated_at DESC, lesson_id LIMIT ?`,
+        )
+        .all(capped),
+    );
     return rows.map((row) => {
       const lessonKey = parseLessonContentKey(row.lesson_id);
       const key =
@@ -1229,13 +1262,15 @@ export class SqliteLearningStore implements LearningStore {
 
   listExerciseAttempts(limit = 10_000): readonly StoredExerciseAttempt[] {
     const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
-    const rows = this.#database
-      .prepare(
-        `SELECT attempt_id, command_id, exercise_id, content_revision,
-                score, max_score, response_json, occurred_at
-         FROM exercise_attempt ORDER BY occurred_at ASC, rowid ASC LIMIT ?`,
-      )
-      .all(capped) as unknown as ExerciseCommandRow[];
+    const rows = rowsAs<ExerciseCommandRow[]>(
+      this.#database
+        .prepare(
+          `SELECT attempt_id, command_id, exercise_id, content_revision,
+                  score, max_score, response_json, occurred_at
+           FROM exercise_attempt ORDER BY occurred_at ASC, rowid ASC LIMIT ?`,
+        )
+        .all(capped),
+    );
     return rows.map((row) => ({
       attemptId: row.attempt_id,
       commandId: row.command_id ?? row.attempt_id,
@@ -1360,14 +1395,16 @@ export class SqliteLearningStore implements LearningStore {
     if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
       throw new Error("Retrieval-attempt limit must be an integer between 1 and 1000");
     }
-    const rows = this.#database
-      .prepare(`
-        SELECT * FROM retrieval_attempt
-        WHERE card_key = ?
-        ORDER BY started_at DESC, rowid DESC
-        LIMIT ?
-      `)
-      .all(key, limit) as unknown as RetrievalAttemptRow[];
+    const rows = rowsAs<RetrievalAttemptRow[]>(
+      this.#database
+        .prepare(`
+          SELECT * FROM retrieval_attempt
+          WHERE card_key = ?
+          ORDER BY started_at DESC, rowid DESC
+          LIMIT ?
+        `)
+        .all(key, limit),
+    );
     return rows.map(rowToRetrievalAttempt);
   }
 
@@ -1446,14 +1483,16 @@ export class SqliteLearningStore implements LearningStore {
     if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) {
       throw new Error("Session limit must be an integer between 1 and 1000");
     }
-    const rows = this.#database
-      .prepare(`
-        SELECT session_id, started_at, ended_at, host, objective
-        FROM learning_session
-        ORDER BY started_at DESC, session_id DESC
-        LIMIT ?
-      `)
-      .all(limit) as unknown as LearningSessionRow[];
+    const rows = rowsAs<LearningSessionRow[]>(
+      this.#database
+        .prepare(`
+          SELECT session_id, started_at, ended_at, host, objective
+          FROM learning_session
+          ORDER BY started_at DESC, session_id DESC
+          LIMIT ?
+        `)
+        .all(limit),
+    );
     return rows.map(rowToLearningSession);
   }
 
@@ -1635,17 +1674,19 @@ export class SqliteLearningStore implements LearningStore {
     if (!options.includeResolved) clauses.push("resolved_at IS NULL");
     const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
     parameters.push(capped);
-    const rows = this.#database
-      .prepare(`
-        SELECT mark_id, lesson_id, content_revision, kind,
-               quote_exact, quote_prefix, quote_suffix,
-               section_title, note, created_at, resolved_at
-        FROM reader_mark
-        ${where}
-        ORDER BY created_at ASC, rowid ASC
-        LIMIT ?
-      `)
-      .all(...parameters) as unknown as ReaderMarkRow[];
+    const rows = rowsAs<ReaderMarkRow[]>(
+      this.#database
+        .prepare(`
+          SELECT mark_id, lesson_id, content_revision, kind,
+                 quote_exact, quote_prefix, quote_suffix,
+                 section_title, note, created_at, resolved_at
+          FROM reader_mark
+          ${where}
+          ORDER BY created_at ASC, rowid ASC
+          LIMIT ?
+        `)
+        .all(...parameters),
+    );
     return rows.map(rowToReaderMark);
   }
 

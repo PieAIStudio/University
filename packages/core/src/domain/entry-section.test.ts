@@ -193,7 +193,9 @@ const SAMPLES = {
 } satisfies { [T in EntrySectionType]: EntrySection & { type: T } };
 
 function sample<T extends EntrySectionType>(type: T): EntrySection & { type: T } {
-  return SAMPLES[type];
+  // The registry is checked once above; this assertion preserves the key/value
+  // correlation that TypeScript cannot retain through a generic indexed read.
+  return SAMPLES[type] as EntrySection & { type: T };
 }
 
 describe("section payloads", () => {

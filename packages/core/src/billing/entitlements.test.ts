@@ -20,7 +20,7 @@ const CONFIG_WITH_PENDING_PLAN: BillingConfig = {
     ...BILLING_CONFIG.plans,
     {
       id: "studio",
-      name: "工作室",
+      nameKey: "billing.member.name",
       pricing: { kind: "pending" },
       ai: {
         deterministicGrading: true,
@@ -29,7 +29,7 @@ const CONFIG_WITH_PENDING_PLAN: BillingConfig = {
         openTutoringTurnsPerDay: 20,
       },
       sync: { included: true, seats: 1 },
-      lines: [],
+      lineKeys: [],
     },
   ],
 };

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { lessonRefKey } from "./contract.js";
 import { lessonKey, lessonKeyOf } from "./document.js";
 import { createProgressPort } from "./port.js";
-import { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
+import { createMemoryPersistence } from "./memory.js";
 
 const REF = {
   studyId: "turing-pact",
@@ -47,7 +47,6 @@ describe("naming a lesson", () => {
     */
     const port = createProgressPort({
       persistence: createMemoryPersistence(),
-      remote: createMemoryRemoteStore(),
     });
 
     port.confirmLessonRead(lessonKeyOf(REF), 1);

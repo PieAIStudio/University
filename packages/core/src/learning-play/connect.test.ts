@@ -3,12 +3,27 @@ import { checkConnections, traceConnectionProbe } from "./connect.js";
 import type { ConnectActivity } from "./types.js";
 
 const graph = {
+  id: "route",
+  kind: "connect",
+  title: "顺着名字找文件",
+  brief: "把画面和文件连起来。",
+  goal: "找到对应文件。",
+  takeaway: "先看画面，再顺着名字找。",
+  hint: "从画面上的名字开始。",
+  source: { label: "测试资料", url: "https://example.com/source" },
+  nodes: [
+    { id: "click", label: "点击处", note: "点击处", x: 0, y: 0 },
+    { id: "request", label: "请求", note: "请求", x: 1, y: 0 },
+    { id: "success", label: "成功", note: "成功", x: 2, y: 0 },
+    { id: "error", label: "失败", note: "失败", x: 2, y: 1 },
+  ],
+  probes: [{ label: "从点击到结果", path: ["click", "request", "success"] }],
   edges: [
     { from: "click", to: "request", why: "" },
     { from: "request", to: "success", why: "" },
     { from: "request", to: "error", why: "" },
   ],
-} as ConnectActivity;
+} satisfies ConnectActivity;
 
 describe("causal connections", () => {
   it("accepts any order of construction and requires both outcome branches", () => {

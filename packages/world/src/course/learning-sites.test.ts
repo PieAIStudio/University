@@ -204,6 +204,7 @@ describe("measured (not asserted): how often a node finds free ground", () => {
         `${sites.filter((s) => s.kind === kind && s.resolved).length}/${sites.filter((s) => s.kind === kind).length}`;
       return `${courseId}: checkpoint ${byKind("checkpoint")} personal ${byKind("personal")} challenge ${byKind("challenge")} stones ${sites.reduce((n, s) => n + s.branch.length, 0)}`;
     });
+    // This diagnostic test intentionally prints its compact coverage receipt.
     // eslint-disable-next-line no-console
     console.info(rows.join("\n"));
   });

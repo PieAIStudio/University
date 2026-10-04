@@ -107,6 +107,8 @@ export function WispField({ spots }: { readonly spots: readonly WispSpot[] }) {
   const reducedMotion = usePrefersReducedMotion();
   useLayoutEffect(() => {
     place(0, true);
+    // The initial placement reads refs and baked geometry; only the source
+    // arrays should cause a new placement pass.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spots, baked]);
   useFrame(({ clock }) => {

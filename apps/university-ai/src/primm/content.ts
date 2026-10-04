@@ -20,6 +20,8 @@ const LessonId = z
   .string()
   .max(100)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 // The course family is open on purpose: any lesson of this course may run once
 // its canonical package carries a native PRIMM activity, which the resolver
 // below enforces, so a newly written lesson needs no second allow-list. The
@@ -198,8 +200,8 @@ export function createCanonicalPrimmResolver(options: {
       publicLesson.contentRevision !== input.contentRevision
     )
       throw new PreviewFailure("stale", 409);
-    const rawActivity = lesson.activities.find((a: any) => a?.kind === "primm");
-    const publicActivity = publicLesson.activities.find((a: any) => a?.kind === "primm");
+    const rawActivity = lesson.activities.find((a) => isRecord(a) && a.kind === "primm");
+    const publicActivity = publicLesson.activities.find((a) => isRecord(a) && a.kind === "primm");
     if (
       !rawActivity ||
       !publicActivity ||
@@ -211,7 +213,9 @@ export function createCanonicalPrimmResolver(options: {
       input.locale,
     );
     const exercise = ExerciseSchema.parse(
-      lesson.exercises.find((exercise: any) => exercise?.id === activity.make.exerciseId),
+      lesson.exercises.find(
+        (exercise) => isRecord(exercise) && exercise.id === activity.make.exerciseId,
+      ),
     );
     const spec = input.phase === "make" ? activity.make : activity.starter;
     if (input.phase === "run" && !primmRunPrompts(activity).includes(input.prompt))

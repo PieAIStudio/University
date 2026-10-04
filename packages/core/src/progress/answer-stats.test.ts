@@ -1,4 +1,5 @@
 import type { ExerciseAttemptRecord, ProgressDocument } from "../ports/progress.js";
+import type { LessonRef } from "./contract.js";
 import { describe, expect, it } from "vitest";
 
 import { emptyProgress } from "./document.js";
@@ -18,7 +19,7 @@ function attempt(
     readonly occurredAt: string;
     readonly passed: boolean | null;
     readonly contentRevision?: number;
-    readonly locator?: Partial<typeof LOCATOR>;
+    readonly locator?: Partial<LessonRef>;
     readonly outcome?: "pass" | "fail" | "undecided";
   },
 ): ExerciseAttemptRecord {

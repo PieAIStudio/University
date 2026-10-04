@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { createGeneratorRegistry } from "@pieai/swimmer-ai-provider-kit/generator-registry";
 import { createStructuredOutputClient } from "@pieai/swimmer-ai-provider-kit/structured-output";
 import type { ChatCompletionTransport, ChatMessage } from "@pieai/swimmer-ai-provider-kit/chat";
 import type { ExerciseAttemptResult, PrimmExecutionResult } from "@pieai/university-core";
@@ -115,19 +114,19 @@ export function createPrimmRuntime(options: PrimmRuntimeOptions) {
   let active: { commandId: string; controller: AbortController } | undefined;
   let used = 0;
   const quota = Math.min(Math.max(options.quota ?? 100, 1), 100);
-  const generators = createGeneratorRegistry<"completion" | "transcription", any, any>({
-    generators: {
-      completion: (input: { messages: ChatMessage[]; signal: AbortSignal }) =>
-        options.transport.complete({ ...input, model: PREVIEW_MODEL, maxTokens: 1600 }),
-      transcription: async (input: { asset: ApprovedAsset; signal: AbortSignal }) => {
-        if (!options.transcriber) throw new PreviewFailure("unavailable", 503);
-        const result = await options.transcriber.transcribe(input);
-        if (!result.text.trim() || result.text.length > 16_000 || !result.model)
-          throw new PreviewFailure("unavailable", 503);
-        return result;
-      },
+  // These two operations have different input and output contracts. Keeping
+  // them as a typed pair is clearer than forcing both through an `any` registry.
+  const generators = {
+    completion: (input: { messages: ChatMessage[]; signal: AbortSignal }) =>
+      options.transport.complete({ ...input, model: PREVIEW_MODEL, maxTokens: 1600 }),
+    transcription: async (input: { asset: ApprovedAsset; signal: AbortSignal }) => {
+      if (!options.transcriber) throw new PreviewFailure("unavailable", 503);
+      const result = await options.transcriber.transcribe(input);
+      if (!result.text.trim() || result.text.length > 16_000 || !result.model)
+        throw new PreviewFailure("unavailable", 503);
+      return result;
     },
-  });
+  };
   const structured = createStructuredOutputClient({ transport: options.transport });
 
   async function context(

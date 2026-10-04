@@ -143,6 +143,7 @@
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",
+    "typecheck:tests": "tsc -p tsconfig.tests.json --pretty false",
     "lint": "oxlint --deny-warnings src vitest.config.ts",
     "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src --ignore-path .oxfmtignore",
     "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src --ignore-path .oxfmtignore",

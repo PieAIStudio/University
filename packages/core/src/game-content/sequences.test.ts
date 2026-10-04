@@ -97,9 +97,11 @@ describe("贪吃蛇 rounds", () => {
   });
 
   it("skips a probe step the lesson never drew as a link", () => {
-    const skipped = structuredClone(route) as { activities: { probes: unknown[] }[] };
+    const skipped = structuredClone(route) as GameLesson & {
+      activities: { probes: unknown[] }[];
+    };
     skipped.activities[0]!.probes = [{ label: "跳着走", path: ["screen", "head", "file"] }];
-    expect(sequenceRoundsFromLesson(skipped as GameLesson)).toEqual([]);
+    expect(sequenceRoundsFromLesson(skipped)).toEqual([]);
   });
 
   it("skips what a lawn cannot show rather than shortening it", () => {

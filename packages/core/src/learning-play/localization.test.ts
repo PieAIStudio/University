@@ -66,10 +66,11 @@ describe("activity translation preserves the actual V3 task", () => {
   it("translates nested step labels without changing ids or actions", () => {
     const translated = localizeActivity(v3Activity, "en-US");
     expect(translated.id).toBe(v3Activity.id);
-    expect(translated.steps[0]?.title).toMatch(/^You want to know/);
-    expect(translated.steps[0]?.kind).toBe("choose");
-    expect(translated.steps[0]?.options[0]?.id).toBe("vague");
-    expect(translated.requests[0]?.id).toBe(v3Activity.requests[0]?.id);
+    const first = translated.steps[0];
+    expect(first?.title).toMatch(/^You want to know/);
+    expect(first?.kind).toBe("choose");
+    if (first?.kind === "choose") expect(first.options[0]?.id).toBe("vague");
+    expect(translated.requests?.[0]?.id).toBe(v3Activity.requests?.[0]?.id);
   });
   it("leaves the authored Chinese activity intact", () => {
     expect(localizeActivity(v3Activity, "zh-CN")).toBe(v3Activity);
@@ -84,7 +85,12 @@ describe("activity translation preserves the actual V3 task", () => {
   it("keeps every display string in the authored translation inventory", () => {
     const strings = activityDisplayStrings(v3Activity);
     expect(strings).toContain(v3Activity.steps[0]!.title);
-    expect(strings).toContain(v3Activity.steps.find((step) => step.kind === "find")!.title);
+    const findStep = v3Activity.steps.find(
+      (step): step is Extract<(typeof v3Activity.steps)[number], { kind: "find" }> =>
+        step.kind === "find",
+    );
+    expect(findStep?.title).toBeDefined();
+    expect(strings).toContain(findStep!.title);
     expect(activityTranslationIssues(v3Activity)).toEqual([]);
   });
 });

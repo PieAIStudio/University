@@ -17,11 +17,11 @@ function port(
   attempts: readonly ExerciseAttemptRecord[] = [],
 ): ProgressPort {
   return {
-    lessonState: (key) => {
+    lessonState: (key: string) => {
       expect(key).toBe(lessonKeyOf(REF));
       return state;
     },
-    latestExerciseAttempt: (_locator, exerciseId, contentRevision) =>
+    latestExerciseAttempt: (_locator: LessonRef, exerciseId: string, contentRevision: number) =>
       attempts
         .filter(
           (attempt) =>
@@ -29,7 +29,7 @@ function port(
         )
         .sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt))[0] ??
       null,
-    exerciseAttempts: (_locator, exerciseId, contentRevision) =>
+    exerciseAttempts: (_locator: LessonRef, exerciseId: string, contentRevision: number) =>
       attempts.filter(
         (attempt) =>
           attempt.exerciseId === exerciseId && attempt.contentRevision === contentRevision,
