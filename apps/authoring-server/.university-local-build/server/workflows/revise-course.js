@@ -1,0 +1,859 @@
+import { refineChoiceExercise } from "@pieai/university-core";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { z } from "zod";
+import { CardContentSchema, EvidenceReferenceSchema, interactionLessonIssues, isUrlEvidence, ExerciseSchema, IsoDateTime, LessonManifestSchema, LessonActivitySchema, LessonAssetSchema, LessonSectionSchema, LessonVariantSchema, LocaleMap, LocalizedCardSchema, LocalizedExerciseSchema, ChoiceExerciseContentSchema, LocalizedLessonSchema, Sha256, SnapshotManifestSchema, StableId, UaAnalysisManifestSchema, } from "@pieai/university-core/domain/schemas.js";
+import { readCourse, readLatestCard, readLatestExercise, readLatestLesson, readUnit, updateCourseStatus, updateUnitStatus, writeCardRevision, writeExerciseRevision, writeLessonRevision, assertUnitReadyForActivation, } from "../content/repository.js";
+import { matchesAssetMime, sniffAssetMime } from "../content/asset-bytes.js";
+import { LessonAssetFileProposalSchema } from "../content/asset-input.js";
+import { validateEvidence } from "../content/evidence.js";
+import { normalizeCard, normalizeExercise } from "../content/normalization.js";
+import { writeJsonAtomically } from "../storage/atomic-json.js";
+import { canonicalJson, readJson, sha256 } from "../storage/serialization.js";
+import { getCoursePaths, getLessonPaths, getSnapshotPaths, getStudyPaths, getUaAnalysisPaths, } from "../studies/paths.js";
+import { auditStudyFreshness, inspectSourceStatus } from "./refresh-study.js";
+const MAX_LESSON_CONTENT_BYTES = 512 * 1024;
+/**
+ * `expectedRevision` is the optimistic-concurrency check against the stored
+ * item. Omitting it declares the item as new: a course that could only revise
+ * what it already had could never grow, so adding a card or an exercise meant
+ * rebuilding the whole course.
+ */
+const CardRevisionProposalSchema = z
+    .object({
+    id: StableId,
+    expectedRevision: z.number().int().positive().optional(),
+    kind: z.enum(["basic", "cloze"]).optional(),
+    front: z.string().min(1).max(20_000),
+    locales: LocaleMap(LocalizedCardSchema),
+    back: z.string().min(1).max(20_000),
+    tags: z.array(StableId).optional(),
+    evidence: z.array(EvidenceReferenceSchema).min(1),
+})
+    .strict();
+const ExerciseRevisionBaseSchema = z.object({
+    id: StableId,
+    expectedRevision: z.number().int().positive().optional(),
+    title: z.string().min(1).max(200).optional(),
+    prompt: z.string().min(1).max(20_000),
+    locales: LocaleMap(LocalizedExerciseSchema),
+    evidence: z.array(EvidenceReferenceSchema).min(1),
+});
+const ExerciseRevisionProposalSchema = z.union([
+    ExerciseRevisionBaseSchema.extend(ChoiceExerciseContentSchema.shape)
+        .strict()
+        .superRefine(refineChoiceExercise),
+    ExerciseRevisionBaseSchema.extend({
+        kind: z.literal("short-answer").optional(),
+        expectedAnswer: z.string().min(1),
+    }).strict(),
+    ExerciseRevisionBaseSchema.extend({
+        kind: z.literal("explain").optional(),
+        rubric: z.array(z.string().min(1)).min(1),
+    }).strict(),
+]);
+/**
+ * Exported for the birth-and-revision agreement check in `add-lessons.test.ts`:
+ * a field this schema can set on a lesson but the creation proposal cannot
+ * express is a field a new lesson is structurally unable to be born with.
+ */
+export const CourseRevisionProposalSchema = z
+    .object({
+    schemaVersion: z.literal(1),
+    proposalId: StableId,
+    targetSnapshotId: StableId.optional(),
+    targetAnalysisId: StableId.optional(),
+    lesson: z
+        .object({
+        courseId: StableId,
+        unitId: StableId,
+        id: StableId,
+        expectedRevision: z.number().int().positive(),
+        title: z.string().min(1).max(200).optional(),
+        variant: LessonVariantSchema.optional(),
+        sections: z.array(LessonSectionSchema).max(100).optional(),
+        content: z.string().min(1),
+        locales: LocaleMap(LocalizedLessonSchema),
+        evidence: z.array(EvidenceReferenceSchema).min(1),
+        assets: z.array(LessonAssetSchema).max(100).optional(),
+        /*
+          Existing assets this revision deliberately stops carrying. A lesson
+          replaced by new content (Owner, 2026-09-28: old lessons go in batches
+          with their replacements) must not ship the old one's media, and an
+          omission must still never drop one: retiring is said by name.
+        */
+        retireAssetIds: z.array(StableId).max(100).optional(),
+        /*
+          Omitted means unchanged, the way assets are: a revision that only
+          rewords prose must not silently drop the activity the lesson
+          embeds, and an author who did not mention activities did not ask
+          for one to disappear.
+        */
+        activities: z.array(LessonActivitySchema).max(3).optional(),
+        assetFiles: z.array(LessonAssetFileProposalSchema).optional(),
+        cards: z.array(CardRevisionProposalSchema),
+        exercises: z.array(ExerciseRevisionProposalSchema),
+    })
+        .strict(),
+})
+    .strict();
+const OperationReceiptSchema = z
+    .object({
+    schemaVersion: z.literal(1),
+    operation: z.literal("course-revise"),
+    proposalId: StableId,
+    proposalHash: Sha256,
+    studyId: StableId,
+    courseId: StableId,
+    unitId: StableId,
+    lessonId: StableId,
+    targetSnapshotId: StableId.nullable(),
+    targetAnalysisId: StableId.nullable(),
+    status: z.enum(["pending", "complete"]),
+    completedComponents: z.array(z.string().min(1)),
+    createdAt: IsoDateTime,
+    updatedAt: IsoDateTime,
+})
+    .strict();
+/**
+ * Moves an active course and its units to `stale` so their content can be
+ * edited. `course revise` refuses to touch active containers, and until now the
+ * only thing that produced `stale` was a freshness audit finding the source had
+ * moved — so a course whose evidence was still perfectly current could not be
+ * improved at all. This is the deliberate half of the same transition, and
+ * `course reactivate` remains the only way back, with its full audit intact.
+ */
+export function openCourseForEdit(input) {
+    const course = readCourse(input.studiesRoot, input.studyId, input.courseId);
+    if (course.status !== "active" && course.status !== "stale") {
+        throw new Error(`Only an active course can be opened for editing: ${course.id} is ${course.status}`);
+    }
+    const alreadyOpen = course.status === "stale" &&
+        course.unitIds.every((unitId) => readUnit(input.studiesRoot, input.studyId, course.id, unitId).status === "stale");
+    const now = input.now ?? new Date();
+    // The course goes first: `updateUnitStatus` refuses to move a unit out of
+    // `active` while its course is still active. Reactivation runs the mirror
+    // image, units first and the course last.
+    const updated = updateCourseStatus(input.studiesRoot, input.studyId, course.id, "stale", now);
+    for (const unitId of course.unitIds) {
+        updateUnitStatus(input.studiesRoot, input.studyId, course.id, unitId, "stale");
+    }
+    return {
+        schemaVersion: 1,
+        operation: "course-open-for-edit",
+        disposition: alreadyOpen ? "reused" : "opened",
+        studyId: input.studyId,
+        courseId: course.id,
+        staleUnitIds: course.unitIds,
+        courseStatus: updated.status,
+    };
+}
+export class CourseRevisionPartialError extends Error {
+    receipt;
+    constructor(receipt, cause) {
+        const detail = cause instanceof Error ? cause.message : String(cause);
+        super(`Course revision stopped after a partial write (${receipt.completedComponents.join(", ") || "none"}). ` +
+            `A pending receipt was preserved; retry the exact proposal ${receipt.proposalId}. Cause: ${detail}`);
+        this.name = "CourseRevisionPartialError";
+        this.receipt = receipt;
+    }
+}
+function assertUniqueIds(items, label) {
+    const ids = items.map((item) => item.id);
+    if (new Set(ids).size !== ids.length)
+        throw new Error(`${label} must not contain duplicate IDs`);
+}
+/**
+ * A revision may add items but never lose them. Dropping a card would leave its
+ * scheduled review state pointing at content the lesson no longer declares, so
+ * removal has to go through retirement rather than through an omission in a
+ * proposal. Duplicates are rejected for the same reason `create-course` rejects
+ * them: two entries would write into one directory.
+ */
+function assertCoversExisting(proposed, existing, label) {
+    const seen = new Set();
+    for (const id of proposed) {
+        if (seen.has(id))
+            throw new Error(`${label} must not contain duplicate IDs: ${id}`);
+        seen.add(id);
+    }
+    const missing = existing.filter((id) => !seen.has(id));
+    if (missing.length > 0) {
+        throw new Error(`${label} must still contain every existing ID; missing: ${missing.join(", ")}. ` +
+            `Retire an item instead of dropping it from a revision.`);
+    }
+}
+function resolveLessonAssets(currentLesson, proposedAssets, retiredIds = []) {
+    const retired = new Set(retiredIds);
+    for (const id of retired) {
+        if (!currentLesson.assets.some((asset) => asset.id === id))
+            throw new Error(`Retired asset is not an asset of lesson ${currentLesson.id}: ${id}`);
+    }
+    const assets = proposedAssets ?? currentLesson.assets.filter((asset) => !retired.has(asset.id));
+    assertUniqueIds(assets, "Proposed lesson assets");
+    assertUniqueIds(assets.map((asset) => ({ id: asset.path })), "Proposed lesson asset paths");
+    for (const asset of assets) {
+        if (retired.has(asset.id))
+            throw new Error(`Lesson ${currentLesson.id} asset is both kept and retired: ${asset.id}`);
+    }
+    const kept = currentLesson.assets.filter((asset) => !retired.has(asset.id));
+    assertCoversExisting(assets.map((asset) => asset.id), kept.map((asset) => asset.id), `Lesson ${currentLesson.id} assets`);
+    const proposedById = new Map(assets.map((asset) => [asset.id, asset]));
+    for (const current of kept) {
+        const replacement = proposedById.get(current.id);
+        if (replacement?.path !== current.path) {
+            throw new Error(`Existing lesson asset paths cannot change in a revision: ${current.id}`);
+        }
+    }
+    return assets;
+}
+function resolveLessonAssetFiles(studiesRoot, studyId, currentLesson, assets, proposedFiles) {
+    const files = proposedFiles ?? [];
+    assertUniqueIds(files.map((file) => ({ id: file.path })), "Proposed lesson asset files");
+    const declaredPaths = new Set(assets.map((asset) => asset.path));
+    for (const file of files) {
+        if (!declaredPaths.has(file.path)) {
+            throw new Error(`Asset file is not declared by the lesson: ${file.path}`);
+        }
+    }
+    const explicitByPath = new Map(files.map((file) => [file.path, file.sourcePath]));
+    const currentById = new Map(currentLesson.assets.map((asset) => [asset.id, asset]));
+    const currentRevisionRoot = join(getLessonPaths(studiesRoot, studyId, currentLesson.courseId, currentLesson.unitId, currentLesson.id).revisions, String(currentLesson.contentRevision));
+    return assets.map((asset) => {
+        const sourcePath = explicitByPath.get(asset.path) ??
+            (currentById.has(asset.id) ? join(currentRevisionRoot, asset.path) : undefined);
+        if (!sourcePath) {
+            throw new Error(`New lesson asset needs an assetFiles sourcePath: ${asset.id}`);
+        }
+        const bytes = readFileSync(sourcePath);
+        if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
+            throw new Error(`Lesson asset hash/size mismatch: ${asset.id}`);
+        }
+        // Size and hash are both computed from this very file, so they agree with
+        // any declared MIME. The bytes are the only thing that can contradict it,
+        // and the serving path refuses a file that does — after it is already
+        // stored, where the failure is a broken image and nobody's build error.
+        if (!matchesAssetMime(bytes, asset.mime)) {
+            throw new Error(`Lesson asset ${asset.id} declares ${asset.mime} but its bytes are ${sniffAssetMime(bytes)}: ${asset.path}`);
+        }
+        return { path: asset.path, sourcePath };
+    });
+}
+/**
+ * What a proposal claims to be written against, or `null` when it claims
+ * nothing — a course in a study with no repository.
+ *
+ * Null is not "the snapshot could not be read". A missing snapshot for a study
+ * that has one is still an error and still throws below; this branch is only
+ * for a proposal that never named one, which is the honest shape for 通用课.
+ */
+export function readTargetIdentity(studiesRoot, studyId, proposal) {
+    if (!proposal.targetSnapshotId) {
+        if (proposal.targetAnalysisId)
+            throw new Error("A source analysis requires its snapshot");
+        if (existsSync(getStudyPaths(studiesRoot, studyId).source.registration)) {
+            throw new Error("A repository-backed study requires a target snapshot; omission cannot bypass freshness checks");
+        }
+        return null;
+    }
+    const snapshot = SnapshotManifestSchema.parse(readJson(getSnapshotPaths(studiesRoot, studyId, proposal.targetSnapshotId).manifest));
+    if (!proposal.targetAnalysisId) {
+        return {
+            snapshotId: snapshot.id,
+            sourceCommit: snapshot.sourceCommit,
+            analysisId: null,
+            graphHash: null,
+        };
+    }
+    const analysis = UaAnalysisManifestSchema.parse(readJson(getUaAnalysisPaths(studiesRoot, studyId, proposal.targetAnalysisId).manifest));
+    if (analysis.status !== "ready" ||
+        analysis.snapshotId !== snapshot.id ||
+        analysis.sourceCommit !== snapshot.sourceCommit) {
+        throw new Error("Target UA analysis is not ready or does not match the target snapshot");
+    }
+    return {
+        snapshotId: snapshot.id,
+        sourceCommit: snapshot.sourceCommit,
+        analysisId: analysis.id,
+        graphHash: analysis.graphHash,
+    };
+}
+export function validateTargetEvidence(studiesRoot, studyId, evidence, 
+/** Null when the study has no repository; only URL citations are legal then. */
+target, label) {
+    for (const reference of evidence) {
+        validateEvidence(studiesRoot, studyId, reference);
+        if (isUrlEvidence(reference))
+            continue;
+        if (!target) {
+            throw new Error(`${label} repository evidence needs a target snapshot; this study has no repository`);
+        }
+        if (reference.snapshotId !== target.snapshotId ||
+            reference.sourceCommit !== target.sourceCommit) {
+            throw new Error(`${label} evidence must point to the target snapshot and source commit`);
+        }
+        if (reference.analysisId) {
+            if (reference.analysisId !== target.analysisId || reference.graphHash !== target.graphHash) {
+                throw new Error(`${label} UA evidence must point to the target analysis identity`);
+            }
+        }
+    }
+}
+/**
+ * Whether a proposal, renumbered to the revision already stored, is that stored
+ * item byte for byte.
+ *
+ * The revise contract makes a proposal list every existing card and exercise —
+ * dropping one is a deletion, not a smaller edit. Taken together with an
+ * unconditional bump, that meant no lesson's prose could be touched without
+ * minting a fresh revision of every card hanging off it, and a fresh revision
+ * resets completion and pulls that card out of the review queue. Adding one
+ * interactive activity to a lesson cost three learners' review schedules.
+ *
+ * `contentHash` covers `contentRevision`, so two revisions of identical text
+ * never hash alike. Renumbering the candidate to the stored revision first is
+ * what makes the comparison ask about the content instead of the number.
+ */
+function unchangedFrom(current, build) {
+    if (current === null)
+        return null;
+    return build(current.contentRevision).contentHash === current.contentHash ? current : null;
+}
+function createCardRevision(current, proposal, location) {
+    const build = (contentRevision) => normalizeCard({
+        schemaVersion: 1,
+        id: proposal.id,
+        kind: proposal.kind ?? current?.kind ?? "basic",
+        courseId: location.courseId,
+        unitId: location.unitId,
+        lessonId: location.lessonId,
+        front: proposal.front,
+        back: proposal.back,
+        ...((proposal.locales ?? current?.locales)
+            ? { locales: proposal.locales ?? current?.locales }
+            : {}),
+        contentRevision,
+        status: "active",
+        tags: proposal.tags ?? current?.tags ?? [],
+        evidence: proposal.evidence,
+    });
+    return (unchangedFrom(current, build) ??
+        build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1));
+}
+function createExerciseRevision(current, proposal, location) {
+    const title = proposal.title ?? current?.title;
+    if (title === undefined) {
+        throw new Error(`Exercise ${proposal.id} is new and must declare a title`);
+    }
+    const nextKind = proposal.kind ?? ("expectedAnswer" in proposal ? "short-answer" : "explain");
+    const locales = proposal.locales ?? (current?.kind === nextKind ? current.locales : undefined);
+    const build = (contentRevision) => {
+        const common = {
+            schemaVersion: 1,
+            id: proposal.id,
+            title,
+            courseId: location.courseId,
+            unitId: location.unitId,
+            lessonId: location.lessonId,
+            prompt: proposal.prompt,
+            ...(locales ? { locales } : {}),
+            contentRevision,
+            status: "active",
+            evidence: proposal.evidence,
+        };
+        if (proposal.kind === "choice") {
+            return normalizeExercise({
+                ...common,
+                kind: "choice",
+                options: proposal.options,
+                correctOptionId: proposal.correctOptionId,
+            });
+        }
+        if ("expectedAnswer" in proposal) {
+            if (proposal.kind && proposal.kind !== "short-answer") {
+                throw new Error(`Exercise ${proposal.id} kind does not match expectedAnswer content`);
+            }
+            return normalizeExercise({
+                ...common,
+                kind: "short-answer",
+                expectedAnswer: proposal.expectedAnswer,
+            });
+        }
+        if (proposal.kind && proposal.kind !== "explain") {
+            throw new Error(`Exercise ${proposal.id} kind does not match rubric content`);
+        }
+        return normalizeExercise({ ...common, kind: "explain", rubric: proposal.rubric });
+    };
+    return (unchangedFrom(current, build) ??
+        build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1));
+}
+function buildBundle(studiesRoot, studyId, proposal, target, timestamp, allowInstalledTargetRevision, requireStaleContainers) {
+    const course = readCourse(studiesRoot, studyId, proposal.lesson.courseId);
+    const unit = readUnit(studiesRoot, studyId, course.id, proposal.lesson.unitId);
+    if (requireStaleContainers && (course.status !== "stale" || unit.status !== "stale")) {
+        throw new Error("Course and target unit must both be stale before revising lesson content");
+    }
+    const currentLesson = readLatestLesson(studiesRoot, studyId, course.id, unit.id, proposal.lesson.id).manifest;
+    const assets = resolveLessonAssets(currentLesson, proposal.lesson.assets, proposal.lesson.retireAssetIds);
+    if (proposal.lesson.sections) {
+        assertUniqueIds(proposal.lesson.sections, `Proposed lesson ${currentLesson.id} sections`);
+        assertCoversExisting(proposal.lesson.sections.map((section) => section.id), currentLesson.sections.map((section) => section.id), `Lesson ${currentLesson.id} sections`);
+    }
+    const assetFiles = resolveLessonAssetFiles(studiesRoot, studyId, currentLesson, assets, proposal.lesson.assetFiles);
+    assertUniqueIds(proposal.lesson.cards, "Proposed cards");
+    assertUniqueIds(proposal.lesson.exercises, "Proposed exercises");
+    const existingCardIds = new Set(currentLesson.cardIds);
+    const existingExerciseIds = new Set(currentLesson.exerciseIds);
+    assertCoversExisting(proposal.lesson.cards.map((card) => card.id), currentLesson.cardIds, `Lesson ${currentLesson.id} cards`);
+    assertCoversExisting(proposal.lesson.exercises.map((exercise) => exercise.id), currentLesson.exerciseIds, `Lesson ${currentLesson.id} exercises`);
+    if (Buffer.byteLength(proposal.lesson.content, "utf8") > MAX_LESSON_CONTENT_BYTES) {
+        throw new Error(`Lesson content must not exceed ${MAX_LESSON_CONTENT_BYTES} bytes`);
+    }
+    if (proposal.lesson.content.trim() === "")
+        throw new Error("Lesson content must not be empty");
+    const assertExpected = (label, current, expected) => {
+        const installedTarget = expected + 1;
+        if (current !== expected && !(allowInstalledTargetRevision && current === installedTarget)) {
+            throw new Error(`${label} expected current revision ${expected}, received ${current}`);
+        }
+    };
+    assertExpected(`Lesson ${currentLesson.id}`, currentLesson.contentRevision, proposal.lesson.expectedRevision);
+    validateTargetEvidence(studiesRoot, studyId, proposal.lesson.evidence, target, `Lesson ${currentLesson.id}`);
+    const location = {
+        courseId: course.id,
+        unitId: unit.id,
+        lessonId: currentLesson.id,
+    };
+    /**
+     * An omitted `expectedRevision` claims the item is new, so the claim is
+     * checked against the lesson rather than trusted: an ID the lesson already
+     * declares must come with the revision it is at, and an ID it does not
+     * declare must not pretend to have one.
+     */
+    const assertNewness = (label, id, expected) => {
+        const known = existingCardIds.has(id) || existingExerciseIds.has(id);
+        if (known && expected === undefined) {
+            throw new Error(`${label} already exists; declare its expectedRevision to revise it`);
+        }
+        if (!known && expected !== undefined) {
+            throw new Error(`${label} does not exist yet; omit expectedRevision to add it`);
+        }
+        return !known;
+    };
+    const cards = proposal.lesson.cards.map((item) => {
+        const isNew = assertNewness(`Card ${item.id}`, item.id, item.expectedRevision);
+        const current = isNew
+            ? null
+            : readLatestCard(studiesRoot, studyId, course.id, unit.id, currentLesson.id, item.id);
+        if (current !== null) {
+            assertExpected(`Card ${item.id}`, current.contentRevision, item.expectedRevision);
+        }
+        validateTargetEvidence(studiesRoot, studyId, item.evidence, target, `Card ${item.id}`);
+        return createCardRevision(current, item, location);
+    });
+    const exercises = proposal.lesson.exercises.map((item) => {
+        const isNew = assertNewness(`Exercise ${item.id}`, item.id, item.expectedRevision);
+        const current = isNew
+            ? null
+            : readLatestExercise(studiesRoot, studyId, course.id, unit.id, currentLesson.id, item.id);
+        if (current !== null) {
+            assertExpected(`Exercise ${item.id}`, current.contentRevision, item.expectedRevision);
+        }
+        validateTargetEvidence(studiesRoot, studyId, item.evidence, target, `Exercise ${item.id}`);
+        return createExerciseRevision(current, item, location);
+    });
+    const lesson = LessonManifestSchema.parse({
+        ...currentLesson,
+        title: proposal.lesson.title ?? currentLesson.title,
+        ...((proposal.lesson.locales ?? currentLesson.locales)
+            ? { locales: proposal.lesson.locales ?? currentLesson.locales }
+            : {}),
+        variant: proposal.lesson.variant ?? currentLesson.variant,
+        sections: proposal.lesson.sections ?? currentLesson.sections,
+        // The proposal's order is the lesson's order, and it is where a newly added
+        // card or exercise becomes part of the lesson rather than an orphan file.
+        cardIds: cards.map((card) => card.id),
+        exerciseIds: exercises.map((exercise) => exercise.id),
+        contentRevision: proposal.lesson.expectedRevision + 1,
+        contentHash: sha256(proposal.lesson.content),
+        status: "active",
+        evidence: proposal.lesson.evidence,
+        assets,
+        activities: proposal.lesson.activities ?? currentLesson.activities,
+        updatedAt: timestamp,
+    });
+    const pathIssues = interactionLessonIssues({ ...lesson, content: proposal.lesson.content });
+    if (pathIssues.length)
+        throw new Error(pathIssues.join("; "));
+    return { lesson, lessonContent: proposal.lesson.content, assetFiles, cards, exercises };
+}
+function operationPath(studiesRoot, studyId, courseId, proposalId) {
+    return join(getCoursePaths(studiesRoot, studyId, courseId).root, "operations", `revise-${StableId.parse(proposalId)}.json`);
+}
+function writeReceipt(path, receipt) {
+    mkdirSync(join(path, ".."), { recursive: true, mode: 0o700 });
+    writeJsonAtomically(path, OperationReceiptSchema.parse(receipt));
+}
+function readExistingReceipt(path) {
+    return existsSync(path) ? OperationReceiptSchema.parse(readJson(path)) : null;
+}
+function assertStoredBundle(studiesRoot, studyId, bundle) {
+    const paths = getLessonPaths(studiesRoot, studyId, bundle.lesson.courseId, bundle.lesson.unitId, bundle.lesson.id);
+    const lessonRoot = join(paths.revisions, String(bundle.lesson.contentRevision));
+    const storedLesson = LessonManifestSchema.parse(readJson(join(lessonRoot, "manifest.json")));
+    const storedContent = readFileSync(join(lessonRoot, "content.md"), "utf8");
+    if (canonicalJson(storedLesson) !== canonicalJson(bundle.lesson) ||
+        storedContent !== bundle.lessonContent ||
+        storedLesson.contentHash !== sha256(storedContent)) {
+        throw new Error("Stored lesson target revision conflicts with the proposal");
+    }
+    for (const asset of bundle.lesson.assets) {
+        const storedAssetPath = join(lessonRoot, asset.path);
+        if (!existsSync(storedAssetPath)) {
+            throw new Error(`Stored lesson asset is missing: ${asset.id}`);
+        }
+        const bytes = readFileSync(storedAssetPath);
+        if (bytes.byteLength !== asset.bytes || sha256(bytes) !== asset.sha256) {
+            throw new Error(`Stored lesson asset conflicts with the proposal: ${asset.id}`);
+        }
+        if (!matchesAssetMime(bytes, asset.mime)) {
+            throw new Error(`Stored lesson asset ${asset.id} declares ${asset.mime} but its bytes are ${sniffAssetMime(bytes)}`);
+        }
+    }
+    for (const card of bundle.cards) {
+        const stored = CardContentSchema.parse(readJson(join(paths.cards, card.id, "revisions", String(card.contentRevision), "card.json")));
+        if (canonicalJson(stored) !== canonicalJson(card)) {
+            throw new Error(`Stored card target revision conflicts with the proposal: ${card.id}`);
+        }
+    }
+    for (const exercise of bundle.exercises) {
+        const stored = ExerciseSchema.parse(readJson(join(paths.exercises, exercise.id, "revisions", String(exercise.contentRevision), "exercise.json")));
+        if (canonicalJson(stored) !== canonicalJson(exercise)) {
+            throw new Error(`Stored exercise target revision conflicts with the proposal: ${exercise.id}`);
+        }
+    }
+}
+function readLatestCardIfPresent(studiesRoot, studyId, courseId, unitId, lessonId, cardId) {
+    try {
+        return readLatestCard(studiesRoot, studyId, courseId, unitId, lessonId, cardId);
+    }
+    catch (error) {
+        if (error instanceof Error && "code" in error && error.code === "ENOENT")
+            return null;
+        throw error;
+    }
+}
+function readLatestExerciseIfPresent(studiesRoot, studyId, courseId, unitId, lessonId, exerciseId) {
+    try {
+        return readLatestExercise(studiesRoot, studyId, courseId, unitId, lessonId, exerciseId);
+    }
+    catch (error) {
+        if (error instanceof Error && "code" in error && error.code === "ENOENT")
+            return null;
+        throw error;
+    }
+}
+function assertInstalledTargetComponentsMatch(studiesRoot, studyId, bundle) {
+    const latestLesson = readLatestLesson(studiesRoot, studyId, bundle.lesson.courseId, bundle.lesson.unitId, bundle.lesson.id);
+    if (latestLesson.manifest.contentRevision === bundle.lesson.contentRevision &&
+        (canonicalJson(latestLesson.manifest) !== canonicalJson(bundle.lesson) ||
+            latestLesson.content !== bundle.lessonContent)) {
+        throw new Error("Installed lesson target revision conflicts with the pending proposal");
+    }
+    // A proposal may introduce items the lesson does not have yet, so "not on
+    // disk" is the expected state for them rather than a fault. Nothing that is
+    // absent can conflict with what is about to be written.
+    for (const card of bundle.cards) {
+        const latest = readLatestCardIfPresent(studiesRoot, studyId, card.courseId, card.unitId, card.lessonId, card.id);
+        if (latest !== null &&
+            latest.contentRevision === card.contentRevision &&
+            canonicalJson(latest) !== canonicalJson(card)) {
+            throw new Error(`Installed card target revision conflicts with the pending proposal: ${card.id}`);
+        }
+    }
+    for (const exercise of bundle.exercises) {
+        const latest = readLatestExerciseIfPresent(studiesRoot, studyId, exercise.courseId, exercise.unitId, exercise.lessonId, exercise.id);
+        if (latest !== null &&
+            latest.contentRevision === exercise.contentRevision &&
+            canonicalJson(latest) !== canonicalJson(exercise)) {
+            throw new Error(`Installed exercise target revision conflicts with the pending proposal: ${exercise.id}`);
+        }
+    }
+}
+function result(mode, disposition, studyId, proposal, proposalHash, bundle, completedComponents) {
+    return {
+        schemaVersion: 1,
+        operation: "course-revise",
+        mode,
+        disposition,
+        studyId,
+        proposalId: proposal.proposalId,
+        proposalHash,
+        courseId: proposal.lesson.courseId,
+        unitId: proposal.lesson.unitId,
+        lessonId: proposal.lesson.id,
+        targetSnapshotId: proposal.targetSnapshotId ?? null,
+        targetAnalysisId: proposal.targetAnalysisId ?? null,
+        revisions: {
+            lesson: bundle.lesson.contentRevision,
+            cards: Object.fromEntries(bundle.cards.map((card) => [card.id, card.contentRevision])),
+            exercises: Object.fromEntries(bundle.exercises.map((exercise) => [exercise.id, exercise.contentRevision])),
+        },
+        completedComponents,
+        retrySafe: true,
+    };
+}
+function sameSourceStatus(left, right) {
+    return canonicalJson(left) === canonicalJson(right);
+}
+function withSourceStatusGuard(studiesRoot, studyId, changedMessage, operation) {
+    // A public-source course has no Git registration to inspect. Keep absence
+    // in the comparison so a concurrently added/removed registration still fails.
+    // readTargetIdentity separately rejects a missing pin for a registered source.
+    const inspect = () => existsSync(getStudyPaths(studiesRoot, studyId).source.registration)
+        ? inspectSourceStatus(studiesRoot, studyId)
+        : null;
+    const before = inspect();
+    let outcome;
+    try {
+        outcome = operation();
+    }
+    catch (error) {
+        const afterFailure = inspect();
+        if (!sameSourceStatus(before, afterFailure)) {
+            const detail = error instanceof Error ? error.message : String(error);
+            throw new Error(`${changedMessage}. The local operation also failed: ${detail}`);
+        }
+        throw error;
+    }
+    const after = inspect();
+    if (!sameSourceStatus(before, after))
+        throw new Error(changedMessage);
+    return outcome;
+}
+function reviseCourseLessonUnchecked(input) {
+    const proposal = CourseRevisionProposalSchema.parse(input.proposal);
+    const proposalHash = sha256(canonicalJson(proposal));
+    const target = readTargetIdentity(input.studiesRoot, input.studyId, proposal);
+    const path = operationPath(input.studiesRoot, input.studyId, proposal.lesson.courseId, proposal.proposalId);
+    const existing = readExistingReceipt(path);
+    if (existing && existing.proposalHash !== proposalHash) {
+        throw new Error(`Proposal ID ${proposal.proposalId} was already used for different content`);
+    }
+    const timestamp = existing?.createdAt ?? (input.now ?? new Date()).toISOString();
+    const bundle = buildBundle(input.studiesRoot, input.studyId, proposal, target, timestamp, existing !== null, existing?.status !== "complete");
+    assertInstalledTargetComponentsMatch(input.studiesRoot, input.studyId, bundle);
+    if (existing?.status === "complete") {
+        assertStoredBundle(input.studiesRoot, input.studyId, bundle);
+        return result("apply", "reused", input.studyId, proposal, proposalHash, bundle, existing.completedComponents);
+    }
+    if (input.dryRun) {
+        return result("dry-run", "validated", input.studyId, proposal, proposalHash, bundle, []);
+    }
+    let receipt = existing ??
+        OperationReceiptSchema.parse({
+            schemaVersion: 1,
+            operation: "course-revise",
+            proposalId: proposal.proposalId,
+            proposalHash,
+            studyId: input.studyId,
+            courseId: proposal.lesson.courseId,
+            unitId: proposal.lesson.unitId,
+            lessonId: proposal.lesson.id,
+            targetSnapshotId: proposal.targetSnapshotId ?? null,
+            targetAnalysisId: proposal.targetAnalysisId ?? null,
+            status: "pending",
+            completedComponents: [],
+            createdAt: timestamp,
+            updatedAt: timestamp,
+        });
+    writeReceipt(path, receipt);
+    const complete = (component) => {
+        let newlyCompleted = false;
+        if (!receipt.completedComponents.includes(component)) {
+            receipt = OperationReceiptSchema.parse({
+                ...receipt,
+                completedComponents: [...receipt.completedComponents, component],
+                updatedAt: (input.now ?? new Date()).toISOString(),
+            });
+            writeReceipt(path, receipt);
+            newlyCompleted = true;
+        }
+        if (newlyCompleted)
+            input.onComponentWritten?.(component);
+    };
+    try {
+        const latestLesson = readLatestLesson(input.studiesRoot, input.studyId, bundle.lesson.courseId, bundle.lesson.unitId, bundle.lesson.id).manifest;
+        if (latestLesson.contentRevision === proposal.lesson.expectedRevision) {
+            const { contentHash: _contentHash, ...manifest } = bundle.lesson;
+            writeLessonRevision(input.studiesRoot, input.studyId, {
+                manifest,
+                content: bundle.lessonContent,
+                assetFiles: bundle.assetFiles,
+            });
+        }
+        complete(`lesson:${bundle.lesson.id}`);
+        // Each write is skipped when the target revision is already installed, so a
+        // retry resumes rather than repeats. A newly added item has nothing stored
+        // yet, and its target revision is 1, so absence is exactly the state that
+        // means "still to write".
+        for (const card of bundle.cards) {
+            const latest = readLatestCardIfPresent(input.studiesRoot, input.studyId, card.courseId, card.unitId, card.lessonId, card.id);
+            if ((latest?.contentRevision ?? 0) === card.contentRevision - 1) {
+                const { contentHash: _contentHash, ...candidate } = card;
+                writeCardRevision(input.studiesRoot, input.studyId, candidate);
+            }
+            complete(`card:${card.id}`);
+        }
+        for (const exercise of bundle.exercises) {
+            const latest = readLatestExerciseIfPresent(input.studiesRoot, input.studyId, exercise.courseId, exercise.unitId, exercise.lessonId, exercise.id);
+            if ((latest?.contentRevision ?? 0) === exercise.contentRevision - 1) {
+                const { contentHash: _contentHash, ...candidate } = exercise;
+                writeExerciseRevision(input.studiesRoot, input.studyId, candidate);
+            }
+            complete(`exercise:${exercise.id}`);
+        }
+        assertStoredBundle(input.studiesRoot, input.studyId, bundle);
+        receipt = OperationReceiptSchema.parse({
+            ...receipt,
+            status: "complete",
+            updatedAt: (input.now ?? new Date()).toISOString(),
+        });
+        writeReceipt(path, receipt);
+    }
+    catch (error) {
+        throw new CourseRevisionPartialError(receipt, error);
+    }
+    return result("apply", existing ? "recovered" : "created", input.studyId, proposal, proposalHash, bundle, receipt.completedComponents);
+}
+export function reviseCourseLesson(input) {
+    return withSourceStatusGuard(input.studiesRoot, input.studyId, "Studied repository status changed while course content was being revised", () => reviseCourseLessonUnchecked(input));
+}
+function reactivateCourseUnchecked(input) {
+    if (!input.targetSnapshotId) {
+        throw new Error("Repository reactivation requires a target snapshot");
+    }
+    const audit = auditStudyFreshness({
+        studiesRoot: input.studiesRoot,
+        studyId: input.studyId,
+        targetSnapshotId: input.targetSnapshotId,
+        ...(input.targetAnalysisId ? { targetAnalysisId: input.targetAnalysisId } : {}),
+    });
+    const report = audit.reports.find((candidate) => candidate.courseId === input.courseId);
+    if (!report)
+        throw new Error(`Course freshness report not found: ${input.courseId}`);
+    if (report.status !== "fresh") {
+        throw new Error(`Course remains stale for target ${input.targetSnapshotId}; revise every stale item before reactivation`);
+    }
+    if (report.items.some((item) => item.contentStatus !== "active")) {
+        throw new Error("Every lesson, card, and exercise must be active before course reactivation");
+    }
+    let course = readCourse(input.studiesRoot, input.studyId, input.courseId);
+    const unitStatuses = course.unitIds.map((unitId) => readUnit(input.studiesRoot, input.studyId, course.id, unitId));
+    if (course.status === "active") {
+        const nonActiveUnit = unitStatuses.find((unit) => unit.status !== "active");
+        if (nonActiveUnit) {
+            throw new Error(`Active course has a non-active unit and requires inspection: ${nonActiveUnit.id}`);
+        }
+        return {
+            schemaVersion: 1,
+            operation: "course-reactivate",
+            disposition: "reused",
+            studyId: input.studyId,
+            courseId: input.courseId,
+            targetSnapshotId: input.targetSnapshotId,
+            targetAnalysisId: input.targetAnalysisId ?? null,
+            reportHash: report.reportHash,
+            activatedUnitIds: [],
+            courseStatus: "active",
+        };
+    }
+    if (course.status !== "stale") {
+        throw new Error(`Course must be stale before reactivation: ${course.id} is ${course.status}`);
+    }
+    // `draft` used to mean only one thing — an interrupted `course create` — and
+    // was refused for that reason. `course add-lessons` gives it a second, valid
+    // meaning: a unit added to this course and never published. Both are safe to
+    // let through here because the gate is not the status, it is the audit above
+    // plus `assertUnitReadyForActivation`, which walks every lesson, card and
+    // exercise and re-checks its evidence. A half-built unit fails those.
+    for (const unit of unitStatuses) {
+        if (unit.status === "retired") {
+            throw new Error(`Unit cannot be reactivated from ${unit.status}: ${unit.id}`);
+        }
+    }
+    const activatedUnitIds = [];
+    try {
+        for (const unitId of course.unitIds) {
+            const unit = readUnit(input.studiesRoot, input.studyId, course.id, unitId);
+            if (unit.status === "stale" || unit.status === "draft") {
+                updateUnitStatus(input.studiesRoot, input.studyId, course.id, unit.id, "active");
+                activatedUnitIds.push(unit.id);
+            }
+        }
+        course = updateCourseStatus(input.studiesRoot, input.studyId, course.id, "active");
+    }
+    catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Course reactivation stopped safely while the course remained stale. Retry after inspection. Cause: ${detail}`);
+    }
+    return {
+        schemaVersion: 1,
+        operation: "course-reactivate",
+        disposition: "activated",
+        studyId: input.studyId,
+        courseId: input.courseId,
+        targetSnapshotId: input.targetSnapshotId,
+        targetAnalysisId: input.targetAnalysisId ?? null,
+        reportHash: report.reportHash,
+        activatedUnitIds,
+        courseStatus: course.status,
+    };
+}
+export function reactivateCourse(input) {
+    if (!input.targetSnapshotId) {
+        readTargetIdentity(input.studiesRoot, input.studyId, input);
+        const course = readCourse(input.studiesRoot, input.studyId, input.courseId);
+        if (course.status === "retired")
+            throw new Error("A retired course cannot be reactivated");
+        const identities = [];
+        // Validate every unit before changing any status; these checks read the
+        // actual revisions, evidence and media bytes, not a fabricated git pin.
+        for (const unitId of course.unitIds) {
+            const unit = readUnit(input.studiesRoot, input.studyId, input.courseId, unitId);
+            if (unit.status === "retired")
+                throw new Error(`Cannot reactivate a retired unit: ${unitId}`);
+            assertUnitReadyForActivation(input.studiesRoot, input.studyId, input.courseId, unit);
+            identities.push({
+                unit,
+                lessons: unit.lessonIds.map((lessonId) => {
+                    const lesson = readLatestLesson(input.studiesRoot, input.studyId, input.courseId, unitId, lessonId).manifest;
+                    return {
+                        lesson,
+                        cards: lesson.cardIds.map((id) => readLatestCard(input.studiesRoot, input.studyId, input.courseId, unitId, lessonId, id).contentHash),
+                        exercises: lesson.exerciseIds.map((id) => readLatestExercise(input.studiesRoot, input.studyId, input.courseId, unitId, lessonId, id).contentHash),
+                    };
+                }),
+            });
+        }
+        if (!course.unitIds.length)
+            throw new Error("A course without units cannot be reactivated");
+        for (const unitId of course.unitIds)
+            updateUnitStatus(input.studiesRoot, input.studyId, input.courseId, unitId, "active");
+        updateCourseStatus(input.studiesRoot, input.studyId, input.courseId, "active");
+        return {
+            schemaVersion: 1,
+            operation: "course-reactivate",
+            disposition: course.status === "active" ? "reused" : "activated",
+            studyId: input.studyId,
+            courseId: input.courseId,
+            targetSnapshotId: null,
+            targetAnalysisId: null,
+            reportHash: sha256(canonicalJson({ kind: "source-url-content-check", courseId: course.id, identities })),
+            activatedUnitIds: course.unitIds,
+            courseStatus: "active",
+        };
+    }
+    return withSourceStatusGuard(input.studiesRoot, input.studyId, "Studied repository status changed while the course was being reactivated", () => reactivateCourseUnchecked(input));
+}
+//# sourceMappingURL=revise-course.js.map

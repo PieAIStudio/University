@@ -1,6 +1,6 @@
 node_modules/
 dist/
-.university-local-build/
+.university-authoring-build/
 coverage/
 *.log
 *.tsbuildinfo
@@ -9,7 +9,7 @@ coverage/
 .env.*
 !.env.example
 .scratch/
-university-local.config.local.json
+university-authoring.config.local.json
 
 # PGS skill symlinks are intentionally visible in Git as part of the internal
 # checkout setup contract. Their relative targets require the sibling

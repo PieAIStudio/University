@@ -30,7 +30,7 @@ import { pathToFileURL } from "node:url";
 import { contentPaths } from "../../../scripts/content-root.mjs";
 
 const ROOT = resolve(import.meta.dirname, "../../..");
-const APP_ROOT = join(ROOT, "apps", "local");
+const APP_ROOT = join(ROOT, "apps", "authoring-server");
 
 function parseArguments(argv) {
   let study;
