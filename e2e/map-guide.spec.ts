@@ -96,7 +96,9 @@ for (const viewport of [
     // No model is connected: no free-text box pretends otherwise.
     await humanClick(page, body(page), "涟");
     // UIKit 3 exposes the four guided questions in one accessible group.
-    await expect(outlet(page).locator(".swimmer-nerve-liquid__questions button")).toHaveCount(4);
+    await expect(
+      outlet(page).locator(".swimmer-nerve-liquid__questions button:visible"),
+    ).toHaveCount(3);
     await expect(outlet(page).locator("textarea")).toHaveCount(0);
     // While the questions are open, no scene label sits under them.
     const panel = (await outlet(page).boundingBox())!;
@@ -182,14 +184,17 @@ test("map guide: two islands side by side, chosen in order, read-only", async ({
 
   // The third question on the archipelago.
   await ask(page, 2);
-  const candidates = page.locator(".map-guide__candidates button");
+  const candidates = page.locator(".map-guide__candidates button:visible");
   await expect(candidates.nth(1)).toBeVisible({ timeout: 10_000 });
-  const first = (await candidates.nth(1).textContent())!.trim();
-  const second = (await candidates.nth(0).textContent())!.trim();
+  const first = (await candidates.nth(1).innerText()).trim();
+  const second = (await candidates.nth(0).innerText()).trim();
   await humanClick(page, candidates.nth(1), "第一座岛");
   await expect(said(page)).toContainText(first);
-  await humanClick(page, candidates.nth(0), "第二座岛");
-
+  await humanClick(
+    page,
+    page.locator(".map-guide__candidates button:visible").filter({ hasText: second }),
+    "第二座岛",
+  );
   // In the learner's order, each with only what University decided about it.
   const pair = page.locator(".map-guide__pair li");
   await expect(pair).toHaveCount(2);

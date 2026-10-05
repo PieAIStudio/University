@@ -113,7 +113,19 @@ async function contrastOf(page: Page, selector: string): Promise<number> {
   return page.evaluate((target) => {
     const node = document.querySelector(target);
     if (!node) throw new Error(`no element for ${target}`);
-    const parse = (value: string): readonly number[] => (value.match(/[\d.]+/g) ?? []).map(Number);
+    const parse = (value: string): readonly number[] => {
+      const modern = value.match(
+        /^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)$/,
+      );
+      if (modern)
+        return [
+          Number(modern[1]) * 255,
+          Number(modern[2]) * 255,
+          Number(modern[3]) * 255,
+          modern[4] === undefined ? 1 : Number(modern[4]),
+        ];
+      return (value.match(/[\d.]+/g) ?? []).map(Number);
+    };
     const over = (top: readonly number[], bottom: readonly number[]): readonly number[] => {
       const alpha = top[3] ?? 1;
       return [0, 1, 2].map((i) => (top[i] ?? 0) * alpha + (bottom[i] ?? 0) * (1 - alpha));

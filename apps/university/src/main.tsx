@@ -111,7 +111,7 @@ import { progressPort } from "./progress/store";
 import { nerveLanguage } from "./nerve-language";
 
 // Resolve the cached account preference before React paints the learner surface.
-applyThemePreference(progressPort.accountData().preferences.theme);
+const initialResolvedTheme = applyThemePreference(progressPort.accountData().preferences.theme);
 applyUiStylePreference(progressPort.accountData().preferences.uiStyle);
 recordLocaleRequest(localeDemandPort, typeof navigator === "undefined" ? null : navigator.language);
 
@@ -164,7 +164,7 @@ function UniversityApplication() {
   return (
     <NerveI18nProvider value={nerve}>
       <NerveUIProvider components={nerveUI}>
-        <AuthUIProvider controls={authControls} captchaTheme="light">
+        <AuthUIProvider controls={authControls} captchaTheme={initialResolvedTheme}>
           <App />
           <LiquidCtaTransitionLayer />
         </AuthUIProvider>

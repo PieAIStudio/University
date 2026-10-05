@@ -141,9 +141,9 @@ export function CosmeticsPanel({
     knownCosmetic(item.id) ? t.t(COSMETIC_NAMES[item.id]) : item.id;
   return (
     <section className="cosmetics-panel" data-cosmetics-phase={snapshot.phase}>
-      <button className="game-ui-button game-ui-button--ghost" type="button" onClick={onBack}>
+      <GameButton variant="ghost" static onClick={onBack}>
         {t.t("cosmetics.back")}
-      </button>
+      </GameButton>
       <header>
         <h1>{t.t("cosmetics.title")}</h1>
         <p>{t.t("cosmetics.intro")}</p>

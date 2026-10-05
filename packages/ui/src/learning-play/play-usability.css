@@ -92,6 +92,7 @@
 }
 .learning-activity__orientation {
   display: flex;
+  flex-wrap: wrap;
   align-items: start;
   justify-content: space-between;
   gap: 10px;
@@ -99,7 +100,7 @@
 }
 .learning-activity__background {
   min-width: 0;
-  flex: 1;
+  flex: 1 1 10rem;
   font-size: 13px;
   color: var(--game-ui-text-muted);
 }
@@ -116,7 +117,7 @@
   padding: 12px;
   margin: 0;
 }
-.learning-activity__orientation > button {
+.learning-activity__orientation button {
   flex-shrink: 0;
   font-size: 12px;
   min-height: 36px;
@@ -226,4 +227,20 @@
 
 .learning-play-lab > .learning-play-lab__intro {
   margin-block-start: 28px;
+}
+.learning-play-lab__modes {
+  overflow: clip;
+}
+.learning-play-lab__modes > .game-ui-button-frame {
+  overflow: hidden;
+}
+.learning-play-lab__modes > .game-ui-button-frame {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.learning-play-lab__modes > .game-ui-button-frame > button {
+  width: 100%;
+  min-width: 0;
 }

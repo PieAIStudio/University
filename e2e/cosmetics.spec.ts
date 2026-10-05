@@ -36,7 +36,7 @@ for (const [mode, origin] of [
       await expect(page.locator(".cosmetic-odds dd")).toHaveText(["70%", "22%", "7%", "1%"]);
       await noOverflow(page);
       await capture(page, `${mode}-${width}-closed`);
-      await page.locator(".cosmetics-panel > button").click();
+      await page.locator(".cosmetics-panel .game-ui-button-frame button").click();
       await expect(page.locator(".cosmetics-panel")).toHaveCount(0);
       await expect(page.locator("[data-house]")).toBeVisible();
       expect(requests).toEqual([]);
@@ -81,7 +81,7 @@ for (const width of [1440, 390])
         await noOverflow(page);
         await capture(page, `synthetic-${width}-reveal`);
       }
-      await dialog.locator(".cosmetic-reveal > button").last().click();
+      await dialog.locator(".cosmetic-reveal .game-ui-button-frame button").last().click();
     }
     await expect(dialog).toHaveCount(0);
     const operations = await page.evaluate(() => (window as any).__cosmeticsFixture.operations);

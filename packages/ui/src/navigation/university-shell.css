@@ -97,7 +97,7 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  color: var(--game-ui-control-chroma-ink);
+  color: var(--game-ui-text);
 }
 .native-practice__boundary {
   color: var(--game-ui-text-muted);

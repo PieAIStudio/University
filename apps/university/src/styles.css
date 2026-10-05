@@ -4377,3 +4377,23 @@ body,
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* NerveKit 0.8 has no UIKit dependency; bind its native fallback controls to
+   the same published token surface so settings and liquid panels keep the app
+   theme in both shells. */
+:root {
+  --nerve-ui-ink: var(--game-ui-text);
+  --nerve-ui-surface: var(--game-ui-surface-raised);
+  --nerve-ui-border: var(--game-ui-border-strong);
+  --nerve-ui-focus: var(--game-ui-focus-ring);
+  --nerve-ui-radius: var(--game-ui-radius-control);
+  --nerve-ui-padding: var(--game-ui-space-2) var(--game-ui-space-4);
+  --nerve-ui-ghost: transparent;
+  --nerve-ui-muted: var(--game-ui-text-muted);
+  --nerve-ui-gap: var(--game-ui-space-2);
+  --nerve-ui-target: 44px;
+  --nerve-ui-modal-width: 60rem;
+  --nerve-ui-modal-padding: var(--game-ui-space-4);
+  --nerve-ui-backdrop: var(--game-ui-scrim-strong);
+  --nerve-ui-disabled-opacity: 0.55;
+}

@@ -37,6 +37,22 @@
   min-height: 44px;
   min-width: 44px;
 }
+.prop-finish button {
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  gap: 4px;
+  padding-inline: 8px;
+}
+.prop-finish .game-ui-selection-mark {
+  display: none;
+}
+.prop-finish .game-ui-button > svg {
+  display: none;
+}
 .prop-finish label {
   display: flex;
   gap: 10px;

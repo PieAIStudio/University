@@ -56,14 +56,15 @@ export async function expectAccountFieldsContained(page: Page) {
 }
 
 export async function clickAccountSubmitSurface(page: Page) {
-  const surface = page
-    .locator('.account-panel .game-ui-button-liquid:has(button[type="submit"])')
-    .last();
-  const native = surface.locator('button[type="submit"]');
+  const native = page.locator('.account-panel button[type="submit"]').last();
+  const frame = native.locator('xpath=ancestor::*[contains(@class,"game-ui-button-frame")][1]');
+  const surface = (await frame.count()) > 0 ? frame : native;
   await expect(native).toBeEnabled();
   await scrollIntoView(surface);
   const geometry = await surface.evaluate((element) => {
-    const button = element.querySelector('button[type="submit"]')!;
+    const button = element.matches('button[type="submit"]')
+      ? element
+      : element.querySelector('button[type="submit"]')!;
     const outer = element.getBoundingClientRect();
     const hit = button.getBoundingClientRect();
     const x = outer.right - 20;

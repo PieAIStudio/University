@@ -126,7 +126,8 @@ export function LearningPlayLab() {
           <GameButton
             sound={false}
             static
-            variant={mode === kind ? "primary" : "secondary"}
+            variant="secondary"
+            aria-pressed={mode === kind}
             type="button"
             key={kind}
             className="learning-play-lab__mode"
@@ -226,10 +227,9 @@ export function LearningPlayLab() {
               total: modes.length,
             })}
           </span>
-          <GameButton
-            sound={false}
+          <button
             type="button"
-            variant="secondary"
+            className="game-ui-button game-ui-button--secondary learning-play-lab__mix"
             onClick={
               playlist !== null && !playlistDone
                 ? () => {
@@ -242,7 +242,7 @@ export function LearningPlayLab() {
             {playlist !== null && !playlistDone
               ? interfaceTranslator.t("play.lab.cancelMix")
               : interfaceTranslator.t("play.lab.mix", { total: modes.length })}
-          </GameButton>
+          </button>
         </div>
       </header>
       <p className="play-muted">{interfaceTranslator.t("play.difficulty.change")}</p>

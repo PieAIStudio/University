@@ -234,9 +234,10 @@ export function MapGuide({
           return found ? [{ id: found.id, label: found.label }] : [];
         }),
       publish: (candidates) =>
-        setCompare((current) =>
-          current?.key === compare.key ? { ...current, candidates } : current,
-        ),
+        setCompare((current) => {
+          if (current?.key !== compare.key) return current;
+          return { ...current, candidates };
+        }),
     });
   }, [compare, comparable, registry]);
 
@@ -285,27 +286,40 @@ export function MapGuide({
   function choose(targetId: string) {
     if (!compare) return;
     const label = compare.candidates?.find((item) => item.id === targetId)?.label ?? "";
-    if (!compare.selection.add(targetId)) {
-      // Gone from the map since the list was read: say so, read it again.
+    const attempt = (remaining: number) => {
+      const current = compareRef.current;
+      if (!current || current.key !== compare.key) return;
+      const added = current.selection.add(targetId);
+      if (!added) {
+        if (remaining > 0) {
+          requestAnimationFrame(() => attempt(remaining - 1));
+          return;
+        }
+        // Gone from the map since the list was read: say so, read it again.
+        setCompare({
+          ...current,
+          candidates: null,
+          notice: interfaceTranslator.t("map.guide.compare.gone", { title: label }),
+        });
+        return;
+      }
+      if (current.selection.getSnapshot().items.length < 2) {
+        setCompare({ ...current, notice: null });
+        return;
+      }
+      const basis = current.selection.capture();
+      if (!basis) current.selection.clear();
       setCompare({
-        ...compare,
-        candidates: null,
-        notice: interfaceTranslator.t("map.guide.compare.gone", { title: label }),
+        ...current,
+        basis,
+        candidates: basis ? current.candidates : null,
+        notice: basis ? null : interfaceTranslator.t("map.guide.compare.expired"),
       });
-      return;
-    }
-    if (compare.selection.getSnapshot().items.length < 2) {
-      setCompare({ ...compare, notice: null });
-      return;
-    }
-    const basis = compare.selection.capture();
-    if (!basis) compare.selection.clear();
-    setCompare({
-      ...compare,
-      basis,
-      candidates: basis ? compare.candidates : null,
-      notice: basis ? null : interfaceTranslator.t("map.guide.compare.expired"),
-    });
+    };
+    // UIKit 3 settles the framed map labels over a few paints after the first
+    // choice. Keep the candidate truthful while its real marker catches up;
+    // only retire it after a bounded one-second settle window.
+    attempt(60);
   }
 
   function clear() {
@@ -379,7 +393,12 @@ export function MapGuide({
   ) : null;
 
   return (
-    <div ref={root} className="map-guide" data-map-guide={outletOpen ? "open" : "closed"}>
+    <div
+      ref={root}
+      className="map-guide"
+      data-map-guide={outletOpen ? "open" : "closed"}
+      data-map-question={compare ? "compare" : shown ? "answer" : undefined}
+    >
       <div ref={seat} className="map-guide__seat">
         {ready ? (
           <NerveLiquidInteraction

@@ -69,7 +69,7 @@
 
 .host-grade__eyebrow {
   margin: 0 0 10px;
-  color: var(--game-ui-control-chroma-ink);
+  color: var(--game-ui-text);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.04em;

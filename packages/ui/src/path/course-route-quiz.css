@@ -64,7 +64,7 @@
 }
 
 .course-route-quiz__summary-meta {
-  color: var(--game-ui-ink-heading);
+  color: var(--game-ui-text) !important;
   font-size: 0.78rem;
   font-weight: 800;
   white-space: nowrap;
@@ -103,7 +103,7 @@
 .course-route-quiz__result h4 {
   max-width: 760px;
   margin: 12px 0 0;
-  color: var(--game-ui-ink-title);
+  color: var(--game-ui-text) !important;
   font-family: var(--game-ui-font-display);
   font-size: 1.02rem;
   line-height: 1.35;
@@ -180,10 +180,6 @@
   margin: 9px 0 0;
   color: var(--game-ui-text);
   line-height: 1.6;
-}
-
-.course-route-quiz__result h4 {
-  color: var(--game-ui-ink-title);
 }
 
 .course-route-quiz__reason {
@@ -321,9 +317,25 @@
 .question-step__note {
   max-width: 760px;
   margin: 0;
-  color: var(--game-ui-text-muted);
+  color: var(--game-ui-text);
   font-size: 0.78rem;
   line-height: 1.6;
+}
+
+.skip-test__note {
+  color: var(--game-ui-text);
+}
+
+[data-game-ui-theme="dark"] .skip-test__note {
+  color: var(--game-ui-text-on-dark);
+}
+
+.skip-test__verdict {
+  color: var(--game-ui-text);
+}
+
+[data-game-ui-theme="dark"] .skip-test__verdict {
+  color: var(--game-ui-text-on-dark);
 }
 
 /* One recommended unit, and the test that is the only way past it. */

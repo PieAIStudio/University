@@ -245,7 +245,7 @@ function ActivityRound({
                 sound={false}
                 static
                 type="button"
-                variant={level === (activity.difficulty ?? "practice") ? "primary" : "ghost"}
+                variant="secondary"
                 aria-pressed={level === (activity.difficulty ?? "practice")}
                 onClick={() => onPickLevel?.(level)}
               >

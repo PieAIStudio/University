@@ -58,7 +58,7 @@ test("a wisp comes back to the finished stone once its cards are due", async ({ 
       await expect(answer).toBeEnabled();
       await answer.fill("先自己回忆这一关，再对照卡片检查。");
       await page.getByRole("button", { name: /揭示答案/ }).click();
-      const ratings = page.locator(".rating-row > button");
+      const ratings = page.locator(".rating-row button:visible");
       await expect(ratings).toHaveCount(4);
       // The label includes the actual next interval; the fourth rating is Easy.
       await ratings.nth(3).click();

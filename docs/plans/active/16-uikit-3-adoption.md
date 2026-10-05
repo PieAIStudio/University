@@ -127,9 +127,13 @@ commit.
   AuthUIProvider are injected once at the app root. AuthKit receives the existing
   backend auth client; it does not create a second SDK owner.
 - The existing light/dark/system preference remains the stored theme control. The
-  Owner's separate pastel/grey visual choice was not added because the current
-  account preference contract has no fourth theme value; this is left for the
-  Owner's look review rather than silently changing stored data.
+  The existing light/dark/system preference remains independent from the stored
+  `uiStyle` control. `uiStyle` defaults to grey and offers 淡彩; both are
+  persisted through the account preference record and applied before paint.
+  Nerve variables are mapped from UIKit tokens, and AuthKit receives the
+  resolved initial light/dark captcha theme. Ordinary selection controls use
+  flat secondary styling; the one forward action keeps the liquid primary
+  treatment.
 - Fast gate: `pnpm verify` passed. Counts were core 95/864, UI 100/633,
   authoring-server 55/518, world 164/1238, app 79/431, backend 5/28,
   university-ai 6/50; docs 180/324/0 warnings.
@@ -153,10 +157,22 @@ commit.
   and the expected count was updated from the old three-question disclosure to
   the four questions now exposed by NerveKit 0.8.0; the representative map-guide
   test passed twice (`1 passed`, `1 passed`).
-- The remaining representative failure is the retained play shelf at desktop and
-  narrow desktop widths: its `scrollWidth - clientWidth` is 18px and 16px after
-  the UIKit 3 button-frame migration. The same two-test isolation failed twice
-  (`2 failed` each). This is a deterministic layout regression, not load or
-  network noise. Because the complete push gate remains red after the required
-  isolation, task 16 is held here and has not been pushed. No `--no-verify` push
-  was attempted.
+- The retained play shelf was corrected by constraining the UIKit button frames
+  and their child controls to the shelf width. The two representative tests then
+  passed twice. Other deterministic UIKit 3 regressions were fixed at their
+  owning surface: descendant selectors for framed controls, the account helper's
+  native/frame hit-area fallback, closed disclosure controls excluded from
+  reachability checks, and the prop-finish selection mark kept out of the narrow
+  control's scroll area. No timeout was raised and no assertion was weakened.
+
+## Gate exception record · 2026-10-05 21:40
+
+- Fresh complete gate on pre-fix commit `99b6bee5`; candidate `0aa9bc0a` contains the contrast and selector follow-ups but has not passed a new complete gate: `336 passed`, `2 failed` out of `338`. The two failures were the two-island read-only map comparison and the light skip-test panel's `.skip-test__verdict` contrast. Prop-finish, account, cosmetics, shelf, Nerve guide and all other suites passed.
+- The skip-test verdict was corrected to the dark-surface text token. The map comparison was isolated repeatedly (`task16-map-isolated-1.log`, `task16-map-isolated-2.log`, and a fresh run after the candidate-selector correction) and stayed red: after the first real selection, the second candidate never reaches a captured comparison basis. The failure is deterministic and not load related; no push was attempted.
+- The attempted fixes preserved the original target IDs and retried only the real registry target. The root cause was the comparison panel covering a second island label; the DOM target adapter correctly rejected that covered target. The comparison panel now moves above the desktop map label field while it is open, preserving the existing target and hit-test contract. The two-island test passed twice (`1 passed` each), and the dark skip-test contrast test passed twice (`1 passed` each).
+
+## Gate completion · 2026-10-05
+
+- After the map and skip-test fixes, the complete browser gate passed **338 passed (20.8m)**.
+- The first timing gate was **31 passed, 9 failed (6.5m)**. All nine failures were the same 1452px document overflow in the synthetic Planet fixture at 1440px/375px widths; the isolated fixture run reproduced it. UIKit 3's framed SVG could extend 12px beyond the viewport. The fixture now clips its horizontal overflow and caps its SVG surface at the fixture width. The full isolated timing file then passed **11 passed (1.3m)**, and the complete timing gate passed **40 passed (5.8m)**.
+- The timing test's old colour parser was also extended for UIKit 3's `color(srgb …)` computed tokens; the product surface keeps semantic kit tokens and the light/dark skip-test copy now follows the actual theme attribute.

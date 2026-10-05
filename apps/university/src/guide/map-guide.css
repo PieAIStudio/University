@@ -68,6 +68,16 @@
   color: var(--game-ui-text-muted);
 }
 
+/* The compare list is an interaction with the original map labels. Keep its
+   panel out of the map's label field so the DOM target adapter can still
+   confirm that both chosen islands are exposed and hit-testable. */
+@media (min-width: 768px) {
+  .map-guide[data-map-question="compare"] {
+    top: max(96px, env(safe-area-inset-top));
+    bottom: auto;
+  }
+}
+
 /*
   A short landscape keeps its normal-sized, touchable centre entry low.
   The world's existing compact captions fit beside it rather than on it.
