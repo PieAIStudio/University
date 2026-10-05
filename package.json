@@ -2,7 +2,7 @@
   "name": "@pieai/university",
   "version": "0.0.0",
   "private": true,
-  "description": "University — one browser app in two modes, and the authoring server behind one of them.",
+  "description": "University — one learner app across browser, desktop and phone shells, with delivery and authoring modes plus its local authoring server.",
   "type": "module",
   "scripts": {
     "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-raw-colours.mjs && node scripts/check-shared-styles.mjs && node scripts/check-i18n.mjs",

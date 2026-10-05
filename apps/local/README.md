@@ -26,13 +26,13 @@ governed target: that describes the governance relationship, not its strategic
 importance. It is not a consumer AI product line and is not a reason to modify the
 projects it studies.
 
-The local shell is not a permanently-offline product. It connects to the same
-SwimmerBackend account and learner-data document as the online shell, so
+The authoring mode is not a permanently-offline product. It connects to the same
+SwimmerBackend account and learner-data document as the delivery mode, so
 progress, answers, marks, review state, vocabulary, favourites, practice
 history, and settings follow the learner between Windows, macOS, and the web.
-Its only runtime difference is where grading AI comes from: the local shell
+Its only mode difference is where grading AI comes from: authoring mode
 uses the AI coding host/clipboard path and does not require a product API key;
-the online shell uses the metered online AI path. Course sources, study
+delivery mode uses the metered online AI path. Course sources, study
 snapshots, and authoring notes remain local by design and are not part of the
 learner-data sync document.
 

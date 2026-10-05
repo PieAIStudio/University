@@ -2,7 +2,7 @@
   "name": "@pieai/university-local",
   "version": "0.1.0",
   "private": true,
-  "description": "UniversityLocal — the authoring server. Courses are written by the CLI and read off the disk; the browser that shows them is apps/university.",
+  "description": "UniversityLocal — University's Node authoring server and CLI. It writes the configured course root; the shared app reads it in authoring mode across browser, desktop and phone shells.",
   "type": "module",
   "scripts": {
     "typecheck:tests": "tsc -p tsconfig.tests.json --pretty false",

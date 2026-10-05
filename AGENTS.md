@@ -135,9 +135,10 @@ repository; what survived, survived because it follows from these.
 
 What follows from them:
 
-- **One browser app, two modes.** `apps/university` is the whole product;
+- **One responsive app, three shells, two modes.** `apps/university` is the
+  whole product across browser, desktop and phone shells;
   `vite --mode authoring` writes courses on a machine and `vite --mode
-  delivery` sells them. There were two apps until 2026-08-25, and the reason
+  delivery` serves published courses. There were two apps until 2026-08-25, and the reason
   they were merged is written down: the difference set had shrunk to three
   port boundaries while the drift rate had not moved, because two files meant
   two places one decision could be made. `packages/*` is still everything
@@ -208,8 +209,8 @@ What follows from them:
   capability goes behind a port: storage, payment, notification, grading,
   content and source access. Everything above a port is identical on all three.
   A responsive layout is not two implementations; a second implementation is.
-- **The renderer lives in `packages/world`, never in `packages/ui`.** Both
-  modes share one scene, and `packages/ui` stays at zero `three` so that a
+- **The renderer lives in `packages/world`, never in `packages/ui`.** All three
+  shells share one scene, and `packages/ui` stays at zero `three` so that a
   test of the lesson reader never has to stand up a WebGL mock. SPEC-0001 and
   SPEC-0003 both say this; if a reading of either suggests otherwise, that
   contradiction was settled on 2026-08-22 and the specs carry the note.

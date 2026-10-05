@@ -2,7 +2,7 @@
   "name": "@pieai/university-app",
   "version": "0.0.0",
   "private": true,
-  "description": "University — one browser app, two modes. `--mode authoring` writes courses on a machine; `--mode delivery` sells them.",
+  "description": "University — one responsive app in browser, desktop and phone shells, with two modes: `--mode authoring` connects to the local course writer and `--mode delivery` serves published courses.",
   "type": "module",
   "scripts": {
     "dev": "vite --mode delivery",

@@ -1,18 +1,20 @@
 # @pieai/university-world
 
-The 3D scene. One implementation, so both shells can stand on the same world.
+The 3D scene. One implementation, so the browser, desktop and phone shells can
+stand on the same world.
 
 ## Responsible
 
 The archipelago, the course path, the colour pipeline that draws them, and the
-DOM labels that sit on top. A shell hands it course nodes, a `ProgressSource`,
-and a click handler.
+DOM labels that sit on top. The app shell hands it course nodes, a
+`ProgressSource`, and a click handler.
 
 ## Not responsible
 
 Lesson prose, cards, evidence, account, payment, or any shell's store. No
 fetch, no localStorage, no SQLite. `packages/ui` stays at zero `three`
-(ADR-0004). Authoring does not depend on this package yet (SPEC-0003 step 2).
+(ADR-0004). Both app modes use this package through the shared app; it does not
+own lesson prose or learner/account state.
 
 ## Public API
 

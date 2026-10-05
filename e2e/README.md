@@ -24,7 +24,7 @@ release-inventory exception is `published-catalogue.spec.ts`, through
 pnpm e2e
 ```
 
-It starts both shells and grading itself (main defaults: online 18093, local
+It starts both app modes and grading itself (main defaults: delivery 18093, authoring
 18094, local API 18095, grading 18096),
 uses the system Chrome (`channel: "chrome"`), and is **not** part of
 `pnpm verify`. A slow gate people skip is worse than no gate.

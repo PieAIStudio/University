@@ -2,7 +2,7 @@
   "name": "@pieai/university-world",
   "version": "0.0.0",
   "private": true,
-  "description": "The 3D scene both shells will render. packages/ui stays at zero three.",
+  "description": "The shared 3D world rendered by University's browser, desktop and phone shells. packages/ui stays at zero three.",
   "type": "module",
   "exports": {
     "./prop-finish.js": "./src/prop-finish/PropFinishScene.tsx",

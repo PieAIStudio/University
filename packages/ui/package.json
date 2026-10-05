@@ -2,7 +2,7 @@
   "name": "@pieai/university-ui",
   "version": "0.0.0",
   "private": true,
-  "description": "The learning surface both shells render. Neither app is allowed a second copy of anything in here.",
+  "description": "The shared learner surface rendered by University's browser, desktop and phone shells; shared components have one implementation here.",
   "type": "module",
   "exports": {
     "./cosmetics/cosmetics.css": "./src/cosmetics/cosmetics.css",

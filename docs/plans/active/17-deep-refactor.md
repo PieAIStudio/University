@@ -757,3 +757,60 @@ timing gate remains **40 passed (5.7m)**, with the slowed-phone lesson ready in
 4,161 ms and frame p95 18.0 ms. The full browser receipt remains **338 passed
 (18.7m)**. R10 changes documentation and measurements only; no numbered task
 pack is needed.
+
+## R11 execution record (2026-10-05)
+
+R11 closes the refactor on `main`. The R10 commit `b4e11df4` is on the remote;
+this stage adds the final health measurements and aligns the short self
+descriptions with the code that now exists. The alignment is deliberately
+narrow: current package descriptions, the opening structure paragraphs in
+README files, and the package map in `AGENTS.md`. Completed plans, ADRs and
+archived evidence are not edited.
+
+### Final health measurements
+
+| Measure | R0 baseline | R11 result | Evidence and reading |
+| --- | ---: | ---: | --- |
+| `apps/university/src/app` files | 79 | 72 | Feature ownership from R1/R2; `find apps/university/src/app -type f` |
+| `apps/university/src/app/composition/App.tsx` | 1,478 lines | 1,374 lines | R3 repair measurement; the remaining size is composition work, not a hidden hook |
+| Largest current source files | `App.tsx` 1,478; `schemas.ts` 1,482; `Maps.tsx` about 2,000 | `concepts/data/frontend.ts` 20,360; `concepts/data/backend.ts` 5,528; `styles.css` 4,379; `learning-play/PrimmLesson.tsx` 9 | The two 20k+ files are generated concept data, not orchestration; runtime hotspots remain named below |
+| Explicit tracked source files / files with exports / line-start export declarations | 729 / — / 3,432 (older candidate inventory) | 861 / 853 / 3,891 | R3 introduced the reproducible tracked `apps/*/src` + `packages/*/src`, non-test TS/JS formula; R0's candidate inventory is retained as provenance and is not treated as a like-for-like reduction |
+| Direct dependency declarations | 122 | 117 | R6 inventory; five unconsumed declarations removed |
+| Remaining multi-version libraries | Not measured | 18 | R6 recursive graph, after excluding two workspace-link spellings; all retained by upstream or peer contracts |
+| Suppressions | `any` 212; double casts 187; TS comments 2; lint 13 | `any` 209; double casts 163; TS comments 2; lint 13 | R7 inventory; every survivor has a boundary or invariant reason |
+| Tracked `docs/` files | 1,279 | 1,262 | R4 archived dated evidence without deleting history; R9/R10 added current execution records |
+| Complete browser gate | 431 passed floor | 338 passed (R10: 22.6m) | R3 removed 94 retired-subject cases, retained coverage and named replacement cases; R10 receipt `.scratch/overnight-20261003/task17-r10-e2e.log` |
+| Timing gate | 40 passed | 40 passed (R10: 5.9m) | No timing case removed; R10 receipt `.scratch/overnight-20261003/task17-r10-timing.log` |
+| Bundle | Not measured | 600 files, 25.44 MiB; JS+CSS 3.08 MiB gzip | R10 census; largest asset `catalogue-*.js` 1,529,121 bytes |
+
+The R8 flaky list is closed by deterministic readiness rather than weaker
+assertions: AA first-reader entry waits for `.lesson-reader`, R56 waits for two
+equal geometry/resource frames, and R43 waits for assets, labels, viewport and
+three equal label frames. No new flaky family appeared in R9 or R10. The four
+open experience-ledger findings remain recorded for their existing owners.
+
+### Self-description alignment
+
+| 位置 | 现在写的（对齐前） | 实际情况 | 改成什么 |
+| --- | --- | --- | --- |
+| `package.json` | “one browser app in two modes, and the authoring server behind one of them” | One learner app is delivered through browser, desktop and phone shells; authoring and delivery are modes, with `apps/local` as the Node server | “one learner app across browser, desktop and phone shells, with delivery and authoring modes plus its local authoring server” |
+| `apps/local/package.json` | “the authoring server… the browser that shows them is apps/university” | A Node server and CLI write the configured course root; the shared app reads it in authoring mode on all three shells | “University's Node authoring server and CLI… the shared app reads it in authoring mode across browser, desktop and phone shells” |
+| `apps/university/package.json` | “one browser app, two modes… delivery sells them” | One responsive app has two modes and three shells; delivery serves published courses | “one responsive app in browser, desktop and phone shells… authoring connects to the local course writer and delivery serves published courses” |
+| `apps/university-ai/package.json` | “server-only metered structured grading endpoint” | The endpoint is server-only, metered, structured grading, and is reached through the delivery grading port | Added “for the delivery grading port” and punctuation |
+| `packages/backend/package.json` | “shared SwimmerBackend browser adapter” | It is the shared account adapter used by the app's browser, desktop and phone shells | “shared SwimmerBackend account adapter for the browser, desktop and phone shells” |
+| `packages/core/package.json` | “The domain model both shells agree on. Types and schemas only” | Core exports 293 functions for grading, progress, scheduling and other domain rules; it still has no React, filesystem or network | “shared domain model and learning rules: types, schemas, grading, progress and scheduling. No React, filesystem or network” |
+| `packages/ui/package.json` | “learning surface both shells render” and “Neither app…” | One learner DOM/component implementation is rendered by the three shells; there are no two apps to keep in sync | “shared learner surface rendered by University's browser, desktop and phone shells; shared components have one implementation here” |
+| `packages/world/package.json` | “3D scene both shells will render” | The shared 3D world is used by all three shells; `packages/ui` remains at zero `three` | “shared 3D world rendered by University's browser, desktop and phone shells…” |
+| root `README.md` opening map | “一个浏览器应用，两个模式”; UI is described as shared by two modes | The structure is one responsive app, three shells, two modes; package ownership is unchanged | Opening map now says “三个 shell（浏览器、桌面、手机），两个模式（交付、创作）” and assigns UI to the three shells |
+| `apps/local/README.md` | “local shell” versus “online shell” | Those are authoring and delivery modes of the same app, each available through the three shells | Replaced those labels with “authoring mode” and “delivery mode” |
+| `e2e/README.md` | “starts both shells” with online/local ports | The harness starts the delivery and authoring app modes plus grading | Says “both app modes” and names delivery/authoring ports |
+| `packages/world/README.md` opening and stability note | “both shells”; “Authoring does not depend on this package yet” | Browser, desktop and phone share the scene, and both app modes import it through `apps/university` | Names the three shells and records that both modes use the package; the world still owns no prose or learner/account state |
+| root `AGENTS.md` package map | “One browser app, two modes”; “Both modes share one scene” | One responsive app has three shells and both modes share the same world | Says “one responsive app, three shells, two modes” and “All three shells share one scene” |
+| `packages/ui/src/learning-play/README.md`, `apps/university/src/app/README.md`, `apps/local/AGENTS.md` | Two app modes / one learner app / Node course-authoring module | Those statements are still current after R2–R10 | Audited and left unchanged |
+
+The edits in this record are current-entry wording only. They do not alter the
+V7 journey, an ADR, a completed plan, a lesson byte or a historical receipt.
+
+R11 gate receipts are retained below after the stage commit and push. The final
+state must be the `main` branch only, with local and remote equal, a clean tree,
+and generated paths covered by `.gitignore`.

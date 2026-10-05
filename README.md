@@ -3,15 +3,16 @@
 在 3D 群岛里，用真实资料和动手练习学习 AI。面向没有编程经验的成人，Web 为主，
 同一应用适配手机、平板和电脑；商业能力与真实收费验收分开。
 
-一个仓库，一个浏览器应用，两个模式：
+一个仓库，一套 University 应用，三个 shell（浏览器、桌面、手机），两个模式（交付、创作）：
 
 ```
-apps/university 产品本体。`--mode delivery` 是交付端（3D 世界地图、关卡、复习），
-                `--mode authoring` 是创作端（读磁盘、剪贴板判分）。
-                三条模式边界：AI 从哪来、课文从哪来、能否访问课程背后的源码。
-apps/local      创作端背后的 Node 服务与 CLI。课是它写出来的，浏览器只负责显示。
+apps/university 一套响应式产品；三个 shell 共用同一组件树。`--mode delivery` 是交付模式
+                （3D 世界地图、关卡、复习），`--mode authoring` 接本机写课服务
+                （读配置的课程根、剪贴板判分）。三条模式边界：AI 从哪来、课文从哪来、
+                能否访问课程背后的源码。
+apps/local      创作模式背后的 Node 服务与 CLI。课由它写进配置的课程根，University 应用负责显示。
 packages/core   领域模型与学习规则：课程形状、地址、FSRS 调度、判分。
-packages/ui     两个模式共用的学习面：阅读器、证据、复习、markdown、语言层。
+packages/ui     三个 shell 共用的学习面：阅读器、证据、复习、markdown、语言层。
 packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 three 为零。
 ```
 
