@@ -170,7 +170,6 @@ export function Settlement({
           label={interfaceTranslator.t("app.lesson.settlement.copy.课程进度")}
           value={shownDone}
           max={lessons}
-          tone={finished ? "success" : "accent"}
           valueLabel={interfaceTranslator.t("app.lesson.settlement.copy.value0-value1-关", {
             value0: shownDone,
             value1: lessons,
@@ -257,13 +256,7 @@ export function Settlement({
             {interfaceTranslator.t("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         ) : (
-          <GameButton
-            variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
-            className="university-cta"
-            onClick={onMap}
-          >
+          <GameButton variant="primary" className="university-cta" onClick={onMap}>
             {interfaceTranslator.t("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         )}

@@ -111,7 +111,6 @@ export function CourseSection({
           value={completed}
           max={Math.max(lessons.length, 1)}
           label={interfaceTranslator.t("app.authoring.courseSection.copy.课程完成度")}
-          tone={finished ? "success" : "accent"}
           valueLabel={interfaceTranslator.t("app.authoring.courseSection.copy.value0-value1-节", {
             value0: completed,
             value1: lessons.length,

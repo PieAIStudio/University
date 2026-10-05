@@ -52,7 +52,8 @@ describe("approved CTA appearance ownership", () => {
           if (node.tagName.getText(ast) === "LiquidCtaButton") wrappers++;
           if (
             node.tagName.getText(ast) === "GameButton" &&
-            stringAttr(node.attributes, "surface") === "liquid"
+            stringAttr(node.attributes, "variant") === "primary" &&
+            stringAttr(node.attributes, "className")?.includes("university-cta")
           )
             liquid.push(node.attributes);
         }
@@ -66,7 +67,6 @@ describe("approved CTA appearance ownership", () => {
       expect(liquid, "all migrated call sites must use the kit liquid surface").toHaveLength(count);
       for (const attributes of liquid) {
         expect(stringAttr(attributes, "variant")).toBe("primary");
-        expect(stringAttr(attributes, "liquidFinish")).toBe("glossy");
         expect(stringAttr(attributes, "className")).toContain("university-cta");
       }
       if (/PlansScreen|ChoiceBlock|CoursePickCard|NodeCard|UnitCard/.test(path)) {

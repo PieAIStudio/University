@@ -171,6 +171,14 @@ function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPo
 
 function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort }) {
   const interfaceTranslator = useI18n();
+  const [uiStyle, setUiStyle] = useState(
+    () => progress?.accountData().preferences.uiStyle ?? "grey",
+  );
+  useEffect(
+    () =>
+      progress?.subscribe(() => setUiStyle(progress.accountData().preferences.uiStyle ?? "grey")),
+    [progress],
+  );
   const [theme, setTheme] = useState<ThemePreference>(
     () => progress?.accountData().preferences.theme ?? "system",
   );
@@ -222,6 +230,28 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
               onClick={() => choose(option.id)}
             >
               {option.label}
+            </GameButton>
+          ))}
+        </div>
+        <div role="group" aria-label={interfaceTranslator.t("product.uiStyle.label")}>
+          {(["grey", "pastel"] as const).map((option) => (
+            <GameButton
+              key={option}
+              type="button"
+              variant="secondary"
+              aria-pressed={uiStyle === option}
+              data-ui-style-choice={option}
+              onClick={() => {
+                setUiStyle(option);
+                progress?.setAccountPreferences({
+                  ...progress.accountData().preferences,
+                  uiStyle: option,
+                });
+              }}
+            >
+              {interfaceTranslator.t(
+                option === "grey" ? "product.uiStyle.grey" : "product.uiStyle.pastel",
+              )}
             </GameButton>
           ))}
         </div>

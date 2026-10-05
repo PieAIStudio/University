@@ -17,7 +17,7 @@
 
 .word-list__history {
   margin-top: 14px;
-  border-top: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 16%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 16%, transparent);
   padding-top: 10px;
 }
 
@@ -43,7 +43,7 @@
   flex: 0 0 auto;
   border: 0;
   background: none;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   cursor: pointer;
   font: inherit;
   font-size: 0.74rem;
@@ -68,7 +68,7 @@
   padding: 6px 8px;
   border: 1px solid var(--campus-rule);
   border-radius: 8px;
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   color: var(--game-ui-text);
   font: inherit;
   font-size: 0.82rem;
@@ -108,7 +108,7 @@
 }
 
 .word-list__word span {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-weight: 700;
 }
 

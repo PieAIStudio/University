@@ -1,5 +1,5 @@
 import { weeklyBossHistory, type ProgressDocument } from "@pieai/university-core";
-import { GameAssetIcon, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameIcon, GamePanel } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "../../i18n/index.js";
 
 /** The permanent record is text, not an ever-growing WebGL scene. */
@@ -20,7 +20,7 @@ export function WeeklyBossRecords({
         data-weekly-wins={history.total}
       >
         <h2 id="weekly-boss-records-title">
-          <GameAssetIcon icon="crown" size="sm" /> {t.t("weeklyBoss.history.title")}
+          <GameIcon icon="crown" size="sm" /> {t.t("weeklyBoss.history.title")}
         </h2>
         <div className="weekly-boss-records__counts">
           <p>{t.t("weeklyBoss.history.total", { count: history.total })}</p>

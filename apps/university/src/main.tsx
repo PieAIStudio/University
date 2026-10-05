@@ -1,6 +1,23 @@
-import { StrictMode, useMemo } from "react";
+import { StrictMode, forwardRef, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { NerveI18nProvider } from "@pieai/swimmer-nerve-kit/i18n/react";
+import { NerveUIProvider, type NerveUIComponents } from "@pieai/swimmer-nerve-kit/ui";
+import {
+  GameButton,
+  GameField,
+  GameIconButton,
+  GameInput,
+  GameModal,
+  GameOtpInput,
+  GameSelect,
+  GameTabs,
+  GameTextArea,
+} from "@pieai/swimmer-ui-kit";
+import {
+  AuthUIProvider,
+  type AuthButtonProps,
+  type AuthControls,
+} from "@pieaistudio/swimmer-auth-kit/react";
 
 // Brand tokens first, product layout second: the kit defines the custom
 // properties everything below reads.
@@ -87,7 +104,7 @@ import {
   localeNavigationUrl,
   useI18n,
 } from "@pieai/university-ui/i18n.js";
-import { applyThemePreference } from "@pieai/university-ui/theme.js";
+import { applyThemePreference, applyUiStylePreference } from "@pieai/university-ui/theme.js";
 import { localeDemandPort, recordLocaleRequest } from "./analytics/locale-demand";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
 import { progressPort } from "./progress/store";
@@ -95,6 +112,7 @@ import { nerveLanguage } from "./nerve-language";
 
 // Resolve the cached account preference before React paints the learner surface.
 applyThemePreference(progressPort.accountData().preferences.theme);
+applyUiStylePreference(progressPort.accountData().preferences.uiStyle);
 recordLocaleRequest(localeDemandPort, typeof navigator === "undefined" ? null : navigator.language);
 
 const container = document.getElementById("root");
@@ -112,14 +130,45 @@ window.addEventListener("university:locale-change", (event) => {
 
 void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 
+const nerveUI = {
+  Button: GameButton,
+  IconButton: GameIconButton,
+  TextArea: GameTextArea,
+  Tabs: GameTabs,
+  Modal: GameModal,
+} satisfies NerveUIComponents;
+
+const authButton = forwardRef<HTMLButtonElement, Omit<AuthButtonProps, "ref">>(function AuthButton(
+  { children, ...props },
+  ref,
+) {
+  return (
+    <GameButton {...(props as any)} ref={ref}>
+      {children}
+    </GameButton>
+  );
+});
+
+const authControls = {
+  Button: authButton,
+  Input: GameInput,
+  Field: GameField,
+  Select: GameSelect,
+  OtpInput: GameOtpInput,
+} satisfies AuthControls;
+
 function UniversityApplication() {
   const { locale } = useI18n();
   // One expression per locale: a new value only when the language changes.
   const nerve = useMemo(() => nerveLanguage(locale), [locale]);
   return (
     <NerveI18nProvider value={nerve}>
-      <App />
-      <LiquidCtaTransitionLayer />
+      <NerveUIProvider components={nerveUI}>
+        <AuthUIProvider controls={authControls} captchaTheme="light">
+          <App />
+          <LiquidCtaTransitionLayer />
+        </AuthUIProvider>
+      </NerveUIProvider>
     </NerveI18nProvider>
   );
 }

@@ -9,7 +9,7 @@
   font-size: clamp(25px, 3vw, 36px);
 }
 .arcade3d__standalone a {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   text-underline-offset: 4px;
 }
 .arcade3d__modes {

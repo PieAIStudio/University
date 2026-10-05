@@ -173,8 +173,6 @@ export function AccountPanel({
         {continueLearningHref ? (
           <GameButton
             variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
             className="university-cta"
             type="button"
             onClick={() => onContinueLearning?.()}

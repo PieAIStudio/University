@@ -672,6 +672,7 @@ export function createProgressPort(options: {
       "sharesPresence",
       "speechQuality",
       "avatarRecipe",
+      "uiStyle",
       "theme",
       "worldStyle",
       "journey",

@@ -53,6 +53,7 @@ export type AccountPreferenceKey =
   | "sharesPresence"
   | "speechQuality"
   | "avatarRecipe"
+  | "uiStyle"
   | "theme"
   | "worldStyle"
   | "locale"
@@ -72,6 +73,7 @@ export interface AccountPreferences {
   readonly soundEnabled: boolean;
   readonly sharesPresence: boolean;
   readonly speechQuality: SpeechQuality;
+  readonly uiStyle?: "grey" | "pastel";
   readonly theme: ThemePreference;
   readonly worldStyle: WorldStyle;
   readonly locale: InterfaceLocale | null;
@@ -119,6 +121,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   soundEnabled: true,
   sharesPresence: false,
   speechQuality: "auto",
+  uiStyle: "grey",
   theme: "system",
   worldStyle: "classic",
   locale: null,
@@ -175,6 +178,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "sharesPresence",
       "speechQuality",
       "avatarRecipe",
+      "uiStyle",
       "theme",
       "worldStyle",
       "locale",
@@ -204,6 +208,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       value.speechQuality === "premium"
         ? value.speechQuality
         : "auto",
+    uiStyle: value.uiStyle === "pastel" ? "pastel" : "grey",
     theme:
       value.theme === "light" || value.theme === "dark" || value.theme === "system"
         ? value.theme
@@ -284,6 +289,9 @@ export function mergeAccountPreferences(
     avatarRecipe: newer(leftAvatarRecipe, rightAvatarRecipe)
       ? right.avatarRecipe
       : left.avatarRecipe,
+    uiStyle: newer(timestampMs(left.updatedAt.uiStyle), timestampMs(right.updatedAt.uiStyle))
+      ? (right.uiStyle ?? "grey")
+      : (left.uiStyle ?? "grey"),
     theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
     worldStyle: newer(leftWorldStyle, rightWorldStyle) ? right.worldStyle : left.worldStyle,
     locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,

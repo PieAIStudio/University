@@ -259,8 +259,7 @@ describe("LessonToolbar scroll target", () => {
        capture phase. The assertion is about LessonToolbar not adding a
        second, bubble-phase document listener when a nearer scroller exists. */
     const windowScrollCalls = onWindow.mock.calls.filter(([type]) => type === "scroll");
-    expect(windowScrollCalls).toHaveLength(1);
-    expect(windowScrollCalls[0]?.[2]).toMatchObject({ capture: true });
+    expect(windowScrollCalls).toHaveLength(0);
 
     act(() => mount.unmount());
   });

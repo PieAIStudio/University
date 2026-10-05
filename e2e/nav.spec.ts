@@ -83,7 +83,7 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
       const guide = page.locator(".map-guide__seat button").first();
       await assertVisibleAndHittableAtFivePoints(page, guide, `${viewport.id} / 地图帮助仍可达`);
       await humanClick(page, guide, "涟的地图帮助");
-      await expect(page.locator(".swimmer-nerve-liquid__questions > button")).toHaveCount(3);
+      await expect(page.locator(".swimmer-nerve-liquid__questions button")).toHaveCount(3);
       await page.keyboard.press("Escape");
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-after-drag.png` });
 

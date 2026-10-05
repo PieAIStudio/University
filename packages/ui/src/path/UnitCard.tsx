@@ -89,8 +89,6 @@ export function UnitCardBody({
       {liquid ? (
         <GameButton
           variant="primary"
-          surface="liquid"
-          liquidFinish="glossy"
           fullWidth
           className="university-cta path-card__start"
           onClick={onStart}

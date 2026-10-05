@@ -24,7 +24,7 @@
   padding: 11px 14px;
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep, #0c1018);
+  background: var(--game-ui-surface-sunken, #0c1018);
   color: inherit;
   font: inherit;
   font-size: 0.98rem;

@@ -1,3 +1,4 @@
+import { createAuthClient } from "@pieai/swimmer-backend-client";
 import { authRedirect, createSupabaseAuth } from "@pieaistudio/swimmer-auth-kit";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -78,15 +79,20 @@ function asIdentityAuth(auth: UniversityAuth): IdentityAuth {
   return auth;
 }
 
-function createBrowserAuthPort(client: SupabaseClient): UniversityAuth | null {
+function createBrowserAuthPort(client: SupabaseClient, backendUrl: string): UniversityAuth | null {
   const redirects = universityAuthRedirects(browserAuthOrigin());
   if (!redirects) return null;
-  return createSupabaseAuth(client, redirects);
+  return createSupabaseAuth(client, {
+    ...redirects,
+    backendUrl,
+    authClient: createAuthClient(client),
+  });
 }
 
 export function createUniversityBackend(env: BrowserEnv, locale?: () => string): UniversityBackend {
+  const config = readSwimmerBackendPublicEnv(env);
   const client = createDeliverySupabaseClient(env);
-  const authPort = client ? createBrowserAuthPort(client) : null;
+  const authPort = client && config ? createBrowserAuthPort(client, config.url) : null;
   const identityPort = createIdentityPort(authPort ? asIdentityAuth(authPort) : null);
   return {
     client,

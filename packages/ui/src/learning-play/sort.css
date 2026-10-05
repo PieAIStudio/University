@@ -39,7 +39,7 @@
   padding: 10px 12px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
-  background: var(--game-ui-panel);
+  background: var(--game-ui-surface);
   color: var(--game-ui-text);
   text-align: start;
   cursor: pointer;
@@ -67,7 +67,7 @@
   padding: 12px;
   border: 1px dashed var(--game-ui-border-subtle);
   border-radius: 16px;
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
 }
 
 .play-sort__bucket-head {
@@ -125,7 +125,7 @@
   padding: 10px 12px;
   border-inline-start: 3px solid var(--game-ui-border-subtle);
   border-radius: 12px;
-  background: var(--game-ui-panel);
+  background: var(--game-ui-surface);
 }
 
 .play-sort__note--right {

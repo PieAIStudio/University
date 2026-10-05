@@ -33,7 +33,6 @@ export function LevelProgress({
         label={interfaceTranslator.t("product.level.xp")}
         value={level.xpIntoLevel}
         max={level.xpForNextLevel}
-        tone="accent"
         valueLabel={`${level.xpIntoLevel} / ${level.xpForNextLevel} ${interfaceTranslator.t("product.level.xp")}`}
       />
     </section>

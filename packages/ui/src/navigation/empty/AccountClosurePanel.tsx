@@ -168,7 +168,6 @@ export function AccountClosurePanel({
               <GameButton
                 type="submit"
                 variant="primary"
-                surface="liquid"
                 fullWidth
                 disabled={busy || confirmation !== confirmationPhrase}
               >

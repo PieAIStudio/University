@@ -106,7 +106,7 @@ import { useShelf } from "../../catalog/use-shelf";
 import { useWorldMarkers, useWorldModel, type PathOverlay } from "../map/world-model";
 import { universityCounters } from "@pieai/university-ui/navigation/counters.js";
 import { PresenceSession } from "@pieai/university-ui/presence.js";
-import { watchThemePreference } from "@pieai/university-ui/theme.js";
+import { watchThemePreference, applyUiStylePreference } from "@pieai/university-ui/theme.js";
 import { bindWorldStylePreference, WorldStyleControl } from "@pieai/university-ui/world-style.js";
 import { resolveIslandLookDebug } from "@pieai/university-world/island-look.js";
 import type { MapViewportCommands } from "@pieai/university-world/WorldMapCanvas.js";
@@ -297,6 +297,9 @@ export function App() {
 
   useEffect(() => bindWorldStylePreference(progressPort), []);
 
+  useEffect(() => {
+    applyUiStylePreference(progress.account.preferences.uiStyle);
+  }, [progress.account.preferences.uiStyle]);
   useEffect(
     () => watchThemePreference(progress.account.preferences.theme),
     [progress.account.preferences.theme],

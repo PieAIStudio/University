@@ -188,8 +188,8 @@ describe("AccountPanel", () => {
     expect(markup).toContain("跨设备同步需要对应会员权益");
     expect(markup).toContain("swimmer-auth");
     expect(markup).toContain('type="password"');
-    expect(markup).toContain("game-ui-input");
-    expect(markup).toContain("game-ui-field");
+    expect(markup).toContain("swimmer-auth-input");
+    expect(markup).toContain("swimmer-auth-field");
     expect(markup).not.toContain('role="tablist"');
     expect(markup).not.toContain("免密码登录");
   });

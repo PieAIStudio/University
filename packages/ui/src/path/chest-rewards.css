@@ -20,7 +20,7 @@
   border-radius: 1.1rem;
   background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
-  box-shadow: var(--game-ui-shadow-panel);
+  box-shadow: var(--game-ui-shadow-raised);
   text-align: center;
 }
 .chest-rewards button {
@@ -40,7 +40,7 @@
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   background: var(--game-ui-accent);
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
   font-size: var(--game-ui-font-sm);
 }
 .chest-rewards__list {
@@ -62,7 +62,7 @@
 .chest-rewards__line--badge {
   font-size: var(--game-ui-font-lg);
   font-weight: var(--game-ui-weight-strong);
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 .chest-rewards__line--badge .emblem-image {
   display: block;

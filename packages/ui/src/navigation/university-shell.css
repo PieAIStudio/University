@@ -97,7 +97,7 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 .native-practice__boundary {
   color: var(--game-ui-text-muted);
@@ -346,7 +346,7 @@ a.linkish {
   padding: 12px;
   border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface, #151b2b) 80%, transparent);
 }
 
 .settings-subnav__label {
@@ -521,7 +521,7 @@ a.linkish {
   padding: 12px;
   border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface, #151b2b) 80%, transparent);
 }
 
 .account-panel__form form {
@@ -542,7 +542,7 @@ a.linkish {
     alone somewhere without that variable, it keeps the plain panel radius.
   */
   border-radius: var(--shell-nested-radius, var(--game-ui-radius-panel, 14px));
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 88%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface, #151b2b) 88%, transparent);
 }
 
 .today-card h2 {
@@ -630,7 +630,7 @@ a.linkish {
   list-style: none;
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: var(--game-ui-panel-strong, #151b2b);
+  background: var(--game-ui-surface-raised, #151b2b);
   backdrop-filter: none;
   box-shadow: 0 18px 48px rgb(0 0 0 / 35%);
   color: var(--game-ui-text, #e9edf5);
@@ -709,7 +709,7 @@ a.linkish {
   width: 100%;
   height: 100%;
   border-radius: var(--game-ui-radius-panel, 18px);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
 }
 
 /*
@@ -733,7 +733,7 @@ a.linkish {
   padding: 8px 16px;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
   font: inherit;
   text-decoration: none;
@@ -796,7 +796,7 @@ a.linkish {
   padding: 0.9rem 1rem;
   border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
   border-radius: var(--game-ui-radius-card, 12px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 80%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface, #151b2b) 80%, transparent);
 }
 
 .quest--done {
@@ -838,7 +838,7 @@ a.linkish {
   padding: 0.85rem;
   border: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
   border-radius: var(--game-ui-radius-card, 12px);
-  background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 70%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface, #151b2b) 70%, transparent);
 }
 
 /*
@@ -857,7 +857,7 @@ a.linkish {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--game-ui-panel-strong, #1d2438) 85%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-raised, #1d2438) 85%, transparent);
   color: var(--game-ui-text-muted, #9aa6bb);
   font-size: 1.05rem;
 }
@@ -1047,7 +1047,7 @@ a.linkish {
 */
 .plan-card--featured > * {
   border-color: var(--game-ui-accent);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--game-ui-accent-contrast) 22%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--game-ui-control-on-text) 22%, transparent);
 }
 
 .plan-card__saving {
@@ -1185,7 +1185,7 @@ a.linkish {
   border: 2px solid var(--game-ui-surface-raised);
   border-radius: 999px;
   background: var(--game-ui-accent);
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
   font-size: var(--game-ui-font-sm);
   font-weight: var(--game-ui-weight-strong);
   line-height: 1.2;

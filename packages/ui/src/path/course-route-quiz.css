@@ -28,7 +28,7 @@
       color-mix(in srgb, var(--game-ui-secondary) 16%, transparent),
       transparent 18rem
     ),
-    var(--game-ui-panel);
+    var(--game-ui-surface);
 }
 
 .course-route-quiz > summary {
@@ -95,7 +95,7 @@
 }
 
 .course-route-quiz__progress span:first-child {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-weight: 800;
 }
 
@@ -261,7 +261,7 @@
 
 .skip-test__progress {
   margin: 0;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-size: 0.74rem;
   font-weight: 800;
 }

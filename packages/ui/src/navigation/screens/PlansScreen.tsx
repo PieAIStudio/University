@@ -1,6 +1,6 @@
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
 import {
-  GameAssetIcon,
+  GameIcon,
   GameButton,
   GameCallout,
   GamePanel,
@@ -160,7 +160,7 @@ function PlanCard({
     <li className={purchasable ? "plan-card plan-card--featured" : "plan-card"}>
       <GamePanel>
         <div className="plan-card__head">
-          {purchasable ? <GameAssetIcon icon="crown" size="md" /> : null}
+          {purchasable ? <GameIcon icon="crown" size="md" /> : null}
           <h2 className="plan-card__name">{copy.name}</h2>
         </div>
 
@@ -207,8 +207,6 @@ function PlanCard({
             ) : null}
             <GameButton
               variant="primary"
-              surface="liquid"
-              liquidFinish="glossy"
               className="university-cta"
               fullWidth
               type="button"

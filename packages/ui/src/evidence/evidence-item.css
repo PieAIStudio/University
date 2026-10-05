@@ -42,7 +42,7 @@
 .evidence-item__copy-hint {
   margin: 8px 0 0;
   padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 22%, transparent);
   border-radius: 10px;
   background: color-mix(in srgb, var(--game-ui-accent-pale) 6%, transparent);
   color: color-mix(in srgb, var(--game-ui-text-on-dark) 78%, transparent);
@@ -59,7 +59,7 @@
 }
 
 .evidence-item__copy-hint code {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-size: 0.72rem;
 }
 
@@ -80,7 +80,7 @@
 .evidence-item__trigger code {
   grid-column: 1 / -1;
   overflow-wrap: anywhere;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-size: 0.76rem;
 }
 

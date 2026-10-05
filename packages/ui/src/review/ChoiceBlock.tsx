@@ -199,8 +199,6 @@ export function ChoiceBlock({
         {liquidPrimary ? (
           <GameButton
             variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
             className="university-cta"
             fullWidth
             disabled={!canAdvance && !canSubmit}

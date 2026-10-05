@@ -22,7 +22,7 @@
   line-height: 1.7;
 }
 .play-catalog a {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   text-underline-offset: 3px;
 }
 .play-catalog__layout {
@@ -96,7 +96,7 @@
   background: var(--game-ui-surface-raised);
 }
 .play-catalog__results button:active {
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
 }
 .play-catalog__results span {
   font-size: 13px;

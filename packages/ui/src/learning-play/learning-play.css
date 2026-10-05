@@ -54,8 +54,15 @@
 .learning-play-lab__modes {
   display: grid;
   /* 见 play-usability.css：列数由入口数决定，不是写死的五。 */
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
   gap: 8px;
+}
+.learning-play-lab__modes > .game-ui-button-frame {
+  min-width: 0;
+  width: 100%;
+  display: contents !important;
+  width: auto !important;
 }
 .learning-play-lab__mode {
   display: flex;
@@ -65,6 +72,8 @@
   padding: 10px 6px;
   border-radius: 16px;
   position: relative;
+  min-width: 0;
+  width: 100%;
   box-shadow: none;
 }
 .learning-play-lab__mode > .play-icon {
@@ -143,7 +152,7 @@
   padding: clamp(16px, 3vw, 28px);
   border-radius: 22px;
   color: var(--game-ui-text);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   min-width: 0;
 }
 .learning-activity *,
@@ -162,8 +171,8 @@
   place-items: center;
   border-radius: 14px;
   flex: 0 0 auto;
-  background: color-mix(in srgb, var(--game-ui-accent) 15%, var(--game-ui-panel-strong));
-  color: var(--game-ui-accent-ink);
+  background: color-mix(in srgb, var(--game-ui-accent) 15%, var(--game-ui-surface-raised));
+  color: var(--game-ui-control-chroma-ink);
 }
 .learning-activity__symbol .play-icon {
   width: 28px;
@@ -190,7 +199,7 @@
   margin: 16px 0;
   padding: 14px 16px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--game-ui-secondary) 9%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-secondary) 9%, var(--game-ui-surface-raised));
   line-height: 1.65;
   font-size: 13px;
 }
@@ -243,7 +252,7 @@
 .learning-activity__hint {
   margin: 18px 0 0;
   padding: 14px 16px;
-  background: color-mix(in srgb, var(--game-ui-warning) 15%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-warning) 15%, var(--game-ui-surface-raised));
   border-radius: 12px;
   font-size: 13px;
   line-height: 1.85;
@@ -252,7 +261,7 @@
   display: flex;
   align-items: start;
   gap: 10px;
-  background: color-mix(in srgb, var(--game-ui-warning) 12%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-warning) 12%, var(--game-ui-surface-raised));
   border-radius: 12px;
   padding: 14px 16px;
   margin-block-start: 20px;
@@ -260,7 +269,7 @@
   font-size: 13px;
 }
 .learning-activity__feedback[data-passed="true"] {
-  background: color-mix(in srgb, var(--game-ui-success) 13%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-success) 13%, var(--game-ui-surface-raised));
 }
 .learning-activity__feedback .play-icon {
   margin-block-start: 3px;
@@ -323,7 +332,7 @@
 .play-connect__board {
   position: relative;
   height: 288px;
-  background: color-mix(in srgb, var(--game-ui-secondary) 5%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-secondary) 5%, var(--game-ui-surface-raised));
   border-radius: 16px;
   overflow: hidden;
 }
@@ -425,7 +434,7 @@
 }
 .play-connect__connections button:disabled {
   color: var(--game-ui-text-muted);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   opacity: 1;
 }
 .play-connect__traces {
@@ -481,20 +490,20 @@
   transition: filter 180ms var(--game-ui-ease-soft);
 }
 .play-tune__sky {
-  fill: var(--game-ui-panel);
+  fill: var(--game-ui-surface);
 }
 .play-tune__sun,
 .play-tune__roof {
   fill: var(--game-ui-accent);
 }
 .play-tune__hill-back {
-  fill: color-mix(in srgb, var(--game-ui-secondary) 25%, var(--game-ui-panel));
+  fill: color-mix(in srgb, var(--game-ui-secondary) 25%, var(--game-ui-surface));
 }
 .play-tune__hill-front {
-  fill: color-mix(in srgb, var(--game-ui-secondary) 55%, var(--game-ui-panel));
+  fill: color-mix(in srgb, var(--game-ui-secondary) 55%, var(--game-ui-surface));
 }
 .play-tune__paper {
-  fill: var(--game-ui-panel-strong);
+  fill: var(--game-ui-surface-raised);
 }
 .play-tune__ink {
   fill: var(--game-ui-text);
@@ -520,7 +529,7 @@
   padding: 14px 10px;
   margin-block-end: 10px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--game-ui-secondary) 7%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-secondary) 7%, var(--game-ui-surface-raised));
 }
 .play-tune__worker {
   display: flex;
@@ -594,7 +603,7 @@
   gap: 12px;
 }
 .play-tune__meter {
-  background: color-mix(in srgb, var(--game-ui-secondary) 5%, var(--game-ui-panel-strong));
+  background: color-mix(in srgb, var(--game-ui-secondary) 5%, var(--game-ui-surface-raised));
   padding: 16px;
   border-radius: 12px;
 }
@@ -755,6 +764,8 @@
     margin-block-start: 18px;
   }
   .learning-play-lab__modes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
     gap: 5px;
   }
   .learning-play-lab__mode {
@@ -805,7 +816,7 @@
 }
 
 .play-connect__node:disabled {
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
 }
 .play-connect__node.is-active:disabled {
@@ -825,7 +836,7 @@
   form fieldsets, on a surface at the same value as the prose around it.
 
   Nothing here is new brand vocabulary, and SwimmerUIKit needed no change: every
-  token below already existed in both the light and `[data-game-ui-theme='night']`
+  token below already existed in both the light and `[data-game-ui-theme='dark']`
   palettes, and the boards simply never reached for them. That is why this layer
   is tokens only — a literal colour here would be the one thing that breaks when
   the theme flips.
@@ -867,8 +878,8 @@
 */
 .learning-activity .play-connect__board,
 .learning-activity .play-sort__bucket {
-  background: var(--game-ui-panel-deep);
-  box-shadow: var(--game-ui-shadow-inset);
+  background: var(--game-ui-surface-sunken);
+  box-shadow: var(--game-ui-shadow-raised);
 }
 
 /* Pieces: raised, seated, and pointable. */
@@ -893,7 +904,7 @@
 .learning-activity .play-connect__node:active:not(:disabled),
 .learning-activity .play-sort__item:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: var(--game-ui-shadow-inset);
+  box-shadow: var(--game-ui-shadow-raised);
 }
 
 /* A placed node owns a bounded column, unlike an ordinary fit-content CTA.

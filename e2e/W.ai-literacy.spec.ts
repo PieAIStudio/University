@@ -271,7 +271,7 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto(`${ONLINE}${lessonPathOf(target!.course, target!.lesson)}?lang=en`);
-  await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
+  await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "dark");
   await expect(page.locator(".lesson-reader")).toBeVisible();
   const media = page.locator(".lesson-media").first();
   await expect(media).toBeVisible();

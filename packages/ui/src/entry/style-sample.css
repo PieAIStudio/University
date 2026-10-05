@@ -55,7 +55,7 @@
 .stylesample__switch-button[aria-pressed="true"] {
   border-color: var(--game-ui-accent);
   background-color: var(--game-ui-accent);
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
 }
 
 .stylesample__frame {

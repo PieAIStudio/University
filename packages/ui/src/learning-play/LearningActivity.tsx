@@ -356,13 +356,7 @@ function ActivityRound({
               screen」 true by construction instead of by discipline.
             */}
             {onNext ? (
-              <GameButton
-                sound={false}
-                surface="liquid"
-                type="button"
-                variant="primary"
-                onClick={onNext}
-              >
+              <GameButton sound={false} type="button" variant="primary" onClick={onNext}>
                 {nextLabel ?? interfaceTranslator.t("play.lab.next")}
                 <PlayIcon name="arrow" />
               </GameButton>

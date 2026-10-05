@@ -13,7 +13,8 @@ let root: Root;
 const click = async (label: string) => {
   const button = [...container.querySelectorAll("button")].find(
     (candidate) =>
-      candidate.textContent?.trim() === label || candidate.getAttribute("aria-label") === label,
+      candidate.textContent?.trim().includes(label) ||
+      candidate.getAttribute("aria-label") === label,
   );
   expect(button, label).toBeDefined();
   await act(async () => button!.click());

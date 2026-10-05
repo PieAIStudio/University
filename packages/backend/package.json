@@ -21,7 +21,7 @@
   "dependencies": {
     "@pieai/swimmer-backend-client": "0.6.0",
     "@pieai/university-core": "workspace:*",
-    "@pieaistudio/swimmer-auth-kit": "0.1.9",
+    "@pieaistudio/swimmer-auth-kit": "0.8.0-rc.1",
     "@supabase/supabase-js": "2.110.3"
   },
   "devDependencies": {

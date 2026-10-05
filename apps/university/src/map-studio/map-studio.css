@@ -99,7 +99,7 @@
 }
 
 .map-studio .game-ui-tab[aria-selected="true"] {
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
   background: var(--game-ui-accent);
 }
 
@@ -176,7 +176,7 @@
   overflow: hidden;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   box-shadow: 0 18px 50px color-mix(in srgb, var(--game-ui-ink-deep) 28%, transparent);
 }
 
@@ -223,7 +223,7 @@
   padding: 7px 9px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: var(--game-ui-radius-control, 10px);
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 92%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 92%, transparent);
   color: var(--game-ui-text-muted);
   font-size: 0.68rem;
 }
@@ -267,7 +267,7 @@
   gap: 2px;
   padding: 10px 12px;
   border-inline-start: 3px solid var(--game-ui-accent);
-  background: color-mix(in srgb, var(--game-ui-accent) 9%, var(--game-ui-panel));
+  background: color-mix(in srgb, var(--game-ui-accent) 9%, var(--game-ui-surface));
   color: var(--game-ui-text-muted);
   font-size: 0.76rem;
 }
@@ -293,7 +293,7 @@
   min-width: 0;
   padding: 13px;
   border-color: var(--game-ui-border-subtle);
-  background: var(--game-ui-panel);
+  background: var(--game-ui-surface);
   box-shadow: none;
 }
 
@@ -440,7 +440,7 @@
   padding: 6px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
 }
 
 .map-studio__swatch {
@@ -490,7 +490,7 @@
   padding: 6px 8px;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   color: var(--game-ui-text);
   font: inherit;
   font-size: 0.72rem;
@@ -512,7 +512,7 @@
   padding: 10px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: var(--game-ui-radius-card, 12px);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
 }
 
 .map-studio__asset-title {
@@ -656,7 +656,7 @@
   padding: 8px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 9px;
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
 }
 
 .map-studio__budget-hero span,

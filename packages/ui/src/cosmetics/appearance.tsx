@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import type { CosmeticSlot } from "@pieai/university-core";
 import "../assets.js";
 import "./cosmetics.css";
-import crown from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/crown-v1.png";
+const crown = new URL("../reference/assets/crown-v1.png", import.meta.url).href;
 import { KNOWLEDGE_CARD_ART, KNOWLEDGE_CARD_BACK } from "../reference/knowledge-card-art.js";
 
 export const COSMETIC_NAMES = {

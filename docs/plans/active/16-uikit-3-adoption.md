@@ -114,3 +114,49 @@ commit.
 ## 6 Report back
 
 - The published versions adopted, the gate output verbatim, the commit, the walkthrough page path, and anything the migration table got wrong.
+
+## Execution record · 2026-10-05
+
+- Registry verification before installation: `@pieai/swimmer-ui-kit@3.0.0-rc.1`,
+  `@pieai/swimmer-nerve-kit@0.8.0`, and `@pieaistudio/swimmer-auth-kit@0.8.0-rc.1`
+  are all published on npm.
+- Adopted the three exact versions. UIKit 3 migration removed deprecated button
+  surface/finish props, removed `GameProgress.tone`, replaced `GameAssetIcon` with
+  `GameIcon`, and carried the still-used clay illustrations into the product source
+  because the new package no longer exports those files. NerveUIProvider and
+  AuthUIProvider are injected once at the app root. AuthKit receives the existing
+  backend auth client; it does not create a second SDK owner.
+- The existing light/dark/system preference remains the stored theme control. The
+  Owner's separate pastel/grey visual choice was not added because the current
+  account preference contract has no fourth theme value; this is left for the
+  Owner's look review rather than silently changing stored data.
+- Fast gate: `pnpm verify` passed. Counts were core 95/864, UI 100/633,
+  authoring-server 55/518, world 164/1238, app 79/431, backend 5/28,
+  university-ai 6/50; docs 180/324/0 warnings.
+- Walkthrough: `.scratch/overnight-20261003/task16-walkthrough.md`.
+
+## Gate exception record · 2026-10-05
+
+- First complete push attempt (before the `GameStatList` removal was amended):
+  `41 passed (1.4h)` and failed at browser startup with
+  `SyntaxError: @pieai/swimmer-ui-kit.js does not provide an export named GameStatList`.
+  The source was corrected by replacing that removed export with semantic stats markup;
+  the planet test was then isolated twice and passed (`1 passed` each).
+- Second complete push attempt on `d29bda54`: `297 passed (24.8m)`, 41 failed.
+  The first deterministic class was the cosmetics back control: UIKit 3 wraps
+  `GameButton` in `game-ui-button-frame`, while the existing contract requires the
+  back button to be a direct child. It was restored as a semantic button with UIKit
+  classes; the representative delivery-1440 test passed twice (`1 passed`, `1 passed`).
+- The next deterministic class was the Nerve guide question selector. UIKit 3's
+  injected control exposes four visible question buttons in the group and wraps
+  them in frames. The selectors were changed from direct-child to descendant,
+  and the expected count was updated from the old three-question disclosure to
+  the four questions now exposed by NerveKit 0.8.0; the representative map-guide
+  test passed twice (`1 passed`, `1 passed`).
+- The remaining representative failure is the retained play shelf at desktop and
+  narrow desktop widths: its `scrollWidth - clientWidth` is 18px and 16px after
+  the UIKit 3 button-frame migration. The same two-test isolation failed twice
+  (`2 failed` each). This is a deterministic layout regression, not load or
+  network noise. Because the complete push gate remains red after the required
+  isolation, task 16 is held here and has not been pushed. No `--no-verify` push
+  was attempted.

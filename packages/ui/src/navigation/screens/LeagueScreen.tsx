@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { interfaceTranslator, useI18n } from "../../i18n/index.js";
-import { GameAssetIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
+import { GameIcon, GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { leagueTierName } from "../league-tier-name.js";
 import { WeeklyBossRecords } from "./WeeklyBossRecords.js";
 import {
@@ -50,7 +50,7 @@ export function LeagueScreen({
                 {emblem(standing.tier.id)}
               </span>
             ) : (
-              <GameAssetIcon icon="medal" size="lg" />
+              <GameIcon icon="medal" size="lg" />
             )}
             <span className="league-standing__name">{leagueTierName(standing.tier)}</span>
             <GameBadge tone="success">
@@ -68,7 +68,6 @@ export function LeagueScreen({
             }
             value={standing.progress}
             max={1}
-            tone="success"
             valueLabel={
               standing.next ? `${standing.cards} / ${standing.next.at}` : `${standing.cards}`
             }

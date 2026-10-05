@@ -70,7 +70,7 @@
   font-weight: 600;
 }
 .welcome-questions [aria-pressed="true"] {
-  outline: 2px solid var(--game-ui-accent-ink);
+  outline: 2px solid var(--game-ui-control-chroma-ink);
   outline-offset: 1px;
 }
 .welcome-questions__recommendation {

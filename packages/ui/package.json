@@ -153,9 +153,9 @@
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
     "@pieai/swimmer-i18n-kit": "0.2.0",
-    "@pieai/swimmer-ui-kit": "2.14.0",
+    "@pieai/swimmer-ui-kit": "3.0.0-rc.1",
     "@pieai/university-core": "workspace:*",
-    "@pieaistudio/swimmer-auth-kit": "0.1.9",
+    "@pieaistudio/swimmer-auth-kit": "0.8.0-rc.1",
     "mermaid": "11.16.1",
     "react-markdown": "10.1.0",
     "remark-directive": "4.0.0",

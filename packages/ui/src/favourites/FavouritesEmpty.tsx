@@ -39,14 +39,7 @@ export function FavouritesEmpty({
       description={FAVOURITES_EMPTY_DESCRIPTION}
       action={
         onBrowse ? (
-          <GameButton
-            variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
-            className="university-cta"
-            type="button"
-            onClick={onBrowse}
-          >
+          <GameButton variant="primary" className="university-cta" type="button" onClick={onBrowse}>
             {FAVOURITES_EMPTY_ACTION}
           </GameButton>
         ) : undefined

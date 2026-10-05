@@ -12,3 +12,12 @@ setInterfaceLocale("zh-CN");
 beforeEach(() => {
   setInterfaceLocale("zh-CN");
 });
+
+if (typeof globalThis.ResizeObserver === "undefined") {
+  class TestResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  Object.assign(globalThis, { ResizeObserver: TestResizeObserver });
+}

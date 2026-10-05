@@ -15,7 +15,7 @@
   padding: 0;
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep, #0c1018);
+  background: var(--game-ui-surface-sunken, #0c1018);
   /*
     `panel-deep` is deep on night and a light tan on light, so muted ink only
     reads on one of them (3.91:1 on light). Full text reads on both, and the

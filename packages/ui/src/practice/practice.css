@@ -328,7 +328,7 @@
   overflow: auto;
   border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: var(--game-ui-panel, #1a2030);
+  background: var(--game-ui-surface, #1a2030);
 }
 
 .practice-reward-panel.is-locked {

@@ -307,7 +307,6 @@ export function ConnectGame({
         */}
         <GameButton
           sound={false}
-          surface="liquid"
           type="button"
           variant="primary"
           disabled={disabled || running || edges.length === 0}

@@ -4,6 +4,9 @@ import type { MessageCatalog } from "../types.js";
 export const messages = {
   "product.settings.interfaceLanguage": "Interface language",
   "product.worldStyle.label": "World style",
+  "product.uiStyle.label": "UI style",
+  "product.uiStyle.grey": "Grey",
+  "product.uiStyle.pastel": "Pastel",
   "product.worldStyle.classic": "Classic miniature",
   "product.worldStyle.clay": "Colored clay",
   "ui.world.domain.programming": "AI & Programming",

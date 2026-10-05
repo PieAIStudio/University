@@ -103,7 +103,7 @@ body {
   gap: 12px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--game-ui-border-subtle);
-  background: var(--game-ui-panel);
+  background: var(--game-ui-surface);
   /* Safe-area padding is here from the start: the shells are a product promise
      and retrofitting insets after layouts settle is how notches eat headers. */
   padding-top: max(10px, env(safe-area-inset-top));
@@ -177,7 +177,7 @@ a.primary {
     (#241609) is the ink meant to sit on the accent, and it is what every
     button inside SwimmerUIKit itself uses.
   */
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
   font-weight: 600;
   padding: 8px 16px;
 }
@@ -299,7 +299,7 @@ button.block {
   overscroll-behavior: contain;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
   backdrop-filter: none;
   padding: 14px 16px;
@@ -321,7 +321,7 @@ button.block {
   width: 280px;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-panel, 14px);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
   backdrop-filter: none;
   padding: 14px 16px;
@@ -487,7 +487,7 @@ button.block {
 
 .lesson__en--on {
   /* The ink for the accent. `bg` is dark on night and cream on light (2.48:1). */
-  color: var(--game-ui-accent-contrast);
+  color: var(--game-ui-control-on-text);
   background: var(--game-ui-accent);
   border-color: var(--game-ui-accent);
 }
@@ -524,7 +524,7 @@ button.block {
   margin: 16px 0;
   padding: 14px 16px;
   overflow-x: auto;
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: var(--game-ui-radius-card, 12px);
   font-size: 0.84rem;
@@ -598,7 +598,7 @@ button.block {
   padding: 11px 12px;
   border-radius: var(--game-ui-radius-control, 10px);
   border: 1px solid var(--game-ui-border-strong);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   color: inherit;
   font: inherit;
   font-size: 1rem;
@@ -746,7 +746,7 @@ button.block {
 .review__grades button {
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   color: inherit;
   font: inherit;
   font-size: 0.86rem;
@@ -826,8 +826,8 @@ button.block {
     position: sticky;
     bottom: 0;
     margin-top: auto;
-    background-color: var(--game-ui-panel-deep);
-    background-image: linear-gradient(var(--game-ui-panel-strong), var(--game-ui-panel-strong));
+    background-color: var(--game-ui-surface-sunken);
+    background-image: linear-gradient(var(--game-ui-surface-raised), var(--game-ui-surface-raised));
   }
 }
 
@@ -1318,7 +1318,7 @@ button.block {
   border: 1px solid var(--game-ui-border-subtle);
   border-inline-start: 3px solid var(--game-ui-accent);
   border-radius: 12px;
-  background: var(--game-ui-panel);
+  background: var(--game-ui-surface);
 }
 
 .catalog__course > summary {
@@ -1403,7 +1403,7 @@ button.block {
 .catalog__unit > summary {
   padding-block: 10px 10px;
   padding-inline: 42px 16px;
-  background: color-mix(in srgb, var(--game-ui-panel) 70%, var(--game-ui-panel-deep));
+  background: color-mix(in srgb, var(--game-ui-surface) 70%, var(--game-ui-surface-sunken));
 }
 
 .catalog__unit > summary h4 {
@@ -1498,7 +1498,7 @@ button.block {
   margin: 0;
   padding: 6px 10px;
   border-radius: var(--game-ui-radius-control, 10px);
-  background: color-mix(in srgb, var(--game-ui-panel) 78%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface) 78%, transparent);
   color: var(--game-ui-text);
   font-family: var(--game-ui-font-mono);
   font-size: 0.72rem;
@@ -1605,7 +1605,7 @@ button.block {
 
 .campus {
   --campus-rule: var(--game-ui-border-subtle);
-  --campus-surface: var(--game-ui-panel);
+  --campus-surface: var(--game-ui-surface);
   min-height: 100vh;
   padding: clamp(18px, 3vw, 42px);
   color: var(--game-ui-text);
@@ -1870,7 +1870,7 @@ button.block {
   padding: 22px;
   border: 1px solid var(--campus-rule);
   border-radius: var(--game-ui-radius-panel);
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 60%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 60%, transparent);
 }
 
 .today-metric > span {
@@ -1932,7 +1932,7 @@ button.block {
   border-radius: 12px;
   padding: 14px 15px;
   color: var(--game-ui-text);
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 72%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 72%, transparent);
   line-height: 1.55;
 }
 
@@ -1943,7 +1943,7 @@ button.block {
 .answer-field textarea[readonly] {
   border-style: dashed;
   color: var(--game-ui-text);
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 45%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 45%, transparent);
 }
 
 /* Rubric self-assessment for `explain` exercises: the answer is already
@@ -1955,7 +1955,7 @@ button.block {
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 14px;
   padding: 18px 20px;
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 45%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 45%, transparent);
 }
 
 .rubric-field legend {
@@ -2206,7 +2206,7 @@ button.block {
   padding: 14px 16px;
   border: 1px solid var(--campus-rule);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 52%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 52%, transparent);
 }
 
 .study-evidence-status__metric strong {
@@ -2243,7 +2243,7 @@ button.block {
   border-radius: 16px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--game-ui-panel-deep) 68%, transparent),
+    color-mix(in srgb, var(--game-ui-surface-sunken) 68%, transparent),
     color-mix(in srgb, var(--game-ui-secondary-pale) 44%, transparent)
   );
 }
@@ -2292,7 +2292,7 @@ button.block {
 
 .study-analysis-panel__summary-action::after {
   margin-inline-start: 7px;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   content: "展开 ▾";
   font-weight: 600;
 }
@@ -2480,7 +2480,7 @@ button.block {
 }
 
 .course-objectives summary::after {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   content: "展开 ▾";
   font-size: 0.82rem;
 }
@@ -2518,7 +2518,7 @@ button.block {
 }
 
 .course-units summary::after {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   content: "展开 ▾";
   font-size: 0.82rem;
 }
@@ -2555,8 +2555,8 @@ button.block {
   border-radius: 16px;
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--game-ui-panel-strong) 78%, transparent),
-    color-mix(in srgb, var(--game-ui-panel-deep) 72%, transparent)
+    color-mix(in srgb, var(--game-ui-surface-raised) 78%, transparent),
+    color-mix(in srgb, var(--game-ui-surface-sunken) 72%, transparent)
   );
 }
 
@@ -2597,7 +2597,7 @@ button.block {
   padding: 14px;
   border-color: var(--campus-rule);
   border-radius: 11px;
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 40%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 40%, transparent);
 }
 
 .lesson-row:hover {
@@ -2724,11 +2724,11 @@ button.block {
  */
 .lesson-reader .lesson-detail summary,
 .lesson-reader .markdown-body.lesson-prose > h2[data-role="ask"] {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .lesson-reader .markdown-body.lesson-prose > h2[data-role="reveal"]::before {
-  background: var(--game-ui-accent-ink);
+  background: var(--game-ui-control-chroma-ink);
 }
 
 /*
@@ -2887,7 +2887,7 @@ button.block {
   border: 1px solid color-mix(in srgb, var(--game-ui-warning) 48%, transparent);
   padding: 9px 14px;
   background: color-mix(in srgb, var(--game-ui-warning) 13%, transparent);
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -2973,14 +2973,14 @@ button.block {
 .coaching-packet {
   margin-top: 16px;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 28%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--game-ui-accent-pale) 7%, transparent);
 }
 
 .coaching-packet__status {
   margin: 0 0 10px;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-size: 0.92rem;
   font-weight: 600;
 }
@@ -3040,7 +3040,7 @@ button.block {
   padding: 16px 18px;
   border: 1px solid var(--campus-rule);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 60%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 60%, transparent);
 }
 
 /* Quiet single-line rail panel chrome: label + ? */
@@ -3066,8 +3066,8 @@ button.block {
   width: 1.2rem;
   height: 1.2rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 28%, transparent);
-  color: color-mix(in srgb, var(--game-ui-accent-ink) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 28%, transparent);
+  color: color-mix(in srgb, var(--game-ui-control-chroma-ink) 72%, transparent);
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
@@ -3078,7 +3078,7 @@ button.block {
 .rail-panel__help:hover,
 .rail-panel__help:focus-visible {
   border-color: color-mix(in srgb, var(--game-ui-warning) 65%, transparent);
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .evidence-list {
@@ -3220,12 +3220,12 @@ button.block {
   border: 0;
   padding: 0;
   background: none;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--game-ui-accent-ink) 40%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--game-ui-control-chroma-ink) 40%, transparent);
   text-underline-offset: 0.18em;
 }
 
@@ -3261,7 +3261,7 @@ button.block {
   border: 1px solid color-mix(in srgb, var(--game-ui-warning) 32%, transparent);
   padding: 6px 9px;
   background: transparent;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font: inherit;
   font-size: 0.76rem;
   cursor: pointer;
@@ -3450,7 +3450,7 @@ button.block {
 .airlock-clocks {
   margin: 16px 0;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 18%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--game-ui-accent-pale) 4%, transparent);
 }
@@ -3659,7 +3659,7 @@ button.block {
 
 .lesson-backlinks__list button:hover,
 .lesson-backlinks__list button:focus-visible {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .lesson-backlinks__list button:disabled {
@@ -3730,7 +3730,7 @@ button.block {
 
 .tip-panel__term {
   margin: 0 0 6px;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -3755,7 +3755,7 @@ button.block {
 }
 
 .review-card__queue strong {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .rating-row__help {
@@ -3796,8 +3796,8 @@ button.block {
   padding: 8px 14px;
   border: 1px solid var(--campus-rule);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--game-ui-accent-ink) 12%, transparent);
-  color: var(--game-ui-accent-ink);
+  background: color-mix(in srgb, var(--game-ui-control-chroma-ink) 12%, transparent);
+  color: var(--game-ui-control-chroma-ink);
   cursor: pointer;
   font-size: 0.84rem;
   text-align: start;
@@ -3806,7 +3806,7 @@ button.block {
 
 .lesson-return:hover,
 .lesson-return:focus-visible {
-  border-color: color-mix(in srgb, var(--game-ui-accent-ink) 40%, transparent);
+  border-color: color-mix(in srgb, var(--game-ui-control-chroma-ink) 40%, transparent);
   color: var(--game-ui-accent-bright);
 }
 
@@ -3836,7 +3836,7 @@ button.block {
 
 .lesson-backlinks button:hover,
 .lesson-backlinks button:focus-visible {
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 /* The lesson header already states the title, and every lesson's Markdown
@@ -3868,9 +3868,9 @@ button.block {
   display: flex;
   gap: 2px;
   padding: 4px;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-ink) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--game-ui-control-chroma-ink) 30%, transparent);
   border-radius: 10px;
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   box-shadow: var(--game-ui-shadow-callout);
 }
 
@@ -3886,7 +3886,7 @@ button.block {
 }
 
 .selection-menu__action:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--game-ui-accent-ink) 14%, transparent);
+  background: color-mix(in srgb, var(--game-ui-control-chroma-ink) 14%, transparent);
 }
 
 .selection-menu__action:disabled {
@@ -3914,7 +3914,7 @@ button.block {
   padding: 20px 22px;
   border: 1px solid var(--campus-rule);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 42%, transparent);
+  background: color-mix(in srgb, var(--game-ui-surface-sunken) 42%, transparent);
 }
 
 .study-map__header {
@@ -3994,7 +3994,7 @@ button.block {
   display: block;
   block-size: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--game-ui-accent-ink), var(--game-ui-warning));
+  background: linear-gradient(90deg, var(--game-ui-control-chroma-ink), var(--game-ui-warning));
 }
 
 /*

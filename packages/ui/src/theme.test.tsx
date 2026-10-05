@@ -43,7 +43,7 @@ describe("theme resolution", () => {
     expect(applyThemePreference("light", document.documentElement)).toBe("light");
     expect(document.documentElement.dataset.gameUiTheme).toBe("light");
     expect(applyThemePreference("dark", document.documentElement)).toBe("dark");
-    expect(document.documentElement.dataset.gameUiTheme).toBe("night");
+    expect(document.documentElement.dataset.gameUiTheme).toBe("dark");
   });
 
   it("derives browser chrome from the active kit surface token", () => {
@@ -76,7 +76,7 @@ describe("theme resolution", () => {
     expect(document.documentElement.dataset.gameUiTheme).toBe("light");
     media.matches = true;
     listener?.();
-    expect(document.documentElement.dataset.gameUiTheme).toBe("night");
+    expect(document.documentElement.dataset.gameUiTheme).toBe("dark");
     stop();
     expect(media.removeEventListener).toHaveBeenCalledWith("change", listener);
   });
@@ -87,9 +87,7 @@ describe("theme settings", () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     await act(async () => root.render(withInterfaceLocale(<SettingsScreen progress={progress} />)));
 
-    const dark = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "深色",
-    );
+    const dark = container.querySelector<HTMLButtonElement>('button[title*="深色"]');
     expect(dark).toBeDefined();
     await act(async () => dark?.click());
 

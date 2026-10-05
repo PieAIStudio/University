@@ -303,8 +303,6 @@ export function ReviewCard({
         liquidPrimary ? (
           <GameButton
             variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
             className="university-cta"
             onClick={() => void reveal()}
             disabled={!answer.trim() || pending}

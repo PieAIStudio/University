@@ -206,7 +206,7 @@ test.describe("P 手机与同一学习者表面", () => {
         await mode(page, label);
         await page.evaluate(
           (theme) => document.documentElement.setAttribute("data-game-ui-theme", theme),
-          index % 2 === 0 ? "light" : "night",
+          index % 2 === 0 ? "light" : "dark",
         );
         await capture(page, `${name}-mobile-${index}`);
         const bounds = await activity(page).evaluate((node) => ({

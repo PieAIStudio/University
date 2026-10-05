@@ -31,7 +31,7 @@
 
 .source-sheet__meta code {
   overflow-wrap: anywhere;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .source-sheet__tools {
@@ -55,7 +55,7 @@
   border: 1px solid var(--campus-rule);
   padding: 7px 9px;
   color: var(--game-ui-text);
-  background: var(--game-ui-panel-deep);
+  background: var(--game-ui-surface-sunken);
   font: inherit;
 }
 
@@ -67,7 +67,7 @@
 
 .source-sheet__truncation {
   margin: 0;
-  color: var(--game-ui-accent-ink);
+  color: var(--game-ui-control-chroma-ink);
 }
 
 .source-sheet__footer {

@@ -18,7 +18,7 @@
   border-radius: 1.1rem;
   background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
-  box-shadow: var(--game-ui-shadow-panel);
+  box-shadow: var(--game-ui-shadow-raised);
 }
 .weekly-boss-fight button {
   min-height: 44px;

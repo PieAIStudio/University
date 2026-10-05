@@ -82,8 +82,6 @@ export function MapEntryAction({
       <GameButton
         type="button"
         variant="primary"
-        surface="liquid"
-        liquidFinish="glossy"
         aria-label={interfaceTranslator.t("map.enterNamed", { title })}
         onClick={onEnter}
       >

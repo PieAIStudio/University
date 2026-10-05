@@ -1,5 +1,5 @@
 import type { Ref } from "react";
-import { GameAssetIcon, GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameIcon, GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "../i18n/index.js";
 
 /** The existing, finite practice ending shared by native lesson rehearsal and
@@ -32,7 +32,7 @@ export function PracticeRoundComplete({
           {t.t("product.practice.roundDone")}
         </h1>
         <div className="practice-stream__celebrate" aria-hidden="true">
-          <GameAssetIcon icon="trophy" size="xl" />
+          <GameIcon icon="trophy" size="lg" />
         </div>
         <p>{receipt ?? t.t("product.practice.roundReceipt", { count })}</p>
         <div className="practice-stream__actions">

@@ -27,7 +27,7 @@
   overflow: hidden;
   border: 1px solid var(--game-ui-border-strong);
   border-radius: var(--game-ui-radius-panel);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   box-shadow: var(--game-ui-shadow-callout);
 }
 .app-shell[data-map-shell="true"] .nav-rail {
@@ -204,7 +204,7 @@
     overflow: hidden;
     border: 1px solid var(--game-ui-border-strong);
     border-radius: 18px;
-    background: var(--game-ui-panel-strong);
+    background: var(--game-ui-surface-raised);
   }
   .app-shell[data-map-shell="true"] .app-shell__east-stack {
     flex-direction: column;

@@ -236,7 +236,7 @@ for (const [mode, origin] of [
         }
         await humanClick(
           page,
-          page.locator('.map-node-dialog [data-map-node-flow="checkpoint"] > button').last(),
+          page.locator('.map-node-dialog [data-map-node-flow="checkpoint"] button').last(),
           "submit actual reference answer",
         );
       }

@@ -6,13 +6,11 @@ import { createMemoryIdentityPort, createPaymentPort } from "@pieai/university-c
 import { InterfaceLanguageProvider, setInterfaceLocale } from "@pieai/university-ui/i18n.js";
 import { PlansScreen } from "@pieai/university-ui/navigation/screens.js";
 import { ProfileScreen } from "@pieai/university-ui/navigation/empty.js";
-import { setClayAssetMode } from "@pieai/swimmer-ui-kit";
 import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/university-ui/navigation/university-shell.css";
 
 const locale = new URLSearchParams(location.search).get("lang") === "zh-CN" ? "zh-CN" : "en";
 setInterfaceLocale(locale);
-setClayAssetMode("source");
 document.documentElement.lang = locale;
 const identity = createMemoryIdentityPort({
   id: "synthetic-learner",

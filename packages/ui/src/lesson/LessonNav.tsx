@@ -287,7 +287,6 @@ export function LessonToolbar({
       label={progressOverride?.label ?? interfaceTranslator.t("ui.lesson.lessonNav.copy.课文进度")}
       value={valueNow}
       max={valueMax}
-      tone="accent"
       valueLabel={
         progressOverride?.label ??
         (valued ? interfaceTranslator.t("product.reading.sections", { current, total }) : undefined)

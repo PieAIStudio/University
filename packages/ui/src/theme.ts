@@ -81,7 +81,7 @@ export function applyThemePreference(
 ): ResolvedTheme {
   const resolved = resolvedThemeOf(preference, systemPrefersDark());
   const target = rootOf(root);
-  target?.setAttribute("data-game-ui-theme", resolved === "dark" ? "night" : "light");
+  target?.setAttribute("data-game-ui-theme", resolved);
   updateThemeColor(target);
   return resolved;
 }
@@ -92,4 +92,13 @@ export function watchThemePreference(preference: ThemePreference, root?: HTMLEle
   update();
 
   return preference === "system" ? subscribeSystemTheme(update) : () => undefined;
+}
+
+export function applyUiStylePreference(
+  style: "grey" | "pastel" = "grey",
+  root?: HTMLElement,
+): void {
+  const target = rootOf(root);
+  target?.setAttribute("data-game-ui-style", style);
+  updateThemeColor(target);
 }

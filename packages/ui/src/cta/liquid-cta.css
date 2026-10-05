@@ -20,7 +20,7 @@
   --liquid-cta-fill-top: var(--game-ui-accent-bright);
   --liquid-cta-fill-bottom: var(--liquid-cta-fill);
   --liquid-cta-shadow: 0 5px 10px
-    color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
+    color-mix(in srgb, var(--game-ui-control-on-text) 32%, transparent);
   position: fixed;
   /* Reader content is a deliberate z-index:2 underlay boundary. */
   z-index: 1;
@@ -57,7 +57,7 @@
     180deg,
     var(--liquid-cta-fill-top),
     var(--liquid-cta-fill-bottom) 62%,
-    color-mix(in srgb, var(--liquid-cta-fill-bottom) 88%, var(--game-ui-accent-contrast))
+    color-mix(in srgb, var(--liquid-cta-fill-bottom) 88%, var(--game-ui-control-on-text))
   );
 }
 

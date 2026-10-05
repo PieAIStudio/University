@@ -134,7 +134,7 @@
   margin-block: 0 16px;
   padding: 14px 16px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--game-ui-secondary) 10%, var(--game-ui-panel));
+  background: color-mix(in srgb, var(--game-ui-secondary) 10%, var(--game-ui-surface));
 }
 .play-guide strong {
   display: block;

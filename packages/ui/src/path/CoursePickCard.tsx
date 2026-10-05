@@ -186,8 +186,6 @@ export function CoursePickCard({
           ) : null}
           <GameButton
             variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
             fullWidth
             className="university-cta picked__enter"
             onClick={onEnter}

@@ -32,9 +32,9 @@
   padding: 12px 14px;
   border-radius: 18px;
   /* The kit's own presence label, so the fallback reads as 涟 speaking. */
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
-  box-shadow: var(--game-ui-shadow-button);
+  box-shadow: var(--game-ui-shadow-raised);
 }
 
 .first-use__bubble {

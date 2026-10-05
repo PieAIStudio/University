@@ -15,7 +15,7 @@ test("isolated award readability: locked badge rules and the promotion stay legi
   await page.setViewportSize({ width: 390, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   const findings: unknown[] = [];
-  for (const theme of ["light", "night"]) {
+  for (const theme of ["light", "dark"]) {
     await page.goto(`${ONLINE_ORIGIN}/e2e-fixtures/knowledge.html?lang=en`);
     await expect(page.locator(".badge-tile")).toHaveCount(17);
     await page.evaluate((value) => {

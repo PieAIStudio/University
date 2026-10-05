@@ -1890,6 +1890,9 @@ export interface MessageContracts {
   readonly "product.splash.progress": { readonly "percent": string | number | bigint | boolean | null | undefined | Date; };
   readonly "product.splash.start": {  };
   readonly "product.splash.time": {  };
+  readonly "product.uiStyle.grey": {  };
+  readonly "product.uiStyle.label": {  };
+  readonly "product.uiStyle.pastel": {  };
   readonly "product.value.whyAi": {  };
   readonly "product.welcome.assess": {  };
   readonly "product.welcome.assess.choose": {  };

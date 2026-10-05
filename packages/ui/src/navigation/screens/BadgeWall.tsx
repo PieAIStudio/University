@@ -41,7 +41,7 @@ function BadgeTile({ badge: source, emblem }: { badge: Badge; emblem?: BadgeEmbl
         </div>
         <p className="badge-tile__how">{badge.how}</p>
         {badge.earned ? null : (
-          <GameProgress label={badge.name} value={badge.progress} max={1} tone="accent" showValue />
+          <GameProgress label={badge.name} value={badge.progress} max={1} showValue />
         )}
       </div>
     </li>
@@ -80,7 +80,6 @@ export function BadgeWall({
           label={interfaceTranslator.t("ui.navigation.screens.badgeWall.copy.已获得")}
           value={earned}
           max={badges.length}
-          tone={earned > 0 ? "success" : "accent"}
           valueLabel={`${earned} / ${badges.length}`}
         />
       </GamePanel>

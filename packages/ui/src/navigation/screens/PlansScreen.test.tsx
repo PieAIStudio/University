@@ -392,9 +392,7 @@ describe("PlansScreen wallet line", () => {
   it("retains the non-sensitive monthly choice when the page is reopened", async () => {
     const payment = createPaymentPort({ identity: createMemoryIdentityPort(), transport: null });
     await act(async () => root.render(withInterfaceLocale(<PlansScreen paymentPort={payment} />)));
-    const monthly = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "按月",
-    );
+    const monthly = container.querySelector<HTMLButtonElement>(".plan-toggle button:last-child");
     if (!monthly) throw new Error("missing monthly choice");
     await act(async () => monthly.click());
     await act(async () => root.unmount());

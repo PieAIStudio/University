@@ -112,14 +112,7 @@ export function AuthCallbackScreen({
     return (
       <section className="account-panel">
         <h1>{interfaceTranslator.t("product.account.authCallbackTitle")}</h1>
-        <GameButton
-          variant="primary"
-          surface="liquid"
-          liquidFinish="glossy"
-          className="university-cta"
-          type="button"
-          onClick={onContinue}
-        >
+        <GameButton variant="primary" className="university-cta" type="button" onClick={onContinue}>
           {interfaceTranslator.t("product.account.continueLearning")}
         </GameButton>
       </section>

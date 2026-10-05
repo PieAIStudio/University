@@ -95,8 +95,8 @@ for (const viewport of [
 
     // No model is connected: no free-text box pretends otherwise.
     await humanClick(page, body(page), "涟");
-    // Three questions first; the fourth waits behind the kit's disclosure.
-    await expect(outlet(page).locator(".swimmer-nerve-liquid__questions > button")).toHaveCount(3);
+    // UIKit 3 exposes the four guided questions in one accessible group.
+    await expect(outlet(page).locator(".swimmer-nerve-liquid__questions button")).toHaveCount(4);
     await expect(outlet(page).locator("textarea")).toHaveCount(0);
     // While the questions are open, no scene label sits under them.
     const panel = (await outlet(page).boundingBox())!;

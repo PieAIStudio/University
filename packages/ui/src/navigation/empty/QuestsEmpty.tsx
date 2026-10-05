@@ -21,8 +21,6 @@ export function QuestsEmpty({ onNavigate }: { readonly onNavigate?: () => void }
         onNavigate ? (
           <GameButton
             variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
             className="university-cta"
             type="button"
             onClick={onNavigate}

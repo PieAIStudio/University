@@ -11,13 +11,7 @@
  * would fight. Why the list rows are not GameButton: a row is a choice,
  * not an action; the kit's button is the enter/close pair.
  */
-import {
-  GameBadge,
-  GameButton,
-  GamePanel,
-  GameProgress,
-  GameStatList,
-} from "@pieai/swimmer-ui-kit";
+import { GameBadge, GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { useEffect, useId, useMemo } from "react";
 import { useI18n } from "@pieai/university-ui/i18n.js";
 
@@ -365,27 +359,23 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
         component the whole time; this page was hand-rolling a badge because
         nobody looked.
       */}
-      <GameStatList
-        label={interfaceTranslator.t("world.picker.overview", { title: study.title })}
-        density="dense"
-        facts={[
-          {
-            id: "courses",
-            label: interfaceTranslator.t("world.picker.courses"),
-            value: study.courseCount,
-          },
-          {
-            id: "lessons",
-            label: interfaceTranslator.t("world.picker.lessons"),
-            value: study.lessonCount,
-          },
-          {
-            id: "done",
-            label: interfaceTranslator.t("world.picker.completed"),
-            value: study.lessonsDone,
-          },
-        ]}
-      />
+      <dl
+        className="planet-page__stats"
+        aria-label={interfaceTranslator.t("world.picker.overview", { title: study.title })}
+      >
+        <div>
+          <dt>{interfaceTranslator.t("world.picker.courses")}</dt>
+          <dd>{study.courseCount}</dd>
+        </div>
+        <div>
+          <dt>{interfaceTranslator.t("world.picker.lessons")}</dt>
+          <dd>{study.lessonCount}</dd>
+        </div>
+        <div>
+          <dt>{interfaceTranslator.t("world.picker.completed")}</dt>
+          <dd>{study.lessonsDone}</dd>
+        </div>
+      </dl>
       {listed.shown.length > 0 ? (
         <ul className="planet-page__courses">
           {listed.shown.map((title) => (

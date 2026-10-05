@@ -3,14 +3,14 @@
 import "../assets.js";
 /** Imported from the pinned brand package, so Vite emits only these actual
  * illustrations rather than a copied icon tree or runtime placeholder. */
-import brain from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/brain-v1.png";
-import book from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/book-v1.png";
-import cloud from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/cloud-v1.png";
-import compass from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/compass-v1.png";
-import energy from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/energy-v1.png";
-import copy from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/copy-v1.png";
-import gem from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/gem-v1.png";
-import card from "@pieai/swimmer-ui-kit/assets/game/ui/clay/phase03-clay-kit/icons/function/card-v1.png";
+const brain = new URL("./assets/brain-v1.png", import.meta.url).href;
+const book = new URL("./assets/book-v1.png", import.meta.url).href;
+const cloud = new URL("./assets/cloud-v1.png", import.meta.url).href;
+const compass = new URL("./assets/compass-v1.png", import.meta.url).href;
+const energy = new URL("./assets/energy-v1.png", import.meta.url).href;
+const copy = new URL("./assets/copy-v1.png", import.meta.url).href;
+const gem = new URL("./assets/gem-v1.png", import.meta.url).href;
+const card = new URL("./assets/card-v1.png", import.meta.url).href;
 import type { ConceptCategory } from "@pieai/university-core";
 
 export const KNOWLEDGE_CARD_ART: Record<ConceptCategory, string> = {

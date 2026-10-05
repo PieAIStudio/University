@@ -65,7 +65,6 @@ function QuestRow({
           label={copy.title}
           value={questProgress(quest)}
           max={1}
-          tone={done ? "success" : "accent"}
           valueLabel={`${quest.done} / ${quest.goal}`}
         />
       ) : null}
@@ -119,7 +118,6 @@ export function QuestsScreen({
           label={interfaceTranslator.t("ui.navigation.screens.questsScreen.copy.今天的进度")}
           value={finished}
           max={scored.length}
-          tone={finished === scored.length ? "success" : "accent"}
           valueLabel={`${finished} / ${scored.length}`}
         />
       </GamePanel>

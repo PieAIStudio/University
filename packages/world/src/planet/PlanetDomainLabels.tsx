@@ -117,8 +117,6 @@ export function PlanetDomainLabels({
                 <GameButton
                   type="button"
                   variant="primary"
-                  surface="liquid"
-                  liquidFinish="glossy"
                   data-map-entry="true"
                   aria-label={interfaceTranslator.t("map.enterNamed", {
                     title:

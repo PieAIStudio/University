@@ -24,9 +24,9 @@ afterEach(() => {
 });
 
 describe("University browser account assembly", () => {
-  it("does not construct a second auth controller from createAuthClient", () => {
+  it("passes the existing Supabase client through AuthKit without a second SDK", () => {
     const source = readFileSync(fileURLToPath(new URL("./browser.ts", import.meta.url)), "utf8");
-    expect(source).not.toMatch(/createAuthClient/);
+    expect(source).toMatch(/createAuthClient/);
     expect(source).not.toMatch(/as IdentityAuth/);
     expect(source).toMatch(/createSupabaseAuth/);
     expect(source).toMatch(/authRedirect/);

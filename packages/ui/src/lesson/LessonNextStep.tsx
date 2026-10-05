@@ -60,13 +60,7 @@ export function LessonNextStep({
           )}
         </p>
         {completed ? (
-          <GameButton
-            variant="primary"
-            surface="liquid"
-            liquidFinish="glossy"
-            className="university-cta"
-            onClick={onBackToCourse}
-          >
+          <GameButton variant="primary" className="university-cta" onClick={onBackToCourse}>
             {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.回到课程")}
           </GameButton>
         ) : (
@@ -102,13 +96,7 @@ export function LessonNextStep({
         </p>
       )}
       {completed ? (
-        <GameButton
-          variant="primary"
-          surface="liquid"
-          liquidFinish="glossy"
-          className="university-cta"
-          onClick={() => onOpenLesson(next)}
-        >
+        <GameButton variant="primary" className="university-cta" onClick={() => onOpenLesson(next)}>
           {interfaceTranslator.t("ui.lesson.lessonNextStep.copy.继续下一节")}
         </GameButton>
       ) : (

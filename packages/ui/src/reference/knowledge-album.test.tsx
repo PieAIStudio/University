@@ -103,8 +103,8 @@ describe("the same collection index becomes the learner's album", () => {
       "en",
     );
     expect(
-      [...host.querySelectorAll("button")].some(
-        (button) => button.textContent === "Interactive lessons",
+      [...host.querySelectorAll("button")].some((button) =>
+        button.textContent?.trim().includes("Interactive lessons"),
       ),
     ).toBe(true);
     expect(host.textContent).toContain("My notes");

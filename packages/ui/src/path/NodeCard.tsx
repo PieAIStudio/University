@@ -58,8 +58,6 @@ export function NodeCard({
       <p className="node-card__cost">{cost}</p>
       <GameButton
         variant="primary"
-        surface="liquid"
-        liquidFinish="glossy"
         fullWidth
         className="university-cta path-card__start"
         onClick={onStart}

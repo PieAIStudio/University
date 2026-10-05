@@ -7,7 +7,7 @@
   max-height: calc(100dvh - var(--game-ui-safe-top) - var(--game-ui-safe-bottom) - 5rem);
   overflow: auto;
   border-radius: var(--game-ui-radius-panel);
-  background: var(--game-ui-panel-strong);
+  background: var(--game-ui-surface-raised);
   color: var(--game-ui-text);
 }
 .rank-promotion .game-ui-toast {

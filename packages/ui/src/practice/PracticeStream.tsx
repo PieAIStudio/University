@@ -196,8 +196,6 @@ export function PracticeStream<Head = unknown>({
             onBrowse ? (
               <GameButton
                 variant="primary"
-                surface="liquid"
-                liquidFinish="glossy"
                 className="university-cta"
                 type="button"
                 onClick={onBrowse}
@@ -225,8 +223,6 @@ export function PracticeStream<Head = unknown>({
             <div className="practice-stream__actions">
               <GameButton
                 variant="primary"
-                surface="liquid"
-                liquidFinish="glossy"
                 className="university-cta"
                 type="button"
                 data-practice-round
