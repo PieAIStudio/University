@@ -342,8 +342,8 @@ export interface MessageContracts {
   readonly "app.mapstudio.mapStudioScreen.copy.预览项目": {  };
   readonly "app.mapstudio.mapStudioScreen.copy.颜色分带": {  };
   readonly "app.mode.copy.先跑-pnpm-content-它会从-UniversityLocal-的导出包里取课程-没有-Universi": {  };
+  readonly "app.mode.copy.创作端": {  };
   readonly "app.mode.copy.在线端": {  };
-  readonly "app.mode.copy.本地端": {  };
   readonly "app.mode.copy.用-AI-宿主注册一个真实项目后-它会出现在这里-源码不会被学习资料污染": {  };
   readonly "app.ports.feedback.copy.当前浏览器不提供复制功能": {  };
   readonly "app.ports.local.content.copy.这个项目的地址不对-value0": { readonly "value0": string | number | bigint | boolean | null | undefined | Date; };

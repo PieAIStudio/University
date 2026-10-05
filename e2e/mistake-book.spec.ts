@@ -20,7 +20,7 @@ import { enterExerciseAnswer } from "./harness/exercise-input.js";
  * apart — the fold is correct either way. This walks the actual product: get
  * one wrong on purpose, then go looking for it.
  */
-test.describe("H 错题本 · 在线端", () => {
+test.describe("H 错题本 · 交付端", () => {
   test("答错一道题 → 它出现在错题本里，带着题面和你当时的答案", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await openOnline(page);

@@ -46,7 +46,7 @@ await new Promise((done, fail) => {
 // Compile the current tree every time. An old .js file is not proof the current
 // source is running. Do not regenerate or publish any public course package.
 for (const args of [
-  ["--filter", "@pieai/university-local", "build"],
+  ["--filter", "@pieai/university-authoring-server", "build"],
   [
     "--filter",
     "@pieai/university-ai-service",
@@ -64,8 +64,8 @@ for (const args of [
 const load = (file) => import(pathToFileURL(join(root, file)).href);
 const [{ PersonalLessonService, PersonalLessonError, PRIVATE_CARD_ID }, contracts, grading, local] =
   await Promise.all([
-    load("apps/local/.university-local-build/server/personal/service.js"),
-    load("apps/local/.university-local-build/server/personal/contracts.js"),
+    load("apps/authoring-server/.university-authoring-build/server/personal/service.js"),
+    load("apps/authoring-server/.university-authoring-build/server/personal/contracts.js"),
     load("apps/university-ai/.primm-preview-build/src/primm/runtime.js"),
     load("apps/university-ai/.primm-preview-build/src/primm/local-transport.js"),
   ]);

@@ -37,7 +37,7 @@ function registeredKinds() {
   return new Set([...outer, ...inner, ...three]);
 }
 
-const table = read("apps/local/.agents/skills/write-lesson/references/components.md");
+const table = read("apps/authoring-server/.agents/skills/write-lesson/references/components.md");
 /*
   A component is named in a table cell or in the prose that explains the three
   re-skins, always as a code span. Every other code span in the file is a field
@@ -64,7 +64,7 @@ const problems = [];
 if (missing.length > 0)
   problems.push(
     `登记了但表里没有：${missing.join("、")}\n` +
-      `  加一行到 apps/local/.agents/skills/write-lesson/references/components.md，` +
+      `  加一行到 apps/authoring-server/.agents/skills/write-lesson/references/components.md，` +
       `四个字段都从引擎读，不要照着名字推。`,
   );
 if (stale.length > 0)

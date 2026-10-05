@@ -33,35 +33,35 @@ import { createSupabaseFeedbackPort } from "@pieai/university-backend";
 import { AUTHORING, CAMPUS_NAME } from "../mode.js";
 import { identityPort, swimmerBackendClient } from "../account/identity";
 import { progressPort } from "../progress/store.js";
-import { createLocalContentPort } from "./local/content.js";
-import { createLocalGradingPort } from "./local/grading.js";
-import { createLocalReaderPort } from "./local/reader.js";
-import { createLocalSourceAccessPort } from "./local/source-access.js";
+import { createAuthoringContentPort } from "./authoring/content.js";
+import { createAuthoringGradingPort } from "./authoring/grading.js";
+import { createAuthoringReaderPort } from "./authoring/reader.js";
+import { createAuthoringSourceAccessPort } from "./authoring/source-access.js";
 import { createClipboardFeedbackPort, createFeedbackPort } from "./feedback.js";
-import { createOnlineContentPort } from "./online/content.js";
-import { createOnlineGradingPort } from "./online/grading.js";
+import { createDeliveryContentPort } from "./delivery/content.js";
+import { createDeliveryGradingPort } from "./delivery/grading.js";
 import { withPrimmPreview } from "./primm-preview.js";
 import { createPersonalContentPort } from "../personal/content.js";
 import { createPersonalReaderPort } from "../personal/reader.js";
 import { createPersonalGradingPort } from "../personal/grading.js";
-import { createOnlineReaderPort } from "./online/reader.js";
-import { createOnlineSourceAccessPort } from "./online/source-access.js";
+import { createDeliveryReaderPort } from "./delivery/reader.js";
+import { createDeliverySourceAccessPort } from "./delivery/source-access.js";
 import { createBrowserReviewReminderPort } from "./notifications.js";
 
 /** One shelf per document. Both implementations are stateless above their caches. */
 const normalContentPort: ContentPort = AUTHORING
-  ? createLocalContentPort({ progress: progressPort })
-  : createOnlineContentPort();
+  ? createAuthoringContentPort({ progress: progressPort })
+  : createDeliveryContentPort();
 export const contentPort = createPersonalContentPort(normalContentPort, progressPort);
 
 const normalReaderPort: ReaderPort = AUTHORING
-  ? createLocalReaderPort({ progress: progressPort })
-  : createOnlineReaderPort({ progress: progressPort });
+  ? createAuthoringReaderPort({ progress: progressPort })
+  : createDeliveryReaderPort({ progress: progressPort });
 export const readerPort = createPersonalReaderPort(normalReaderPort, progressPort);
 
 const normalGradingPort: GradingPort = AUTHORING
-  ? createLocalGradingPort({ progress: progressPort })
-  : createOnlineGradingPort({
+  ? createAuthoringGradingPort({ progress: progressPort })
+  : createDeliveryGradingPort({
       progress: progressPort,
       readAccessToken: () => identityPort.readAccessToken(),
     });
@@ -78,8 +78,8 @@ export const gradingPort = createPersonalGradingPort(courseGradingPort, progress
 
 /** Repository access is the third boundary: action locally, explanation in delivery. */
 export const sourceAccessPort: SourceAccessPort = AUTHORING
-  ? createLocalSourceAccessPort()
-  : createOnlineSourceAccessPort();
+  ? createAuthoringSourceAccessPort()
+  : createDeliverySourceAccessPort();
 
 const accountFeedbackPort: FeedbackPort | null = swimmerBackendClient
   ? createSupabaseFeedbackPort(swimmerBackendClient, {

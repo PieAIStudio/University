@@ -27,7 +27,7 @@ export const AUTHORING = import.meta.env.MODE === "authoring";
 
 /** The word a person uses for this build, for the feedback note and the title. */
 export const CAMPUS_NAME = AUTHORING
-  ? interfaceTranslator.t("app.mode.copy.本地端")
+  ? interfaceTranslator.t("app.mode.copy.创作端")
   : interfaceTranslator.t("app.mode.copy.在线端");
 
 /**

@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
-import { importCourseRecovery } from "../apps/local/.university-local-build/server/recovery/course-recovery.js";
+import { importCourseRecovery } from "../apps/authoring-server/.university-authoring-build/server/recovery/course-recovery.js";
 import { createSourceSnapshot } from "./fixtures/catalogue/source-snapshot.mjs";
 import {
   E2E_FIXTURE_ROOT,
@@ -47,7 +47,7 @@ copyFileSync(
 );
 writeFileSync(marker, "University E2E disposable catalogue\n");
 writeFileSync(
-  join(E2E_PROJECT_ROOT, "university-local.config.json"),
+  join(E2E_PROJECT_ROOT, "university-authoring.config.json"),
   JSON.stringify({ schemaVersion: 1, studiesRoot: "./studies" }),
 );
 const manifest = JSON.parse(readFileSync(join(E2E_FIXTURE_ROOT, "manifest.json"), "utf8"));

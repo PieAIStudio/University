@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createOnlineIdentityPort, readSwimmerBackendPublicEnv } from "./identity";
+import { createDeliveryIdentityPort, readSwimmerBackendPublicEnv } from "./identity";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -76,12 +76,12 @@ describe("readSwimmerBackendPublicEnv", () => {
   });
 });
 
-describe("createOnlineIdentityPort", () => {
+describe("createDeliveryIdentityPort", () => {
   it("does not construct a client or write to the console when env is missing", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const port = createOnlineIdentityPort({});
+    const port = createDeliveryIdentityPort({});
     expect(port.status().kind).toBe("unconfigured");
     expect(log).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();

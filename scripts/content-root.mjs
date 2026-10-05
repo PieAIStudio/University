@@ -14,7 +14,7 @@ import { resolve } from "node:path";
 export function contentRoot({ projectRoot = process.cwd(), env = process.env } = {}) {
   const configured = env.UNIVERSITY_COURSE_ROOT;
   if (configured) return resolve(projectRoot, configured);
-  return resolve(projectRoot, "apps/local/content");
+  return resolve(projectRoot, "apps/authoring-server/content");
 }
 
 export function contentPaths(options = {}) {

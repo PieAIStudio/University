@@ -208,7 +208,7 @@ export function isStudiesPath(path, { projectRoot = PROJECT_ROOT } = {}) {
   // Keep rejecting the former in-repo shelf even after task 14 removes it;
   // callers that still hand that path to the release boundary must fail
   // closed rather than treating it as arbitrary recovery input.
-  const legacyStudiesRoot = resolve(projectRoot, "apps/local/content/studies");
+  const legacyStudiesRoot = resolve(projectRoot, "apps/authoring-server/content/studies");
   if (isInside(candidate, legacyStudiesRoot)) return true;
   if (isInside(candidate, studiesRoot)) return true;
   try {

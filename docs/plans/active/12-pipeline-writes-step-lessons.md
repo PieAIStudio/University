@@ -35,16 +35,16 @@ lesson four in the learning line.
   The writing pipeline is the beta bottleneck; the Owner must be able to read its
   fourth lesson early. Do not wait for tasks `13-`, `14-`, `16-` or `17-`.
   This replaces the earlier instruction to wait for the refactor.
-- Before using the course-authoring skills, read `apps/local/AGENTS.md`.
+- Before using the course-authoring skills, read `apps/authoring-server/AGENTS.md`.
 - **Where things stand.** The first three lessons of `ai-literacy` /
   `understanding-ai`, unit `first-useful-step`, are version-3 step lessons. They
   were written by hand from the Owner-approved prototype and landed with
   `primm-pipeline.mjs assemble-steps`. The Owner accepted them as samples on
   2026-10-01. The production line itself still writes only version 2: see "Known
   limits" in
-  [`primm-pipeline.md`](../../../apps/local/.agents/skills/write-lesson/references/primm-pipeline.md)
+  [`primm-pipeline.md`](../../../apps/authoring-server/.agents/skills/write-lesson/references/primm-pipeline.md)
   and §4 of
-  [`teaching-contract.md`](../../../apps/local/.agents/skills/write-lesson/references/teaching-contract.md).
+  [`teaching-contract.md`](../../../apps/authoring-server/.agents/skills/write-lesson/references/teaching-contract.md).
 - **Design authority.** §11 of the
   [execution spec](../../reference/interaction-components/spec.html), together with
   the design for lessons 1–3 (`lesson-1.html`, `lesson-2.html`, `lesson-3.html`,
@@ -237,8 +237,8 @@ These native commands completed, with the same explicit project and run roots:
 ```text
 PRIMM_PROJECT_ROOT=/Users/yuanfei/PieAI/University/.scratch/primm-engine/task12-20261003/unpublished-authoring
 PRIMM_RUN_ROOT=/Users/yuanfei/PieAI/University/.scratch/primm-engine/task12-20261003
-node apps/local/scripts/primm-pipeline.mjs prepare-unpublished --lesson first-useful-step/edit-one-part
-node apps/local/scripts/primm-pipeline.mjs packet --lesson first-useful-step/edit-one-part
+node apps/authoring-server/scripts/primm-pipeline.mjs prepare-unpublished --lesson first-useful-step/edit-one-part
+node apps/authoring-server/scripts/primm-pipeline.mjs packet --lesson first-useful-step/edit-one-part
 ```
 
 Their outputs were:
@@ -410,7 +410,7 @@ The next request was `DS-Mac-V3.exec_command` in workspace `ws_b4dd57394f`, with
 `yield_time_ms: 1000` and `max_output_tokens: 1400`. Its exact command was:
 
 ```sh
-cp .scratch/primm-engine/task12-20261003/edit-one-part/lint.v1.json .scratch/task12/lint-v1-before-complete-diagnostics.json && env PRIMM_PROJECT_ROOT="$PWD/.scratch/primm-engine/task12-20261003/unpublished-authoring" PRIMM_RUN_ROOT="$PWD/.scratch/primm-engine/task12-20261003" PRIMM_WRITER_CLI=agy PRIMM_WRITER_MODEL=claude-opus-4-6-thinking node apps/local/scripts/primm-pipeline.mjs check --lesson first-useful-step/edit-one-part > .scratch/task12/check-v1-complete.log 2>&1; result=$?; cat .scratch/task12/check-v1-complete.log; exit $result
+cp .scratch/primm-engine/task12-20261003/edit-one-part/lint.v1.json .scratch/task12/lint-v1-before-complete-diagnostics.json && env PRIMM_PROJECT_ROOT="$PWD/.scratch/primm-engine/task12-20261003/unpublished-authoring" PRIMM_RUN_ROOT="$PWD/.scratch/primm-engine/task12-20261003" PRIMM_WRITER_CLI=agy PRIMM_WRITER_MODEL=claude-opus-4-6-thinking node apps/authoring-server/scripts/primm-pipeline.mjs check --lesson first-useful-step/edit-one-part > .scratch/task12/check-v1-complete.log 2>&1; result=$?; cat .scratch/task12/check-v1-complete.log; exit $result
 ```
 
 The host rejected it before any execution result was returned:

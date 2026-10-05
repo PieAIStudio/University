@@ -3,14 +3,14 @@
 在 3D 群岛里，用真实资料和动手练习学习 AI。面向没有编程经验的成人，Web 为主，
 同一应用适配手机、平板和电脑；商业能力与真实收费验收分开。
 
-一个仓库，一套 University 应用，三个 shell（浏览器、桌面、手机），两个模式（交付、创作）：
+一个仓库，一套 University 应用，三个平台（浏览器、桌面、手机），两个模式（交付、创作）：
 
 ```
-apps/university 一套响应式产品；三个 shell 共用同一组件树。`--mode delivery` 是交付模式
+apps/university 一套响应式产品；三个平台共用同一组件树。`--mode delivery` 是交付模式
                 （3D 世界地图、关卡、复习），`--mode authoring` 接本机写课服务
                 （读配置的课程根、剪贴板判分）。三条模式边界：AI 从哪来、课文从哪来、
                 能否访问课程背后的源码。
-apps/local      创作模式背后的 Node 服务与 CLI。课由它写进配置的课程根，University 应用负责显示。
+apps/authoring-server      创作模式背后的 Node 服务与 CLI。课由它写进配置的课程根，University 应用负责显示。
 packages/core   领域模型与学习规则：课程形状、地址、FSRS 调度、判分。
 packages/ui     三个 shell 共用的学习面：阅读器、证据、复习、markdown、语言层。
 packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 three 为零。
@@ -60,15 +60,15 @@ pnpm install
 pnpm start
 ```
 
-`pnpm start` 同时打开两个壳，并告诉你哪个是哪个：
+`pnpm start` 同时打开两个模式，并告诉你哪个是哪个：
 
 | | 地址 | 用来做什么 |
 | --- | --- | --- |
 | **在线端** | http://localhost:9998 | 试用、提意见 —— 3D 世界、关卡、答题、复习 |
-| **本地端** | http://localhost:9999 | 自己学习、写课 —— 文件系统、剪贴板判分 |
+| **创作端** | http://localhost:9999 | 自己学习、写课 —— 文件系统、剪贴板判分 |
 
 同一个 `apps/university`，两次 `vite --mode`。9999 那一次把 `/api` 代理到
-`apps/local` 起在 4317 上的服务；9998 那一次读 `content/` 里已发布的包。
+`apps/authoring-server` 起在 4317 上的服务；9998 那一次读 `content/` 里已发布的包。
 
 Owner 走查优先打开 `http://127.0.0.1:9998/planet?lang=zh-CN`；本地作者端把端口
 换为 9999。账号位于 `/me`，展开“登录 / 创建账号”；注册、邮箱验证码和密码恢复
@@ -84,8 +84,7 @@ pnpm start --lan
 ```
 
 它会打印一个本机网络地址，手机连同一个 Wi-Fi 就能打开**在线端**。
-本地端不上网络——它服务的是文件系统、真实仓库检出和一个会写盘的 API，
-把那些放到网络上应该是一个明确的决定，不是一个默认值。真要的话：`--lan-local`。
+创作端默认只监听本机回环地址——它服务的是文件系统、真实仓库检出和一个会写盘的 API；它仍可登录并同步账户数据。需要在局域网开放时，明确使用 `--lan-authoring`。
 
 改完代码之后：
 

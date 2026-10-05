@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "CONTENT_ROOT=\"${UNIVERSITY_COURSE_ROOT:-apps/local/content}\" pnpm delivery:build -- --version \"${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}\" --recovery-root \"$CONTENT_ROOT/course-proposals/recovery\" --lexicon \"$CONTENT_ROOT/vocabulary/en.json\" --evidence baked",
+  "buildCommand": "CONTENT_ROOT=\"${UNIVERSITY_COURSE_ROOT:-apps/authoring-server/content}\" pnpm delivery:build -- --version \"${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}\" --recovery-root \"$CONTENT_ROOT/course-proposals/recovery\" --lexicon \"$CONTENT_ROOT/vocabulary/en.json\" --evidence baked",
   "outputDirectory": "apps/university/dist/delivery",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,

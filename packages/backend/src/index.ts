@@ -1,7 +1,7 @@
 export {
   browserAuthOrigin,
   createUniversityBackend,
-  createOnlineSupabaseClient,
+  createDeliverySupabaseClient,
   createSupabaseProgressRemoteStore,
   readSwimmerBackendPublicEnv,
   universityAuthRedirects,

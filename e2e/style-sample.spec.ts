@@ -23,7 +23,7 @@ const CASES: readonly (readonly [string, string, string, string])[] = [
   ["style-terminal", "terminal", "neumorphism", "新拟态"],
 ];
 
-test.describe("I 风格样例 · 在线端", () => {
+test.describe("I 风格样例 · 交付端", () => {
   test("走过多条风格词条，每页都是自己的皮肤，按钮说中文", async ({ page }) => {
     test.setTimeout(180_000);
     const consoleErrors = watchConsole(page);

@@ -14,7 +14,7 @@ import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const REGISTRY_SOURCE_PATH = join(ROOT, "packages/ui/src/review/scheduler-ports.ts");
-const DUE_QUEUE_SOURCE_PATH = join(ROOT, "apps/local/server/workflows/learning-overview.ts");
+const DUE_QUEUE_SOURCE_PATH = join(ROOT, "apps/authoring-server/server/workflows/learning-overview.ts");
 
 function registryFromSource(source) {
   const match = /const REVIEW_CARD_KIND_REGISTRY\s*=\s*\{([\s\S]*?)\}\s*as const\s+satisfies/.exec(

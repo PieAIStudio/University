@@ -4,15 +4,15 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { createOnlinePresencePort, presenceAdapterIsWired } from "./presence";
+import { createDeliveryPresencePort, presenceAdapterIsWired } from "./presence";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
 
-describe("createOnlinePresencePort", () => {
+describe("createDeliveryPresencePort", () => {
   it("is not wired until the production schema and group flow are released", () => {
     expect(presenceAdapterIsWired()).toBe(false);
-    const port = createOnlinePresencePort(
+    const port = createDeliveryPresencePort(
       {
         VITE_SWIMMER_BACKEND_SUPABASE_URL: "https://example.supabase.co",
         VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_test",
@@ -35,7 +35,7 @@ describe("createOnlinePresencePort", () => {
 
   it("is not imported by the running app", () => {
     const app = readFileSync(join(root, "src/app/composition/App.tsx"), "utf8");
-    expect(app).not.toMatch(/createOnlinePresencePort/);
+    expect(app).not.toMatch(/createDeliveryPresencePort/);
     expect(app).not.toMatch(/from ["'].*account\/presence["']/);
   });
 });

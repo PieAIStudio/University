@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-05T02:23:41.561Z
+generated_at: 2026-10-05T04:48:14.081Z
 generator_version: doc-gov@0.14.2
-docs_count: 179
+docs_count: 180
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -260,6 +260,13 @@ docs:
     path: docs/plans/active/17-deep-refactor.md
     type: plan
     status: active
+    canonical: true
+    last_reviewed: 2026-10-05
+    pinned: false
+  - id: PLAN-19-ONE-NAME-FOR-THE-AUTHORING-SIDE
+    path: docs/plans/active/19-one-name-for-the-authoring-side.md
+    type: plan
+    status: completed
     canonical: true
     last_reviewed: 2026-10-05
     pinned: false

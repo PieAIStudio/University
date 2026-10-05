@@ -32,7 +32,7 @@ uses the system Chrome (`channel: "chrome"`), and is **not** part of
 For a fresh worktree, run `pnpm worktree:prepare .` first. This installs and
 prepares the actual inputs, including public account configuration. Its ignored
 `.scratch/worktree.json` records all four E2E ports. The ordinary author's existing
-`apps/local/university-local.config.local.json` still owns dev/freshness inputs,
+`apps/authoring-server/university-authoring.config.local.json` still owns dev/freshness inputs,
 but is never read by the isolated E2E API. Explicit
 `E2E_ONLINE_PORT`, `E2E_LOCAL_WEB_PORT`, `E2E_LOCAL_API_PORT` and
 `E2E_GRADING_PORT` override those defaults. The pre-push gate sets all four.

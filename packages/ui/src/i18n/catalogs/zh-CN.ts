@@ -358,7 +358,7 @@ export const messages = {
   "app.mode.copy.先跑-pnpm-content-它会从-UniversityLocal-的导出包里取课程-没有-Universi":
     "先跑 pnpm content，它会从 UniversityLocal 的导出包里取课程。没有 UniversityLocal 的检出时它会干净退出——这个产品不生产内容，只投放内容。",
   "app.mode.copy.在线端": "在线端",
-  "app.mode.copy.本地端": "本地端",
+  "app.mode.copy.创作端": "创作端",
   "app.mode.copy.用-AI-宿主注册一个真实项目后-它会出现在这里-源码不会被学习资料污染":
     "用 AI 宿主注册一个真实项目后，它会出现在这里；源码不会被学习资料污染。",
   "app.ports.feedback.copy.当前浏览器不提供复制功能": "当前浏览器不提供复制功能。",

@@ -101,11 +101,11 @@ export function readWorktreeSettings(root) {
   // freshness and E2E. Read an older scratch setting only during migration.
   return local.studiesRoot === undefined
     ? saved
-    : { ...saved, studiesRoot: resolve(root, "apps/local", local.studiesRoot) };
+    : { ...saved, studiesRoot: resolve(root, "apps/authoring-server", local.studiesRoot) };
 }
 
 function localConfigAt(worktree) {
-  const path = join(worktree, "apps/local/university-local.config.local.json");
+  const path = join(worktree, "apps/authoring-server/university-authoring.config.local.json");
   const value = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Invalid project-local configuration: " + path);
@@ -116,12 +116,12 @@ function localConfigAt(worktree) {
 /** The normal dev server and freshness checker read this existing local config. */
 export function configureLocalStudies(worktreeCandidate, studiesRoot, allowChange = false) {
   const worktree = realpathSync(worktreeCandidate);
-  const project = realpathSync(join(worktree, "apps/local"));
+  const project = realpathSync(join(worktree, "apps/authoring-server"));
   const source = requireStudiesRoot(studiesRoot);
   const defaultRoot = realpathSync(contentPaths({ projectRoot: worktree }).studies);
   if (inside(source, project) || (inside(project, source) && source !== defaultRoot)) {
     throw new Error(
-      "Select a dedicated studies root outside apps/local, or its default studies directory",
+      "Select a dedicated studies root outside apps/authoring-server, or its default studies directory",
     );
   }
   const { path, value } = localConfigAt(worktree);
@@ -192,7 +192,7 @@ export function refreshE2EManifest(root) {
 
 function requireStudiesRoot(path) {
   const root = realpathSync(path);
-  const marker = JSON.parse(readFileSync(join(root, ".university-local-root"), "utf8"));
+  const marker = JSON.parse(readFileSync(join(root, ".university-authoring-root"), "utf8"));
   if (marker.schemaVersion !== 1 || marker.product !== "UniversityLocal") {
     throw new Error("Invalid studies root marker: " + root);
   }
@@ -205,10 +205,10 @@ export function relocateNestedStudies(worktreeCandidate, env = process.env) {
   const nested = join(contentPaths({ projectRoot: worktree, env }).studies, "studies");
   if (!stat(nested)) return null;
   const root = requireStudiesRoot(nested);
-  if (!inside(join(worktree, "apps/local"), root)) return root;
+  if (!inside(join(worktree, "apps/authoring-server"), root)) return root;
   if (stat(nested).isSymbolicLink()) {
     throw new Error(
-      "Nested study link resolves inside apps/local; select --studies-root explicitly",
+      "Nested study link resolves inside apps/authoring-server; select --studies-root explicitly",
     );
   }
   const target = join(worktree, ".scratch/worktree-studies");

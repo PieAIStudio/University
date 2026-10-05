@@ -51,7 +51,7 @@ generated diff; do not discard it blindly.
 
 The command also refreshes the E2E cache baseline and saves four independently
 reserved ports in ignored `.scratch/worktree.json`. The source choice lives in
-the existing ignored `apps/local/university-local.config.local.json`, so ordinary
+the existing ignored `apps/authoring-server/university-authoring.config.local.json`, so ordinary
 authoring startup, source freshness and E2E all read the same choice without a
 global environment override. Existing focus/settings are preserved.
 `pnpm e2e` reads those settings; explicit `E2E_*_PORT` values still win.
@@ -59,7 +59,7 @@ global environment override. Existing focus/settings are preserved.
 an error, never permission to reuse or kill another task's server. Inspect PID
 and cwd before stopping your own interrupted process.
 
-An existing real `apps/local/studies/studies` isolation copy moves intact to
+An existing real `apps/authoring-server/studies/studies` isolation copy moves intact to
 `.scratch/worktree-studies`, with its old path retained as a symlink. The API's
 root guard stays unchanged. Existing isolation destinations are not replaced;
 unrelated configuration fields and owner environment files are preserved.

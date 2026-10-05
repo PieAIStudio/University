@@ -100,7 +100,7 @@ relevant hits.
 Specialist skills live in `.agents/manual-skills/`. Discover their names for
 the task, then read only the selected skill's SKILL.md; they are a toolbox, not a
 startup reading list. The complete managed selection is `.pro-gov/assets.json`.
-Course-authoring skills belong to `apps/local/.agents/skills/`; read that
+Course-authoring skills belong to `apps/authoring-server/.agents/skills/`; read that
 module's `AGENTS.md` before using them. User-owned tools stay at user scope.
 No skill's installation, deployment or publication instructions expand the
 current task's authority. Shared-brand and teaching contracts still win over
@@ -145,13 +145,13 @@ What follows from them:
   neither mode may own twice. The delivery mode is not forbidden from authoring
   courses; when it authors, it runs the same workflows.
 - **The app and the authoring server never import each other.**
-  `apps/local` is the Node server that reads the disk on 4317, and nothing
+  `apps/authoring-server` is the Node server that reads the disk on 4317, and nothing
   else; `apps/university/src` is bundled for a browser. Either import
   type-checks and fails at runtime, so `check-module-boundaries.mjs` is where
   that gets caught rather than remembered. They share
   `@pieai/university-core`.
 - **One producer of course content, always.** Lessons are authored by the
-  `apps/local` CLI and nowhere else; publishing them is a separate, gated act,
+  `apps/authoring-server` CLI and nowhere else; publishing them is a separate, gated act,
   and a customer sees a package only once it is published (ADR-0002). A second
   thing that can emit a lesson dissolves SPEC-0001.
 - **Both modes hold one cloud account.** They sign in to SwimmerBackend and

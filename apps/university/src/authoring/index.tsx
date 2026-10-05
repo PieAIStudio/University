@@ -21,7 +21,7 @@ import type {
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 
-import { localBootstrap } from "../ports/local/bootstrap.js";
+import { authoringBootstrap } from "../ports/authoring/bootstrap.js";
 import { progressPort } from "../progress/store.js";
 import { feedbackReviewSource } from "./feedback-source.js";
 import { StudioSection } from "./StudioSection.js";
@@ -41,7 +41,7 @@ function useShelfRecord(studyId: string | null): {
 
   useEffect(() => {
     let cancelled = false;
-    void localBootstrap().then((boot) => {
+    void authoringBootstrap().then((boot) => {
       if (!cancelled) setData(boot);
     });
     return () => {

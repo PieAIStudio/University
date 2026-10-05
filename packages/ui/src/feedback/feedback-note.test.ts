@@ -28,7 +28,7 @@ describe("feedbackNote", () => {
 
   it("still produces a usable note when nothing was typed", () => {
     const note = feedbackNote({
-      shell: "本地端",
+      shell: "创作端",
       route: "/",
       viewport: [1440, 900],
       theme: "night",

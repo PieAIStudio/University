@@ -37,7 +37,7 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-04
 
-**17 (R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
+**17 (R11) → 19 → 16 → overnight report.** Tasks 13, 18 and 14 have been
 delivered. Task 17 R0–R10 are complete through pushed commit `b4e11df4`; R11
 is the closeout commit, with one commit, one push and a complete gate. The R9
 system-health evidence is in [its execution table](task17-r9-system-health.md),
@@ -53,7 +53,7 @@ completed in `73968ab9`, R5 reachability cleanup completed in `b41cfdd4`, and
 R6 dependency hardening completed in `5bfb0975`; R7 typecheck/suppression health
 completed in `35754ccb`; R8 test health completed in `9bd55a9c`; R9 system
 health is now recorded in `task17-r9-system-health.md`; R10 build/runtime health
-is recorded in `task17-r10-build-runtime.md`; R11 closes task 17 before task 16.
+is recorded in `task17-r10-build-runtime.md`; R11 closes task 17; task 19 renames the authoring side before task 16.
 The fourth lesson stays unpublished and
 protected, and its typo waits for Owner feedback in task 12's review → fix
 workflow.
@@ -70,10 +70,10 @@ five minutes for at most 60 minutes. Apply any review that arrives; otherwise
 continue with the recorded plan. R1–R5 each retain one commit, one push, full
 gates, pipeline tests and a native dry-run. No stage waits indefinitely for Owner.
 
-Task 16 moves after 17 and depends on it. It remains held until UIKit 3's stable
-release and the decoupled NerveKit `0.8.0` and AuthKit `0.8.0-rc.1` are published.
-The App injects UIKit controls and the authentication client; the kits must not
-depend on each other. Earlier coupled candidate tarballs do not release this hold.
+Task 19 runs after R11 and before task 16. Task 19's active pack owns the
+authoring-side rename. Task 16 then adopts the published UIKit `3.0.0-rc.1`,
+NerveKit `0.8.0` and AuthKit `0.8.0-rc.1`; the App injects UIKit controls and
+the authentication client, and the kits must not depend on each other.
 
 Task 14's initial pre-push browser stop and its repair are recorded in
 `completed/14-content-repository-integration.md`. The repair must finish with a

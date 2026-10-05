@@ -118,8 +118,8 @@ test("a server key cannot masquerade as a browser publishable key", () => {
 
 test("relocates a nested real isolation input intact and preserves its original access path", () => {
   const root = temporary(),
-    nested = join(root, "apps/local/content/studies/studies");
-  put(join(nested, ".university-local-root"), marker);
+    nested = join(root, "apps/authoring-server/content/studies/studies");
+  put(join(nested, ".university-authoring-root"), marker);
   put(join(nested, "fixture/study.json"), "isolated-input");
   const moved = relocateNestedStudies(root, {});
   assert.equal(moved, realpathSync(join(root, ".scratch/worktree-studies")));
@@ -130,8 +130,8 @@ test("relocates a nested real isolation input intact and preserves its original 
 
 test("conflicting isolation destinations preserve both originals", () => {
   const root = temporary(),
-    nested = join(root, "apps/local/content/studies/studies");
-  put(join(nested, ".university-local-root"), marker);
+    nested = join(root, "apps/authoring-server/content/studies/studies");
+  put(join(nested, ".university-authoring-root"), marker);
   put(join(root, ".scratch/worktree-studies/keep"), "another input");
   assert.throws(() => relocateNestedStudies(root, {}), /relocation target exists/);
   assert.equal(lstatSync(nested).isDirectory(), true);
@@ -194,19 +194,19 @@ test("worktree settings are opt-in and read from the supplied checkout, not cwd"
 test("ordinary authoring and E2E read one local source choice, preserving owner focus", () => {
   const root = temporary();
   const source = join(root, "source");
-  put(join(source, ".university-local-root"), marker);
+  put(join(source, ".university-authoring-root"), marker);
   put(join(source, "study/study.json"), "{}");
   const tree = join(root, "tree");
-  mkdirSync(join(tree, "apps/local/content/studies"), { recursive: true });
-  symlinkSync(join(source, "study"), join(tree, "apps/local/content/studies/study"));
+  mkdirSync(join(tree, "apps/authoring-server/content/studies"), { recursive: true });
+  symlinkSync(join(source, "study"), join(tree, "apps/authoring-server/content/studies/study"));
   // This is the real shelf's Dirent boundary: a linked child is not a directory.
   assert.equal(
-    readdirSync(join(tree, "apps/local/content/studies"), { withFileTypes: true }).filter((entry) =>
-      entry.isDirectory(),
-    ).length,
+    readdirSync(join(tree, "apps/authoring-server/content/studies"), {
+      withFileTypes: true,
+    }).filter((entry) => entry.isDirectory()).length,
     0,
   );
-  const config = join(tree, "apps/local/university-local.config.local.json");
+  const config = join(tree, "apps/authoring-server/university-authoring.config.local.json");
   put(config, JSON.stringify({ focus: { studyId: "keep" } }));
   configureLocalStudies(tree, source);
   const local = JSON.parse(readFileSync(config, "utf8"));
@@ -227,8 +227,9 @@ test("ordinary authoring and E2E read one local source choice, preserving owner 
 test("changing an owner's source requires the explicit selection and retains other fields", () => {
   const root = temporary(),
     tree = join(root, "tree");
-  mkdirSync(join(tree, "apps/local/content/studies"), { recursive: true });
-  for (const name of ["first", "second"]) put(join(root, name, ".university-local-root"), marker);
+  mkdirSync(join(tree, "apps/authoring-server/content/studies"), { recursive: true });
+  for (const name of ["first", "second"])
+    put(join(root, name, ".university-authoring-root"), marker);
   configureLocalStudies(tree, join(root, "first"));
   assert.throws(() => configureLocalStudies(tree, join(root, "second")), /Preserve existing/);
   configureLocalStudies(tree, join(root, "second"), true);
@@ -237,10 +238,13 @@ test("changing an owner's source requires the explicit selection and retains oth
 
 test("an explicitly selected unsafe nested root is rejected before claiming readiness", () => {
   const root = temporary(),
-    source = join(root, "apps/local/content/studies/nested");
-  put(join(source, ".university-local-root"), marker);
+    source = join(root, "apps/authoring-server/content/studies/nested");
+  put(join(source, ".university-authoring-root"), marker);
   assert.throws(() => configureLocalStudies(root, source), /dedicated studies root/);
-  assert.equal(existsSync(join(root, "apps/local/university-local.config.local.json")), false);
+  assert.equal(
+    existsSync(join(root, "apps/authoring-server/university-authoring.config.local.json")),
+    false,
+  );
 });
 
 test("every browser spec takes ports from the shared entry, including synthetic planet fixtures", () => {

@@ -98,7 +98,7 @@ function courseLabel(page: Page, id: string): Locator {
  *
  * The name is a DOM button whose `activate` is the same as the mesh
  * `onClick`. `humanClick` hit-tests first. Clicking 18px below the name
- * (the mesh) misses on the local shell, where islands are smaller; the
+ * (the mesh) misses on the authoring mode, where islands are smaller; the
  * name is the target a person actually aims at.
  */
 async function clickCourseLabel(page: Page, label: Locator): Promise<Box> {
@@ -495,7 +495,7 @@ async function walkIslandPick(page: Page, prefix: "online" | "local"): Promise<v
 test.describe("F 点岛出现对象旁进入动作 · 跟岛走", () => {
   test.use({ viewport: { width: 1440, height: 810 } });
 
-  test("在线端：未选中 → 点岛出现在旁边 → 点海面消失 → 靠右翻边", async ({ page }) => {
+  test("交付端：未选中 → 点岛出现在旁边 → 点海面消失 → 靠右翻边", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await openOnline(page);
     await waitForMapReady(page);
@@ -503,9 +503,9 @@ test.describe("F 点岛出现对象旁进入动作 · 跟岛走", () => {
     consoleErrors.assertClean();
   });
 
-  test("本地端：同一套卡片，跟岛走", async ({ page }) => {
+  test("创作端：同一套卡片，跟岛走", async ({ page }) => {
     const consoleErrors = watchConsole(page);
-    await namedStep(page, "打开本地端世界地图", async () => {
+    await namedStep(page, "打开创作端世界地图", async () => {
       // This case measures the archipelago, not the root return invitation.
       // The author's real legacy progress may legitimately resume a course.
       // Reach the world through its actual breadcrumb without erasing data.

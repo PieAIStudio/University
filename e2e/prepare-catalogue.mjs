@@ -26,7 +26,11 @@ function must(command, args, cwd = ROOT, env = {}) {
 }
 console.log("e2e: restoring frozen test inputs through the production recovery importer");
 must("pnpm", ["--filter", "@pieai/university-core", "build"]);
-must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], join(ROOT, "apps/local"));
+must(
+  "pnpm",
+  ["exec", "tsc", "-p", "tsconfig.server.build.json"],
+  join(ROOT, "apps/authoring-server"),
+);
 must("node", ["e2e/seed-catalogue.mjs"]);
 console.log("e2e: baking the test-owned catalogue, not the delivery shelf");
 must("node", ["apps/university/scripts/import-courses.mjs"], ROOT, {

@@ -15,7 +15,7 @@ import {
   walkFirstOnlineLesson,
 } from "./harness/online-learner.js";
 
-test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
+test.describe("A 新学习者 · 交付端 · 手机宽度", () => {
   test.use({ viewport: { width: 375, height: 812 }, hasTouch: false });
 
   test(`清空 storage → 落地 → 第一节 → 结算 1/${SETTLEMENT_LESSON_COUNT}`, async ({ page }) => {
@@ -127,7 +127,7 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
   });
 });
 
-test.describe("A 在线端 · 手机指针", () => {
+test.describe("A 交付端 · 手机指针", () => {
   test.use({
     viewport: { width: 375, height: 812 },
     hasTouch: true,

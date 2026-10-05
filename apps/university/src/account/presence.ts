@@ -19,7 +19,7 @@
  * 2. Verify `university.study_groups` / `study_group_members` with RLS
  *    (a member may UPDATE only their own `shares_presence` row).
  * 3. Flip `presenceAdapterIsWired` to return true.
- * 4. Call `createOnlinePresencePort` from both shells once identity is
+ * 4. Call `createDeliveryPresencePort` from both shells once identity is
  *    signed in, passing the group id. Channel name `study-group:${id}`,
  *    presence key = `auth.uid()`.
  * 5. Persist the toggle to `study_group_members.shares_presence`.
@@ -43,7 +43,7 @@ export function presenceAdapterIsWired(): boolean {
   return false;
 }
 
-export function createOnlinePresencePort(
+export function createDeliveryPresencePort(
   env: BrowserEnv,
   options: {
     readonly self: PresenceSelf;

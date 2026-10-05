@@ -15,7 +15,7 @@ import {
 } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 
-test.describe("C 在线端 · 桌面宽度", () => {
+test.describe("C 交付端 · 桌面宽度", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   test("右侧当前对象说明和地图一致，并且同样走完第一节", async ({ page }) => {

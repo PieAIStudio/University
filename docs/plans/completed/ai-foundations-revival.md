@@ -85,9 +85,9 @@ pnpm --filter @pieai/university-local university -- snapshot list --study ai-fou
 `pnpm doc-gov scan` 更新的 `docs/governance/MANIFEST.yml`。流水线另外生成了以下
 gitignored 本地资料，不假装这些材料会随本次 Git 提交传到别的机器：
 
-- `apps/local/studies/ai-foundations/source/snapshots/git-392d0df1b264.json` 与
+- `apps/authoring-server/studies/ai-foundations/source/snapshots/git-392d0df1b264.json` 与
   `source/repository.git/`：固定 commit 的原始材料。
-- `apps/local/studies/ai-foundations/ua/<analysis-id>/manifest.json`：真实失败回执；
+- `apps/authoring-server/studies/ai-foundations/ua/<analysis-id>/manifest.json`：真实失败回执；
   `data/config.json` 保留；`workspace` 和租约均已清理。
 - `.scratch/ai-foundations-revival/phase-0/`：命令原始日志。
 
@@ -116,7 +116,7 @@ Path is outside allowed roots: /Users/yuanfei/.understand-anything/repo/understa
 RETIRE_EXIT=1
 ```
 
-现有 [retireUaAnalysis](../../../apps/local/server/ua/adapter.ts) 只接受 `ready` /
+现有 [retireUaAnalysis](../../../apps/authoring-server/server/ua/adapter.ts) 只接受 `ready` /
 `legacy-import`；[UaAnalysisManifestSchema](../../../packages/core/src/domain/schemas.ts)
 的 `superseded` 分支还要求已有 `graphHash`、`nodeCount`、`edgeCount` 和
 `completedAt`。因此不能通过补几个字段或强写状态来冒充退休成功；`--force` 也不是
@@ -178,8 +178,8 @@ apps/university-grading test:  Test Files  4 passed (4)
 apps/university-grading test:       Tests  27 passed (27)
 packages/ui test:  Test Files  82 passed (82)
 packages/ui test:       Tests  544 passed (544)
-apps/local test:  Test Files  46 passed (46)
-apps/local test:       Tests  470 passed (470)
+apps/authoring-server test:  Test Files  46 passed (46)
+apps/authoring-server test:       Tests  470 passed (470)
 packages/world test:  Test Files  123 passed (123)
 packages/world test:       Tests  988 passed (988)
 apps/university test:  Test Files  57 passed (57)
@@ -217,7 +217,7 @@ UA 分析已完成。** `pnpm e2e` 未运行：本阶段刷新收尾条件已经
 本轮没有更改插件权限、全局配置或工具允许根。
 
 **是否批准先修复退出与重试路径。** 现有 CLI 不能把 `preparing` / `failed` 分析退休；
-而 [prepareStudyRefresh](../../../apps/local/server/workflows/refresh-source.ts) 对同一
+而 [prepareStudyRefresh](../../../apps/authoring-server/server/workflows/refresh-source.ts) 对同一
 确定性 ID 的 `failed` 状态也会拒绝重试。后续不要直接重复 prepare、手改 manifest、
 删除失败回执或编造一个 ready 分析。建议单独修复并测试“未完成分析安全终止、保留失败
 原因、清理租约、分配新 retry ID”的闭环，再恢复本计划；当前没有批准或实施该修改。
@@ -288,8 +288,8 @@ apps/university-grading test:  Test Files  4 passed (4)
 apps/university-grading test:       Tests  27 passed (27)
 packages/ui test:  Test Files  82 passed (82)
 packages/ui test:       Tests  544 passed (544)
-apps/local test:  Test Files  46 passed (46)
-apps/local test:       Tests  470 passed (470)
+apps/authoring-server test:  Test Files  46 passed (46)
+apps/authoring-server test:       Tests  470 passed (470)
 packages/world test:  Test Files  123 passed (123)
 packages/world test:       Tests  988 passed (988)
 apps/university test:  Test Files  57 passed (57)

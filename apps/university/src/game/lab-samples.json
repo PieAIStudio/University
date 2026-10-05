@@ -1,5 +1,5 @@
 {
-  "$comment": "Play-lab sample rounds (Owner 2026-09-30: 题少的先编一些). Only KitGameLab reads this, and only to top up a game the shelf cannot fill yet; the map never plays it. Lesson content still has one producer, the apps/local CLI.",
+  "$comment": "Play-lab sample rounds (Owner 2026-09-30: 题少的先编一些). Only KitGameLab reads this, and only to top up a game the shelf cannot fill yet; the map never plays it. Lesson content still has one producer, the apps/authoring-server CLI.",
   "links": [
     {
       "id": "sample/links-request",

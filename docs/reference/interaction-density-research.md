@@ -19,7 +19,7 @@ related: []
 # 互动密度研究：要不要把课改成「互动为主、讲解为辅」
 
 > 本文保留早期调研、原型与被推翻的判断，不是当前写课操作规范。
-> Owner 已确认的后续方向由 [write-lesson V2](../../apps/local/.agents/skills/write-lesson/SKILL.md)
+> Owner 已确认的后续方向由 [write-lesson V2](../../apps/authoring-server/.agents/skills/write-lesson/SKILL.md)
 > 唯一维护，体验约定见 [V5](player-journey/v5/index.html)。下文固定拍数、字数目标、
 > “拼句一律退役”等阶段性结论，以及旧用量统计，不得直接用作 V2 闸门。
 > 2026-10-01 起，下文提到的 `docs/reference/interaction-prototype/` 各原型页、研究小样和旧 3D
@@ -41,7 +41,7 @@ related: []
 
 ## 1 现状：量出来的，不是感觉
 
-以下全部由本次实测得出（2026-09-16，扫描 `apps/local/studies/*/courses/**`，只取每节最新修订）。
+以下全部由本次实测得出（2026-09-16，扫描 `apps/authoring-server/studies/*/courses/**`，只取每节最新修订）。
 
 ### 1.1 互动覆盖率
 
@@ -228,7 +228,7 @@ Brilliant 的「先让你试，再告诉你怎么做」——**University 的「
    改成真正的选择题。
 - 现在「请抄写一个选项」这种题，打字是纯摩擦，没有任何教学收益。
 - 引擎和校验（含**每个错项必须有自己的解释**）已经写好，缺的是把它并进 `ExerciseSchema` 的 union，
-  以及让 `apps/local` 的作者/恢复流水线认第三个分支。
+  以及让 `apps/authoring-server` 的作者/恢复流水线认第三个分支。
 
 **4. `cloze` 挖空卡** — 2109 张卡全是「正面问题 / 背面答案」的翻面卡。
 - `cloze` 已在 schema 里。挖空是**产出**，翻面是**再认**——
@@ -313,7 +313,7 @@ activities: z.array(LessonActivitySchema).max(3).default([])
 
 ### 6.3 `ChoiceExerciseSchema` 被排除在 union 之外
 
-已在 §1.4 说明。解开它需要动 `apps/local` 的作者与恢复流水线，
+已在 §1.4 说明。解开它需要动 `apps/authoring-server` 的作者与恢复流水线，
 这是一次**真实的迁移工作**，不是改一行枚举。**但它是第二批里最值钱的一件。**
 
 ---
@@ -430,7 +430,7 @@ README 自己写过同一句话：通关数和点击数**推不出**"觉得好�
 
 ## 附：本文数字的复现方式
 
-全部来自 `apps/local/studies/*/courses/**` 的最新修订扫描，
+全部来自 `apps/authoring-server/studies/*/courses/**` 的最新修订扫描，
 以及 `packages/core/src/domain/schemas.ts`、`packages/ui/src/learning-play/README.md`。
 外部对照数字（多邻国每节 12–15 题 / 5–10 分钟；Brilliant 每节 5–15 分钟且整节为题序列；
 提取练习与生成效应的效应量）来自公开二手资料，**属于量级参考，不是本项目实测**。

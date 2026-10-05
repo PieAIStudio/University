@@ -32,7 +32,7 @@ pre-push:
   parallel: false
   commands:
     browser-e2e:
-      glob: "{apps/local/**,apps/university/**,packages/**,e2e/**,package.json,pnpm-lock.yaml}"
+      glob: "{apps/authoring-server/**,apps/university/**,packages/**,e2e/**,package.json,pnpm-lock.yaml}"
       # Its own ports. e2e/ports.ts made these overridable precisely so two runs
       # can coexist, and a subagent verifying in a worktree holds the defaults.
       # Without this the gate fails on a port clash and reads as a real failure.

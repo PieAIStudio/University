@@ -3,7 +3,7 @@ import { interfaceTranslator } from "@pieai/university-ui/i18n.js";
 import { createUniversityBackend, type BrowserEnv } from "@pieai/university-backend/browser.js";
 
 export {
-  createOnlineSupabaseClient,
+  createDeliverySupabaseClient,
   readSwimmerBackendPublicEnv,
   SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV,
   SWIMMER_BACKEND_SUPABASE_URL_ENV,
@@ -23,6 +23,6 @@ export const authPort = backend.authPort;
 export const paymentPort = backend.paymentPort;
 
 /** Kept for callers/tests that construct an isolated identity port. */
-export function createOnlineIdentityPort(env: BrowserEnv) {
+export function createDeliveryIdentityPort(env: BrowserEnv) {
   return createUniversityBackend(env).identityPort;
 }

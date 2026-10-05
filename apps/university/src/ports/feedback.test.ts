@@ -24,7 +24,7 @@ describe("clipboard feedback port", () => {
   it("keeps the authoring hand-off and carries the shared context", async () => {
     const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     const port = createClipboardFeedbackPort({
-      shell: "本地端",
+      shell: "创作端",
       now: () => new Date("2026-08-27T06:00:00.000Z"),
       writeText,
     });

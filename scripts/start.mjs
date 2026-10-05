@@ -2,14 +2,14 @@
 /**
  * One command that opens the university.
  *
- * There are two shells and they answer different questions — 「我自己学」 and
+ * There are two modes and they answer different questions — 「我自己学」 and
  * 「这个产品怎么样」 — so the honest launcher starts both and says which is
- * which. Before this, `pnpm dev` started only the delivery shell, the README's
- * quick start named only that command, and the authoring shell was reachable
+ * which. Before this, `pnpm dev` started only the delivery mode, the README's
+ * quick start named only that command, and the authoring mode was reachable
  * exclusively by knowing a pnpm filter by heart. The person who owns the
  * product could not open half of it without reading the source.
  *
- * It also builds the delivery shell's content when it is missing. A fresh
+ * It also builds the delivery mode's content when it is missing. A fresh
  * clone has no `apps/online/content`, and the failure that produces is an
  * empty archipelago rather than an error, which reads as a broken product
  * rather than a missing step.
@@ -22,20 +22,20 @@ import { join } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 
 /**
- * `--lan` puts the delivery shell on this machine's network address so a real
+ * `--lan` puts the delivery mode on this machine's network address so a real
  * phone can open it.
  *
  * This product is designed mobile-first — six tabs, 375px layouts, a map meant
  * for a thumb — and without this the only way to see that is a narrow window
  * on a desktop, which is not the same thing and never has been.
  *
- * Opt-in, and only the delivery shell. The authoring shell serves the
+ * Opt-in, and only the delivery mode. The authoring mode serves the
  * filesystem: `studies/`, real checkouts of private repositories, an API that
  * writes to disk. Putting that on a network by default is a decision nobody
- * asked for. `--lan-local` exists for when you do mean it.
+ * asked for. `--lan-authoring` exists for when you do mean it.
  */
-const lanWanted = process.argv.includes("--lan") || process.argv.includes("--lan-local");
-const lanIncludesLocal = process.argv.includes("--lan-local");
+const lanWanted = process.argv.includes("--lan") || process.argv.includes("--lan-authoring");
+const lanIncludesLocal = process.argv.includes("--lan-authoring");
 
 function lanAddress() {
   for (const entries of Object.values(networkInterfaces())) {
@@ -49,11 +49,11 @@ function lanAddress() {
 /**
  * Two modes of one app, and the authoring server behind one of them.
  *
- * `pnpm --filter @pieai/university-local dev` is the chain that emits the
+ * `pnpm --filter @pieai/university-authoring-server dev` is the chain that emits the
  * server and starts it on 4317; the browser half of that campus is
- * `@pieai/university-app dev:local`, which proxies `/api` to it.
+ * `@pieai/university-app dev:authoring`, which proxies `/api` to it.
  */
-const SHELLS = [
+const MODES = [
   {
     name: "在线端",
     purpose: "试用、提意见 — 3D 世界、关卡、复习",
@@ -63,30 +63,30 @@ const SHELLS = [
     lan: true,
   },
   {
-    name: "本地端 · 服务",
+    name: "创作端 · 服务",
     purpose: "读磁盘上的课、剪贴板判分 — 4317",
     url: null,
-    filter: "@pieai/university-local",
+    filter: "@pieai/university-authoring-server",
     script: "dev",
     lan: false,
   },
   {
-    name: "本地端",
+    name: "创作端",
     purpose: "自己学习、写课 — 文件系统、剪贴板判分",
     url: "http://localhost:9999",
     filter: "@pieai/university-app",
-    script: "dev:local",
+    script: "dev:authoring",
     lan: false,
   },
 ];
 
 /**
- * `detached` so each shell gets its own process group, and stopping means
+ * `detached` so each mode gets its own process group, and stopping means
  * signalling the group rather than the child.
  *
- * The authoring shell is a chain — pnpm runs tsc, which runs `dev.mjs`, which
+ * The authoring mode is a chain — pnpm runs tsc, which runs `dev.mjs`, which
  * spawns an API server and Vite. A signal to the pnpm wrapper reaches none of
- * those. Measured: Ctrl-C stopped the delivery shell and left the authoring
+ * those. Measured: Ctrl-C stopped the delivery mode and left the authoring
  * one holding 9999, so the next `pnpm start` failed on a taken port with an
  * error about something the person had already stopped.
  */
@@ -123,34 +123,34 @@ async function main() {
   }
 
   const address = lanWanted ? lanAddress() : null;
-  const onLan = (shell) => lanWanted && (shell.lan || lanIncludesLocal) && address !== null;
+  const onLan = (mode) => lanWanted && (mode.lan || lanIncludesLocal) && address !== null;
 
-  const children = SHELLS.map((shell) =>
+  const children = MODES.map((mode) =>
     run(
       "pnpm",
       [
         "--filter",
-        shell.filter,
-        shell.script,
+        mode.filter,
+        mode.script,
         // No `--` separator: pnpm forwards it literally, so vite received
         // `vite -- --host 0.0.0.0` and read the host flag as a positional.
         // Measured — the network address never answered.
-        ...(onLan(shell) ? ["--host", "0.0.0.0"] : []),
+        ...(onLan(mode) ? ["--host", "0.0.0.0"] : []),
       ],
-      `[${shell.name}]`,
+      `[${mode.name}]`,
     ),
   );
 
   console.log("");
-  for (const shell of SHELLS) {
-    console.log(`  ${shell.name}  ${shell.url ?? ""}`);
-    if (shell.url && onLan(shell)) {
-      console.log(`         手机上打开  http://${address}:${new URL(shell.url).port}`);
+  for (const mode of MODES) {
+    console.log(`  ${mode.name}  ${mode.url ?? ""}`);
+    if (mode.url && onLan(mode)) {
+      console.log(`         手机上打开  http://${address}:${new URL(mode.url).port}`);
     }
-    console.log(`         ${shell.purpose}`);
+    console.log(`         ${mode.purpose}`);
   }
   if (lanWanted && address === null) {
-    console.log("\n  找不到本机的网络地址，两个壳都只在 localhost 上。");
+    console.log("\n  找不到本机的网络地址，两个模式都只在 localhost 上。");
   }
   if (!lanWanted) {
     console.log("\n  想在手机上看：pnpm start --lan");
@@ -173,12 +173,12 @@ async function main() {
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
 
-  // If either shell dies, say so and take the other down rather than leaving
+  // If either mode dies, say so and take the other down rather than leaving
   // half a university running and a person wondering which half.
   for (const [index, child] of children.entries()) {
     child.on("exit", (code) => {
       if (code !== 0 && code !== null) {
-        console.error(`\n${SHELLS[index].name} 退出了（code ${code}）。另一个也停下。\n`);
+        console.error(`\n${MODES[index].name} 退出了（code ${code}）。另一个也停下。\n`);
       }
       stop();
     });

@@ -324,7 +324,7 @@ describe("delivery artifact gate", () => {
 
   it("refuses the private studies shelf as a release input", () => {
     expect(() =>
-      validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/content/studies")),
+      validateRecoveryInput(resolve(PROJECT_ROOT, "apps/authoring-server/content/studies")),
     ).toThrow(/configured content studies/);
   });
 });

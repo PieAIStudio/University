@@ -315,7 +315,7 @@ export const messages = {
   "app.mode.copy.先跑-pnpm-content-它会从-UniversityLocal-的导出包里取课程-没有-Universi":
     "Run pnpm content first; it fetches courses from the UniversityLocal export package. If there is no UniversityLocal checkout, it exits cleanly—this product does not produce content, it only delivers content.",
   "app.mode.copy.在线端": "Online client",
-  "app.mode.copy.本地端": "Local client",
+  "app.mode.copy.创作端": "Authoring client",
   "app.mode.copy.用-AI-宿主注册一个真实项目后-它会出现在这里-源码不会被学习资料污染":
     "After registering a real project with an AI host, it will appear here; source code will not be polluted by study materials.",
   "app.ports.feedback.copy.当前浏览器不提供复制功能":

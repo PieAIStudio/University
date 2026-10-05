@@ -85,7 +85,7 @@ function createBrowserAuthPort(client: SupabaseClient): UniversityAuth | null {
 }
 
 export function createUniversityBackend(env: BrowserEnv, locale?: () => string): UniversityBackend {
-  const client = createOnlineSupabaseClient(env);
+  const client = createDeliverySupabaseClient(env);
   const authPort = client ? createBrowserAuthPort(client) : null;
   const identityPort = createIdentityPort(authPort ? asIdentityAuth(authPort) : null);
   return {
@@ -132,7 +132,7 @@ export function readSwimmerBackendPublicEnv(env: BrowserEnv): {
   return { url, publishableKey };
 }
 
-export function createOnlineSupabaseClient(env: BrowserEnv): SupabaseClient | null {
+export function createDeliverySupabaseClient(env: BrowserEnv): SupabaseClient | null {
   const config = readSwimmerBackendPublicEnv(env);
   if (!config) return null;
   try {

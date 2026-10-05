@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode delivery",
-    "dev:local": "vite --mode authoring",
+    "dev:authoring": "vite --mode authoring",
     "journey": "node scripts/pull-taxonomy.mjs",
     "kit": "node scripts/import-kit.mjs",
     "kenney:r01": "node scripts/import-kenney-r01.mjs",

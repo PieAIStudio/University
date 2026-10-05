@@ -13,7 +13,7 @@
       "state": "fixed",
       "foundBy": "independent-release-code-review",
       "foundOn": "2026-09-15",
-      "guardedBy": "apps/local/server/workflows/bilingual-course.test.ts::serves complete English teaching data through the real authoring HTTP projection without reference answers / e2e/X.ai-literacy-english.spec.ts",
+      "guardedBy": "apps/authoring-server/server/workflows/bilingual-course.test.ts::serves complete English teaching data through the real authoring HTTP projection without reference answers / e2e/X.ai-literacy-english.spec.ts",
       "evidence": ".scratch/independent-release-review/bilingual-red.log; .scratch/independent-release-review/bilingual-http-final.log; .scratch/independent-release-review/bilingual-browser.log",
       "note": "先通过真实 HTTP 投影复现中文返回，再补安全的 locales 投影；公开课文不包含原始答案、rubric 或卡背。卡片与错题专用读取另外经真实临时 HTTP 服务验证。双模式逐课扫查覆盖两系列全部 66 节，不用交付端通过替代作者端。"
     },
@@ -131,7 +131,7 @@
       "viewport": "phone",
       "severity": "blocking",
       "state": "fixed",
-      "guardedBy": "apps/university/src/ports/online/grading.test.ts / packages/core/src/progress/mistakes.test.ts",
+      "guardedBy": "apps/university/src/ports/delivery/grading.test.ts / packages/core/src/progress/mistakes.test.ts",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/phone-answer-result.png; docs/reference/execution/product-review-evidence/phone-answer-result.json",
@@ -337,7 +337,7 @@
       "state": "fixed",
       "foundBy": "claude+grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "apps/university/src/ports/online/grading.test.ts::never quotes lesson markup back at a learner who just missed"
+      "guardedBy": "apps/university/src/ports/delivery/grading.test.ts::never quotes lesson markup back at a learner who just missed"
     },
     {
       "id": "ad58cf50b131",
@@ -695,7 +695,7 @@
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
       "note": "当前设计以 docs/reference/player-journey/v5/index.html 决定 M 为准：最高层由领域球体转向系列区域表示位置，岛群仍由云载体飞向选中课程，课程岛由头像定位当前小节。旧的星球乘云漂移设计已被替代；G 守护实际点击和原快速上限。R35生产看图又抓出未选课头像位于岩根下、课名遮脸：原生地形射线和DOM/实际头像包围盒先红后绿，F/N补守初始、关闭卡片与返回状态，不另建动画或标签系统。",
-      "guardedBy": "e2e/avatar.spec.ts::星球区域与两层头像都跟随真实点击，并在快速上限内就位 / e2e/avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子 / e2e/world-delivery.spec.ts::ordinary navigation preserves the course and records complete-frame costs / e2e/island-pick.spec.ts::本地端：同一套卡片，跟岛走"
+      "guardedBy": "e2e/avatar.spec.ts::星球区域与两层头像都跟随真实点击，并在快速上限内就位 / e2e/avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子 / e2e/world-delivery.spec.ts::ordinary navigation preserves the course and records complete-frame costs / e2e/island-pick.spec.ts::创作端：同一套卡片，跟岛走"
     },
     {
       "id": "5af5df4513e8",
@@ -751,7 +751,7 @@
       "state": "fixed",
       "foundBy": "claude",
       "foundOn": "2026-09-01",
-      "guardedBy": "apps/local/server/workflows/learning-overview.test.ts::maps every course status to the publishable boundary / apps/local/server/workflows/learning-overview.test.ts::includes a stale course in the authoring shelf with learner facts"
+      "guardedBy": "apps/authoring-server/server/workflows/learning-overview.test.ts::maps every course status to the publishable boundary / apps/authoring-server/server/workflows/learning-overview.test.ts::includes a stale course in the authoring shelf with learner facts"
     },
     {
       "id": "cd7e78792e32",

@@ -27,7 +27,7 @@ import {
 } from "./catalogue-paths.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const LOCAL = join(ROOT, "apps/local");
+const LOCAL = join(ROOT, "apps/authoring-server");
 const APP = join(ROOT, "apps/university");
 const GRADING = join(ROOT, "apps/university-ai");
 
@@ -138,7 +138,7 @@ const localApiEnv = {
 };
 must("node", ["e2e/prepare-catalogue.mjs"], ROOT);
 
-run("node", [join(LOCAL, ".university-local-build/server/http-server.js")], LOCAL, localApiEnv);
+run("node", [join(LOCAL, ".university-authoring-build/server/http-server.js")], LOCAL, localApiEnv);
 
 run(
   "pnpm",

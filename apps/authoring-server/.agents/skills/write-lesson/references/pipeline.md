@@ -1,0 +1,328 @@
+# How a lesson gets produced
+
+This file is for whoever **dispatches** the work. `SKILL.md` tells a model how to
+write; this says who writes, who checks, and what to run.
+
+## Current PRIMM production contract
+
+PRIMM lessons are produced by the scripted line in [primm-pipeline.md](primm-pipeline.md),
+with the teaching rules in [teaching-contract.md](teaching-contract.md). This file keeps
+the measured history of the prose pipeline; its roles still hold: the Writer/fixer and
+the Detector are different families, the Detector never proposes wording, and the Flash
+polish is bounded and mechanically gated. The PRIMM line adds two things the prose line
+lacked: the Detector reads a screen-by-screen render that includes **real local runs** of
+the lesson's own requests, and every visible string, not just prose, goes through polish.
+
+## The pipeline
+
+```
+grok writes  →  a second model reports where a beginner stops  →  grok fixes
+             →  gemini flash polishes for spoken register (bounded, see below)
+             →  scripts/lint-lessons.mjs + scripts/check-lesson-hedges.mjs
+             →  a human reads one lesson per course
+```
+
+The measured path above uses Grok for both Writer/fixer jobs. If the models
+preflight says Grok is unavailable, the Codex CLI may replace that Writer/fixer
+arm only, after its own model-list preflight. The Detector and Polisher keep
+their declared families, and the Writer/fixer and Detector must remain
+different families. If preflight leaves only one family that could fill both
+jobs, stop and report; never let the writer check its own work. The Codex arm
+has not been included in the blind experiment below, so its use changes a
+measured variable and must be visible in the run report.
+
+Chosen by a controlled experiment on 2026-08-10, not by preference. Three
+pipelines, three rewrites and three new lessons each, scored blind by two
+independent readers whose scores agreed almost exactly:
+
+| Pipeline | total | **lowest single lesson** |
+| --- | --- | --- |
+| **grok → detector → grok** | 29/30 | **9** |
+| cheap model drafts → grok repairs | 25/30 | 7 |
+| grok alone | 22/30 | 6 |
+
+The winning pipeline's **floor** equals the other two's **ceiling**. That is the
+property worth having across hundreds of lessons — not a better average.
+
+## The local dispatcher
+
+`apps/authoring-server/scripts/lesson-pipeline-runner.mjs` is the process boundary for a
+single Writer, Detector, fixer, or Polisher stage. Invoke it with
+`pnpm lesson:run -- ...` from `apps/authoring-server` (or call its exported functions from
+another harness). It resolves a lesson's `sourcePath` against
+`studies/<study>/source/checkouts/<snapshot>/` before starting the model, so a
+short `source/checkouts/...` path cannot silently omit the study directory.
+
+The runner uses Node's `spawn` with `shell: false` and records the child's
+`exitCode` from its `close` event. Model stdout is split at the first Markdown
+H1: progress is forwarded to stderr, while the final Markdown is written to
+`--output` (or stdout when no output file is given). Each attempt keeps raw
+stdout, raw stderr, parsed progress, final text, timeout/signal data, and a
+`sessionResult` in the JSON receipt. Grok transport errors and timeouts get one
+bounded retry by default; an ordinary model/content failure does not.
+
+The runner is draft-only. It never creates a course revision or writes under a
+`studies` course root; landing a revision remains the course CLI's job.
+
+The cheap-model-drafts pipeline also produced a **fabricated claim about real
+code** (`install-git-hooks.mjs:3-10` described as "checks the working tree is
+clean"; it actually runs `git rev-parse --is-inside-work-tree`). Every citation
+in every arm resolved to a real path and a real line range, so **no linter can
+catch this class of defect** — only a second model actually reading the source.
+That alone rules out letting the cheap model draft.
+
+## The polish pass, and the one thing it will do to you
+
+Added 2026-08-20, after a second controlled experiment. Grok and Claude reason
+well and write like documentation; Gemini Flash reasons less well and writes
+like a person talking. The question was whether the second thing can be bought
+without losing the first.
+
+It can, but only with two rules the model does not follow unasked.
+
+**What an unbounded polish does.** Three lessons — short, median and long, from
+the now-retired `turing-pact/foundations-before-zero` — polished by `gemini-3.7-flash-high`
+with instructions to change wording only. It kept every evidence anchor, every
+code span, every heading and every fence. It also, across those three lessons:
+
+- removed 10 of the author's 23 hedges, and
+- manufactured 10 absolutes where the originals had **zero**, and
+- grew every lesson by 7–9% while being told not to grow, and
+- wrote 「只要平台不是 `web`，哈希路由**才**会打开」 — 「只要」 pairs with
+  「就」, 「只有」 pairs with 「才」 — in the sentence that states a boolean.
+
+「通常能照着清单重新装」 became 「随时都能重新装」. For a beginner those are
+different claims, and the second one teaches them that the day the network is
+down, the failure is theirs. Both blind judges found this class of defect and
+found it **only** in the polished version.
+
+**With the two rules added** — no absolutising, no growth — the same model on
+the same three lessons restored every hedge (23 → 25), produced **zero**
+absolutes, and came out 1.6% shorter.
+
+**Scored blind, both orderings, two judges** (`claude-sonnet-4-6` and
+`gemini-3.1-pro-high`, neither of which wrote either version):
+
+| | verdict |
+| --- | --- |
+| current output vs **unbounded** polish | judges split: Gemini Pro preferred the current output 3/3, Sonnet preferred the polish 3/3 |
+| current output vs **bounded** polish | **bounded polish wins 11 of 12** |
+
+The first row is why the rules are not optional; the second is why the pass is
+worth running. Position was swapped and re-judged because the first
+randomisation happened to put one version first every time.
+
+**The rules, in the polish prompt:**
+
+1. Every hedge in the source is deliberate. `通常 / 常常 / 往往 / 一般 / 多数 /
+   可能 / 倾向于` must survive. Never introduce `绝不 / 绝对 / 必然 / 从不 /
+   全都是 / 根本不 / 压根 / 随时都能 / 完全可以`. 「只要」 takes 「就」;
+   「只有」 takes 「才」.
+2. The output may not be longer than the input. Spoken language is *shorter*
+   sentences, not more words.
+
+Both are checked mechanically afterwards, which is what makes the pass safe to
+run at volume:
+
+```bash
+node scripts/check-lesson-hedges.mjs --before <original.md> --after <polished.md>
+```
+
+It fails on a lost hedge, a new absolute, or a new 「只要…才」.
+
+**The hedge check is not the whole gate.** Measured 2026-09-06: a bounded
+polish deleted the line 「先写下你的判断，再往下看答案。」 outright — the
+low-stakes prompt that invariant 3 requires — and
+`check-lesson-hedges.mjs` passed it without a murmur. Hedges 0 → 0, absolutes
+0 → 0, body 779 → 734 characters, which reads as a well-behaved polish right
+up until you notice a required line is gone.
+
+That is not a bug in the checker. It measures hedges, absolutes and growth,
+and it measured all three correctly. It is a gap in what "the polish failed"
+was taken to mean. A polish that quietly removes a spine element is exactly as
+unshippable as one that manufactures an absolute, so the rule below —
+**non-zero → throw it away and ship your own draft** — has to be triggered by
+the structural check as well:
+
+```bash
+node scripts/check-lesson-hedges.mjs --before <fixed.md> --after <polished.md>
+node scripts/lint-lessons.mjs --study <id> --course <id>   # or an equivalent shape check
+```
+
+Both must pass before the polished version replaces the draft. Discarding it
+costs one model call; shipping it costs a lesson whose prediction has no
+answer prompt, and the reader is the one who finds out.
+
+**And the third one, measured 2026-09-10.** 「关掉网，这个页面还能抠图吗？」 came
+back from the Polisher passing hedges, absolutes, length, second person *and* the
+structural check — and inside a `:::detail` explaining what 「发出去」 means it had
+rewritten 「那台电脑上会多出一份拷贝」 as 「别人那边会多出一份备份」. A copy on
+somebody else's machine and a backup are different claims, in the lesson whose
+entire point is that the reader's photo never leaves.
+
+The prompt already forbids this in as many words — 「所有关于代码、文件、命令的事实
+陈述…你没见过这些代码，没资格改任何技术判断」 — so being told is not the control.
+`check-lesson-hedges.mjs` now also compares the terms the lesson uses, in both
+directions: a term the original had and the polish dropped, or one the polish
+introduced that the original never used, is a failure. That polish is discarded,
+and the lesson keeps revision 1.
+
+Three blind spots have now been found in this gate, all the same shape: the
+checker measured what it was asked to measure, correctly, and the polish went
+wrong somewhere nobody had thought to look. Expect a fourth. When you find it,
+add it here rather than remembering it.
+
+**Polish once, not twice.** The first instinct is to add a second Flash pass at
+the end to apply the fixes Grok finds. Do not: every pass is another chance to
+absolutise, and running two doubles a risk that has been measured rather than
+guessed. Grok finds the errors and Grok fixes them.
+
+**The honesty note.** This experiment is a quarter the size of the 2026-08-10
+one — 3 lessons, 2 model judges, one course, against 3 pipelines × 6 lessons
+scored by two human readers. It supports "run this on the next batch and look",
+not "this is settled". Re-evaluate after about 10 lessons.
+
+## The detector is not allowed to write
+
+Give it the lesson and ask only where a beginner stops. It must not propose
+wording, titles, or replacement prose.
+
+A suggestion from the detector becomes the writer's answer instead of the best
+answer — and a model asked "what is missing?" will always find something, which
+is how lessons get padded with material that measurably hurts retention (see
+「暖，是换说法，不是加内容」 in SKILL.md).
+
+Its two most valuable findings are shapes a writer misses on its own:
+
+- **too late** — the term *is* explained, but after the sentence that needs it.
+  The fix is to move the explanation earlier or reword the sentence, never to add
+  another block.
+- **a block nobody needed** — an explanation of something that was not confusing.
+
+## Retiring the detector
+
+Every new defect class it finds gets promoted into `SKILL.md` as a rule, after
+which the writer avoids that class unaided. The "too late" rule came from this
+loop and is already in the skill.
+
+So the detector's yield **falls over time by design**. Re-evaluate after about 40
+lessons: if a run reports only defects the skill already names, stop running it.
+
+## Dispatching to a submodel: inline the rules, do not make it read them
+
+Measured 2026-09-06, on the first run of this pipeline against a brand-new
+study. The obvious way to brief a Writer submodel is to point it at `SKILL.md`
+and `references/variants.md` and let it read them. **Do not.**
+
+Three runs briefed that way were still going at ten minutes and produced
+nothing; the model spent the whole budget exploring the repository before it
+began writing. The same lesson, with the invariants and the variant table
+pasted into the prompt and an explicit "do not use any tools, do not read any
+files", finished in **287 seconds** and passed every invariant on the first
+attempt.
+
+So a dispatch prompt carries the rules; it does not carry a path to them. That
+is a duplication, and it is the right one: the rules move slowly, and the cost
+of the alternative is the whole run.
+
+The same brief must also pin the facts. Give the submodel the exact claims it
+may use and the exact evidence ranges — for a repository lesson, the file paths
+and line numbers, chosen by whoever dispatches. A writer asked to find its own
+citations will find plausible ones. `check-proposal-evidence.mjs` now fetches
+URL citations for exactly this reason, but a fabricated *line range* inside a
+real file still resolves, and only the person who picked the range would know.
+
+## The brief must say what the reader already knows
+
+A dispatch brief that describes only *this* lesson produces a lesson written
+for someone arriving from nowhere. Measured 2026-09-06: a lesson positioned in
+the third course of a curriculum — seventy-five lessons in — opened by defining
+「代码」, because nothing in its brief said the reader had met the word in
+lesson two. The model was not wrong; it was told the lesson's subject and not
+its place.
+
+Across a hundred-lesson line that compounds into a course that re-teaches its
+own vocabulary, and re-teaching is worse than it sounds: it tells a reader who
+did the work that their progress did not count.
+
+So a brief carries two things beyond the subject: **what the reader is assumed
+to already hold**, and **what this lesson must not re-explain**. Both are short
+lists. Writing them is the dispatcher's job, not the model's — the model cannot
+see the other lessons, and a model asked to guess what came before will guess
+generously and define everything.
+
+## Every role must be told to emit an H1
+
+`lesson-pipeline-runner.mjs` splits model stdout at the first Markdown H1:
+everything before it is progress, everything after is the answer. Only the
+Writer produces one unprompted. A Detector prompt that asks for a report, and a
+Polisher prompt that does not restate the requirement, both come back with
+`model stdout had no Markdown H1` after the model did perfectly good work.
+
+Put the instruction in the prompt for **every** role, not just the writing ones.
+
+## First run of this pipeline on a new study — 2026-09-06
+
+Seven lessons existed before this batch; these are the next ones. Recording the
+numbers because both of this file's scheduled re-evaluations are counted in
+lessons, and an unrecorded run does not count.
+
+- **Writer, first attempt, no retries:** 6 of 6 lessons passed every structural
+  invariant — spine, variant section counts, the prediction line, questions-only
+  self-check, single bold takeaway, detail blocks, 「你」 density. Lesson length
+  1,015–2,139 characters; 「你」 density 23–47 per 1,000 against a floor of 2.
+- **Detector:** on the first lesson it reported five findings, two of them in
+  the "too late" class this file calls its most valuable — including one where
+  the term appeared **in the H1 title** and its plain-language gloss did not
+  arrive until the third-to-last paragraph. It proposed no wording. A human
+  reader independently flagged the same redundant detail block it flagged.
+- **Fixer:** moved the explanations rather than adding paragraphs, and deleted
+  the redundant block rather than rewriting it. Length **+1.2%**.
+- **Polisher, bounded:** hedges 3 → 3, absolutes 0 → 0, body **−1.7%**.
+  `check-lesson-hedges.mjs` passed. This is the first data point of the
+  re-evaluation this file asks for after about ten lessons.
+
+## Commands
+
+**Which models, how to preflight them, and how to invoke them:
+[models.md](models.md). Read it before dispatching a run. Its preflight is a
+hard gate: no writing or checking prompt is sent before both model listings
+have been inspected and the selected arm has been recorded.**
+
+It is a separate file because model ids go stale every few weeks while the
+pipeline's shape does not, and a version number buried in this argument is a
+version number nobody updates. It names roles rather than versions, and says to
+ask `grok models` / `agy models` for what is current — plus `codex debug models`
+when the Writer/fixer fallback is selected — always the newest in the family,
+always the highest effort it accepts.
+
+Two things there are worth knowing before you read it: `--effort` makes Claude
+models under `agy` fail outright, and the detector may never propose wording.
+
+## Never
+
+- Never let any model in this pipeline write into `studies/` except the final,
+  intentional revision, landed through the `course` CLI.
+- Never silently drop a manifest source. Added media/coverage must be verified,
+  declared in the new revision and reported. Tokens only point within its evidence.
+- Never trust a self-reported "all checks pass". Run
+  `node scripts/lint-lessons.mjs --study <id> --course <id>` yourself.
+
+## When refresh-study invokes write-lesson
+
+`refresh-study` is the parent workflow. It owns source snapshot preparation, UA,
+freshness audit, stale marking, and course reactivation. This skill is only the
+content step for one stale lesson:
+
+1. Accept the exact target snapshot, analysis, audit reasons, current lesson
+   manifest, and all existing card/exercise IDs from the handoff.
+2. Own the lesson prose, cards, and exercises, including their evidence and
+   checklist; keep IDs and structure stable. Append a revision when the content
+   needs rewriting **or** when stale evidence must be rebound, even if the text
+   is unchanged.
+3. Return the revision proposal and dry-run result to the parent. Do not run
+   `refresh prepare`, `refresh finalize`, `refresh audit`, `refresh audit --apply`,
+   or `course reactivate` from this child step.
+
+When writing a lesson independently, the same content contract applies; only
+the parent orchestration differs.
