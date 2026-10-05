@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-05T01:38:49.857Z
+generated_at: 2026-10-05T02:23:41.561Z
 generator_version: doc-gov@0.14.2
-docs_count: 178
+docs_count: 179
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -661,6 +661,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-TASK17-R10-BUILD-RUNTIME
+    path: docs/reference/execution/task17-r10-build-runtime.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-05
     pinned: false
   - id: REF-TASK17-R9-SYSTEM-HEALTH
     path: docs/reference/execution/task17-r9-system-health.md

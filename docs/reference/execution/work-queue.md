@@ -37,11 +37,12 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-04
 
-**17 (R9 → R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
-delivered. Task 17 R0–R8 are complete through pushed commit `9bd55a9c`; each
+**17 (R10 → R11) → 16 → overnight report.** Tasks 13, 18 and 14 have been
+delivered. Task 17 R0–R9 are complete through pushed commit `27cb811a`; each
 remaining stage is one commit, one push and a complete gate. The R9 system
-health evidence is in [its execution table](task17-r9-system-health.md). Task
-16 follows R11 and is skipped only if one of its three required kit versions is
+health evidence is in [its execution table](task17-r9-system-health.md), and
+the R10 build/runtime measurement is in [its execution table](task17-r10-build-runtime.md).
+Task 16 follows R11 and is skipped only if one of its three required kit versions is
 not published. Task 12 remains active as **awaiting Owner reading** and is
 skipped; 06, 09 and 15 remain Owner-held and are skipped. Do not renumber
 entries.
@@ -51,8 +52,8 @@ gate repair and push completed on 2026-10-05, R4 documentation convergence
 completed in `73968ab9`, R5 reachability cleanup completed in `b41cfdd4`, and
 R6 dependency hardening completed in `5bfb0975`; R7 typecheck/suppression health
 completed in `35754ccb`; R8 test health completed in `9bd55a9c`; R9 system
-health is now recorded in `task17-r9-system-health.md`; task 17 continues
-through R11
+health is now recorded in `task17-r9-system-health.md`; R10 build/runtime health
+is recorded in `task17-r10-build-runtime.md`; task 17 continues through R11
 before task 16. The fourth lesson stays unpublished and
 protected, and its typo waits for Owner feedback in task 12's review → fix
 workflow.

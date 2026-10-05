@@ -737,3 +737,23 @@ browser completion tests that do not exist. Reminder delivery, real Supabase
 RLS/cross-device acceptance and the formal cosmetics service remain the
 cross-repository or Owner-held boundaries named by the table. No new numbered
 task pack was needed.
+
+## R10 execution record (2026-10-05)
+
+R10 measured the delivery build with the chunk census and recorded the exact
+output in the [R10 build/runtime table](../../reference/execution/task17-r10-build-runtime.md).
+The delivery output is 600 files / 26,680,979 bytes (25.44 MiB); JavaScript is
+12,122,628 bytes, CSS 525,705 bytes, and JavaScript plus CSS is 3.08 MiB gzip.
+The largest chunks are the concept catalogue (1,529,121 bytes),
+`WorldAppearance` (906,128), `Maps` (812,731), Mermaid parser (662,084), the
+entry (551,568), i18n (542,267), and shared CSS (510,388).
+
+The build still prints Vite's standard over-500-kB warning. A module census
+traced every warned chunk to a route or shared surface; no unused route import
+was found, so R10 does not introduce speculative splitting or increase the
+warning limit to hide it. The warning, its ownership and the raw sizes are
+explained in the execution table. Runtime budgets are unchanged: the full
+timing gate remains **40 passed (5.7m)**, with the slowed-phone lesson ready in
+4,161 ms and frame p95 18.0 ms. The full browser receipt remains **338 passed
+(18.7m)**. R10 changes documentation and measurements only; no numbered task
+pack is needed.
