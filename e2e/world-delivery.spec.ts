@@ -112,6 +112,7 @@ for (const [mode, origin] of [
         await expect(page).toHaveURL(`${origin}/planet`);
         await waitForOwnedLayerReady(page, "planet");
         await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
+        await waitForPlanetSelectionSurfaceReady(page, [EMPTY_DOMAIN_ID, PRIMARY_DOMAIN_ID]);
         // Returning to the globe is location, not a new selection. Only the
         // explicit click below may activate a domain and expose its entry.
         await expect(page.locator('[data-planet-domain-label][data-active="true"]')).toHaveCount(0);
@@ -474,6 +475,89 @@ async function waitForOwnedLayerReady(page: Page, layer: Layer, mapSceneUuid?: s
   expect(
     result.ready,
     `${layer} never reached ${STABLE_COMPLETE_FRAMES} consecutive complete frames on the visible canvas with stable geometries/textures/programs (not GPU completeness): ${JSON.stringify(result.last)}`,
+  ).toBe(true);
+}
+
+/**
+ * The planet's WebGL groups and its readable label DOM are produced by two
+ * render paths. A zero-resource status proves that preparation finished, but
+ * it does not prove that the projected label and the sphere hit surface have
+ * reached the same camera frame. Wait for both paths to describe a clickable
+ * globe before sampling the real canvas point.
+ */
+async function waitForPlanetSelectionSurfaceReady(page: Page, domainIds: readonly string[]) {
+  const result = await page.evaluate(async (ids) => {
+    const started = performance.now();
+    const canvas = () => document.querySelector("[data-planet-globe] canvas");
+    const inspect = () => {
+      const state = (globalThis as any).three;
+      const element = canvas();
+      const canvasRect = element?.getBoundingClientRect();
+      if (!state?.scene || !state.camera || !(element instanceof HTMLCanvasElement) || !canvasRect)
+        return { ok: false as const, reason: "planet canvas is not ready" };
+      const domains = ids.map((id) => {
+        const root = state.scene.getObjectByName(`domain-planet-${id}`);
+        const label = document.querySelector(
+          `[data-planet-domain-label="${CSS.escape(id)}"] button[data-domain-id="${CSS.escape(id)}"]`,
+        );
+        const rect = label?.getBoundingClientRect();
+        const world = root?.getWorldPosition?.(state.camera.position.clone());
+        const projected = world?.project?.(state.camera);
+        const labelVisible = Boolean(
+          label &&
+          rect &&
+          rect.width > 0 &&
+          rect.height > 0 &&
+          rect.left >= 0 &&
+          rect.right <= innerWidth &&
+          rect.top >= 0 &&
+          rect.bottom <= innerHeight,
+        );
+        const pointInCanvas = Boolean(
+          projected &&
+          projected.z >= -1 &&
+          projected.z <= 1 &&
+          canvasRect.left <= canvasRect.left + ((projected.x + 1) * canvasRect.width) / 2 &&
+          canvasRect.left + ((projected.x + 1) * canvasRect.width) / 2 <= canvasRect.right &&
+          canvasRect.top <= canvasRect.top + ((1 - projected.y) * canvasRect.height) / 2 &&
+          canvasRect.top + ((1 - projected.y) * canvasRect.height) / 2 <= canvasRect.bottom,
+        );
+        return {
+          id,
+          assetsReady: root?.userData?.planetAssetsReady === true,
+          labelVisible,
+          pointInCanvas,
+          labelBox: rect ? [rect.x, rect.y, rect.width, rect.height] : null,
+        };
+      });
+      return {
+        ok: domains.every(
+          (domain) => domain.assetsReady && domain.labelVisible && domain.pointInCanvas,
+        ),
+        domains,
+      };
+    };
+    let streak = 0;
+    let lastKey = "";
+    let last = inspect();
+    while (performance.now() - started < 90_000) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      last = inspect();
+      if (!last.ok) {
+        streak = 0;
+        lastKey = "";
+        continue;
+      }
+      const key = JSON.stringify(last.domains.map((domain) => domain.labelBox));
+      streak = key === lastKey ? streak + 1 : 1;
+      lastKey = key;
+      if (streak >= 3) return { ready: true as const, last, streak };
+    }
+    return { ready: false as const, last, streak };
+  }, domainIds);
+  expect(
+    result.ready,
+    `planet selection surface never aligned WebGL domains with visible projected labels: ${JSON.stringify(result.last)}`,
   ).toBe(true);
 }
 

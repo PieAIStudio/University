@@ -650,3 +650,61 @@ R7 gate receipts:
 
 R7 is ready to commit and push. R8 is next: repair the named browser flakies
 with deterministic readiness and require two complete green runs on one commit.
+
+## R8 execution record (2026-10-05)
+
+R8 addressed the three flaky families named by the plan without deleting any
+learner-property coverage, weakening an assertion, or increasing a timeout.
+The original failure receipts and the exact cause/fix mapping are kept in
+`.scratch/task17/r8-flaky-inventory.json`.
+
+The first-reader failure was reproduced twice in isolation in the task 14
+repair evidence (`task14-e2e-isolated-1.log` and `task14-e2e-isolated-2.log`).
+The map helper used a changed pathname as its completion signal, so authoring
+could pass the URL check while the lesson request was still unresolved. The
+AA caller now supplies the real `.lesson-reader` surface; the helper waits for
+that locator after navigation, and a fetch failure still fails the test.
+
+The landscape-delivery sample had the same class of scene-settle race recorded
+around R2. `settledReceipt` previously compared only mesh geometry. It now
+requires two equal geometry and renderer-resource censuses before the original
+receipt is accepted, so Suspense-mounted dressing cannot be sampled halfway
+through. The existing landscape, canvas, geometry, material and budget
+assertions remain intact.
+
+R43's 1600px globe selection could sample a projected point while the planet's
+WebGL resource and DOM label paths were on different frames. The test now waits
+for every selected domain's assets, visible projected label, in-viewport label
+box and projected sphere center, with three equal label frames, before the
+real-canvas click. It still exercises the actual globe pointer path and keeps
+the `aria-pressed` assertion.
+
+The focused regression set passed **20 tests in 6.1 minutes** (AA, R56 and
+R43, one worker). The R8 fast gate and the pipeline/native receipts are:
+
+- `pnpm verify`: green; core `95 files / 864 tests`, UI `100 / 633`, local
+  `55 / 518`, world remote/performance `5 / 45` plus world `164 / 1238`, app
+  `79 / 431`, backend `5 / 28`, AI `6 / 50`; canvas `5` mounts, experience
+  ledger `68 findings — 64 fixed, 4 open`, doc-gov `177 docs / 320 links / 0
+  warnings`, delivery and authoring builds green. Receipt:
+  `.scratch/overnight-20261003/task17-r8-verify.log`.
+- `pnpm --filter @pieai/university-local test:primm-pipeline`: `2 files
+  passed`, `18 tests passed`, `12.98s`; receipt
+  `.scratch/overnight-20261003/task17-r8-pipeline.log`.
+- Native course revise dry-run: `validated`, lesson `8`, cards `2/2`,
+  exercise `2`, `completedComponents []`, `retrySafe true`; receipt
+  `.scratch/overnight-20261003/task17-r8-native-dry-run.log`.
+
+The previous full-suite baseline was `338 passed (17.7m)` from R7. On the R8
+commit being pushed for this stage, the two consecutive normal-load runs were
+`338 passed
+(17.4m)` and `338 passed (17.5m)`; no test was removed. The timing gate was
+`40 passed (5.5m)`. Receipts are
+`.scratch/overnight-20261003/task17-r8-e2e-1.log`,
+`.scratch/overnight-20261003/task17-r8-e2e-2.log`, and
+`.scratch/overnight-20261003/task17-r8-timing.log`.
+
+R8 is ready to push. Before that push the one-minute load check must be below
+20 with no other Playwright process; the pre-push hook will repeat the complete
+browser and timing gates on this commit. No stage-specific test coverage was
+removed.

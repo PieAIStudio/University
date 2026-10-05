@@ -125,15 +125,27 @@ const geometryIdentity = (r: Awaited<ReturnType<typeof receipt>>, source = false
  * The receipt once nothing new is still arriving. The course's monsters sit
  * behind a Suspense boundary of their own and can mount after the dressing is
  * ready; under the pre-push load they did, and the first receipt missed them
- * while the clay one did not. Two equal readings in a row, never a looser check.
+ * while the clay one did not. Geometry alone is insufficient: the renderer's
+ * resource census can settle one frame later. Two equal geometry and resource
+ * readings in a row, never a looser check.
  */
 async function settledReceipt(page: Page) {
   let previous = await receipt(page);
   for (let reading = 0; reading < 20; reading += 1) {
     await page.waitForTimeout(750);
     const next = await receipt(page);
-    if (JSON.stringify(geometryIdentity(next)) === JSON.stringify(geometryIdentity(previous)))
-      return next;
+    const stable = (value: Awaited<ReturnType<typeof receipt>>) =>
+      JSON.stringify({
+        geometry: geometryIdentity(value),
+        resources: value.canvases.map((canvas: any) => [
+          canvas.materialCount,
+          canvas.programs,
+          canvas.textures,
+          canvas.ownedGeometries,
+          canvas.ownedVertices,
+        ]),
+      });
+    if (stable(next) === stable(previous)) return next;
     previous = next;
   }
   throw new Error("the course scene kept gaining or losing meshes for 15 seconds");

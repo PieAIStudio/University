@@ -133,8 +133,9 @@ for (const [mode, origin] of [
       await ready(page, "course");
       expect(await pose(page)).toEqual(firstPose);
       // The camera eases back to the current lesson; press once the button settles.
-      await enterSelectedMapObject(page, "current lesson after a locked choice");
-      await expect(page.locator(".lesson-reader")).toBeVisible();
+      await enterSelectedMapObject(page, "current lesson after a locked choice", {
+        ready: page.locator(".lesson-reader"),
+      });
       await expect(page).toHaveURL(new RegExp(`${coursePath}/${first.unitId}/${first.id}`));
       await page.locator(".lesson-toolbar__close").click();
       await ready(page, "course");

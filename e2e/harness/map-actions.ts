@@ -108,7 +108,11 @@ export function mapEntryButton(page: Page): Locator {
     .first();
 }
 
-export async function enterSelectedMapObject(page: Page, label: string): Promise<void> {
+export async function enterSelectedMapObject(
+  page: Page,
+  label: string,
+  options: { readonly ready?: Locator } = {},
+): Promise<void> {
   const entry = mapEntryButton(page);
   await expect(entry, `${label} 必须有对象旁进入按钮`).toBeVisible();
   // The entry button is bound to its object and reprojects every frame with no
@@ -157,6 +161,10 @@ export async function enterSelectedMapObject(page: Page, label: string): Promise
     await humanClick(page, entry, label);
     try {
       await expect.poll(() => mapSignature(page), { timeout: 15_000 }).not.toBe(before);
+      // A changed route is only navigation readiness. Callers that need the
+      // first reader must name the content surface too; otherwise a click can
+      // win the URL race while the route is still fetching its lesson.
+      if (options.ready) await expect(options.ready).toBeVisible();
       return;
     } catch (error) {
       if (attempt === 2) throw error;
