@@ -708,3 +708,32 @@ R8 is ready to push. Before that push the one-minute load check must be below
 20 with no other Playwright process; the pre-push hook will repeat the complete
 browser and timing gates on this commit. No stage-specific test coverage was
 removed.
+
+## R9 execution record (2026-10-05)
+
+R9 is the founder-board system health check. It found no learner feature that
+needed a freeze-exception code fix. The evidence and the honest external
+boundaries are consolidated in [the R9 system-health table](../../reference/execution/task17-r9-system-health.md).
+The repository code is unchanged in this stage; the stage adds the evidence
+index and links it from the two execution entry points.
+
+The focused evidence batches are:
+
+- core `9 files / 97 tests`, UI `6 files / 27 tests`, app `6 files / 47 tests`:
+  **171 tests passed**; `.scratch/overnight-20261003/task17-r9-focused.log`;
+- lessons, steps, grading and reading: **25 passed (1.5m)**;
+  `.scratch/overnight-20261003/task17-r9-grading-e2e.log`;
+- review, games, account and settings: **82 passed (5.2m)**;
+  `.scratch/overnight-20261003/task17-r9-e2e-focused.log`;
+- island-game inventory, node navigation and courtyard: **15 passed (3.1m)**;
+  `.scratch/overnight-20261003/task17-r9-island-e2e.log`;
+- chests, keepsakes, knowledge cards and review wisps: **14 passed (2.4m)**;
+  `.scratch/overnight-20261003/task17-r9-rewards-e2e.log`.
+
+The six-game catalogue is guarded as six identities and the courtyard game is
+guarded through a real run. The other five games share the exhaustive
+`IslandGame` dispatch and `RoundGameShell`; R9 does not claim five extra full
+browser completion tests that do not exist. Reminder delivery, real Supabase
+RLS/cross-device acceptance and the formal cosmetics service remain the
+cross-repository or Owner-held boundaries named by the table. No new numbered
+task pack was needed.
