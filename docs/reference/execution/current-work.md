@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-10-05
+last_reviewed: 2026-10-06
 domain: execution
 tags:
   - current-work
@@ -58,7 +58,7 @@ New mainline work follows the applicable lanes below.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Next mainline work | Tasks 13, 18, 14 and 19 are delivered. Task 17 R0–R11 is complete through `0c1601a`; its health measurements and self-description alignment are recorded in the completed plan. Task 16 follows completed task 19 and is complete on published UIKit 3.0.0-rc.1, NerveKit 0.8.0 and AuthKit 0.8.0-rc.1. [The work queue](work-queue.md) owns the protocol and stop conditions. [12 · unpublished r7](../../plans/active/12-pipeline-writes-step-lessons.md) stays active **awaiting Owner reading**, protected and skipped; 06, 09 and [15](../../plans/active/15-account-center-and-closeout-adoption.md) stay Owner-held. |
+| Next mainline work | [20 · one UIKit, one checkout](../../plans/active/20-one-uikit-and-fewer-checkouts.md) is next: `packages/world` still resolves UIKit 2.14.0 beside the App's 3.0.0-rc.1, and task 17's `.worktrees/r2-baseline` is left over. Tasks 13, 18, 14 and 19 are delivered. Task 17 R0–R11 is complete through `0c1601a`; its health measurements and self-description alignment are recorded in the completed plan. Task 16 follows completed task 19 and is complete on published UIKit 3.0.0-rc.1, NerveKit 0.8.0 and AuthKit 0.8.0-rc.1. [The work queue](work-queue.md) owns the protocol and stop conditions. [12 · unpublished r7](../../plans/active/12-pipeline-writes-step-lessons.md) stays active **awaiting Owner reading**, protected and skipped; 06, 09 and [15](../../plans/active/15-account-center-and-closeout-adoption.md) stay Owner-held. |
 | English reading aids missing on PRIMM lessons | [PRIMM reading tools gap](primm-reading-tools-gap.md): the PRIMM reader ships without foreign-language mode or the reading-detail toggle, so an English learner meets five lessons in a row without them. Recorded rather than fixed on 2026-09-21 by Owner ruling, and the browser gate no longer raises it — this document is the only alarm left |
 | Four-course archipelago draws three names | [Archipelago framing gap](archipelago-framing-gap.md): the world camera does not avoid the opaque right rail the way the course overview does, so one of `browser-ai`'s four course names is not drawn and an island dragged to the right edge has no room for its entry button. Recorded rather than fixed on 2026-09-21; the browser gates no longer require the fourth name, so this document is the only alarm left |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |

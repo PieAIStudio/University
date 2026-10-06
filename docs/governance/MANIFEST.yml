@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-06T00:11:21.621Z
+generated_at: 2026-10-06T00:50:03.441Z
 generator_version: doc-gov@0.14.2
-docs_count: 180
+docs_count: 181
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -248,6 +248,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-10-02
+    pinned: false
+  - id: PLAN-20-ONE-UIKIT-AND-FEWER-CHECKOUTS
+    path: docs/plans/active/20-one-uikit-and-fewer-checkouts.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-10-06
     pinned: false
   - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
     path: docs/plans/completed/00-ai-literacy-commercial-release.md
@@ -562,7 +569,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-10-05
+    last_reviewed: 2026-10-06
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -695,7 +702,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-10-04
+    last_reviewed: 2026-10-06
     pinned: true
   - id: REF-ISLAND-ART-V3
     path: docs/reference/FloatingIsland-Reference-v3/island-art-reference.md

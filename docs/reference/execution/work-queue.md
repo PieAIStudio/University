@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: "human"
 created: 2026-09-13
-last_reviewed: 2026-10-04
+last_reviewed: 2026-10-06
 domain: "execution"
 tags:
   - work-queue
@@ -37,7 +37,13 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-06
 
-**17 (R11) → 19 → 16 → overnight report.** The ordered work is delivered; only the overnight report and Owner reading remain. Tasks 13, 18 and 14 have been
+**20 first.** Task 20 ([one UIKit in the product, one checkout to work in](../../plans/active/20-one-uikit-and-fewer-checkouts.md))
+is the only runnable task: it finishes task 16's UIKit 3 adoption in
+`packages/world` and removes the last leftover checkout. Task 12 stays active as
+**awaiting Owner reading** and is skipped; 06, 09 and 15 stay Owner-held and are
+skipped. Do not renumber entries.
+
+The previous order, **17 (R11) → 19 → 16 → overnight report**, is delivered. Tasks 13, 18 and 14 have been
 delivered. Task 17 R0–R11 are complete through pushed commit `0c1601a`; R11
 is the closeout commit, with one commit, one push and a complete gate. The R9
 system-health evidence is in [its execution table](task17-r9-system-health.md),
@@ -57,10 +63,11 @@ The fourth lesson stays unpublished and
 protected, and its typo waits for Owner feedback in task 12's review → fix
 workflow.
 
-Task 14 creates `/Users/yuanfei/PieAI/UniversityCourses`. Do not touch
-`/Users/yuanfei/PieAI/UniversityContent`, another Codex's preparation repository.
-If credentials prevent creating a private GitHub repository, create the local
-repository, record the original failure, and continue.
+Task 14 created `/Users/yuanfei/PieAI/UniversityCourses`, the only course-content
+repository. Its private GitHub remote `PieAIStudio/UniversityCourses` was added
+on 2026-10-06. The same day the Owner retired the side checkouts
+`UniversityContent`, `UniversityLookLab` and `UniversityLookNotes`: course and 3D
+work now happens on `main` through this queue.
 
 Task 17 no longer depends on 16. After R0's measurement and target plan have
 passed their gates and been committed and pushed, create empty
