@@ -2,7 +2,7 @@
 id: PLAN-20-ONE-UIKIT-AND-FEWER-CHECKOUTS
 title: "20 · One UIKit in the product, and one checkout to work in"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-10-06
@@ -138,3 +138,30 @@ test that left and why in the commit body first.
 - One sentence on what changed on the planet page, in words the Owner can check
   by looking.
 - Anything noticed but not done, as a candidate for a later task.
+
+## Execution record · 2026-10-06
+
+- Updated `packages/world` to `@pieai/swimmer-ui-kit@3.0.0-rc.1`; the lockfile
+  now resolves one UIKit version, matching the App. The planet page's existing
+  globe and DOM rail remain intact; UIKit 3 framed controls are contained by the
+  existing fixture viewport at desktop and phone sizes.
+- UIKit 3's jsdom `ResizeObserver` requirement was handled in the world test
+  setup with the same no-op test observer used by the UI and App test suites.
+- The retired `.worktrees/r2-baseline` checkout was removed after saving its
+  uncommitted diff as `.scratch/task20/r2-baseline.patch`. Its 28 edits were all
+  under the old `apps/local/` paths; none was required for the current mainline
+  `apps/authoring-server/` paths.
+- The current publish-lane routing now names the private
+  `PieAIStudio/UniversityCourses` repository instead of the retired
+  `UniversityContent` checkout.
+- Planet captures are recorded in the shared walkthrough
+  `.scratch/overnight-20261003/task16-walkthrough.md` and stored under
+  `.scratch/task20/` as `light-desktop-1440.png`, `light-phone-375.png`,
+  `dark-desktop-1440.png` and `dark-phone-375.png`.
+- Fast gate: `pnpm verify` passed; world 164 files / 1238 tests, app 79 / 431,
+  docs 181 / 328 links / 0 warnings.
+- Complete gate: `338 passed (21.7m)`.
+- Timing gate: `40 passed (6.0m)`.
+- No follow-up issue was found in the planet surface. The remaining UIKit 3
+  browser console warnings are the existing Three.js deprecation notices and
+  did not fail the gate.

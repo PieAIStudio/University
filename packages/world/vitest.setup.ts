@@ -8,3 +8,16 @@ if (typeof navigator !== "undefined") {
 }
 setInterfaceLocale("zh-CN");
 beforeEach(() => setInterfaceLocale("zh-CN"));
+
+// UIKit 3 measures its framed panels with ResizeObserver. jsdom has no layout
+// engine; world tests assert the rendered contract, so a no-op observer is the
+// complete test surface they need.
+if (!("ResizeObserver" in globalThis)) {
+  class NoopResizeObserver implements ResizeObserver {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  }
+  (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+    NoopResizeObserver;
+}

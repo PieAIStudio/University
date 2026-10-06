@@ -36,11 +36,10 @@ related:
 ## Current configured inputs (2026-10-05)
 
 The course repository is selected by `UNIVERSITY_COURSE_ROOT`; the normal
-checkout used for the delivered mainline is
-`/Users/yuanfei/PieAI/UniversityCourses`, whose latest content commit is
-`90d7c348`. It owns `studies/`, `course-proposals/` and `vocabulary/`.
-`/Users/yuanfei/PieAI/UniversityContent` is another preparation checkout and
-is outside this project. The generated browser directory is selected separately
+checkout used for the delivered mainline is the private GitHub repository
+`PieAIStudio/UniversityCourses` (local checkout `/Users/yuanfei/PieAI/UniversityCourses`,
+whose latest content commit is `90d7c348`). It owns `studies/`,
+`course-proposals/` and `vocabulary/`. The generated browser directory is selected separately
 by `UNIVERSITY_CONTENT_ROOT` (normally `apps/university/content` or the
 delivery build's isolated output). No historical count below is a current
 catalogue claim; current content counts come from the configured root and the

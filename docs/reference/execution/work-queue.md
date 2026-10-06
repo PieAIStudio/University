@@ -37,9 +37,9 @@ the queue is changing the same code.
 
 ### Current Owner order · 2026-10-06
 
-**20 first.** Task 20 ([one UIKit in the product, one checkout to work in](../../plans/active/20-one-uikit-and-fewer-checkouts.md))
-is the only runnable task: it finishes task 16's UIKit 3 adoption in
-`packages/world` and removes the last leftover checkout. Task 12 stays active as
+**20 is delivered.** Task 20 ([one UIKit in the product, one checkout to work in](../../plans/completed/20-one-uikit-and-fewer-checkouts.md))
+finished task 16's UIKit 3 adoption in `packages/world` and removed the last
+leftover checkout. No later task is runnable: task 12 stays active as
 **awaiting Owner reading** and is skipped; 06, 09 and 15 stay Owner-held and are
 skipped. Do not renumber entries.
 
