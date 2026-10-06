@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-10-05T04:48:14.081Z
+generated_at: 2026-10-06T00:11:21.621Z
 generator_version: doc-gov@0.14.2
 docs_count: 180
 docs:
@@ -249,27 +249,6 @@ docs:
     canonical: true
     last_reviewed: 2026-10-02
     pinned: false
-  - id: PLAN-16-UIKIT-3-ADOPTION
-    path: docs/plans/active/16-uikit-3-adoption.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-10-04
-    pinned: false
-  - id: PLAN-17-DEEP-REFACTOR
-    path: docs/plans/active/17-deep-refactor.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-10-05
-    pinned: false
-  - id: PLAN-19-ONE-NAME-FOR-THE-AUTHORING-SIDE
-    path: docs/plans/active/19-one-name-for-the-authoring-side.md
-    type: plan
-    status: completed
-    canonical: true
-    last_reviewed: 2026-10-05
-    pinned: false
   - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
     path: docs/plans/completed/00-ai-literacy-commercial-release.md
     type: plan
@@ -361,12 +340,33 @@ docs:
     canonical: false
     last_reviewed: 2026-10-03
     pinned: false
+  - id: PLAN-16-UIKIT-3-ADOPTION
+    path: docs/plans/completed/16-uikit-3-adoption.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-04
+    pinned: false
+  - id: PLAN-17-DEEP-REFACTOR
+    path: docs/plans/completed/17-deep-refactor.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-05
+    pinned: false
   - id: PLAN-18-GRADING-MUST-CATCH-DROPPED-FACTS
     path: docs/plans/completed/18-grading-must-catch-dropped-facts.md
     type: plan
     status: completed
     canonical: true
     last_reviewed: 2026-10-03
+    pinned: false
+  - id: PLAN-19-ONE-NAME-FOR-THE-AUTHORING-SIDE
+    path: docs/plans/completed/19-one-name-for-the-authoring-side.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-10-05
     pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/completed/ai-foundations-revival.md

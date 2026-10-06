@@ -2,7 +2,7 @@
 id: PLAN-16-UIKIT-3-ADOPTION
 title: "16 · University runs on UIKit 3.0, NerveKit 0.8 and a UIKit-3 AuthKit"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-10-02

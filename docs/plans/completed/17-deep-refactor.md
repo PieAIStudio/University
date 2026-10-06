@@ -2,7 +2,7 @@
 id: PLAN-17-DEEP-REFACTOR
 title: "17 · University deep refactor: code, topology, docs, hygiene"
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-10-03

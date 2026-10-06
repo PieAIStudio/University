@@ -35,15 +35,14 @@ the queue is changing the same code.
 
 ## Details
 
-### Current Owner order · 2026-10-04
+### Current Owner order · 2026-10-06
 
-**17 (R11) → 19 → 16 → overnight report.** Tasks 13, 18 and 14 have been
-delivered. Task 17 R0–R10 are complete through pushed commit `b4e11df4`; R11
+**17 (R11) → 19 → 16 → overnight report.** The ordered work is delivered; only the overnight report and Owner reading remain. Tasks 13, 18 and 14 have been
+delivered. Task 17 R0–R11 are complete through pushed commit `0c1601a`; R11
 is the closeout commit, with one commit, one push and a complete gate. The R9
 system-health evidence is in [its execution table](task17-r9-system-health.md),
 and the R10 build/runtime measurement is in [its execution table](task17-r10-build-runtime.md).
-Task 16 follows R11 and is skipped only if one of its three required kit versions is
-not published. Task 12 remains active as **awaiting Owner reading** and is
+Task 16 follows R11 and adopts the published UIKit `3.0.0-rc.1`, NerveKit `0.8.0` and AuthKit `0.8.0-rc.1`; it is complete. Task 12 remains active as **awaiting Owner reading** and is
 skipped; 06, 09 and 15 remain Owner-held and are skipped. Do not renumber
 entries.
 
