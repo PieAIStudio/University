@@ -6,7 +6,13 @@
   "external": [
     "three",
     "react",
+    "react/*",
+    "react/jsx-runtime",
+    "react/jsx-dev-runtime",
     "react-dom",
+    "react-dom/*",
+    "react-dom/client",
+    "react-dom/test-utils",
     "@react-three/fiber",
     "@react-three/drei",
     "@pieai/swimmer-render-kit"
@@ -49,13 +55,13 @@
     },
     {
       "path": "swiminai-island-render.js",
-      "bytes": 511153,
-      "sha256": "27144c581bfd1dbc0042e1ebfd3dccd58d7cc1fd500458f1eb566efa0f201b92"
+      "bytes": 502564,
+      "sha256": "f2b581e4d83d31f58199d768fcda0bc3e06ad92a3028fbb88f48e7417195cfe8"
     },
     {
       "path": "swiminai-island-render.js.map",
-      "bytes": 1435052,
-      "sha256": "a606db05f332d6ff092d430ab45213520abc1efa35bb59917c8f19569b43ab81"
+      "bytes": 1413119,
+      "sha256": "175df789526eccf5ae4cdb88b5eaa54d7745a6d4966b79966905f716bac7b2eb"
     }
   ]
 }

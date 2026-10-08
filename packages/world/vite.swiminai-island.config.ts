@@ -21,7 +21,9 @@ export default defineConfig({
       external: (id) =>
         id === "three" ||
         id === "react" ||
+        id.startsWith("react/") ||
         id === "react-dom" ||
+        id.startsWith("react-dom/") ||
         id.startsWith("@react-three/") ||
         id.startsWith("@pieai/"),
     },

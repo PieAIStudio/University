@@ -11,7 +11,13 @@ const output = resolve(root, "tools/swiminai-islands/render-dist");
 const external = [
   "three",
   "react",
+  "react/*",
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
   "react-dom",
+  "react-dom/*",
+  "react-dom/client",
+  "react-dom/test-utils",
   "@react-three/fiber",
   "@react-three/drei",
   "@pieai/swimmer-render-kit",
