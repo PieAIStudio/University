@@ -51,6 +51,7 @@
     "export:swiminai-islands": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs",
     "export:swiminai-islands:check": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs --check",
     "export:swiminai-render-blueprints": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/write-render-blueprints.mjs",
+    "export:swiminai-render-navigation": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/write-render-navigation.mjs",
     "build:swiminai-island-render": "pnpm --filter @pieai/university-world build:swiminai-island-render",
     "reference:swiminai-island": "pnpm --filter @pieai/university-world reference:swiminai-island",
     "build:reference:swiminai-island": "pnpm --filter @pieai/university-world build:reference:swiminai-island",

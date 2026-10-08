@@ -39,6 +39,17 @@ execFileSync(
   { cwd: root, stdio: "inherit" },
 );
 
+execFileSync(
+  process.execPath,
+  [
+    "--experimental-strip-types",
+    "--experimental-loader",
+    join(root, "tools/swiminai-islands/ts-loader.mjs"),
+    join(root, "tools/swiminai-islands/write-render-navigation.mjs"),
+  ],
+  { cwd: root, stdio: "inherit" },
+);
+
 const declarationSource = join(root, "tools/swiminai-islands/render-entry.d.ts");
 const declarationOutput = join(output, "swiminai-island-render.d.ts");
 await copyFile(declarationSource, declarationOutput);

@@ -79,6 +79,11 @@
       "sha256": "6aaeffa0cb0f9abf64cbb58fdc868c0b79b5062d43af2c3b02e4d5c089336fc8"
     },
     {
+      "path": "render-navigation.json",
+      "bytes": 64452,
+      "sha256": "52cea174ed31476e6ca5fad8f0a063b3dece75d9763cd658ff25048115408358"
+    },
+    {
       "path": "sky-assets/aerial-world-plate-2k.webp",
       "bytes": 114806,
       "sha256": "cd7781ac5e7c22634230c266e61a7b78bc617c9ac31bab2814b1f79aa1303cb6"

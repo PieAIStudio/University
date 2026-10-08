@@ -45,7 +45,8 @@ pnpm build:swiminai-island-render
 
 The output is `render-dist/`: `swiminai-island-render.js`, its source map,
 `swiminai-island-render.d.ts`, the four University surface textures, the
-two aerial background plates, `render-blueprints.json`, and `manifest.json`.
+two aerial background plates, `render-blueprints.json`,
+`render-navigation.json`, and `manifest.json`.
 The entry is
 `@pieai/university-world/swiminai-island-render.js` and its API is:
 
@@ -73,6 +74,12 @@ and the existing recipe catalog. It is generated with
 `pnpm export:swiminai-render-blueprints` (or as part of the renderer build);
 the generator remains a University development tool and is not bundled into
 the website artifact.
+
+`render-navigation.json` is the matching runtime navigation receipt. It is
+generated from the same world-detail terrain, `planRemoteIslandProps`,
+`miniatureMetrics`, pools, portal ground samples, and bridge surface endpoints;
+the website consumes its `walkableOutline` and `blockers` instead of copying
+decoration coordinates.
 
 The manifest's declaration file is the public TypeScript contract; it includes
 `SwimInAIIslandRenderProps`, `SwimInAIIslandDisplay`, `IslandBlueprint`, the
