@@ -96,6 +96,27 @@ function walkableOutline(blueprint, shape, position) {
   }));
 }
 
+function spawnFor(blueprint, shape, position) {
+  const first = blueprint.nodes[0] ?? blueprint.geometryNodes[0];
+  const last = blueprint.nodes.at(-1) ?? blueprint.geometryNodes.at(-1);
+  if (!first || !last) throw new Error(`Island blueprint has no route nodes: ${blueprint.courseId}`);
+  const before = blueprint.centerline[Math.max(0, blueprint.centerline.length - 3)] ?? last;
+  const after = blueprint.centerline.at(-1) ?? last;
+  const tangent = normalize(after.x - before.x, after.z - before.z);
+  const sourceSpawn = {
+    x: first.x - tangent.x * 0.9,
+    z: first.z - tangent.z * 0.9,
+  };
+  return terrainGround(
+    blueprint,
+    shape,
+    position,
+    sourceSpawn.x * shape.scale,
+    sourceSpawn.z * shape.scale,
+    0.3 * shape.scale,
+  );
+}
+
 function blockerForProp(islandId, prop, index) {
   const metrics = miniatureMetrics(prop.asset);
   return {
@@ -156,6 +177,7 @@ function navigationEntry(spec, blueprint, position, shape, isCenter) {
     blueprint.hero.z * shape.scale,
     0.02,
   );
+  const spawn = isCenter ? spawnFor(blueprint, shape, position) : null;
   if (isCenter) {
     blockers.push({
       id: "center-hub",
@@ -181,6 +203,7 @@ function navigationEntry(spec, blueprint, position, shape, isCenter) {
       depth: round(shape.bounds.depth),
     },
     groundNode: isCenter ? "ground" : `ground_${spec.id}`,
+    ...(spawn ? { spawn: pointJson(spawn) } : {}),
     hub: pointJson(hub),
     walkableOutline: walkableOutline(blueprint, shape, position),
     blockers,
