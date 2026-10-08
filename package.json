@@ -50,6 +50,8 @@
     "check:coverage-caveats": "node scripts/check-coverage-caveats.mjs",
     "export:swiminai-islands": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs",
     "export:swiminai-islands:check": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs --check",
+    "build:swiminai-island-render": "pnpm --filter @pieai/university-world build:swiminai-island-render",
+    "check:swiminai-island-render": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/render-contract.mjs",
     "i18n:check": "node scripts/check-interface-catalogs.mjs",
     "i18n:types": "node scripts/check-interface-catalogs.mjs --write-types"
   },

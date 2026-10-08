@@ -26,7 +26,8 @@
     "./path-overlay.js": "./src/labels/path-overlay.ts",
     "./overlay-reservations.js": "./src/labels/overlay-reservations.ts",
     "./planet.js": "./src/planet/index.ts",
-    "./inspector.js": "./src/inspector/index.ts"
+    "./inspector.js": "./src/inspector/index.ts",
+    "./swiminai-island-render.js": "./src/island/swiminai-island-render.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -34,7 +35,8 @@
     "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src",
     "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src",
     "test": "vitest run --project remote-performance && vitest run --project world",
-    "build": "tsc -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.json --noEmit",
+    "build:swiminai-island-render": "node ../../tools/swiminai-islands/build-renderer.mjs"
   },
   "dependencies": {
     "@pieai/swimmer-avatar-kit": "0.7.0",
@@ -57,6 +59,7 @@
     "react-dom": "19.2.8",
     "three": "0.185.1",
     "typescript": "6.0.3",
+    "vite": "8.2.2",
     "vitest": "4.1.11"
   },
   "peerDependencies": {

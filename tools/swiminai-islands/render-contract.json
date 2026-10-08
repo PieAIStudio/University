@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "renderer": "@pieai/university-world/swiminai-island-render",
+  "seed": "swiminai/plan-0002/university-v1",
+  "recipeId": "R01-forest-academy",
+  "detail": "course",
+  "cameraContract": {
+    "viewport": [
+      390,
+      844
+    ],
+    "dpr": 1,
+    "note": "The consuming website must capture this same seed/camera for pixel metrics."
+  },
+  "geometry": {
+    "course": {
+      "triangles": 16006,
+      "topTriangles": 9888,
+      "routeTriangles": 3700,
+      "cliffTriangles": 2418
+    },
+    "world": {
+      "triangles": 1444,
+      "topTriangles": 352,
+      "routeTriangles": 0,
+      "cliffTriangles": 1092
+    }
+  },
+  "layers": {
+    "dressingPlacements": 107,
+    "worldDressingPlacements": 5,
+    "grassInstances": 80000,
+    "routeSamples": 97,
+    "terrainPatches": 3
+  },
+  "draws": {
+    "lowerBound": 3,
+    "layers": [
+      "terrain",
+      "instanced-grass",
+      "grouped-dressing"
+    ],
+    "note": "The external host owns the Stage light/AO/grade pass and may add grouped asset fields."
+  },
+  "lookMetrics": {
+    "detail": "course",
+    "lessonNodeCount": 12,
+    "coursePropCount": 107,
+    "propsPerLessonNode": 8.9167,
+    "rimPropShare": 0.1121,
+    "layerDistribution": {
+      "terrainPatches": 3,
+      "routeSamples": 97,
+      "dressingProps": 107,
+      "lessonNodes": 12
+    },
+    "keyToFillRatio": null,
+    "worldPropsPerIsland": 0,
+    "nodeOcclusionShare": 0
+  },
+  "brightness": {
+    "status": "capture-required",
+    "measured": null,
+    "required": {
+      "landCoverageMin": 0.34,
+      "landMedianLightness": [
+        50,
+        70
+      ],
+      "landP95LightnessMin": 85,
+      "landLightnessRiseMin": 15,
+      "lightnessStdDevMin": 18
+    }
+  },
+  "lighting": {
+    "status": "Stage-owned",
+    "keyToFillRatio": null,
+    "requiredKeyToFillMin": 3,
+    "note": "No duplicate light, AO or grade is created by the pure island entry."
+  }
+}

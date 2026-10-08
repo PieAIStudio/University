@@ -34,3 +34,38 @@ per-scene draw/triangle stats. No synthetic lesson nodes are emitted as
 obstacles. The export record lists each file's SHA-256, fixed seed, recipe,
 source modules, and the University commit supplied at export time
 (`UNIVERSITY_COMMIT` can override it).
+
+## Pure R3F renderer
+
+Build the copyable library artifact with:
+
+```bash
+pnpm build:swiminai-island-render
+```
+
+The output is `render-dist/`: `swiminai-island-render.js`, its source map,
+the four University surface textures, and `manifest.json`. The entry is
+`@pieai/university-world/swiminai-island-render.js` and its API is:
+
+```tsx
+<SwimInAIIslandRender
+  blueprint={blueprint}
+  detail="course"
+  targetRadius={3.2}
+  display={{ id: "uni", name: "University" }}
+/>
+```
+
+`course` mounts `IslandRender` with University's surface detail/course atlas,
+`IslandGrass`, and `IslandDressing`. `world` mounts the shared remote terrain,
+miniature surface atlas, and remote dressing. The host owns Canvas, camera,
+lights, Stage AO/grade, and the aligned external packages. The manifest pins
+Three `0.185.1`, React `19.2.8`, React DOM `19.2.8`, R3F `9.6.1`, Drei
+`10.7.8`, and SwimmerRenderKit `0.5.0`; all are external and must be supplied
+by the website.
+
+The seed/contract receipt is [render-contract.json](./render-contract.json).
+It reports geometry, dressing, grass, look-metrics and the fixed
+`ISLAND_LOOK_CONTRACT` thresholds. Pixel brightness and key/fill values remain
+Stage/browser capture responsibilities, so the receipt marks those fields as
+`capture-required` rather than inventing measurements.

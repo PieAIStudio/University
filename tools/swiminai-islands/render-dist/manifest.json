@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "package": "@pieai/university-world",
+  "entry": "swiminai-island-render.js",
+  "source": "packages/world/src/island/swiminai-island-render.tsx",
+  "external": [
+    "three",
+    "react",
+    "react-dom",
+    "@react-three/fiber",
+    "@react-three/drei",
+    "@pieai/swimmer-render-kit"
+  ],
+  "alignment": {
+    "three": "0.185.1",
+    "react": "19.2.8",
+    "reactDom": "19.2.8",
+    "fiber": "9.6.1",
+    "drei": "10.7.8",
+    "swimmerRenderKit": "0.5.0"
+  },
+  "api": "SwimInAIIslandRender({ blueprint, detail, targetRadius?, display?, showDressing?, showGrass? })",
+  "assets": [
+    {
+      "path": "island-textures/grass-albedo.webp",
+      "bytes": 6480,
+      "sha256": "ee8ed3a7efc54658e3f19c8c76af17edd85704122135c52e2687486e06fceef9"
+    },
+    {
+      "path": "island-textures/rock-albedo.webp",
+      "bytes": 11006,
+      "sha256": "6964ca56980190a63f00a0fa7122850717f5a602ee354594f0b35cf843f5e996"
+    },
+    {
+      "path": "island-textures/route-albedo.webp",
+      "bytes": 3078,
+      "sha256": "c8ad76327cbb5d2cdba44cfc8cee5f80e2e8bed94b5655e75e4fa5e70c880001"
+    },
+    {
+      "path": "island-textures/surface-detail.webp",
+      "bytes": 1170,
+      "sha256": "68da2f99a6a97ba8423221b63ebe07403a1a497b0826e736bd5e89d44cce38a0"
+    },
+    {
+      "path": "swiminai-island-render.js",
+      "bytes": 511153,
+      "sha256": "27144c581bfd1dbc0042e1ebfd3dccd58d7cc1fd500458f1eb566efa0f201b92"
+    },
+    {
+      "path": "swiminai-island-render.js.map",
+      "bytes": 1435052,
+      "sha256": "a606db05f332d6ff092d430ab45213520abc1efa35bb59917c8f19569b43ab81"
+    }
+  ]
+}
