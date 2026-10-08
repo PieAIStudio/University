@@ -44,7 +44,8 @@ pnpm build:swiminai-island-render
 ```
 
 The output is `render-dist/`: `swiminai-island-render.js`, its source map,
-the four University surface textures, and `manifest.json`. The entry is
+the four University surface textures, `render-blueprints.json`, and
+`manifest.json`. The entry is
 `@pieai/university-world/swiminai-island-render.js` and its API is:
 
 ```tsx
@@ -63,6 +64,14 @@ lights, Stage AO/grade, and the aligned external packages. The manifest pins
 Three `0.185.1`, React `19.2.8`, React DOM `19.2.8`, R3F `9.6.1`, Drei
 `10.7.8`, and SwimmerRenderKit `0.5.0`; all are external and must be supplied
 by the website.
+
+`render-blueprints.json` is the copyable serialisable input for this entry. It
+contains complete `IslandBlueprint` objects for `center`, `break`, `uni`,
+`dir`, and `party`, generated from the fixed `swiminai/plan-0002/*-v1` seeds
+and the existing recipe catalog. It is generated with
+`pnpm export:swiminai-render-blueprints` (or as part of the renderer build);
+the generator remains a University development tool and is not bundled into
+the website artifact.
 
 The seed/contract receipt is [render-contract.json](./render-contract.json).
 It reports geometry, dressing, grass, look-metrics and the fixed

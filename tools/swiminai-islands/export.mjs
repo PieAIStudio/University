@@ -23,11 +23,8 @@ import {
 } from "../../packages/world/src/island/miniature-layout.ts";
 import { createMiniatureAsset } from "../../packages/world/src/island/miniature-assets.ts";
 import { planRemoteIslandProps } from "../../packages/world/src/island/remote-props.ts";
-import {
-  islandBlueprint,
-  sampleIslandSurface,
-} from "../../packages/world/src/island/island-blueprint.ts";
-import { recipeById } from "../../packages/world/src/island/kenney-recipes.ts";
+import { sampleIslandSurface } from "../../packages/world/src/island/island-blueprint.ts";
+import { CENTER, ISLANDS, buildBlueprint, recipeSelection } from "./blueprints.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const OUTPUT_DIR = resolve(ROOT, "tools/swiminai-islands/generated");
@@ -35,7 +32,6 @@ const SCHEMA_VERSION = 1;
 const GENERATOR_VERSION = "swiminai-islands-v2";
 const WORLD_DETAIL_RADIUS = 3.2;
 const CENTER_DETAIL_RADIUS = 3.2;
-const LESSON_COUNT = 12;
 
 // GLTFExporter uses FileReader to turn a Blob into a GLB. Node 24 has Blob but
 // intentionally has no DOM FileReader, so provide the smallest async adapter.
@@ -49,59 +45,6 @@ if (!globalThis.FileReader) {
     }
   };
 }
-
-const ISLANDS = [
-  {
-    id: "break",
-    displayName: "BREAK",
-    seed: "swiminai/plan-0002/break-v1",
-    recipeId: "R06-forest-fortress",
-    routeArchetype: "switchback",
-    portalColor: 0xff8a45,
-    groundTint: 0xc88d61,
-    themeAssets: ["gate", "fence", "stone"],
-  },
-  {
-    id: "uni",
-    displayName: "University",
-    seed: "swiminai/plan-0002/university-v1",
-    recipeId: "R01-forest-academy",
-    routeArchetype: "horseshoe",
-    portalColor: 0x5fe0c8,
-    groundTint: 0xc7dca1,
-    themeAssets: ["gate", "flowers", "fence"],
-  },
-  {
-    id: "dir",
-    displayName: "Directing",
-    seed: "swiminai/plan-0002/directing-v1",
-    recipeId: "R07-training-arena",
-    routeArchetype: "serpentine",
-    portalColor: 0xffc266,
-    groundTint: 0xc09ad9,
-    themeAssets: ["gate", "windmill", "fence"],
-  },
-  {
-    id: "party",
-    displayName: "SWIMMER PARTY",
-    seed: "swiminai/plan-0002/swimmer-party-v1",
-    recipeId: "R12-garden-sports",
-    routeArchetype: "arc",
-    portalColor: 0xff66c8,
-    groundTint: 0xe9b5cf,
-    themeAssets: ["blossom", "flowers", "crystal"],
-  },
-];
-
-const CENTER = {
-  id: "center",
-  displayName: "Swim In AI",
-  seed: "swiminai/plan-0002/center-v1",
-  recipeId: "R01-forest-academy",
-  routeArchetype: "loop-around-hill",
-  portalColor: 0x5fe0c8,
-  groundTint: 0xd2dfad,
-};
 
 const PRODUCT_OFFSETS = {
   break: { x: -5.5, y: 0.35, z: -4.5 },
@@ -125,33 +68,6 @@ function vectorJson(vector) {
 function normalize(x, z) {
   const length = Math.hypot(x, z) || 1;
   return { x: x / length, z: z / length };
-}
-
-function recipeSelection(recipeId) {
-  const recipe = recipeById(recipeId);
-  if (!recipe) throw new Error(`Unknown island recipe: ${recipeId}`);
-  return {
-    naturalBasePackId: recipe.base.packId,
-    accentPackIds: [...recipe.accentPackIds],
-    recipeId: recipe.id,
-  };
-}
-
-function buildBlueprint(spec) {
-  const lessonIds = Array.from(
-    { length: LESSON_COUNT },
-    (_, index) => `${spec.id}-lesson-${String(index + 1).padStart(2, "0")}`,
-  );
-  return islandBlueprint({
-    studyId: "swiminai",
-    courseId: `plan-0002-${spec.id}`,
-    lessonCount: LESSON_COUNT,
-    lessonIds,
-    seed: spec.seed,
-    routeArchetype: spec.routeArchetype,
-    themeSelection: recipeSelection(spec.recipeId),
-    checkpointGaps: [3, 7],
-  });
 }
 
 function scaledSurfacePoint(blueprint, shape, x, z, yOffset = 0) {

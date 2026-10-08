@@ -22,6 +22,17 @@ execFileSync("pnpm", ["exec", "vite", "build", "--config", "vite.swiminai-island
   stdio: "inherit",
 });
 
+execFileSync(
+  process.execPath,
+  [
+    "--experimental-strip-types",
+    "--experimental-loader",
+    join(root, "tools/swiminai-islands/ts-loader.mjs"),
+    join(root, "tools/swiminai-islands/write-render-blueprints.mjs"),
+  ],
+  { cwd: root, stdio: "inherit" },
+);
+
 async function filesUnder(directory, prefix = "") {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -58,6 +69,7 @@ const manifest = {
     swimmerRenderKit: "0.5.0",
   },
   api: "SwimInAIIslandRender({ blueprint, detail, targetRadius?, display?, showDressing?, showGrass? })",
+  blueprintArtifact: "render-blueprints.json",
   assets,
 };
 await writeFile(join(output, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);

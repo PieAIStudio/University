@@ -20,6 +20,7 @@
     "swimmerRenderKit": "0.5.0"
   },
   "api": "SwimInAIIslandRender({ blueprint, detail, targetRadius?, display?, showDressing?, showGrass? })",
+  "blueprintArtifact": "render-blueprints.json",
   "assets": [
     {
       "path": "island-textures/grass-albedo.webp",
@@ -40,6 +41,11 @@
       "path": "island-textures/surface-detail.webp",
       "bytes": 1170,
       "sha256": "68da2f99a6a97ba8423221b63ebe07403a1a497b0826e736bd5e89d44cce38a0"
+    },
+    {
+      "path": "render-blueprints.json",
+      "bytes": 196343,
+      "sha256": "6aaeffa0cb0f9abf64cbb58fdc868c0b79b5062d43af2c3b02e4d5c089336fc8"
     },
     {
       "path": "swiminai-island-render.js",
