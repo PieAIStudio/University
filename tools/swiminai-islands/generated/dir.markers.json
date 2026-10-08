@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "dir",
+  "displayName": "Directing",
+  "seed": "swiminai/plan-0002/directing-v1",
+  "recipeId": "R07-training-arena",
+  "nodes": {
+    "spawn": {
+      "x": 8.690766,
+      "y": 1.166872,
+      "z": -9.862356
+    },
+    "hub": {
+      "x": 4.510177,
+      "y": 1.943368,
+      "z": -9.713984
+    },
+    "portal": {
+      "x": 0,
+      "y": 4.275919,
+      "z": 14.461419
+    },
+    "surfaceBottom": {
+      "x": 0,
+      "y": 3.500919,
+      "z": 14.461419
+    },
+    "surfaceCenter": {
+      "x": 0,
+      "y": 4.275919,
+      "z": 14.461419
+    },
+    "front": {
+      "x": 0,
+      "y": 1.12605,
+      "z": 18.169475
+    },
+    "names": {
+      "surface": "portal_dir_surface",
+      "portal": "portal_dir",
+      "front": "portal_dir_front"
+    }
+  },
+  "bridges": {
+    "directing": [
+      {
+        "x": 0,
+        "y": 4.426625,
+        "z": -9.27014
+      },
+      {
+        "x": 0,
+        "y": 4.051529,
+        "z": -4.696871
+      },
+      {
+        "x": 0,
+        "y": 3.629542,
+        "z": -0.123602
+      },
+      {
+        "x": 0,
+        "y": 3.126337,
+        "z": 4.449667
+      },
+      {
+        "x": 0,
+        "y": 2.529351,
+        "z": 9.022936
+      },
+      {
+        "x": 0,
+        "y": 1.851146,
+        "z": 13.596206
+      },
+      {
+        "x": 0,
+        "y": 1.12605,
+        "z": 18.169475
+      }
+    ]
+  }
+}

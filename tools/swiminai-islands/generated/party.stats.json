@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "party",
+  "displayName": "SWIMMER PARTY",
+  "stats": {
+    "staticDraws": 5,
+    "triangles": 19341,
+    "trianglesRounded": 19341,
+    "byCategory": {
+      "ground": 18199,
+      "dressing": 1032,
+      "portal-surface": 2,
+      "portal-frame": 36,
+      "bridge": 72
+    }
+  },
+  "sourceAssetCredits": {
+    "recipeId": "R12-garden-sports",
+    "recipeSource": "packages/world/src/island/kenney-recipes.ts",
+    "dressingSource": "packages/world/src/island/miniature-layout.ts + remote-props.ts",
+    "miniatureSource": "packages/world/src/island/miniature-assets.ts",
+    "donor": "Kenney CC0 (existing checked-in miniature/rock-shape selections)",
+    "styleId": "blossom",
+    "assetIds": [
+      "gate",
+      "blossom",
+      "flowers",
+      "crystal"
+    ]
+  }
+}

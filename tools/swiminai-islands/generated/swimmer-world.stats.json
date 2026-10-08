@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "worldId": "swiminai-world",
+  "stats": {
+    "staticDraws": 18,
+    "triangles": 14508,
+    "trianglesRounded": 14508,
+    "byCategory": {
+      "ground": 7148,
+      "portal-surface": 8,
+      "portal-frame": 144,
+      "bridge": 288,
+      "dressing": 6920
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "dir",
+  "displayName": "Directing",
+  "stats": {
+    "staticDraws": 5,
+    "triangles": 19246,
+    "trianglesRounded": 19246,
+    "byCategory": {
+      "ground": 17472,
+      "dressing": 1664,
+      "portal-surface": 2,
+      "portal-frame": 36,
+      "bridge": 72
+    }
+  },
+  "sourceAssetCredits": {
+    "recipeId": "R07-training-arena",
+    "recipeSource": "packages/world/src/island/kenney-recipes.ts",
+    "dressingSource": "packages/world/src/island/miniature-layout.ts + remote-props.ts",
+    "miniatureSource": "packages/world/src/island/miniature-assets.ts",
+    "donor": "Kenney CC0 (existing checked-in miniature/rock-shape selections)",
+    "styleId": "autumn",
+    "assetIds": [
+      "stone",
+      "autumn",
+      "gate",
+      "windmill",
+      "fence"
+    ]
+  }
+}

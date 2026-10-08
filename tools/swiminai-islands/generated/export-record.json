@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "generatedAt": "2026-10-08T00:00:00.000Z",
+  "universityCommit": "working-tree",
+  "source": {
+    "blueprint": "packages/world/src/island/island-blueprint.ts",
+    "geometry": "packages/world/src/island/island-geometry.ts",
+    "detail": "course for standalone islands; world for merged world",
+    "decoration": "omitted intentionally; markers/nav remain deterministic and extensible"
+  },
+  "islands": [
+    {
+      "id": "break",
+      "displayName": "BREAK",
+      "seed": "swiminai/plan-0002/break-v1",
+      "recipeId": "R06-forest-fortress",
+      "routeArchetype": "switchback"
+    },
+    {
+      "id": "uni",
+      "displayName": "University",
+      "seed": "swiminai/plan-0002/university-v1",
+      "recipeId": "R01-forest-academy",
+      "routeArchetype": "horseshoe"
+    },
+    {
+      "id": "dir",
+      "displayName": "Directing",
+      "seed": "swiminai/plan-0002/directing-v1",
+      "recipeId": "R07-training-arena",
+      "routeArchetype": "serpentine"
+    },
+    {
+      "id": "party",
+      "displayName": "SWIMMER PARTY",
+      "seed": "swiminai/plan-0002/swimmer-party-v1",
+      "recipeId": "R12-garden-sports",
+      "routeArchetype": "arc"
+    }
+  ],
+  "files": [
+    {
+      "path": "break.glb",
+      "bytes": 1065964,
+      "sha256": "039a99583ad68a56e42ad459c365a3077da5b1f0dd4d1993d006544b19679e88"
+    },
+    {
+      "path": "break.markers.json",
+      "bytes": 1416,
+      "sha256": "2c2dad9f538024f44ba0abf22605a083b0da35e562fcdea5b116c4210de01044"
+    },
+    {
+      "path": "break.nav.json",
+      "bytes": 19386,
+      "sha256": "219dff9b7b9e39c73c4d4bedce400fd8774ba8ffab7a78ba7ed7eb00b5d0f135"
+    },
+    {
+      "path": "break.stats.json",
+      "bytes": 835,
+      "sha256": "4623a4289d12249844ca49114acc957279631485db92fd0d58a0e3f386f5fe70"
+    },
+    {
+      "path": "dir.glb",
+      "bytes": 1115000,
+      "sha256": "e520112aa71102dfe1f60ec6a9a7c8529373dd02d26e32c110380e3cef260590"
+    },
+    {
+      "path": "dir.markers.json",
+      "bytes": 1426,
+      "sha256": "756d4924cc77be411d263f3a478085d457f1c9cf81242569ee1858735e92cd46"
+    },
+    {
+      "path": "dir.nav.json",
+      "bytes": 19389,
+      "sha256": "81dd1e43662187692611d5984acc7fba7d66a9cb3372f9bea867503b55e0e74b"
+    },
+    {
+      "path": "dir.stats.json",
+      "bytes": 858,
+      "sha256": "154f2c2204e6cd9b6256c37ab08f9869600e74a4944b50a52e800da98e4c2704"
+    },
+    {
+      "path": "party.glb",
+      "bytes": 1112716,
+      "sha256": "3f9feba8077d2840bb88583b2a5877efa3e82dcc9dd511ccc8842bfda11c03d7"
+    },
+    {
+      "path": "party.markers.json",
+      "bytes": 1456,
+      "sha256": "4dfc98a5fdd5ad7d310fe32b5ef2b02d4a3826fc6a24f9c2e1da6224f3ee308a"
+    },
+    {
+      "path": "party.nav.json",
+      "bytes": 18537,
+      "sha256": "0a2a04d599dd8d74958a69be5e66a1ff047f0ffb7bd7b98664642a1e70ff59ff"
+    },
+    {
+      "path": "party.stats.json",
+      "bytes": 851,
+      "sha256": "198d54ac72ebef19c4aeff9b0bfc3e80571dfdeaba6ac168fd50b1f1ce5f65ff"
+    },
+    {
+      "path": "swimmer-world.glb",
+      "bytes": 1160280,
+      "sha256": "cbe27df55980aa158eb6400fd3616a50c99227c24b6ede842542b4c7f154bd96"
+    },
+    {
+      "path": "swimmer-world.markers.json",
+      "bytes": 4783,
+      "sha256": "579a264440630c43eef5542508d2e69fd0383dee2ddd131890eb6cea0367ae30"
+    },
+    {
+      "path": "swimmer-world.nav.json",
+      "bytes": 64622,
+      "sha256": "f73053aee91413f72e2136604ff13990c12e96eb5aa9f55520b7c014fe971510"
+    },
+    {
+      "path": "swimmer-world.stats.json",
+      "bytes": 336,
+      "sha256": "b272bcb87230864d27faa7f8c653dfa0d0fe0979a60dc2e9559aa292e0d8199a"
+    },
+    {
+      "path": "uni.glb",
+      "bytes": 942076,
+      "sha256": "c5e9d80c4e56556f785192ee85275d78450fa8a07c06c05ad1e8f1931ab2d1ce"
+    },
+    {
+      "path": "uni.markers.json",
+      "bytes": 1433,
+      "sha256": "135a953d7c6057b73b37a39033c3b7c5f8aafb6a06040bacad5b4c68d48d8404"
+    },
+    {
+      "path": "uni.nav.json",
+      "bytes": 18854,
+      "sha256": "7a9e326b95d91a555dc53ed8ab302bf6a19f7defd9d618143840007592bfd5c6"
+    },
+    {
+      "path": "uni.stats.json",
+      "bytes": 840,
+      "sha256": "bb7df9ad5330ee48371a5f9d1c7708df3bea8d3cef6cfe37c5168a7bd17b3ffb"
+    }
+  ]
+}

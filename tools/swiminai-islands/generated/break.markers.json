@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "break",
+  "displayName": "BREAK",
+  "seed": "swiminai/plan-0002/break-v1",
+  "recipeId": "R06-forest-fortress",
+  "nodes": {
+    "spawn": {
+      "x": 9.12947,
+      "y": 2.952396,
+      "z": -12.3712
+    },
+    "hub": {
+      "x": 5.823056,
+      "y": 2.335826,
+      "z": -10.395895
+    },
+    "portal": {
+      "x": 0,
+      "y": 3.646375,
+      "z": 15.556867
+    },
+    "surfaceBottom": {
+      "x": 0,
+      "y": 2.871375,
+      "z": 15.556867
+    },
+    "surfaceCenter": {
+      "x": 0,
+      "y": 3.646375,
+      "z": 15.556867
+    },
+    "front": {
+      "x": 0,
+      "y": 0.32,
+      "z": 19.545808
+    },
+    "names": {
+      "surface": "portal_break_surface",
+      "portal": "portal_break",
+      "front": "portal_break_front"
+    }
+  },
+  "bridges": {
+    "break": [
+      {
+        "x": 0,
+        "y": 1.311559,
+        "z": -9.972351
+      },
+      {
+        "x": 0,
+        "y": 1.321299,
+        "z": -5.052658
+      },
+      {
+        "x": 0,
+        "y": 1.284148,
+        "z": -0.132965
+      },
+      {
+        "x": 0,
+        "y": 1.165779,
+        "z": 4.786728
+      },
+      {
+        "x": 0,
+        "y": 0.953628,
+        "z": 9.706421
+      },
+      {
+        "x": 0,
+        "y": 0.66026,
+        "z": 14.626114
+      },
+      {
+        "x": 0,
+        "y": 0.32,
+        "z": 19.545808
+      }
+    ]
+  }
+}

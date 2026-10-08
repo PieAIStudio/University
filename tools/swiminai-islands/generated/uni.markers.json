@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "uni",
+  "displayName": "University",
+  "seed": "swiminai/plan-0002/university-v1",
+  "recipeId": "R01-forest-academy",
+  "nodes": {
+    "spawn": {
+      "x": 1.943964,
+      "y": 2.241468,
+      "z": -11.376478
+    },
+    "hub": {
+      "x": 1.554372,
+      "y": 2.458257,
+      "z": -6.194468
+    },
+    "portal": {
+      "x": 0,
+      "y": 2.866891,
+      "z": 13.488059
+    },
+    "surfaceBottom": {
+      "x": 0,
+      "y": 2.091891,
+      "z": 13.488059
+    },
+    "surfaceCenter": {
+      "x": 0,
+      "y": 2.866891,
+      "z": 13.488059
+    },
+    "front": {
+      "x": 0,
+      "y": 0.771689,
+      "z": 16.946536
+    },
+    "names": {
+      "surface": "portal_uni_surface",
+      "portal": "portal_uni",
+      "front": "portal_uni_front"
+    }
+  },
+  "bridges": {
+    "university": [
+      {
+        "x": 0,
+        "y": 2.304284,
+        "z": -8.646192
+      },
+      {
+        "x": 0,
+        "y": 2.223851,
+        "z": -4.380737
+      },
+      {
+        "x": 0,
+        "y": 2.096528,
+        "z": -0.115283
+      },
+      {
+        "x": 0,
+        "y": 1.887986,
+        "z": 4.150172
+      },
+      {
+        "x": 0,
+        "y": 1.585663,
+        "z": 8.415627
+      },
+      {
+        "x": 0,
+        "y": 1.202121,
+        "z": 12.681081
+      },
+      {
+        "x": 0,
+        "y": 0.771689,
+        "z": 16.946536
+      }
+    ]
+  }
+}

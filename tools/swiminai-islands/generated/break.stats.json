@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "break",
+  "displayName": "BREAK",
+  "stats": {
+    "staticDraws": 5,
+    "triangles": 19385,
+    "trianglesRounded": 19385,
+    "byCategory": {
+      "ground": 17571,
+      "dressing": 1704,
+      "portal-surface": 2,
+      "portal-frame": 36,
+      "bridge": 72
+    }
+  },
+  "sourceAssetCredits": {
+    "recipeId": "R06-forest-fortress",
+    "recipeSource": "packages/world/src/island/kenney-recipes.ts",
+    "dressingSource": "packages/world/src/island/miniature-layout.ts + remote-props.ts",
+    "miniatureSource": "packages/world/src/island/miniature-assets.ts",
+    "donor": "Kenney CC0 (existing checked-in miniature/rock-shape selections)",
+    "styleId": "grove",
+    "assetIds": [
+      "stone",
+      "fir",
+      "gate",
+      "fence"
+    ]
+  }
+}

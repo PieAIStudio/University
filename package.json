@@ -48,6 +48,8 @@
     "check:e2e-contracts": "node scripts/check-e2e-contracts.mjs",
     "worktree:prepare": "node scripts/link-studies-into-worktree.mjs",
     "check:coverage-caveats": "node scripts/check-coverage-caveats.mjs",
+    "export:swiminai-islands": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs",
+    "export:swiminai-islands:check": "node --experimental-strip-types --experimental-loader ./tools/swiminai-islands/ts-loader.mjs ./tools/swiminai-islands/export.mjs --check",
     "i18n:check": "node scripts/check-interface-catalogs.mjs",
     "i18n:types": "node scripts/check-interface-catalogs.mjs --write-types"
   },

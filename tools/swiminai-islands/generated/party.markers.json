@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "generator": "swiminai-islands-v2",
+  "islandId": "party",
+  "displayName": "SWIMMER PARTY",
+  "seed": "swiminai/plan-0002/swimmer-party-v1",
+  "recipeId": "R12-garden-sports",
+  "nodes": {
+    "spawn": {
+      "x": -11.384525,
+      "y": 4.062136,
+      "z": -9.864388
+    },
+    "hub": {
+      "x": -7.29435,
+      "y": 4.921029,
+      "z": -8.053805
+    },
+    "portal": {
+      "x": 0,
+      "y": 3.870923,
+      "z": 13.71106
+    },
+    "surfaceBottom": {
+      "x": 0,
+      "y": 3.095923,
+      "z": 13.71106
+    },
+    "surfaceCenter": {
+      "x": 0,
+      "y": 3.870923,
+      "z": 13.71106
+    },
+    "front": {
+      "x": 0,
+      "y": 0.32,
+      "z": 17.226716
+    },
+    "names": {
+      "surface": "portal_swimmerparty_surface",
+      "portal": "portal_swimmerparty",
+      "front": "portal_swimmerparty_front"
+    }
+  },
+  "bridges": {
+    "swimmerparty": [
+      {
+        "x": 0,
+        "y": 3.084743,
+        "z": -8.789141
+      },
+      {
+        "x": 0,
+        "y": 2.798952,
+        "z": -4.453165
+      },
+      {
+        "x": 0,
+        "y": 2.466271,
+        "z": -0.117189
+      },
+      {
+        "x": 0,
+        "y": 2.052371,
+        "z": 4.218788
+      },
+      {
+        "x": 0,
+        "y": 1.54469,
+        "z": 8.554764
+      },
+      {
+        "x": 0,
+        "y": 0.95579,
+        "z": 12.89074
+      },
+      {
+        "x": 0,
+        "y": 0.32,
+        "z": 17.226716
+      }
+    ]
+  }
+}
