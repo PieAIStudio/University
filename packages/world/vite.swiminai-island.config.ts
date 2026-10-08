@@ -8,6 +8,7 @@ export default defineConfig({
   build: {
     outDir: resolve(root, "tools/swiminai-islands/render-dist"),
     emptyOutDir: true,
+    assetsInlineLimit: 0,
     sourcemap: true,
     lib: {
       entry: resolve(root, "packages/world/src/island/swiminai-island-render.tsx"),

@@ -195,7 +195,7 @@ export function assertWorldGradePipeline(renderer: THREE.WebGLRenderer): void {
   });
 }
 
-interface GradePass {
+export interface GradePass {
   readonly target: THREE.WebGLRenderTarget;
   resize(width: number, height: number): void;
   /**

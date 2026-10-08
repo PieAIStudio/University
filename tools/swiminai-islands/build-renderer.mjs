@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFile, readdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,6 +38,21 @@ execFileSync(
   ],
   { cwd: root, stdio: "inherit" },
 );
+
+const declarationSource = join(root, "tools/swiminai-islands/render-entry.d.ts");
+const declarationOutput = join(output, "swiminai-island-render.d.ts");
+await copyFile(declarationSource, declarationOutput);
+console.log(`Copied ${declarationOutput}`);
+
+const backgroundResources = ["aerial-world-plate-2k.webp", "aerial-world-plate-4k.webp"];
+const backgroundOutput = join(output, "sky-assets");
+await mkdir(backgroundOutput, { recursive: true });
+for (const asset of backgroundResources) {
+  await copyFile(
+    join(root, "packages/world/src/assets/generated", asset),
+    join(backgroundOutput, asset),
+  );
+}
 
 async function filesUnder(directory, prefix = "") {
   const files = [];
@@ -76,6 +91,15 @@ const manifest = {
   },
   api: "SwimInAIIslandRender({ blueprint, detail, targetRadius?, display?, showDressing?, showGrass? })",
   blueprintArtifact: "render-blueprints.json",
+  declaration: "swiminai-island-render.d.ts",
+  referenceFixture: {
+    html: "tools/swiminai-islands/reference.html",
+    source: "tools/swiminai-islands/main.tsx",
+    defaultDetail: "world",
+    courseQuery: "?detail=course",
+    camera: { position: [10, 9, 16], target: [0, 0, 0], fov: 34 },
+    viewport: { width: 1440, height: 900, dpr: 1 },
+  },
   assets,
 };
 await writeFile(join(output, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);

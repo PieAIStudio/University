@@ -44,8 +44,9 @@ pnpm build:swiminai-island-render
 ```
 
 The output is `render-dist/`: `swiminai-island-render.js`, its source map,
-the four University surface textures, `render-blueprints.json`, and
-`manifest.json`. The entry is
+`swiminai-island-render.d.ts`, the four University surface textures, the
+two aerial background plates, `render-blueprints.json`, and `manifest.json`.
+The entry is
 `@pieai/university-world/swiminai-island-render.js` and its API is:
 
 ```tsx
@@ -72,6 +73,40 @@ and the existing recipe catalog. It is generated with
 `pnpm export:swiminai-render-blueprints` (or as part of the renderer build);
 the generator remains a University development tool and is not bundled into
 the website artifact.
+
+The manifest's declaration file is the public TypeScript contract; it includes
+`SwimInAIIslandRenderProps`, `SwimInAIIslandDisplay`, `IslandBlueprint`, the
+lighting/environment/sky exports, grade pass, look-metrics functions, and the
+alignment constants. The aerial resources are copied to
+`render-dist/sky-assets/` and their hashes are listed in the same manifest.
+
+## Source reference fixture
+
+The source-only comparison page lives at
+[`reference.html`](./reference.html) with [`main.tsx`](./main.tsx). It imports
+University source modules directly, freezes `blueprints.uni`, `detail=world`
+(`?detail=course` is available for the course frame baseline), `targetRadius=3.2`,
+camera `(10,9,16)` looking at `(0,0,0)`, `fov=34`, and viewport `1440×900`
+at DPR 1. It uses the shared `MapLighting` course profile,
+`WorldEnvironment`, `SkyDome`, aerial plate/deep sea, and `WORLD_GRADE` pass.
+
+Run it with:
+
+```bash
+pnpm reference:swiminai-island
+# open http://localhost:4321/reference.html?detail=world
+```
+
+After the frame is ready, Playwright or the browser console can call
+`window.__swiminaiReferenceInspect()` for the actual camera, light list,
+shadow-light count, scene+shadow draws/triangles, post draws/triangles, full
+frame counters, grade and code metrics. Call
+`window.measureSwimInAIReferenceLook()` for the repository's pixel
+`measureIslandLookInBrowser` report; it samples the painted WebGL canvas and
+returns the same `ISLAND_LOOK_CONTRACT` fields used by University. The source
+fixture's image inputs are `packages/world/src/assets/generated/aerial-world-
+plate-{2k,4k}.webp`, and the blueprint input is
+`tools/swiminai-islands/render-dist/render-blueprints.json`.
 
 The seed/contract receipt is [render-contract.json](./render-contract.json).
 It reports geometry, dressing, grass, look-metrics and the fixed

@@ -34,6 +34,8 @@
     "lint": "oxlint --deny-warnings src vitest.config.ts",
     "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src",
     "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src",
+    "reference:swiminai-island": "vite --config vite.swiminai-reference.config.ts",
+    "build:reference:swiminai-island": "vite build --config vite.swiminai-reference.config.ts",
     "test": "vitest run --project remote-performance && vitest run --project world",
     "build": "tsc -p tsconfig.json --noEmit",
     "build:swiminai-island-render": "node ../../tools/swiminai-islands/build-renderer.mjs"

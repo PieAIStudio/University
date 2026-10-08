@@ -170,3 +170,72 @@ export const SWIMINAI_ISLAND_RENDER_ALIGNMENT = {
   drei: "10.7.8",
   swimmerRenderKit: "0.5.0",
 } as const;
+
+// The website owns Canvas and the one frame blit, but it must consume the
+// University's already-validated scene contract. These are direct source
+// re-exports; Maps, Stage and page state remain outside this pure entry.
+export { MapLighting } from "../sky/lighting.js";
+export type { MapLightingProps } from "../sky/lighting.js";
+export {
+  WorldEnvironment,
+  WORLD_ENVIRONMENT,
+  DEFAULT_WORLD_ENVIRONMENT_STOPS,
+} from "../sky/environment.js";
+export type { EnvironmentTextureMemory } from "../sky/environment.js";
+export {
+  SkyDome,
+  createSkyDomeUniforms,
+  SKY_DOME_FRAGMENT_SHADER,
+  SKY_DOME_NAME,
+  SKY_DOME_STOPS_KEY,
+  SKY_DOME_VERTEX_SHADER,
+} from "../sky/skydome.js";
+export type { SkyDomeStops } from "../sky/skydome.js";
+export { AerialWorldPlate, DeepSea, SEA_COLORS } from "../sky/horizon-sea.js";
+export {
+  CATALOGUE_SUN,
+  GARDEN_SUN,
+  WORLD_SUN,
+  mapSunStyle,
+  mapSunStyle as worldSunStyle,
+  worldKeyToFillRatio,
+  worldShadowFrustum,
+  worldShadowNormalBias,
+  worldSunDirection,
+  worldSunPosition,
+  worldTotalFill,
+} from "../sky/sun.js";
+export type { MapSunProfile, WorldShadowFrustum } from "../sky/sun.js";
+export {
+  assertWorldGradePipeline,
+  createGradePass,
+  WORLD_GRADE,
+  WORLD_GRADE_FRAGMENT,
+  WORLD_GRADE_PIVOT_SRGB8,
+} from "./grade.js";
+export type { GradePass } from "./grade.js";
+export {
+  ISLAND_LOOK_CONTRACT,
+  islandLookCameraForShot,
+  islandLookSceneSource,
+} from "./island-look.js";
+export type {
+  IslandLookBounds,
+  IslandLookCameraPose,
+  IslandLookSceneSource,
+  IslandLookSceneSourceOptions,
+  IslandLookViewport,
+} from "./island-look.js";
+export {
+  measureIslandCodeMetrics,
+  measureIslandImageData,
+  measureIslandLookInBrowser,
+  measureKeyToFillRatio,
+} from "./look-metrics.js";
+export type {
+  DomLabelContrastSample,
+  IslandLookBrowserReport,
+  IslandLookCodeMetrics,
+  IslandLookLayerDistribution,
+  IslandLookPixelMetrics,
+} from "./look-metrics.js";

@@ -27,6 +27,31 @@
   },
   "api": "SwimInAIIslandRender({ blueprint, detail, targetRadius?, display?, showDressing?, showGrass? })",
   "blueprintArtifact": "render-blueprints.json",
+  "declaration": "swiminai-island-render.d.ts",
+  "referenceFixture": {
+    "html": "tools/swiminai-islands/reference.html",
+    "source": "tools/swiminai-islands/main.tsx",
+    "defaultDetail": "world",
+    "courseQuery": "?detail=course",
+    "camera": {
+      "position": [
+        10,
+        9,
+        16
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 34
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    }
+  },
   "assets": [
     {
       "path": "island-textures/grass-albedo.webp",
@@ -54,14 +79,29 @@
       "sha256": "6aaeffa0cb0f9abf64cbb58fdc868c0b79b5062d43af2c3b02e4d5c089336fc8"
     },
     {
+      "path": "sky-assets/aerial-world-plate-2k.webp",
+      "bytes": 114806,
+      "sha256": "cd7781ac5e7c22634230c266e61a7b78bc617c9ac31bab2814b1f79aa1303cb6"
+    },
+    {
+      "path": "sky-assets/aerial-world-plate-4k.webp",
+      "bytes": 356200,
+      "sha256": "4c9e5ff90d1d663360f8974cffdfbc2bffc0f6355d9410e5365f7ba53e136b4d"
+    },
+    {
+      "path": "swiminai-island-render.d.ts",
+      "bytes": 14022,
+      "sha256": "ed2783ed4bbccb8d31b71a1c93874c91e954542a3e4589bfeabce0b7e909e8e3"
+    },
+    {
       "path": "swiminai-island-render.js",
-      "bytes": 502564,
-      "sha256": "f2b581e4d83d31f58199d768fcda0bc3e06ad92a3028fbb88f48e7417195cfe8"
+      "bytes": 1159168,
+      "sha256": "a2e911762063ce4214dcdfbdc17e14d8978ee15046c354bd0627f4591b7c4a8d"
     },
     {
       "path": "swiminai-island-render.js.map",
-      "bytes": 1413119,
-      "sha256": "175df789526eccf5ae4cdb88b5eaa54d7745a6d4966b79966905f716bac7b2eb"
+      "bytes": 2152561,
+      "sha256": "70df015c6fa27aa89bbf7da0ee76a78a4ea71de9ee3d776a73b165df238da5f2"
     }
   ]
 }
